@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun, Globe, Menu, X, BookOpen, ChevronDown } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 
 const linkHrefs = [
   { href: "#home", key: "home" as const },
@@ -121,12 +122,16 @@ export function Navbar() {
             </AnimatePresence>
           </div>
 
-          <Button variant="ghost" className="rounded-full">
-            {t.nav.login}
-          </Button>
-          <Button className="rounded-full bg-primary hover:bg-primary/90 shadow-soft">
-            {t.nav.register}
-          </Button>
+          <Link to="/login">
+            <Button variant="ghost" className="rounded-full">
+              {t.nav.login}
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button className="rounded-full bg-primary hover:bg-primary/90 shadow-soft">
+              {t.nav.register}
+            </Button>
+          </Link>
         </div>
 
         <button
@@ -199,8 +204,12 @@ export function Navbar() {
                 </select>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 rounded-full">{t.nav.login}</Button>
-                <Button className="flex-1 rounded-full">{t.nav.register}</Button>
+                <Link to="/login" className="flex-1">
+                  <Button variant="outline" className="w-full rounded-full">{t.nav.login}</Button>
+                </Link>
+                <Link to="/register" className="flex-1">
+                  <Button className="w-full rounded-full">{t.nav.register}</Button>
+                </Link>
               </div>
             </motion.aside>
           </>
