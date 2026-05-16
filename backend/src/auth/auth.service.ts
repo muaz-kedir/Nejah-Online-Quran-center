@@ -66,13 +66,13 @@ export class AuthService {
 
     const studentEntity = await this.studentsService.create({
       fullName: student.fullName,
-      gender: student.gender,
+      gender: student.gender as any,
       age: student.age,
-      residency: student.residency,
-      levelOfQuran: student.levelOfQuran,
+      currentResidency: student.residency,
+      level: student.levelOfQuran as any,
       email: student.email,
-      user: studentUser,
-      parent: parentEntity,
+      userId: studentUser.id,
+      parentId: parentEntity.id,
     });
 
     // 5. Generate token for the student (since they just registered)
@@ -92,13 +92,23 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    console.log(`[AuthService] Attempting login for email: ${loginDto.email}`);
     const user = await this.usersService.findByEmail(loginDto.email);
 
     if (!user) {
+      console.log(`[AuthService] User not found: ${loginDto.email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    console.log(`[AuthService] User found. ID: ${user.id}, Role: ${user.role}, IsActive: ${user.isActive}`);
+    // Check if password exists on user object
+    if (!user.password) {
+      console.error(`[AuthService] CRITICAL: Password field is missing on user object from database!`);
+    }
+
+    console.log(`[AuthService] Stored Hash: ${user.password}`);
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    console.log(`[AuthService] Password valid: ${isPasswordValid}`);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');

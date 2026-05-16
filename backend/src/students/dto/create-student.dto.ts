@@ -1,33 +1,46 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
+import { QuranLevel, Gender, StudentStatus } from '../entities/student.entity';
 
 export class CreateStudentDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   fullName: string;
 
-  @IsString()
-  @IsNotEmpty()
-  gender: string;
+  @IsEnum(Gender)
+  gender: Gender;
 
   @IsNumber()
-  @IsNotEmpty()
+  @Min(3)
+  @Max(80)
   age: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  residency: string;
+  currentResidency?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  levelOfQuran: string;
+  @IsEnum(QuranLevel)
+  level: QuranLevel;
 
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @IsOptional()
-  userId?: string;
+  @IsEnum(StudentStatus)
+  status?: StudentStatus;
 
   @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  @IsOptional()
+  @IsString()
   parentId?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherId?: string;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

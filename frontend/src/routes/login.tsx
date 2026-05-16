@@ -47,24 +47,40 @@ function LoginPage() {
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     try {
+      // Only send email and password (remove rememberMe)
+      const loginData = {
+        email: values.email.trim(),
+        password: values.password.trim(),
+      };
+
+      console.log("Sending Login Request:", loginData);
       const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(loginData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        console.error("Login Error Details:", data);
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join(", ") 
+          : data.message || "Login failed";
+        throw new Error(errorMessage);
       }
 
-      // Store token (in a real app, use a secure context or store)
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Store authentication data
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("userRole", data.user.role);
+      localStorage.setItem("userName", data.user.name);
+      localStorage.setItem("userEmail", data.user.email);
+      localStorage.setItem("userId", data.user.id);
 
       toast.success("Welcome back, " + data.user.name + "!");
-      navigate({ to: "/" });
+      
+      // Redirect to dashboard using window.location for full page reload
+      window.location.href = "/dashboard";
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {

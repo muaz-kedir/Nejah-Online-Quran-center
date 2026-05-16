@@ -22,6 +22,12 @@ export class ParentsService {
     });
   }
 
+  async findAll(): Promise<Parent[]> {
+    return this.parentsRepository.find({
+      relations: ['user']
+    });
+  }
+
   async findOne(id: string): Promise<Parent | null> {
     return this.parentsRepository.findOne({ 
       where: { id },

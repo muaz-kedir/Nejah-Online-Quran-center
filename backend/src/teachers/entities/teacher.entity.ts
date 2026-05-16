@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Student } from '../../students/entities/student.entity';
 
 @Entity('teachers')
 export class Teacher {
@@ -38,6 +40,9 @@ export class Teacher {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Student, (student) => student.teacher)
+  students: Student[];
 
   @CreateDateColumn()
   createdAt: Date;

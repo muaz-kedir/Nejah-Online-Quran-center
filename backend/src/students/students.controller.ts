@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { QueryStudentDto } from './dto/query-student.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('students')
@@ -24,8 +26,13 @@ export class StudentsController {
   }
 
   @Get()
-  findAll() {
-    return this.studentsService.findAll();
+  findAll(@Query() queryDto: QueryStudentDto) {
+    return this.studentsService.findAll(queryDto);
+  }
+
+  @Get('stats')
+  getStats() {
+    return this.studentsService.getStats();
   }
 
   @Get(':id')

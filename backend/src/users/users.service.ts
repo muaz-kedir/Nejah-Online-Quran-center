@@ -1,28 +1,71 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const existingUser = await this.usersRepository.findOne({
-      where: { email: createUserDto.email },
-    });
+  async onModuleInit() {
+    await this.seedSuperAdmin();
+  }
 
+  private async seedSuperAdmin() {
+    const logFile = path.resolve(process.cwd(), 'seed-log.txt');
+    fs.appendFileSync(logFile, `[${new Date().toISOString()}] Checking super admin...\n`);
+    
+    const superAdminEmail = 'nejahsuperadmin@gmail.com';
+    const existingAdmin = await this.findByEmail(superAdminEmail);
+
+    if (!existingAdmin) {
+      fs.appendFileSync(logFile, `[${new Date().toISOString()}] Seeding Super Admin...\n`);
+      try {
+        const hashedPassword = await bcrypt.hash('SuperAdmin123', 10);
+        const superAdmin = this.usersRepository.create({
+          email: superAdminEmail,
+          password: hashedPassword,
+          name: 'Super Administrator',
+          role: UserRole.SUPER_ADMIN,
+          isActive: true,
+        });
+        await this.usersRepository.save(superAdmin);
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ Super Admin seeded successfully!\n`);
+      } catch (error) {
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] ❌ Error seeding Super Admin: ${error.message}\n`);
+      }
+    } else {
+      fs.appendFileSync(logFile, `[${new Date().toISOString()}] Super Admin already exists. Forcing password update...\n`);
+      const hashedPassword = await bcrypt.hash('SuperAdmin123', 10);
+      existingAdmin.password = hashedPassword;
+      existingAdmin.isActive = true;
+      existingAdmin.role = UserRole.SUPER_ADMIN;
+      await this.usersRepository.save(existingAdmin);
+      fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ Super Admin password updated successfully!\n`);
+    }
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // Check if email already exists
+    const existingUser = await this.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
     const user = this.usersRepository.create({
       ...createUserDto,
       password: hashedPassword,
@@ -31,16 +74,46 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find({
-      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt'],
+  async findAll(queryDto: QueryUserDto) {
+    const { search, role, isActive, page = 1, limit = 10 } = queryDto;
+
+    const where: FindOptionsWhere<User> | FindOptionsWhere<User>[] = {};
+
+    if (search) {
+      where['name'] = Like(`%${search}%`);
+    }
+
+    if (role) {
+      where['role'] = role;
+    }
+
+    if (isActive !== undefined) {
+      where['isActive'] = isActive;
+    }
+
+    const [users, total] = await this.usersRepository.findAndCount({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt', 'updatedAt'],
     });
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt'],
+      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt', 'updatedAt'],
     });
 
     if (!user) {
@@ -50,13 +123,32 @@ export class UsersService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto, currentUser: User): Promise<User> {
     const user = await this.findOne(id);
 
+    // Prevent non-SUPER_ADMIN from modifying SUPER_ADMIN
+    if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('You cannot modify a SUPER_ADMIN user');
+    }
+
+    // Prevent ADMIN from creating or changing to SUPER_ADMIN
+    if (updateUserDto.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Only SUPER_ADMIN can assign SUPER_ADMIN role');
+    }
+
+    // Check email uniqueness if email is being updated
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
+      const existingUser = await this.findByEmail(updateUserDto.email);
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    // Hash password if provided
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
@@ -65,8 +157,78 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, currentUser: User): Promise<void> {
     const user = await this.findOne(id);
+
+    // Prevent non-SUPER_ADMIN from deleting SUPER_ADMIN
+    if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('You cannot delete a SUPER_ADMIN user');
+    }
+
+    // Prevent users from deleting themselves
+    if (user.id === currentUser.id) {
+      throw new BadRequestException('You cannot delete your own account');
+    }
+
     await this.usersRepository.remove(user);
+  }
+
+  async toggleStatus(id: string, currentUser: User): Promise<User> {
+    const user = await this.findOne(id);
+
+    // Prevent non-SUPER_ADMIN from deactivating SUPER_ADMIN
+    if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('You cannot deactivate a SUPER_ADMIN user');
+    }
+
+    user.isActive = !user.isActive;
+    return this.usersRepository.save(user);
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<void> {
+    const { currentPassword, newPassword, confirmPassword } = changePasswordDto;
+
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('New passwords do not match');
+    }
+
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Hash and save new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.save(user);
+  }
+
+  async getProfile(userId: string): Promise<User> {
+    return this.findOne(userId);
+  }
+
+  async updateProfile(userId: string, updateDto: Partial<UpdateUserDto>): Promise<User> {
+    const user = await this.findOne(userId);
+
+    // Users cannot change their own role
+    if (updateDto.role) {
+      delete updateDto.role;
+    }
+
+    // Check email uniqueness if email is being updated
+    if (updateDto.email && updateDto.email !== user.email) {
+      const existingUser = await this.findByEmail(updateDto.email);
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    Object.assign(user, updateDto);
+    return this.usersRepository.save(user);
   }
 }

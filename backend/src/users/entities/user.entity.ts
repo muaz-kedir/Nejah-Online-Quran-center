@@ -21,6 +21,11 @@ export class User {
   @Column()
   name: string;
 
+  // Alias for fullName
+  get fullName(): string {
+    return this.name;
+  }
+
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -33,6 +38,11 @@ export class User {
 
   @Column({ nullable: true })
   avatar: string;
+
+  // Alias for profileImage
+  get profileImage(): string {
+    return this.avatar;
+  }
 
   @Column({ default: true })
   isActive: boolean;
