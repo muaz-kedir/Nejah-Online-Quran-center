@@ -1,5 +1,6 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
-import { QuranLevel, Gender, StudentStatus } from '../entities/student.entity';
+import { QuranLevel, StudentStatus } from '../entities/student.entity';
+import { Gender } from '../../common/enums/gender.enum';
 
 export class CreateStudentDto {
   @IsNotEmpty()

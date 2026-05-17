@@ -87,7 +87,7 @@ export function EditUserModal({ open, onClose, user, onSuccess }: EditUserModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>

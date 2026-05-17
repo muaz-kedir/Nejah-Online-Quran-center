@@ -11,6 +11,7 @@ import { Parent } from '../../parents/entities/parent.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
 import { User } from '../../users/entities/user.entity';
 import { OneToOne } from 'typeorm';
+import { Gender } from '../../common/enums/gender.enum';
 
 export enum QuranLevel {
   BEGINNER = 'Beginner',
@@ -24,11 +25,6 @@ export enum StudentStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   PENDING = 'pending',
-}
-
-export enum Gender {
-  MALE = 'Male',
-  FEMALE = 'Female',
 }
 
 @Entity('students')
@@ -69,7 +65,7 @@ export class Student {
   progressRate: number;
 
   // Student ID like NJ-2024-001
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   studentCode: string;
 
   @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE' })

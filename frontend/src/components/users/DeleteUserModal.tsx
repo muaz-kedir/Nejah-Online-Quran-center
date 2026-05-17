@@ -58,7 +58,7 @@ export function DeleteUserModal({ open, onClose, user, onSuccess }: DeleteUserMo
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-red-500" />

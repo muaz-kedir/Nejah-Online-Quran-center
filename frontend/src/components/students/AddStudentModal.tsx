@@ -22,7 +22,8 @@ import { cn } from '@/lib/utils';
 interface Teacher {
   id: string;
   user?: { name: string };
-  specialty: string;
+  specialty?: string;
+  specialization?: string;
 }
 
 interface Parent {
@@ -100,7 +101,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers, parents }:
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[580px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[580px] dark:bg-gray-800 dark:border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold dark:text-gray-100">Add New Student</DialogTitle>
         </DialogHeader>
@@ -190,7 +191,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers, parents }:
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     {teachers?.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
-                        {t.user?.name || 'Unknown'} — {t.specialty}
+                        {t.user?.name || 'Unknown'} — {t.specialization || t.specialty || 'General'}
                       </SelectItem>
                     ))}
                   </SelectContent>

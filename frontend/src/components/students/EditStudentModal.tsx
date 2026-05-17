@@ -21,7 +21,8 @@ import { toast } from 'sonner';
 interface Teacher {
   id: string;
   user?: { name: string };
-  specialty: string;
+  specialty?: string;
+  specialization?: string;
 }
 
 interface Parent {
@@ -123,7 +124,7 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[580px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[580px] dark:bg-gray-800 dark:border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold dark:text-gray-100">Edit Student</DialogTitle>
         </DialogHeader>

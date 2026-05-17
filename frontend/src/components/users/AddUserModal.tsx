@@ -75,7 +75,7 @@ export function AddUserModal({ open, onClose, onSuccess }: AddUserModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
         </DialogHeader>

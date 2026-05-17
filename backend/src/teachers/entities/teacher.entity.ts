@@ -4,42 +4,64 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
+  OneToOne,
   OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Student } from '../../students/entities/student.entity';
+import { Gender } from '../../common/enums/gender.enum';
 
 @Entity('teachers')
 export class Teacher {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
-  @ManyToOne(() => User)
+  @OneToOne(() => User, { cascade: true, onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()
-  specialty: string;
+  fullName: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column({ type: 'enum', enum: Gender, default: Gender.MALE })
+  gender: Gender;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
 
   @Column({ type: 'text', nullable: true })
-  bio: string;
+  qualification: string;
 
-  @Column({ type: 'simple-array', nullable: true })
-  qualifications: string[];
+  @Column({ nullable: true })
+  specialization: string;
 
   @Column({ default: 0 })
-  yearsOfExperience: number;
+  experience: number;
 
-  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
-  rating: number;
+  @Column({ nullable: true })
+  currentResidency: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ default: 'active' })
+  status: string; // active, inactive, pending, on leave
+
+  @Column({ nullable: true })
+  avatarUrl: string;
+
+  @Column({ nullable: true })
+  weeklySchedule: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  hourlyRate: number;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
 
   @OneToMany(() => Student, (student) => student.teacher)
   students: Student[];
