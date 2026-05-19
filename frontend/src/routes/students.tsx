@@ -86,7 +86,13 @@ function StudentsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-      setTeachers(Array.isArray(data) ? data : []);
+      if (data && Array.isArray(data.data)) {
+        setTeachers(data.data);
+      } else if (Array.isArray(data)) {
+        setTeachers(data);
+      } else {
+        setTeachers([]);
+      }
     } catch (error) {
       console.error('Failed to fetch teachers', error);
     }
@@ -99,7 +105,13 @@ function StudentsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-      setParents(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setTeachers(data);
+      } else if (data && Array.isArray(data.data)) {
+        setTeachers(data.data);
+      } else {
+        setTeachers([]);
+      }
     } catch (error) {
       console.error('Failed to fetch parents', error);
     }

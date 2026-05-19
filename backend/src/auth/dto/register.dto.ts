@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsInt, IsEnum, ValidateNested, IsNumber } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class StudentRegisterDto {
@@ -44,6 +44,10 @@ export class ParentRegisterDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phoneNumber: string;
 
   @IsString()
   @IsNotEmpty()

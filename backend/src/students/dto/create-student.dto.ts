@@ -44,4 +44,12 @@ export class CreateStudentDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  attendanceRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  progressRate?: number;
 }

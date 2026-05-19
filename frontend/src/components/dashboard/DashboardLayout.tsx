@@ -38,3 +38,5 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </AppProvider>
   );
 }
+
+export { DashboardLayout as default }

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, User, Users, Mail, MapPin, GraduationCap, Lock, ArrowRight, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+];
+
 const registerSchema = z.object({
   student: z.object({
     fullName: z.string().min(2, "Full name is required"),
@@ -43,6 +47,7 @@ const registerSchema = z.object({
   parent: z.object({
     fullName: z.string().min(2, "Full name is required"),
     email: z.string().email("Invalid email address"),
+    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[\+]?[0-9\s\-\(\)]+$/, "Invalid phone number format"),
     residency: z.string().min(2, "Residency is required"),
     relationshipWithStudent: z.string().min(1, "Relationship is required"),
   }),
@@ -77,6 +82,7 @@ function RegisterPage() {
       parent: {
         fullName: "",
         email: "",
+        phoneNumber: "",
         residency: "",
         relationshipWithStudent: "",
       },
@@ -121,10 +127,22 @@ function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+        // Handle specific error cases
+        if (response.status === 409) {
+          if (data.message.includes("Student email")) {
+            toast.error("This student email is already registered. Please use a different email or login.");
+          } else if (data.message.includes("Email already exists")) {
+            toast.error("This email is already registered. Please use a different email or login.");
+          } else {
+            toast.error(data.message || "This email is already registered.");
+          }
+        } else {
+          toast.error(data.message || "Registration failed. Please try again.");
+        }
+        return;
       }
 
-      if (data.parentStatus.includes("Existing parent found")) {
+      if (data.parentStatus && data.parentStatus.includes("Existing parent found")) {
         toast.success(data.parentStatus);
       }
 
@@ -134,6 +152,7 @@ function RegisterPage() {
         navigate({ to: "/login" });
       }, 3000);
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast.error(error.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -144,11 +163,9 @@ function RegisterPage() {
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
-          <img
-            src="/logo.png"
-            alt="Nejah Logo"
-            className="mx-auto h-20 w-auto mb-4"
-          />
+          <div className="mx-auto h-20 w-20 mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
+            <span className="text-3xl font-bold text-white">N</span>
+          </div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Join Nejah Online Quran & Islamic Center
           </h2>
@@ -250,8 +267,8 @@ function RegisterPage() {
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="male">Male</SelectItem>
-                                      <SelectItem value="female">Female</SelectItem>
+                                      <SelectItem value="Male">Male</SelectItem>
+                                      <SelectItem value="Female">Female</SelectItem>
                                     </SelectContent>
                                   </Select>
                                   <FormMessage />
@@ -278,12 +295,23 @@ function RegisterPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Current Residency</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input className="pl-9" placeholder="City, Country" {...field} />
-                                  </div>
-                                </FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select Country" />
+                                      </SelectTrigger>
+                                    </div>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {COUNTRIES.map((country) => (
+                                      <SelectItem key={country} value={country}>
+                                        {country}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -301,11 +329,11 @@ function RegisterPage() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="beginner">Beginner</SelectItem>
-                                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="hifz">Hifz</SelectItem>
-                                    <SelectItem value="advanced">Advanced</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="Beginner">Beginner</SelectItem>
+                                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                                    <SelectItem value="Hifz">Hifz</SelectItem>
+                                    <SelectItem value="Advanced">Advanced</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -424,16 +452,43 @@ function RegisterPage() {
                           />
                           <FormField
                             control={form.control}
+                            name="parent.phoneNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Contact Phone Number</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input className="pl-9" placeholder="+1 (555) 123-4567" {...field} />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
                             name="parent.residency"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Parent Residency</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input className="pl-9" placeholder="City, Country" {...field} />
-                                  </div>
-                                </FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select Country" />
+                                      </SelectTrigger>
+                                    </div>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {COUNTRIES.map((country) => (
+                                      <SelectItem key={country} value={country}>
+                                        {country}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}

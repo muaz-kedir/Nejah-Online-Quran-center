@@ -19,10 +19,28 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration
+  // CORS configuration - Allow all localhost origins in development
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN') || 'http://localhost:8080',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      
+      // In development, allow all localhost origins
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+      
+      // Check configured origin
+      const configuredOrigin = configService.get('CORS_ORIGIN');
+      if (configuredOrigin && origin === configuredOrigin) {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // API prefix

@@ -58,7 +58,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
   ],
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'My Progress', icon: TrendingUp, path: '/progress' },
+    { label: 'My Progress', icon: TrendingUp, path: '/my-progress' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Attendance', icon: UserCheck, path: '/attendance' },
     { label: 'Schedule', icon: Calendar, path: '/schedule' },

@@ -11,6 +11,11 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Student } from '../../students/entities/student.entity';
 
+export enum ParentStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
 @Entity('parents')
 export class Parent {
   @PrimaryGeneratedColumn('uuid')
@@ -25,8 +30,14 @@ export class Parent {
   @Column()
   residency: string;
 
+  @Column({ nullable: true })
+  phoneNumber: string;
+
   @Column()
   relationshipWithStudent: string;
+
+  @Column({ type: 'enum', enum: ParentStatus, default: ParentStatus.ACTIVE })
+  status: ParentStatus;
 
   @OneToOne(() => User, { cascade: true })
   @JoinColumn()

@@ -18,77 +18,101 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { student, parent } = registerDto;
+    try {
+      console.log('[AuthService] Starting registration process...');
+      const { student, parent } = registerDto;
 
-    // 1. Validate password confirmation
-    if (student.password !== student.confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
+      // 1. Validate password confirmation
+      if (student.password !== student.confirmPassword) {
+        throw new BadRequestException('Passwords do not match');
+      }
 
-    // 2. Check if student email already exists
-    const existingStudentUser = await this.usersService.findByEmail(student.email);
-    if (existingStudentUser) {
-      throw new ConflictException('Student email already registered');
-    }
+      // 2. Check if student email already exists
+      console.log('[AuthService] Checking if student email exists:', student.email);
+      const existingStudentUser = await this.usersService.findByEmail(student.email);
+      if (existingStudentUser) {
+        throw new ConflictException('Student email already registered');
+      }
 
-    // 3. Handle Parent logic
-    let parentEntity = await this.parentsService.findByEmail(parent.email);
-    let parentMessage = '';
+      // 3. Handle Parent logic
+      console.log('[AuthService] Checking if parent email exists:', parent.email);
+      let parentEntity = await this.parentsService.findByEmail(parent.email);
+      let parentMessage = '';
 
-    if (!parentEntity) {
-      // Create new parent user and profile
-      const parentUser = await this.usersService.create({
-        email: parent.email,
-        password: 'TemporaryPassword123!', // Parents might need to reset this
-        name: parent.fullName,
-        role: UserRole.PARENT,
+      if (!parentEntity) {
+        console.log('[AuthService] Creating new parent user...');
+        // Create new parent user and profile
+        const parentUser = await this.usersService.create({
+          email: parent.email,
+          password: 'TemporaryPassword123!', // Parents might need to reset this
+          name: parent.fullName,
+          role: UserRole.PARENT,
+          phone: parent.phoneNumber,
+        });
+        console.log('[AuthService] Parent user created:', parentUser.id);
+
+        console.log('[AuthService] Creating parent profile...');
+        parentEntity = await this.parentsService.create({
+          fullName: parent.fullName,
+          email: parent.email,
+          phoneNumber: parent.phoneNumber,
+          residency: parent.residency,
+          relationshipWithStudent: parent.relationshipWithStudent,
+          user: parentUser,
+        });
+        console.log('[AuthService] Parent profile created:', parentEntity.id);
+        parentMessage = 'New parent account created.';
+      } else {
+        console.log('[AuthService] Using existing parent:', parentEntity.id);
+        parentMessage = 'Existing parent found. Student will be connected to the existing parent account.';
+      }
+
+      // 4. Create Student logic
+      console.log('[AuthService] Creating student user...');
+      const studentUser = await this.usersService.create({
+        email: student.email,
+        password: student.password,
+        name: student.fullName,
+        role: UserRole.STUDENT,
       });
+      console.log('[AuthService] Student user created:', studentUser.id);
 
-      parentEntity = await this.parentsService.create({
-        fullName: parent.fullName,
-        email: parent.email,
-        residency: parent.residency,
-        relationshipWithStudent: parent.relationshipWithStudent,
-        user: parentUser,
+      console.log('[AuthService] Creating student profile...');
+      await this.studentsService.create({
+        fullName: student.fullName,
+        gender: student.gender,
+        age: student.age,
+        currentResidency: student.residency,
+        level: student.levelOfQuran,
+        email: student.email,
+        userId: studentUser.id,
+        parentId: parentEntity.id,
+        status: 'active',
+        attendanceRate: 0,
+        progressRate: 0,
       });
-      parentMessage = 'New parent account created.';
-    } else {
-      parentMessage = 'Existing parent found. Student will be connected to the existing parent account.';
+      console.log('[AuthService] Student profile created successfully');
+
+      // 5. Generate token for the student (since they just registered)
+      const payload = { sub: studentUser.id, email: studentUser.email, role: studentUser.role };
+      
+      console.log('[AuthService] Registration completed successfully');
+      return {
+        message: 'Registration successful!',
+        parentStatus: parentMessage,
+        access_token: this.jwtService.sign(payload),
+        user: {
+          id: studentUser.id,
+          email: studentUser.email,
+          name: studentUser.name,
+          role: studentUser.role,
+        },
+      };
+    } catch (error) {
+      console.error('[AuthService] Registration error:', error.message);
+      console.error('[AuthService] Error stack:', error.stack);
+      throw error;
     }
-
-    // 4. Create Student logic
-    const studentUser = await this.usersService.create({
-      email: student.email,
-      password: student.password,
-      name: student.fullName,
-      role: UserRole.STUDENT,
-    });
-
-    const studentEntity = await this.studentsService.create({
-      fullName: student.fullName,
-      gender: student.gender as any,
-      age: student.age,
-      currentResidency: student.residency,
-      level: student.levelOfQuran as any,
-      email: student.email,
-      userId: studentUser.id,
-      parentId: parentEntity.id,
-    });
-
-    // 5. Generate token for the student (since they just registered)
-    const payload = { sub: studentUser.id, email: studentUser.email, role: studentUser.role };
-    
-    return {
-      message: 'Registration successful!',
-      parentStatus: parentMessage,
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: studentUser.id,
-        email: studentUser.email,
-        name: studentUser.name,
-        role: studentUser.role,
-      },
-    };
   }
 
   async login(loginDto: LoginDto) {
