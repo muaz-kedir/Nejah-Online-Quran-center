@@ -7,6 +7,8 @@ import { StudentsService } from '../students/students.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UserRole } from '../common/enums/user-role.enum';
+import { Gender } from '../common/enums/gender.enum';
+import { QuranLevel, StudentStatus } from '../students/entities/student.entity';
 
 @Injectable()
 export class AuthService {
@@ -58,7 +60,6 @@ export class AuthService {
           phoneNumber: parent.phoneNumber,
           residency: parent.residency,
           relationshipWithStudent: parent.relationshipWithStudent,
-          user: parentUser,
         });
         console.log('[AuthService] Parent profile created:', parentEntity.id);
         parentMessage = 'New parent account created.';
@@ -80,14 +81,14 @@ export class AuthService {
       console.log('[AuthService] Creating student profile...');
       await this.studentsService.create({
         fullName: student.fullName,
-        gender: student.gender,
+        gender: student.gender.toLowerCase() === 'male' ? Gender.MALE : Gender.FEMALE,
         age: student.age,
         currentResidency: student.residency,
-        level: student.levelOfQuran,
+        level: student.levelOfQuran as QuranLevel,
         email: student.email,
         userId: studentUser.id,
         parentId: parentEntity.id,
-        status: 'active',
+        status: StudentStatus.ACTIVE,
         attendanceRate: 0,
         progressRate: 0,
       });

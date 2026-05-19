@@ -24,8 +24,8 @@ interface Parent {
   fullName: string;
   email: string;
   phoneNumber?: string;
-  residency: string;
-  relationshipWithStudent: string;
+  residency?: string;
+  relationshipWithStudent?: string;
   status: string;
   students: Student[];
   createdAt: string;

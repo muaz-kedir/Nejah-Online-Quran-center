@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute, useParams, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useParams } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronLeft,
@@ -40,7 +40,6 @@ export const Route = createFileRoute('/teachers_/$id')({
 
 function TeacherProfilePage() {
   const { id } = useParams({ from: '/teachers_/$id' });
-  const navigate = useNavigate();
   const [teacher, setTeacher] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -177,7 +176,7 @@ function TeacherProfilePage() {
         {/* Back Button */}
         <div>
           <button
-            onClick={() => navigate({ to: '/teachers' })}
+            onClick={() => window.location.href = '/teachers'}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-emerald-800 uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty

@@ -51,29 +51,21 @@ export class ParentsService {
   async findAll(queryDto: QueryParentDto) {
     const { search, status, page = 1, limit = 5 } = queryDto;
 
-    const qb = this.parentsRepository
-      .createQueryBuilder('parent')
-      .leftJoinAndSelect('parent.user', 'user')
-      .leftJoinAndSelect('parent.students', 'students');
-
-    // Search by name or email
-    if (search) {
-      qb.andWhere(
-        '(LOWER(parent.fullName) LIKE LOWER(:search) OR LOWER(parent.email) LIKE LOWER(:search))',
-        { search: `%${search}%` },
-      );
-    }
-
-    // Filter by status
+    // Build where clause
+    const where: any = {};
+    
     if (status) {
-      qb.andWhere('parent.status = :status', { status });
+      where.status = status;
     }
 
-    // Pagination
-    qb.skip((page - 1) * limit).take(limit);
-    qb.orderBy('parent.createdAt', 'DESC');
-
-    const [data, total] = await qb.getManyAndCount();
+    // Use findAndCount with relations - more reliable
+    const [data, total] = await this.parentsRepository.findAndCount({
+      where,
+      relations: ['user', 'students'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
 
     return {
       data,

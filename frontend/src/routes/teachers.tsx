@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -47,7 +47,6 @@ export const Route = createFileRoute('/teachers')({
 });
 
 function TeachersPage() {
-  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -153,7 +152,7 @@ function TeachersPage() {
             <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">Teachers</h1>
           </div>
           <Button
-            onClick={() => navigate({ to: '/teachers/create' })}
+            onClick={() => window.location.href = '/teachers/create'}
             className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
           >
             <Plus className="h-5 w-5" />
@@ -319,7 +318,7 @@ function TeachersPage() {
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => navigate({ to: `/teachers/${teacher.id}` })}
+                            onClick={() => window.location.href = `/teachers/${teacher.id}`}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-700 transition-colors"
                             title="View Faculty Profile"
                           >

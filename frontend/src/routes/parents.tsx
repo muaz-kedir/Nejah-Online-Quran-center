@@ -75,7 +75,7 @@ interface Parent {
 
 function ParentsPage() {
   const [parents, setParents] = useState<Parent[]>([]);
-  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 5, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -110,15 +110,27 @@ function ParentsPage() {
       });
       const res = await response.json();
 
+      const PAGE_SIZE = 5;
+
       if (res && Array.isArray(res.data)) {
         setParents(res.data);
-        setMeta(res.meta || { total: res.data.length, page: 1, limit: 10, totalPages: 1 });
+        const resMeta = res.meta || {};
+        setMeta({
+          total: resMeta.total || res.data.length,
+          page: resMeta.page || meta.page,
+          limit: PAGE_SIZE,
+          totalPages: resMeta.totalPages || Math.ceil((resMeta.total || res.data.length) / PAGE_SIZE),
+        });
       } else if (Array.isArray(res)) {
-        setParents(res);
-        setMeta({ total: res.length, page: 1, limit: 10, totalPages: 1 });
+        // Backend returned a flat array — do client-side pagination
+        const total = res.length;
+        const startIdx = (meta.page - 1) * PAGE_SIZE;
+        const paged = res.slice(startIdx, startIdx + PAGE_SIZE);
+        setParents(paged);
+        setMeta({ total, page: meta.page, limit: PAGE_SIZE, totalPages: Math.ceil(total / PAGE_SIZE) });
       } else {
         setParents([]);
-        setMeta({ total: 0, page: 1, limit: 10, totalPages: 1 });
+        setMeta({ total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 });
       }
 
       // Compute stats from all parents

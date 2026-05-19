@@ -43,7 +43,7 @@ export class Parent {
   @JoinColumn()
   user: User;
 
-  @OneToMany(() => Student, (student) => student.parent)
+  @OneToMany(() => Student, (student) => student.parent, { eager: true })
   students: Student[];
 
   @CreateDateColumn()
