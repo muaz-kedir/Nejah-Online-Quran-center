@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Shield,
   UsersRound,
+  FolderOpen,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -57,12 +58,12 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Schedule', icon: Calendar, path: '/schedule' },
   ],
   student: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'My Progress', icon: TrendingUp, path: '/my-progress' },
-    { label: 'Homework', icon: ClipboardList, path: '/homework' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
-    { label: 'Schedule', icon: Calendar, path: '/schedule' },
-    { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/student/dashboard' },
+    { label: 'My Classes', icon: Users, path: '/student/classes' },
+    { label: 'My Progress', icon: TrendingUp, path: '/student/progress' },
+    { label: 'Homework', icon: ClipboardList, path: '/student/homework' },
+    { label: 'Resources', icon: FolderOpen, path: '/student/resources' },
+    { label: 'Messages', icon: MessageSquare, path: '/student/messages' },
   ],
   parent: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },

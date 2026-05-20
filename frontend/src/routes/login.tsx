@@ -79,8 +79,12 @@ function LoginPage() {
 
       toast.success("Welcome back, " + data.user.name + "!");
       
-      // Redirect to dashboard using window.location for full page reload
-      window.location.href = "/dashboard";
+      // Redirect based on role
+      if (data.user.role === "student") {
+        window.location.href = "/student/dashboard";
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {

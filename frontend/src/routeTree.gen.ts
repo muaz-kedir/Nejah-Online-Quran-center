@@ -20,6 +20,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
+import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
@@ -76,6 +77,11 @@ const TeachersIdRoute = TeachersIdRouteImport.update({
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student/dashboard',
+  path: '/student/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/students': typeof StudentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
+  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers/$id': typeof TeachersIdRoute
   '/teachers/create': typeof TeachersCreateRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/students': typeof StudentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
+  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers/$id': typeof TeachersIdRoute
   '/teachers/create': typeof TeachersCreateRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/students': typeof StudentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
+  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers_/$id': typeof TeachersIdRoute
   '/teachers_/create': typeof TeachersCreateRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/teachers'
     | '/users'
+    | '/student/dashboard'
     | '/teachers/$id'
     | '/teachers/create'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/teachers'
     | '/users'
+    | '/student/dashboard'
     | '/teachers/$id'
     | '/teachers/create'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/teachers'
     | '/users'
+    | '/student/dashboard'
     | '/teachers_/$id'
     | '/teachers_/create'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   StudentsRoute: typeof StudentsRoute
   TeachersRoute: typeof TeachersRoute
   UsersRoute: typeof UsersRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
   TeachersIdRoute: typeof TeachersIdRoute
   TeachersCreateRoute: typeof TeachersCreateRoute
 }
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/dashboard': {
+      id: '/student/dashboard'
+      path: '/student/dashboard'
+      fullPath: '/student/dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentsRoute: StudentsRoute,
   TeachersRoute: TeachersRoute,
   UsersRoute: UsersRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
   TeachersIdRoute: TeachersIdRoute,
   TeachersCreateRoute: TeachersCreateRoute,
 }
