@@ -37,7 +37,7 @@ export class TeachersService {
     // 2. Create the companion User account
     const user = await this.usersService.create({
       email: createTeacherDto.email,
-      password: 'NejahTeacher123!', // Standard temporary password
+      password: createTeacherDto.password, // Use password from form
       name: createTeacherDto.fullName,
       role: UserRole.TEACHER,
       phone: createTeacherDto.phoneNumber || '',

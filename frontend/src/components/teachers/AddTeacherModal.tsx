@@ -33,6 +33,8 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
     email: '',
     gender: 'Male',
     phoneNumber: '',
+    password: '',
+    confirmPassword: '',
     qualification: '',
     specialization: '',
     experience: '',
@@ -42,11 +44,24 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const token = localStorage.getItem('token');
-      const body = {
+      
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...teacherData } = {
         ...formData,
         experience: formData.experience ? parseInt(formData.experience, 10) : 0,
       };
@@ -57,7 +72,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(teacherData),
       });
 
       if (!response.ok) {
@@ -75,6 +90,8 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
         email: '',
         gender: 'Male',
         phoneNumber: '',
+        password: '',
+        confirmPassword: '',
         qualification: '',
         specialization: '',
         experience: '',
@@ -82,6 +99,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
         status: 'active',
       });
     } catch (error: any) {
+      console.error('Teacher creation error:', error);
       toast.error(error.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -153,6 +171,32 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                   placeholder="+1 (555) 000-0000"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="password" className="text-xs font-semibold dark:text-gray-300">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Min. 6 characters"
+                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="confirmPassword" className="text-xs font-semibold dark:text-gray-300">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  placeholder="Re-enter password"
+                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  required
                 />
               </div>
             </div>

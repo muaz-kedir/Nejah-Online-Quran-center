@@ -223,6 +223,7 @@ import {
   Award,
   FileText,
   Camera,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -249,6 +250,8 @@ function AddTeacherPage() {
     email: '',
     gender: '',
     phoneNumber: '',
+    password: '',
+    confirmPassword: '',
     qualification: '',
     specialization: '',
     experience: 0,
@@ -296,16 +299,30 @@ function AddTeacherPage() {
       return;
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...teacherData } = formData;
+      
       const response = await fetch('http://localhost:3000/api/teachers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(teacherData),
       });
 
       if (!response.ok) {
@@ -316,6 +333,7 @@ function AddTeacherPage() {
       toast.success('Faculty profile added successfully!');
       window.location.href = '/teachers';
     } catch (error: any) {
+      console.error('Teacher creation error:', error);
       toast.error(error.message || 'Error occurred during registration');
     } finally {
       setLoading(false);
@@ -415,6 +433,42 @@ function AddTeacherPage() {
                       onChange={handleInputChange}
                       placeholder="e.g. +20 102 345 6789"
                       className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Enter password (min. 6 characters)"
+                      className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      placeholder="Re-enter password"
+                      className="pl-10 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                      required
                     />
                   </div>
                 </div>
