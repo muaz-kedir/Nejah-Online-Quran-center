@@ -60,7 +60,8 @@ export class TeachersService {
     const qb = this.teachersRepository
       .createQueryBuilder('teacher')
       .leftJoinAndSelect('teacher.user', 'user')
-      .leftJoinAndSelect('teacher.students', 'students');
+      .leftJoinAndSelect('teacher.students', 'students')
+      .leftJoinAndSelect('teacher.schedules', 'schedules');
 
     if (search) {
       qb.andWhere(
@@ -93,7 +94,7 @@ export class TeachersService {
   async findOne(id: string): Promise<Teacher> {
     const teacher = await this.teachersRepository.findOne({
       where: { id },
-      relations: ['user', 'students'],
+      relations: ['user', 'students', 'schedules'],
     });
 
     if (!teacher) {
@@ -106,7 +107,7 @@ export class TeachersService {
   async findByUserId(userId: string): Promise<Teacher> {
     const teacher = await this.teachersRepository.findOne({
       where: { userId },
-      relations: ['user', 'students'],
+      relations: ['user', 'students', 'schedules'],
     });
 
     if (!teacher) {

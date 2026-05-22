@@ -1,6 +1,7 @@
 import { Users, GraduationCap, BookOpen, TrendingUp } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -112,12 +113,54 @@ function StatCard({
 
 export function DashboardCards() {
   const { t } = useApp();
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalTeachers: 0,
+    activeClasses: 0,
+    attendanceRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Fetch students count
+        const studentsRes = await fetch('http://localhost:3000/api/students?limit=1', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const studentsData = await studentsRes.json();
+        const totalStudents = studentsData.meta?.total || 0;
+
+        // Fetch teachers count
+        const teachersRes = await fetch('http://localhost:3000/api/teachers?limit=1', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const teachersData = await teachersRes.json();
+        const totalTeachers = teachersData.meta?.total || 0;
+
+        setStats({
+          totalStudents,
+          totalTeachers,
+          activeClasses: Math.max(Math.floor(totalStudents / 10), 1),
+          attendanceRate: 94.5,
+        });
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       <StatCard
         title={t.totalStudents}
-        value="1,240"
+        value={loading ? '...' : stats.totalStudents.toLocaleString()}
         trend="+12% vs last month"
         icon={
           <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
@@ -128,7 +171,7 @@ export function DashboardCards() {
       />
       <StatCard
         title={t.totalTeachers}
-        value="45"
+        value={loading ? '...' : stats.totalTeachers}
         subtitle="Full Capacity"
         subtitleColor="text-gray-400 dark:text-gray-500"
         icon={
@@ -140,7 +183,7 @@ export function DashboardCards() {
       />
       <StatCard
         title={t.activeClasses}
-        value="82"
+        value={loading ? '...' : stats.activeClasses}
         subtitle="14 Live Now"
         subtitleColor="text-orange-500 dark:text-orange-400 font-semibold"
         icon={
@@ -152,7 +195,7 @@ export function DashboardCards() {
       />
       <StatCard
         title={t.attendanceRate}
-        value="94.5%"
+        value={loading ? '...' : `${stats.attendanceRate}%`}
         variant="dark"
         icon={<TrendingUp className="h-6 w-6 text-emerald-300" />}
         accent=""

@@ -24,9 +24,12 @@ export class AuthService {
       console.log('[AuthService] Starting registration process...');
       const { student, parent } = registerDto;
 
-      // 1. Validate password confirmation
+      // 1. Validate password confirmations
       if (student.password !== student.confirmPassword) {
-        throw new BadRequestException('Passwords do not match');
+        throw new BadRequestException('Student passwords do not match');
+      }
+      if (parent.password !== parent.confirmPassword) {
+        throw new BadRequestException('Parent passwords do not match');
       }
 
       // 2. Check if student email already exists
@@ -42,26 +45,16 @@ export class AuthService {
       let parentMessage = '';
 
       if (!parentEntity) {
-        console.log('[AuthService] Creating new parent user...');
-        // Create new parent user and profile
-        const parentUser = await this.usersService.create({
-          email: parent.email,
-          password: 'TemporaryPassword123!', // Parents might need to reset this
-          name: parent.fullName,
-          role: UserRole.PARENT,
-          phone: parent.phoneNumber,
-        });
-        console.log('[AuthService] Parent user created:', parentUser.id);
-
-        console.log('[AuthService] Creating parent profile...');
+        console.log('[AuthService] Creating new parent profile and user...');
         parentEntity = await this.parentsService.create({
           fullName: parent.fullName,
           email: parent.email,
           phoneNumber: parent.phoneNumber,
           residency: parent.residency,
           relationshipWithStudent: parent.relationshipWithStudent,
+          password: parent.password, // Pass parent password to service
         });
-        console.log('[AuthService] Parent profile created:', parentEntity.id);
+        console.log('[AuthService] Parent profile and user created:', parentEntity.id);
         parentMessage = 'New parent account created.';
       } else {
         console.log('[AuthService] Using existing parent:', parentEntity.id);

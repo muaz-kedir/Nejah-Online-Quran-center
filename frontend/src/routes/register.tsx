@@ -50,6 +50,11 @@ const registerSchema = z.object({
     phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[\+]?[0-9\s\-\(\)]+$/, "Invalid phone number format"),
     residency: z.string().min(2, "Residency is required"),
     relationshipWithStudent: z.string().min(1, "Relationship is required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Confirm password is required"),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   }),
 });
 
@@ -72,7 +77,7 @@ function RegisterPage() {
       student: {
         fullName: "",
         gender: "",
-        age: 0,
+        age: "" as any,
         residency: "",
         levelOfQuran: "",
         email: "",
@@ -85,6 +90,8 @@ function RegisterPage() {
         phoneNumber: "",
         residency: "",
         relationshipWithStudent: "",
+        password: "",
+        confirmPassword: "",
       },
     },
   });
@@ -420,111 +427,142 @@ function RegisterPage() {
                           </div>
                           <CardDescription>Guardian details for communication and progress tracking.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="parent.fullName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Parent Full Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Omar Ahmed" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="parent.email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Parent Email</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input className="pl-9" placeholder="parent@example.com" {...field} />
+                                <CardContent className="space-y-4">
+                                  <FormField
+                                    control={form.control}
+                                    name="parent.fullName"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Parent Full Name</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Omar Ahmed" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="parent.email"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Parent Email</FormLabel>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Input className="pl-9" placeholder="parent@example.com" {...field} />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="parent.phoneNumber"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Contact Phone Number</FormLabel>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Input className="pl-9" placeholder="+1 (555) 123-4567" {...field} />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="parent.residency"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Parent Residency</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                          <FormControl>
+                                            <div className="relative">
+                                              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                              <SelectTrigger className="pl-9">
+                                                <SelectValue placeholder="Select Country" />
+                                              </SelectTrigger>
+                                            </div>
+                                          </FormControl>
+                                          <SelectContent>
+                                            {COUNTRIES.map((country) => (
+                                              <SelectItem key={country} value={country}>
+                                                {country}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="parent.relationshipWithStudent"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Relationship With Student</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                          <FormControl>
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Select Relationship" />
+                                            </SelectTrigger>
+                                          </FormControl>
+                                          <SelectContent>
+                                            <SelectItem value="father">Father</SelectItem>
+                                            <SelectItem value="mother">Mother</SelectItem>
+                                            <SelectItem value="brother">Brother</SelectItem>
+                                            <SelectItem value="sister">Sister</SelectItem>
+                                            <SelectItem value="uncle">Uncle</SelectItem>
+                                            <SelectItem value="aunt">Aunt</SelectItem>
+                                            <SelectItem value="guardian">Guardian</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                      control={form.control}
+                                      name="parent.password"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Password</FormLabel>
+                                          <FormControl>
+                                            <div className="relative">
+                                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                              <Input className="pl-9" type="password" {...field} />
+                                            </div>
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name="parent.confirmPassword"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Confirm Password</FormLabel>
+                                          <FormControl>
+                                            <div className="relative">
+                                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                              <Input className="pl-9" type="password" {...field} />
+                                            </div>
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
                                   </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="parent.phoneNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Contact Phone Number</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input className="pl-9" placeholder="+1 (555) 123-4567" {...field} />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="parent.residency"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Parent Residency</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <div className="relative">
-                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
-                                      <SelectTrigger className="pl-9">
-                                        <SelectValue placeholder="Select Country" />
-                                      </SelectTrigger>
-                                    </div>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {COUNTRIES.map((country) => (
-                                      <SelectItem key={country} value={country}>
-                                        {country}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="parent.relationshipWithStudent"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Relationship With Student</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select Relationship" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="father">Father</SelectItem>
-                                    <SelectItem value="mother">Mother</SelectItem>
-                                    <SelectItem value="brother">Brother</SelectItem>
-                                    <SelectItem value="sister">Sister</SelectItem>
-                                    <SelectItem value="uncle">Uncle</SelectItem>
-                                    <SelectItem value="aunt">Aunt</SelectItem>
-                                    <SelectItem value="guardian">Guardian</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="pt-4 bg-slate-50 p-4 rounded-lg text-xs text-gray-500 border border-slate-200">
-                            <p className="font-semibold mb-1">Parent Login Information:</p>
-                            <p>Parents can log in with their email. A temporary password will be assigned, which can be reset later.</p>
-                          </div>
-                        </CardContent>
+                                </CardContent>
                       </Card>
 
                       <div className="flex justify-between pt-6">

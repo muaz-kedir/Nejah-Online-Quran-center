@@ -80,8 +80,13 @@ function LoginPage() {
       toast.success("Welcome back, " + data.user.name + "!");
       
       // Redirect based on role
-      if (data.user.role === "student") {
-        window.location.href = "/student/dashboard";
+      const role = data.user.role;
+      if (role === "student") {
+        window.location.href = "/student_dashboard";
+      } else if (role === "teacher") {
+        window.location.href = "/teacher_dashboard";
+      } else if (role === "parent") {
+        window.location.href = "/parent_dashboard";
       } else {
         window.location.href = "/dashboard";
       }

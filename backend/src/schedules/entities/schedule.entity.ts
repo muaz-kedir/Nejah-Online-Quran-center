@@ -10,10 +10,19 @@ export class Schedule {
   @Column()
   className: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ nullable: true })
+  dayOfWeek: string; // 'Monday', 'Tuesday', etc.
+
+  @Column({ nullable: true })
+  startTimeString: string; // '15:30'
+
+  @Column({ nullable: true })
+  endTimeString: string; // '16:30'
+
+  @Column({ type: 'timestamp', nullable: true })
   startTime: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable: true })
   endTime: Date;
 
   @ManyToOne(() => Student, { onDelete: 'CASCADE' })
@@ -23,15 +32,18 @@ export class Schedule {
   @Column()
   studentId: string;
 
-  @ManyToOne(() => Teacher)
+  @ManyToOne(() => Teacher, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'teacherId' })
   teacher: Teacher;
 
-  @Column()
+  @Column({ nullable: true })
   teacherId: string;
 
   @Column({ nullable: true })
   meetingLink: string;
+
+  @Column({ default: 'active' })
+  status: string; // active, inactive
 
   @CreateDateColumn()
   createdAt: Date;

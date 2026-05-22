@@ -39,15 +39,16 @@ export class StudentsService {
     return this.studentsRepository.save(student);
   }
 
-  async findAll(queryDto: QueryStudentDto) {
-    const { search, level, teacherId, status, page = 1, limit = 10 } = queryDto;
+  async findAll(queryDto: QueryStudentDto & { isAssigned?: boolean }) {
+    const { search, level, teacherId, status, page = 1, limit = 10, isAssigned } = queryDto;
 
     const qb = this.studentsRepository
       .createQueryBuilder('student')
       .leftJoinAndSelect('student.user', 'user')
       .leftJoinAndSelect('student.parent', 'parent')
       .leftJoinAndSelect('student.teacher', 'teacher')
-      .leftJoinAndSelect('teacher.user', 'teacherUser');
+      .leftJoinAndSelect('teacher.user', 'teacherUser')
+      .leftJoinAndSelect('student.schedules', 'schedules');
 
     // Search by name or email
     if (search) {
@@ -72,6 +73,11 @@ export class StudentsService {
       qb.andWhere('student.status = :status', { status });
     }
 
+    // Filter by assignment status
+    if (isAssigned !== undefined) {
+      qb.andWhere('student.isAssigned = :isAssigned', { isAssigned });
+    }
+
     // Pagination
     qb.skip((page - 1) * limit).take(limit);
     qb.orderBy('student.createdAt', 'DESC');
@@ -87,6 +93,14 @@ export class StudentsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async findAllUnassigned() {
+    return this.studentsRepository.find({
+      where: { isAssigned: false },
+      relations: ['parent'],
+      order: { fullName: 'ASC' }
+    });
   }
 
   async findOne(id: string): Promise<Student> {
@@ -120,6 +134,14 @@ export class StudentsService {
 
     Object.assign(student, updateStudentDto);
     return this.studentsRepository.save(student);
+  }
+
+  async unassignFromTeacher(id: string): Promise<void> {
+    // Explicit update to handle nulls more reliably than generic update DTOs
+    await this.studentsRepository.update(id, { 
+      teacherId: null, 
+      isAssigned: false 
+    });
   }
 
   async remove(id: string): Promise<void> {

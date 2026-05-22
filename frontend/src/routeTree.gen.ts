@@ -11,16 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TeachersRouteImport } from './routes/teachers'
+import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
 import { Route as StudentsRouteImport } from './routes/students'
+import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ParentsRouteImport } from './routes/parents'
+import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
-import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
@@ -32,9 +34,19 @@ const TeachersRoute = TeachersRouteImport.update({
   path: '/teachers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
+  id: '/teacher_dashboard',
+  path: '/teacher_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Student_dashboardRoute = Student_dashboardRouteImport.update({
+  id: '/student_dashboard',
+  path: '/student_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -45,6 +57,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
+  id: '/parent_dashboard',
+  path: '/parent_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -77,23 +94,20 @@ const TeachersIdRoute = TeachersIdRouteImport.update({
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentDashboardRoute = StudentDashboardRouteImport.update({
-  id: '/student/dashboard',
-  path: '/student/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
   '/register': typeof RegisterRoute
+  '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers/$id': typeof TeachersIdRoute
   '/teachers/create': typeof TeachersCreateRoute
 }
@@ -102,12 +116,14 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
   '/register': typeof RegisterRoute
+  '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers/$id': typeof TeachersIdRoute
   '/teachers/create': typeof TeachersCreateRoute
 }
@@ -117,12 +133,14 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
   '/register': typeof RegisterRoute
+  '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/student/dashboard': typeof StudentDashboardRoute
   '/teachers_/$id': typeof TeachersIdRoute
   '/teachers_/create': typeof TeachersCreateRoute
 }
@@ -133,12 +151,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/parent_dashboard'
     | '/parents'
     | '/register'
+    | '/student_dashboard'
     | '/students'
+    | '/teacher_dashboard'
     | '/teachers'
     | '/users'
-    | '/student/dashboard'
     | '/teachers/$id'
     | '/teachers/create'
   fileRoutesByTo: FileRoutesByTo
@@ -147,12 +167,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/parent_dashboard'
     | '/parents'
     | '/register'
+    | '/student_dashboard'
     | '/students'
+    | '/teacher_dashboard'
     | '/teachers'
     | '/users'
-    | '/student/dashboard'
     | '/teachers/$id'
     | '/teachers/create'
   id:
@@ -161,12 +183,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/parent_dashboard'
     | '/parents'
     | '/register'
+    | '/student_dashboard'
     | '/students'
+    | '/teacher_dashboard'
     | '/teachers'
     | '/users'
-    | '/student/dashboard'
     | '/teachers_/$id'
     | '/teachers_/create'
   fileRoutesById: FileRoutesById
@@ -176,12 +200,14 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  Parent_dashboardRoute: typeof Parent_dashboardRoute
   ParentsRoute: typeof ParentsRoute
   RegisterRoute: typeof RegisterRoute
+  Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
+  Teacher_dashboardRoute: typeof Teacher_dashboardRoute
   TeachersRoute: typeof TeachersRoute
   UsersRoute: typeof UsersRoute
-  StudentDashboardRoute: typeof StudentDashboardRoute
   TeachersIdRoute: typeof TeachersIdRoute
   TeachersCreateRoute: typeof TeachersCreateRoute
 }
@@ -202,11 +228,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher_dashboard': {
+      id: '/teacher_dashboard'
+      path: '/teacher_dashboard'
+      fullPath: '/teacher_dashboard'
+      preLoaderRoute: typeof Teacher_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/students': {
       id: '/students'
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student_dashboard': {
+      id: '/student_dashboard'
+      path: '/student_dashboard'
+      fullPath: '/student_dashboard'
+      preLoaderRoute: typeof Student_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -221,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/parents'
       fullPath: '/parents'
       preLoaderRoute: typeof ParentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent_dashboard': {
+      id: '/parent_dashboard'
+      path: '/parent_dashboard'
+      fullPath: '/parent_dashboard'
+      preLoaderRoute: typeof Parent_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -265,13 +312,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/student/dashboard': {
-      id: '/student/dashboard'
-      path: '/student/dashboard'
-      fullPath: '/student/dashboard'
-      preLoaderRoute: typeof StudentDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -280,12 +320,14 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  Parent_dashboardRoute: Parent_dashboardRoute,
   ParentsRoute: ParentsRoute,
   RegisterRoute: RegisterRoute,
+  Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
+  Teacher_dashboardRoute: Teacher_dashboardRoute,
   TeachersRoute: TeachersRoute,
   UsersRoute: UsersRoute,
-  StudentDashboardRoute: StudentDashboardRoute,
   TeachersIdRoute: TeachersIdRoute,
   TeachersCreateRoute: TeachersCreateRoute,
 }

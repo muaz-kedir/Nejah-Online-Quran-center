@@ -56,13 +56,24 @@ export class ParentRegisterDto {
   @IsString()
   @IsNotEmpty()
   relationshipWithStudent: string;
+
+  @IsString()
+  @MinLength(6)
+  @IsNotEmpty()
+  password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  confirmPassword: string;
 }
 
 export class RegisterDto {
+  @IsNotEmpty()
   @ValidateNested()
   @Type(() => StudentRegisterDto)
   student: StudentRegisterDto;
 
+  @IsNotEmpty()
   @ValidateNested()
   @Type(() => ParentRegisterDto)
   parent: ParentRegisterDto;

@@ -10,8 +10,9 @@ import {
 import { Parent } from '../../parents/entities/parent.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
 import { User } from '../../users/entities/user.entity';
-import { OneToOne } from 'typeorm';
+import { OneToOne, OneToMany } from 'typeorm';
 import { Gender } from '../../common/enums/gender.enum';
+import { Schedule } from '../../schedules/entities/schedule.entity';
 
 export enum QuranLevel {
   BEGINNER = 'Beginner',
@@ -53,6 +54,9 @@ export class Student {
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;
 
+  @Column({ default: false })
+  isAssigned: boolean;
+
   // Profile photo URL (optional)
   @Column({ nullable: true })
   avatarUrl: string;
@@ -89,6 +93,9 @@ export class Student {
 
   @Column({ nullable: true })
   teacherId: string;
+
+  @OneToMany(() => Schedule, (schedule) => schedule.student)
+  schedules: Schedule[];
 
   @CreateDateColumn()
   createdAt: Date;

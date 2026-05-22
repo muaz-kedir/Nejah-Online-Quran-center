@@ -312,7 +312,7 @@ function StudentDashboard() {
   );
 }
 
-export const Route = createFileRoute('/student/dashboard')({
+export const Route = createFileRoute('/student_dashboard')({
   component: StudentDashboard,
   beforeLoad: () => {
     if (typeof window !== 'undefined') {

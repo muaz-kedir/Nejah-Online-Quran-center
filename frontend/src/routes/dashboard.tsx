@@ -16,12 +16,9 @@ import {
   Award,
   Clock,
   ArrowRight,
-  TrendingUp,
   Flame,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 function TeacherDashboardContent({ userName }: { userName: string }) {
   const [stats, setStats] = useState({

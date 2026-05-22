@@ -39,7 +39,7 @@ export class CreateStudentDto {
 
   @IsOptional()
   @IsString()
-  teacherId?: string;
+  teacherId?: string | null;
 
   @IsOptional()
   @IsString()

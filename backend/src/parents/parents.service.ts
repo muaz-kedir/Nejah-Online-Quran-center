@@ -23,10 +23,12 @@ export class ParentsService {
       throw new ConflictException('A parent with this email already exists');
     }
 
+    const { password, ...parentData } = createParentDto;
+
     // Create user account for parent
     const user = await this.usersService.create({
       email: createParentDto.email,
-      password: createParentDto.password || 'TemporaryPassword123!',
+      password: password || 'TemporaryPassword123!',
       name: createParentDto.fullName,
       role: UserRole.PARENT,
       phone: createParentDto.phoneNumber,
@@ -34,7 +36,7 @@ export class ParentsService {
 
     // Create parent profile
     const parent = this.parentsRepository.create({
-      ...createParentDto,
+      ...parentData,
       user,
     });
 

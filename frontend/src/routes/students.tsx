@@ -29,6 +29,8 @@ import { cn } from '@/lib/utils';
 import { AddStudentModal } from '@/components/students/AddStudentModal';
 import { EditStudentModal } from '@/components/students/EditStudentModal';
 import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
+import { AssignStudentModal } from '@/components/students/AssignStudentModal';
+import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/students')({
@@ -48,7 +50,9 @@ function StudentsPage() {
   const [parents, setParents] = useState<any[]>([]);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
+  const [viewingStudent, setViewingStudent] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
 
   const fetchStudents = async () => {
@@ -170,13 +174,23 @@ function StudentsPage() {
             </p>
             <h1 className="text-3xl font-bold text-emerald-900 dark:text-gray-100">Students</h1>
           </div>
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
-          >
-            <Plus className="h-5 w-5" />
-            Add Student
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setIsAssignModalOpen(true)}
+              variant="outline"
+              className="border-emerald-200 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 gap-2 h-11 px-6 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+            >
+              <UserCheck className="h-5 w-5" />
+              Assign Student
+            </Button>
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
+            >
+              <Plus className="h-5 w-5" />
+              Add Student
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -345,7 +359,10 @@ function StudentsPage() {
                       </td>
                       <td className="py-5 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors">
+                          <button 
+                            onClick={() => setViewingStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button 
@@ -458,6 +475,18 @@ function StudentsPage() {
         student={editingStudent}
         teachers={teachers}
         parents={parents}
+      />
+
+      <AssignStudentModal
+        open={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        onSuccess={fetchStudents}
+      />
+
+      <StudentDetailsModal
+        open={!!viewingStudent}
+        onClose={() => setViewingStudent(null)}
+        student={viewingStudent}
       />
 
       <DeleteStudentModal
