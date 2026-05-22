@@ -206,6 +206,45 @@ POST /students
 }
 ```
 
+### Delegate Student to Teacher
+```http
+POST /students/delegate
+```
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
+{
+  "studentId": "uuid",
+  "teacherId": "uuid",
+  "startTime": "2024-01-15T10:00:00Z",
+  "endTime": "2024-01-15T11:00:00Z",
+  "className": "Quran Class",
+  "meetingLink": "https://zoom.us/j/..."
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Student successfully delegated to teacher",
+  "student": {
+    "id": "uuid",
+    "fullName": "Student Name",
+    "teacherId": "uuid"
+  },
+  "schedule": {
+    "id": "uuid",
+    "studentId": "uuid",
+    "teacherId": "uuid",
+    "startTime": "2024-01-15T10:00:00Z",
+    "endTime": "2024-01-15T11:00:00Z",
+    "className": "Quran Class",
+    "meetingLink": "https://zoom.us/j/..."
+  }
+}
+```
+
 ### Update Student
 ```http
 PATCH /students/:id
@@ -215,6 +254,38 @@ PATCH /students/:id
 ### Delete Student
 ```http
 DELETE /students/:id
+```
+**Headers:** `Authorization: Bearer <token>`
+
+---
+
+## Schedules Endpoints
+
+### Get All Schedules
+```http
+GET /schedules
+```
+**Query Parameters:**
+- `studentId` (optional): Filter by student
+- `teacherId` (optional): Filter by teacher
+
+**Headers:** `Authorization: Bearer <token>`
+
+### Get Student Schedules
+```http
+GET /schedules/student/:studentId
+```
+**Headers:** `Authorization: Bearer <token>`
+
+### Get Teacher Schedules
+```http
+GET /schedules/teacher/:teacherId
+```
+**Headers:** `Authorization: Bearer <token>`
+
+### Get Schedule by ID
+```http
+GET /schedules/:id
 ```
 **Headers:** `Authorization: Bearer <token>`
 
