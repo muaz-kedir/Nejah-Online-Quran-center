@@ -63,18 +63,44 @@ export class SchedulesService {
     return this.schedulesRepository.save(schedule);
   }
 
-  async getStudentSchedules(studentId: string) {
-    return this.schedulesRepository.find({
-      where: { studentId, status: 'active' },
-      relations: ['teacher']
+  async findAll(studentId?: string, teacherId?: string) {
+    const qb = this.schedulesRepository
+      .createQueryBuilder('schedule')
+      .leftJoinAndSelect('schedule.student', 'student')
+      .leftJoinAndSelect('schedule.teacher', 'teacher')
+      .leftJoinAndSelect('teacher.user', 'user')
+      .where("schedule.status = :status", { status: 'active' });
+
+    if (studentId) {
+      qb.andWhere('schedule.studentId = :studentId', { studentId });
+    }
+
+    if (teacherId) {
+      qb.andWhere('schedule.teacherId = :teacherId', { teacherId });
+    }
+
+    return qb.orderBy('schedule.startTime', 'ASC').getMany();
+  }
+
+  async findOne(id: string): Promise<Schedule> {
+    const schedule = await this.schedulesRepository.findOne({
+      where: { id },
+      relations: ['student', 'teacher', 'teacher.user'],
     });
+
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found');
+    }
+
+    return schedule;
+  }
+
+  async getStudentSchedules(studentId: string) {
+    return this.findAll(studentId);
   }
 
   async getTeacherSchedules(teacherId: string) {
-    return this.schedulesRepository.find({
-      where: { teacherId, status: 'active' },
-      relations: ['student']
-    });
+    return this.findAll(undefined, teacherId);
   }
 
   async clearStudentSchedules(studentId: string) {

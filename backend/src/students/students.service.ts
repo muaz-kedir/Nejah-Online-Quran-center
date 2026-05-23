@@ -5,12 +5,16 @@ import { Student } from './entities/student.entity';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
+import { DelegateStudentDto } from './dto/delegate-student.dto';
+import { Schedule } from '../schedules/entities/schedule.entity';
 
 @Injectable()
 export class StudentsService {
   constructor(
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
+    @InjectRepository(Schedule)
+    private schedulesRepository: Repository<Schedule>,
   ) {}
 
   private async generateStudentCode(): Promise<string> {
@@ -162,6 +166,38 @@ export class StudentsService {
       active,
       inactive: total - active,
       averageAttendance: parseFloat(avgAttendance?.avg || '0'),
+    };
+  }
+
+  async delegateStudentToTeacher(delegateDto: DelegateStudentDto) {
+    const { studentId, teacherId, startTime, endTime, className, meetingLink } = delegateDto;
+
+    // Verify student exists
+    const student = await this.findOne(studentId);
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    // Assign teacher to student
+    student.teacherId = teacherId;
+    await this.studentsRepository.save(student);
+
+    // Create schedule for the delegation
+    const schedule = this.schedulesRepository.create({
+      studentId,
+      teacherId,
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      className: className || 'Quran Class',
+      meetingLink,
+    });
+
+    const savedSchedule = await this.schedulesRepository.save(schedule);
+
+    return {
+      message: 'Student successfully delegated to teacher',
+      student,
+      schedule: savedSchedule,
     };
   }
 }
