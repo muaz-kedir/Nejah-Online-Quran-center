@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -209,5 +209,61 @@ export class TeacherDashboardController {
       level: s.student?.level || 'Beginner'
     }));
   }
-}
 
+  // ─────────────────────────────────────────────
+  //  NOTES CRUD
+  // ─────────────────────────────────────────────
+
+  private async getTeacherFromRequest(req: any) {
+    const userId = req.user.id;
+    const teacher = await this.teachersRepository.findOne({ where: { userId } });
+    return teacher;
+  }
+
+  @Get('notes')
+  async getNotes(@Request() req) {
+    const teacher = await this.getTeacherFromRequest(req);
+    if (!teacher) return [];
+    return this.notesRepository.find({
+      where: { teacherId: teacher.id },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  @Post('notes')
+  async createNote(@Request() req, @Body() body: { title: string; content: string; type: string }) {
+    const teacher = await this.getTeacherFromRequest(req);
+    if (!teacher) return { error: 'Teacher not found' };
+    const note = this.notesRepository.create({
+      teacherId: teacher.id,
+      title: body.title,
+      content: body.content,
+      type: body.type as any,
+    });
+    return this.notesRepository.save(note);
+  }
+
+  @Patch('notes/:id')
+  async updateNote(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: { title?: string; content?: string; type?: string },
+  ) {
+    const teacher = await this.getTeacherFromRequest(req);
+    if (!teacher) return { error: 'Teacher not found' };
+    const note = await this.notesRepository.findOne({ where: { id, teacherId: teacher.id } });
+    if (!note) return { error: 'Note not found' };
+    Object.assign(note, body);
+    return this.notesRepository.save(note);
+  }
+
+  @Delete('notes/:id')
+  async deleteNote(@Request() req, @Param('id') id: string) {
+    const teacher = await this.getTeacherFromRequest(req);
+    if (!teacher) return { error: 'Teacher not found' };
+    const note = await this.notesRepository.findOne({ where: { id, teacherId: teacher.id } });
+    if (!note) return { error: 'Note not found' };
+    await this.notesRepository.remove(note);
+    return { success: true };
+  }
+}

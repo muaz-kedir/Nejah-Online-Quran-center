@@ -13,7 +13,7 @@ export class SchedulesController {
   constructor(private readonly schedulesService: SchedulesService) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   create(@Body() createScheduleDto: CreateScheduleDto) {
     return this.schedulesService.createSchedule(createScheduleDto);
   }
@@ -55,13 +55,13 @@ export class SchedulesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   update(@Param('id') id: string, @Body() updateScheduleDto: UpdateScheduleDto) {
     return this.schedulesService.updateSchedule(id, updateScheduleDto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   remove(@Param('id') id: string) {
     return this.schedulesService.deleteSchedule(id);
   }

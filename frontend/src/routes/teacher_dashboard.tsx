@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { 
   Search, 
   Bell, 
   HelpCircle, 
   ChevronRight, 
-  Play, 
   BookOpen, 
   Plus, 
   Clock, 
-  MessageSquare,
   LayoutDashboard,
   Users,
   Calendar,
   ClipboardList,
   Settings,
-  MoreVertical,
-  Filter
+  Filter,
+  Pencil,
+  Trash2,
+  X,
+  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +26,26 @@ import { cn } from '@/lib/utils';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
-// --- Components ---
+const API = 'http://localhost:3000/api';
+const getToken = () => localStorage.getItem('token');
+const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` });
 
+// ─── Note types ────────────────────────────────────────────────────────────────
+const NOTE_TYPES = ['Class Reminder', 'Observation', 'General Reminder'] as const;
+type NoteType = typeof NOTE_TYPES[number];
+
+const noteTypeColor: Record<NoteType, string> = {
+  'Class Reminder': 'bg-emerald-600',
+  'Observation': 'bg-amber-500',
+  'General Reminder': 'bg-blue-500',
+};
+const noteTypeLabelColor: Record<NoteType, string> = {
+  'Class Reminder': 'text-emerald-700',
+  'Observation': 'text-amber-600',
+  'General Reminder': 'text-blue-600',
+};
+
+// ─── Sidebar ────────────────────────────────────────────────────────────────────
 const TeacherSidebar = ({ activePath }: { activePath: string }) => {
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/teachers/dashboard' },
@@ -35,7 +54,6 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
     { label: 'Resources', icon: BookOpen, path: '/teacher/resources' },
     { label: 'Assessments', icon: ClipboardList, path: '/teacher/assessments' },
   ];
-
   const bottomItems = [
     { label: 'Settings', icon: Settings, path: '/teacher/settings' },
     { label: 'Support', icon: HelpCircle, path: '/teacher/support' },
@@ -46,11 +64,11 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
       <div className="p-8 pb-12">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#052c22]">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-             </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
           <div>
             <h1 className="font-bold text-base leading-none">Teacher Suite</h1>
@@ -63,15 +81,10 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
         {menuItems.map((item) => {
           const isActive = activePath === item.path;
           return (
-            <button
-              key={item.path}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                isActive 
-                  ? "bg-emerald-900/50 text-white" 
-                  : "text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white"
-              )}
-            >
+            <button key={item.path} className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+              isActive ? "bg-emerald-900/50 text-white" : "text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white"
+            )}>
               <item.icon className={cn("h-5 w-5", isActive ? "text-emerald-400" : "text-emerald-100/40 group-hover:text-emerald-300")} />
               <span className="font-semibold text-sm">{item.label}</span>
             </button>
@@ -81,10 +94,7 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
 
       <div className="p-4 px-4 space-y-1 border-t border-emerald-900/50">
         {bottomItems.map((item) => (
-          <button
-            key={item.path}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white transition-all"
-          >
+          <button key={item.path} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white transition-all">
             <item.icon className="h-5 w-5 text-emerald-100/40" />
             <span className="font-semibold text-sm">{item.label}</span>
           </button>
@@ -94,30 +104,28 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
   );
 };
 
+// ─── Topbar ────────────────────────────────────────────────────────────────────
 const Topbar = ({ teacher }: any) => (
   <div className="h-20 flex items-center justify-between px-10 bg-white border-b border-gray-100 sticky top-0 z-10 w-full ml-64 max-w-[calc(100%-256px)]">
     <div className="flex items-center gap-4">
-        <div className="p-2 bg-emerald-50 rounded-lg lg:hidden">
-            <LayoutDashboard className="h-5 w-5 text-emerald-700" />
-        </div>
-        <h2 className="text-xl font-bold text-emerald-950 font-serif hidden md:block">Teacher Suite</h2>
+      <div className="p-2 bg-emerald-50 rounded-lg lg:hidden">
+        <LayoutDashboard className="h-5 w-5 text-emerald-700" />
+      </div>
+      <h2 className="text-xl font-bold text-emerald-950 font-serif hidden md:block">Teacher Suite</h2>
     </div>
 
     <div className="flex-1 max-w-xl mx-8">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input 
-          placeholder="Search students, resources, or notes..." 
-          className="pl-12 bg-gray-50 border-none rounded-2xl h-12 w-full focus-visible:ring-emerald-500 text-sm"
-        />
+        <Input placeholder="Search students, resources, or notes..." className="pl-12 bg-gray-50 border-none rounded-2xl h-12 w-full focus-visible:ring-emerald-500 text-sm" />
       </div>
     </div>
 
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-3 text-right">
         <div>
-           <p className="text-sm font-bold text-emerald-950 leading-tight">{teacher?.name || 'Prof. Ibrahim'}</p>
-           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{teacher?.title || 'Senior Tajweed Instructor'}</p>
+          <p className="text-sm font-bold text-emerald-950 leading-tight">{teacher?.name || 'Prof. Ibrahim'}</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{teacher?.title || 'Senior Tajweed Instructor'}</p>
         </div>
         <div className="w-10 h-10 rounded-full border-2 border-emerald-100 p-0.5">
           <img src={teacher?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Ibrahim"} alt="Profile" className="w-full h-full rounded-full bg-emerald-50" />
@@ -126,17 +134,18 @@ const Topbar = ({ teacher }: any) => (
       <div className="w-px h-8 bg-gray-100" />
       <div className="flex items-center gap-4">
         <button className="relative p-2 text-gray-400 hover:text-emerald-700 transition-colors">
-            <Bell className="h-6 w-6" />
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
+          <Bell className="h-6 w-6" />
+          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
         </button>
         <button className="p-2 text-gray-400 hover:text-emerald-700 transition-colors">
-            <HelpCircle className="h-6 w-6" />
+          <HelpCircle className="h-6 w-6" />
         </button>
       </div>
     </div>
   </div>
 );
 
+// ─── Stat Card ─────────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, title, value, subValue, label, color, bgColor }: any) => (
   <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex flex-col justify-between">
     <div className="flex items-start justify-between">
@@ -156,33 +165,134 @@ const StatCard = ({ icon: Icon, title, value, subValue, label, color, bgColor }:
   </div>
 );
 
-// --- Main Page ---
+// ─── Note Modal ─────────────────────────────────────────────────────────────────
+interface NoteModalProps {
+  note: any;
+  onClose: () => void;
+  onSave: (data: { title: string; content: string; type: string }) => void;
+}
 
+const NoteModal = ({ note, onClose, onSave }: NoteModalProps) => {
+  const [title, setTitle] = useState(note?.title || '');
+  const [content, setContent] = useState(note?.content || '');
+  const [type, setType] = useState<NoteType>(note?.type || 'General Reminder');
+  const [saving, setSaving] = useState(false);
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    setSaving(true);
+    await onSave({ title, content, type });
+    setSaving(false);
+  };
+
+  return (
+    <div ref={backdropRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={e => e.target === backdropRef.current && onClose()}>
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-gray-100">
+          <div>
+            <h3 className="text-xl font-extrabold text-emerald-950 font-serif">{note ? 'Edit Note' : 'Add Personal Reflection'}</h3>
+            <p className="text-xs text-gray-400 font-medium mt-0.5">Your notes are private and visible only to you</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-8 py-6 space-y-5">
+          {/* Type selector */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Note Type</label>
+            <div className="flex gap-2 flex-wrap">
+              {NOTE_TYPES.map(t => (
+                <button key={t} onClick={() => setType(t)} className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
+                  type === t
+                    ? t === 'Class Reminder' ? 'bg-emerald-600 border-emerald-600 text-white' : t === 'Observation' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-blue-500 border-blue-500 text-white'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                )}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Title</label>
+            <input
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Focus on Makharij with Sarah"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-emerald-950 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          {/* Content */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Content</label>
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Write your note or observation here..."
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none leading-relaxed"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-8 pb-8">
+          <button onClick={onClose} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={saving} className="px-6 py-3 rounded-xl text-sm font-bold bg-[#052c22] text-white hover:bg-emerald-900 transition-all flex items-center gap-2 disabled:opacity-60">
+            <Save className="h-4 w-4" />
+            {saving ? 'Saving...' : (note ? 'Save Changes' : 'Add Note')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 function TeacherDashboard() {
   const [data, setData] = useState<any>(null);
+  const [notes, setNotes] = useState<any[]>([]);
   const [todaySessions, setTodaySessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [noteModal, setNoteModal] = useState<{ open: boolean; note: any }>({ open: false, note: null });
 
-  // Dynamic time status logic
+  // ── Dynamic time status
   const getSessionStatus = (startTime: string, endTime: string) => {
     const now = new Date();
-    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
-    if (currentTimeStr > endTime) return 'COMPLETED';
-    if (currentTimeStr >= startTime && currentTimeStr <= endTime) return 'LIVE NOW';
+    const cur = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    if (cur > endTime) return 'COMPLETED';
+    if (cur >= startTime && cur <= endTime) return 'LIVE NOW';
     return 'READY TO START';
   };
 
+  // ── Format date relative
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diff === 0) return `Today, ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    if (diff === 1) return 'Yesterday';
+    return `${diff} days ago`;
+  };
+
+  // ── Launch session
   const handleLaunchSession = async (scheduleId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!scheduleId || scheduleId.startsWith('s') || scheduleId.length < 10) {
-        toast.info("Opening simulated online session.");
-        window.location.href = `/class-session/demo-session-id`;
-        return;
-      }
-      const response = await fetch(`http://localhost:3000/api/attendance/sessions/by-schedule-today/${scheduleId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API}/attendance/sessions/by-schedule-today/${scheduleId}`, {
+        headers: authHeaders(),
       });
       if (response.ok) {
         const session = await response.json();
@@ -191,47 +301,82 @@ function TeacherDashboard() {
         const err = await response.json();
         toast.error(err.message || 'Failed to initialize session');
       }
-    } catch (error) {
+    } catch {
       toast.error('Network error launching classroom');
     }
   };
 
+  // ── Fetch all dashboard data
   useEffect(() => {
-    const fetchDashboard = async () => {
+    const load = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const [dashboardRes, sessionsRes] = await Promise.all([
-          fetch('http://localhost:3000/api/teacher/dashboard', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('http://localhost:3000/api/teacher/dashboard/today-sessions', {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+        const [dashRes, sessRes, notesRes] = await Promise.all([
+          fetch(`${API}/teacher/dashboard`, { headers: authHeaders() }),
+          fetch(`${API}/teacher/dashboard/today-sessions`, { headers: authHeaders() }),
+          fetch(`${API}/teacher/dashboard/notes`, { headers: authHeaders() }),
         ]);
-
-        if (dashboardRes.ok) {
-          const result = await dashboardRes.json();
-          setData(result);
-        }
-        
-        if (sessionsRes.ok) {
-          const sessionsData = await sessionsRes.json();
-          setTodaySessions(sessionsData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
+        if (dashRes.ok) setData(await dashRes.json());
+        if (sessRes.ok) setTodaySessions(await sessRes.json());
+        if (notesRes.ok) setNotes(await notesRes.json());
+      } catch {
+        console.error('Dashboard load failed');
       } finally {
         setLoading(false);
       }
     };
-    fetchDashboard();
-    
-    // Auto refresh status every minute to keep tags dynamic
-    const interval = setInterval(() => {
-      setTodaySessions(prev => [...prev]); // Trigger re-render to update statuses
-    }, 60000);
-    return () => clearInterval(interval);
+    load();
+    const iv = setInterval(() => setTodaySessions(p => [...p]), 60000);
+    return () => clearInterval(iv);
   }, []);
+
+  // ── Notes actions
+  const openCreate = () => setNoteModal({ open: true, note: null });
+  const openEdit = (note: any) => setNoteModal({ open: true, note });
+  const closeModal = () => setNoteModal({ open: false, note: null });
+
+  const handleSaveNote = async (body: { title: string; content: string; type: string }) => {
+    const { note } = noteModal;
+    try {
+      if (note) {
+        const res = await fetch(`${API}/teacher/dashboard/notes/${note.id}`, {
+          method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setNotes(prev => prev.map(n => n.id === note.id ? updated : n));
+          toast.success('Note updated!');
+          closeModal();
+        } else toast.error('Failed to update note');
+      } else {
+        const res = await fetch(`${API}/teacher/dashboard/notes`, {
+          method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          setNotes(prev => [created, ...prev]);
+          toast.success('Note added!');
+          closeModal();
+        } else toast.error('Failed to create note');
+      }
+    } catch {
+      toast.error('Network error');
+    }
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    if (!confirm('Delete this note?')) return;
+    try {
+      const res = await fetch(`${API}/teacher/dashboard/notes/${id}`, {
+        method: 'DELETE', headers: authHeaders(),
+      });
+      if (res.ok) {
+        setNotes(prev => prev.filter(n => n.id !== id));
+        toast.success('Note deleted');
+      } else toast.error('Failed to delete note');
+    } catch {
+      toast.error('Network error');
+    }
+  };
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-white">
@@ -247,74 +392,38 @@ function TeacherDashboard() {
         <Topbar teacher={data?.teacher} />
 
         <main className="p-10 space-y-12">
-          {/* Dashboard Header */}
+          {/* Header */}
           <div className="flex items-end justify-between">
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Assalamu Alaikum, Teacher</p>
               <h2 className="text-4xl font-extrabold text-emerald-950 font-serif">Dashboard Overview</h2>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" className="h-12 rounded-xl px-6 border-gray-200 font-bold text-gray-600 gap-2">
-                View Schedule
-              </Button>
-              <Button className="h-12 rounded-xl px-6 bg-[#052c22] hover:bg-[#084133] font-bold gap-2 text-white shadow-xl">
-                <Plus className="h-5 w-5" />
-                New Lesson Note
+              <Button variant="outline" className="h-12 rounded-xl px-6 border-gray-200 font-bold text-gray-600 gap-2">View Schedule</Button>
+              <Button onClick={openCreate} className="h-12 rounded-xl px-6 bg-[#052c22] hover:bg-[#084133] font-bold gap-2 text-white shadow-xl">
+                <Plus className="h-5 w-5" /> New Lesson Note
               </Button>
             </div>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard 
-              icon={Users} 
-              title="My Students" 
-              value={data?.stats?.totalStudents || 24} 
-              subValue="+2 this week"
-              label="My Students"
-              color="text-emerald-700"
-              bgColor="bg-emerald-50/50"
-            />
-            <StatCard 
-              icon={Calendar} 
-              title="Today's Classes" 
-              value={data?.stats?.todayClasses || 6} 
-              subValue="Next: 2:00 PM"
-              label="Today's Classes"
-              color="text-amber-700"
-              bgColor="bg-amber-50/50"
-            />
-            <StatCard 
-              icon={Filter} 
-              title="Overall Attendance" 
-              value={`${data?.stats?.overallAttendance || 98.2}%`} 
-              subValue="Average"
-              label="Overall Attendance"
-              color="text-emerald-600"
-              bgColor="bg-emerald-50/50"
-            />
-            <StatCard 
-              icon={ClipboardList} 
-              title="Homework Pending" 
-              value={data?.stats?.homeworkPending || 12} 
-              subValue="Requires Review"
-              label="Homework Pending"
-              color="text-red-700"
-              bgColor="bg-red-50/50"
-            />
+            <StatCard icon={Users} value={data?.stats?.totalStudents || 0} subValue="+2 this week" label="My Students" color="text-emerald-700" bgColor="bg-emerald-50/50" />
+            <StatCard icon={Calendar} value={data?.stats?.todayClasses || 0} subValue="Next: 2:00 PM" label="Today's Classes" color="text-amber-700" bgColor="bg-amber-50/50" />
+            <StatCard icon={Filter} value={`${data?.stats?.overallAttendance || 0}%`} subValue="Average" label="Overall Attendance" color="text-emerald-600" bgColor="bg-emerald-50/50" />
+            <StatCard icon={ClipboardList} value={data?.stats?.homeworkPending || 0} subValue="Requires Review" label="Homework Pending" color="text-red-700" bgColor="bg-red-50/50" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Left Column: Progress Table */}
+            {/* Left: Progress Table */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-emerald-950 font-serif">Active Student Progress</h3>
                 <button className="text-xs font-bold text-[#052c22] flex items-center gap-1 hover:underline">
-                    View All Students <ChevronRight className="h-3 w-3" />
+                  View All Students <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
-
-              <div className="bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm border-b-4 border-b-gray-100/50">
+              <div className="bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50/30 text-[9px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
@@ -328,29 +437,30 @@ function TeacherDashboard() {
                     {data?.studentProgress?.map((student: any) => (
                       <tr key={student.id} className="group hover:bg-gray-50/50 transition-colors">
                         <td className="px-8 py-6">
-                           <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-xs text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                                 {student.initials}
-                              </div>
-                              <span className="font-bold text-emerald-950">{student.name}</span>
-                           </div>
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-xs text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                              {student.initials}
+                            </div>
+                            <span className="font-bold text-emerald-950">{student.name}</span>
+                          </div>
                         </td>
+                        <td className="px-8 py-6"><span className="text-sm font-semibold text-gray-600">{student.currentSurah}</span></td>
                         <td className="px-8 py-6">
-                          <span className="text-sm font-semibold text-gray-600">{student.currentSurah}</span>
-                        </td>
-                        <td className="px-8 py-6">
-                           <Badge className={cn(
-                             "rounded-full border-none px-3 py-1 text-[8px] font-extrabold uppercase tracking-widest leading-none",
-                             student.status === 'EXCEEDING' ? "bg-emerald-50 text-emerald-600" : 
-                             (student.status === 'ON TRACK' ? "bg-emerald-50 text-emerald-700/70" : 
-                             (student.status === 'NEEDS REVIEW' ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500"))
-                           )}>
-                              {student.status.replace('_', ' ')}
-                           </Badge>
+                          <Badge className={cn(
+                            "rounded-full border-none px-3 py-1 text-[8px] font-extrabold uppercase tracking-widest leading-none",
+                            student.status === 'EXCEEDING' ? "bg-emerald-50 text-emerald-600" :
+                            student.status === 'ON TRACK' ? "bg-emerald-50 text-emerald-700/70" :
+                            student.status === 'NEEDS REVIEW' ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500"
+                          )}>
+                            {student.status.replace('_', ' ')}
+                          </Badge>
                         </td>
                         <td className="px-8 py-6">
                           <div className="w-20">
-                            <ProgressBar value={student.progress} className={cn("h-1.5", student.status === 'EXCEEDING' ? "bg-emerald-100 [&>div]:bg-emerald-600" : (student.status === 'NEEDS REVIEW' ? "bg-amber-100 [&>div]:bg-amber-600" : "bg-gray-100 [&>div]:bg-gray-400"))} />
+                            <ProgressBar value={student.progress} className={cn("h-1.5",
+                              student.status === 'EXCEEDING' ? "bg-emerald-100 [&>div]:bg-emerald-600" :
+                              student.status === 'NEEDS REVIEW' ? "bg-amber-100 [&>div]:bg-amber-600" : "bg-gray-100 [&>div]:bg-gray-400"
+                            )} />
                           </div>
                         </td>
                       </tr>
@@ -360,105 +470,141 @@ function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Right Column: Teacher Notes */}
+            {/* Right: Teacher Notes */}
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-emerald-950 font-serif">Teacher's Notes</h3>
                 <button className="p-2 bg-gray-100 rounded-lg text-gray-400 hover:bg-gray-200 transition-all">
-                    <Filter className="h-4 w-4" />
+                  <Filter className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="space-y-6">
-                {data?.notes?.map((note: any) => (
-                   <div key={note.id} className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm border-l-4 relative border-l-gray-300">
-                      <div className={cn(
-                        "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2/3 rounded-r-full",
-                        note.type === 'Class Reminder' ? "bg-emerald-600" : (note.type === 'Observation' ? "bg-amber-500" : "bg-blue-500")
-                      )} />
-                      <div className="flex items-center justify-between mb-3">
-                         <span className={cn(
-                           "text-[9px] font-extrabold uppercase tracking-widest",
-                           note.type === 'Class Reminder' ? "text-emerald-700" : (note.type === 'Observation' ? "text-amber-600" : "text-blue-600")
-                         )}>{note.type}</span>
-                         <span className="text-[10px] font-bold text-gray-400">{note.date}</span>
-                      </div>
-                      <h4 className="text-base font-bold text-emerald-950 font-serif leading-tight mb-3">{note.title}</h4>
-                      <p className="text-xs text-gray-400 font-medium leading-relaxed">{note.content}</p>
-                   </div>
+              <div className="space-y-5">
+                {notes.length === 0 && (
+                  <div className="bg-white rounded-[24px] p-8 border border-dashed border-gray-200 text-center">
+                    <p className="text-sm text-gray-400 font-medium">No notes yet. Add your first reflection!</p>
+                  </div>
+                )}
+
+                {notes.map((note: any) => (
+                  <div key={note.id} className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm relative group overflow-hidden">
+                    {/* Colored accent bar */}
+                    <div className={cn(
+                      "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2/3 rounded-r-full",
+                      noteTypeColor[note.type as NoteType] || 'bg-gray-400'
+                    )} />
+
+                    {/* Hover action buttons */}
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        onClick={() => openEdit(note)}
+                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-500 transition-all"
+                        title="Edit note"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteNote(note.id)}
+                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-500 transition-all"
+                        title="Delete note"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-3 pr-16">
+                      <span className={cn(
+                        "text-[9px] font-extrabold uppercase tracking-widest",
+                        noteTypeLabelColor[note.type as NoteType] || 'text-gray-500'
+                      )}>{note.type}</span>
+                      <span className="text-[10px] font-bold text-gray-400">{formatDate(note.createdAt)}</span>
+                    </div>
+                    <h4 className="text-base font-bold text-emerald-950 font-serif leading-tight mb-2">{note.title}</h4>
+                    <p className="text-xs text-gray-400 font-medium leading-relaxed">{note.content}</p>
+                  </div>
                 ))}
-                
-                <button className="w-full h-16 rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 text-xs font-bold uppercase tracking-widest hover:border-emerald-200 hover:text-emerald-700 transition-all">
-                   + Add Personal Reflection
+
+                <button
+                  onClick={openCreate}
+                  className="w-full h-16 rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 text-xs font-bold uppercase tracking-widest hover:border-emerald-200 hover:text-emerald-700 transition-all"
+                >
+                  + Add Personal Reflection
                 </button>
-                
-                <div className="fixed bottom-10 right-10 flex flex-col gap-4">
-                     <button className="w-14 h-14 bg-[#052c22] rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform">
-                        <Plus className="h-6 w-6" />
-                     </button>
-                </div>
               </div>
             </div>
           </div>
 
+          {/* Today's Remaining Sessions */}
           <div className="space-y-8 pt-8">
             <h3 className="text-2xl font-bold text-emerald-950 font-serif">Today's Remaining Sessions</h3>
-            
+
             {todaySessions.length === 0 ? (
-               <div className="bg-white rounded-[32px] p-12 border border-gray-100 flex flex-col items-center justify-center text-center">
-                  <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                     <Calendar className="h-10 w-10 text-emerald-600" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-emerald-950 font-serif mb-2">No remaining sessions for today.</h4>
-                  <p className="text-gray-400 font-medium">You have completed all your scheduled classes or have a day off.</p>
-               </div>
+              <div className="bg-white rounded-[32px] p-12 border border-gray-100 flex flex-col items-center justify-center text-center">
+                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+                  <Calendar className="h-10 w-10 text-emerald-600" />
+                </div>
+                <h4 className="text-2xl font-bold text-emerald-950 font-serif mb-2">No remaining sessions for today.</h4>
+                <p className="text-gray-400 font-medium">You have completed all your scheduled classes or have a day off.</p>
+              </div>
             ) : (
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {todaySessions.map((session: any) => {
-                     const dynamicStatus = getSessionStatus(session.startTime, session.endTime);
-                     return (
-                        <div key={session.scheduleId} className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100">
-                           <div className="flex items-center gap-3 mb-8">
-                              <Clock className="h-5 w-5 text-amber-500" />
-                              <span className="text-sm font-bold text-emerald-950">{session.startTime} - {session.endTime}</span>
-                           </div>
-                           
-                           <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2 line-clamp-1">{session.title}</h4>
-                           <p className="text-sm text-gray-400 font-semibold mb-10">{session.sessionType}</p>
-                           
-                           <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                 <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white">
-                                    {session.studentAvatar}
-                                 </div>
-                                 <span className="text-xs font-bold text-emerald-950">{session.studentName}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-4">
-                                  <Badge className={cn(
-                                     "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
-                                     dynamicStatus === 'COMPLETED' ? "bg-gray-100 text-gray-500" :
-                                     dynamicStatus === 'LIVE NOW' ? "bg-red-50 text-red-600 animate-pulse" :
-                                     "bg-emerald-50 text-emerald-600"
-                                  )}>
-                                     {dynamicStatus}
-                                  </Badge>
-                                  <button 
-                                    onClick={() => handleLaunchSession(session.scheduleId)}
-                                    className="text-sm font-extrabold text-emerald-850 hover:underline cursor-pointer"
-                                  >
-                                    Open Quran View
-                                  </button>
-                              </div>
-                           </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {todaySessions.map((session: any) => {
+                  const dynamicStatus = getSessionStatus(session.startTime, session.endTime);
+                  return (
+                    <div key={session.scheduleId} className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-3 mb-8">
+                        <Clock className="h-5 w-5 text-amber-500" />
+                        <span className="text-sm font-bold text-emerald-950">{session.startTime} - {session.endTime}</span>
+                      </div>
+                      <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2 line-clamp-1">{session.title}</h4>
+                      <p className="text-sm text-gray-400 font-semibold mb-10">{session.sessionType}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white">
+                            {session.studentAvatar}
+                          </div>
+                          <span className="text-xs font-bold text-emerald-950">{session.studentName}</span>
                         </div>
-                     );
-                  })}
-               </div>
+                        <div className="flex items-center gap-4">
+                          <Badge className={cn(
+                            "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
+                            dynamicStatus === 'COMPLETED' ? "bg-gray-100 text-gray-500" :
+                            dynamicStatus === 'LIVE NOW' ? "bg-red-50 text-red-600 animate-pulse" :
+                            "bg-emerald-50 text-emerald-600"
+                          )}>
+                            {dynamicStatus}
+                          </Badge>
+                          <button
+                            onClick={() => handleLaunchSession(session.scheduleId)}
+                            className="text-sm font-extrabold text-emerald-850 hover:underline cursor-pointer"
+                          >
+                            Open Quran View
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </main>
       </div>
+
+      {/* Floating Add Note button */}
+      <div className="fixed bottom-10 right-10">
+        <button
+          onClick={openCreate}
+          className="w-14 h-14 bg-[#052c22] rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Note Modal */}
+      {noteModal.open && (
+        <NoteModal note={noteModal.note} onClose={closeModal} onSave={handleSaveNote} />
+      )}
     </div>
   );
 }
@@ -469,14 +615,8 @@ export const Route = createFileRoute('/teacher_dashboard')({
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('userRole');
-      if (!token) {
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
-      }
-      if (role !== 'teacher') {
-        window.location.href = '/dashboard';
-        throw new Error('Access denied: Teacher role required');
-      }
+      if (!token) { window.location.href = '/login'; throw new Error('Not authenticated'); }
+      if (role !== 'teacher') { window.location.href = '/dashboard'; throw new Error('Access denied'); }
     }
   },
 });
