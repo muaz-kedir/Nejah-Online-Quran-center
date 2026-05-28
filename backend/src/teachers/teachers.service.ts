@@ -94,7 +94,7 @@ export class TeachersService {
   async findOne(id: string): Promise<Teacher> {
     const teacher = await this.teachersRepository.findOne({
       where: { id },
-      relations: ['user', 'students', 'schedules'],
+      relations: ['user', 'students', 'schedules', 'schedules.student'],
     });
 
     if (!teacher) {
@@ -107,7 +107,7 @@ export class TeachersService {
   async findByUserId(userId: string): Promise<Teacher> {
     const teacher = await this.teachersRepository.findOne({
       where: { userId },
-      relations: ['user', 'students', 'schedules'],
+      relations: ['user', 'students', 'schedules', 'schedules.student'],
     });
 
     if (!teacher) {

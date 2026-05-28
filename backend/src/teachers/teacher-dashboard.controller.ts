@@ -166,4 +166,48 @@ export class TeacherDashboardController {
       sessions: formattedSessions.length > 0 ? formattedSessions : fallbackSessions
     };
   }
+
+  @Get('today-sessions')
+  async getTodaySessions(@Request() req) {
+    const userId = req.user.id;
+
+    // 1. Get Teacher Profile
+    const teacher = await this.teachersRepository.findOne({
+      where: { userId },
+    });
+
+    if (!teacher) {
+      return [];
+    }
+
+    // 2. Get current day
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = days[new Date().getDay()];
+
+    // 3. Query schedules
+    const sessions = await this.schedulesRepository.find({
+      where: {
+        teacherId: teacher.id,
+        dayOfWeek: currentDay,
+        status: 'active' // Only get active assigned classes
+      },
+      order: { startTimeString: 'ASC' },
+      relations: ['student'],
+    });
+
+    // 4. Map to requested format
+    return sessions.map(s => ({
+      scheduleId: s.id,
+      title: s.className || 'Quran Class',
+      studentName: s.student?.fullName || 'Unknown Student',
+      studentAvatar: s.student?.fullName ? s.student.fullName.charAt(0) : 'U',
+      sessionType: s.classType || s.className || 'Private Hifz • 1:1 Session',
+      startTime: s.startTimeString,
+      endTime: s.endTimeString,
+      meetingLink: s.meetingLink,
+      status: s.status,
+      level: s.student?.level || 'Beginner'
+    }));
+  }
 }
+

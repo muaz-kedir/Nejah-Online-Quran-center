@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { CreateScheduleDto } from './dto/create-schedule.dto';
+import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 @Injectable()
 export class SchedulesService {
@@ -16,14 +18,7 @@ export class SchedulesService {
     private teachersRepository: Repository<Teacher>,
   ) {}
 
-  async createSchedule(data: {
-    studentId: string;
-    teacherId: string;
-    dayOfWeek: string;
-    startTimeString: string;
-    endTimeString: string;
-    className?: string;
-  }) {
+  async createSchedule(data: CreateScheduleDto) {
     const { startTimeString, endTimeString, dayOfWeek, teacherId } = data;
 
     if (!startTimeString || !endTimeString) {
@@ -101,6 +96,58 @@ export class SchedulesService {
 
   async getTeacherSchedules(teacherId: string) {
     return this.findAll(undefined, teacherId);
+  }
+
+  async getTeacherSchedulesByDay(teacherId: string, day: string) {
+    return this.schedulesRepository.find({
+      where: { 
+        teacherId,
+        dayOfWeek: day,
+        status: 'active'
+      },
+      relations: ['student', 'teacher', 'teacher.user'],
+      order: {
+        startTimeString: 'ASC'
+      }
+    });
+  }
+
+  async updateSchedule(id: string, updateData: UpdateScheduleDto) {
+    const schedule = await this.findOne(id);
+    
+    // Check overlap if time or day is updated
+    if (updateData.startTimeString || updateData.endTimeString || updateData.dayOfWeek) {
+      const startTimeString = updateData.startTimeString || schedule.startTimeString;
+      const endTimeString = updateData.endTimeString || schedule.endTimeString;
+      const dayOfWeek = updateData.dayOfWeek || schedule.dayOfWeek;
+
+      if (startTimeString >= endTimeString) {
+        throw new BadRequestException('Schedule start time must be before end time');
+      }
+
+      const existingSchedules = await this.schedulesRepository.find({
+        where: {
+          teacherId: schedule.teacherId,
+          dayOfWeek,
+          status: 'active'
+        }
+      });
+
+      const isOverlap = (existingStart: string, existingEnd: string, newStart: string, newEnd: string) => {
+        return existingStart < newEnd && newStart < existingEnd;
+      };
+
+      for (const existing of existingSchedules) {
+        if (existing.id !== id && isOverlap(existing.startTimeString, existing.endTimeString, startTimeString, endTimeString)) {
+          throw new BadRequestException(
+            `Teacher already has a class on ${dayOfWeek} from ${existing.startTimeString} to ${existing.endTimeString}`,
+          );
+        }
+      }
+    }
+
+    Object.assign(schedule, updateData);
+    return this.schedulesRepository.save(schedule);
   }
 
   async clearStudentSchedules(studentId: string) {

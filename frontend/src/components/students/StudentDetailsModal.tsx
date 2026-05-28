@@ -32,6 +32,31 @@ interface StudentDetailsModalProps {
 export function StudentDetailsModal({ open, onClose, student }: StudentDetailsModalProps) {
   if (!student) return null;
 
+  const handleOpenClassSession = async (scheduleId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/attendance/sessions/by-schedule-today/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const session = await response.json();
+        window.location.href = `/class-session/${session.id}`;
+      } else {
+        const err = await response.json();
+        alert(err.message || 'Failed to open class session');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Network error launching classroom');
+    }
+  };
+
+  const isToday = (dayOfWeek: string) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = days[new Date().getDay()];
+    return dayOfWeek.toLowerCase() === currentDay.toLowerCase();
+  };
+
   const getLevelColor = (lvl: string) => {
     switch (lvl?.toLowerCase()) {
       case 'beginner': return 'bg-amber-50 text-amber-700 border-amber-200';
@@ -200,9 +225,20 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
                              </div>
                           </div>
                        </div>
-                       <Button size="sm" className="h-8 rounded-lg bg-emerald-900 hover:bg-emerald-800 text-white text-[10px] font-bold gap-1.5">
-                          <ExternalLink className="h-3 w-3" /> Join Class
-                       </Button>
+                        <Button 
+                           onClick={() => handleOpenClassSession(slot.id)}
+                           size="sm" 
+                           className={cn(
+                             "h-8 rounded-lg text-[10px] font-bold gap-1.5",
+                             isToday(slot.dayOfWeek) 
+                               ? "bg-emerald-900 hover:bg-emerald-800 text-white border border-emerald-500 shadow-md"
+                               : "bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-[#084133]"
+                           )}
+                           disabled={!isToday(slot.dayOfWeek) && localStorage.getItem('userRole') !== 'super_admin'}
+                        >
+                           <ExternalLink className="h-3 w-3" />
+                           {isToday(slot.dayOfWeek) ? "Start Today's Session" : "Scheduled"}
+                        </Button>
                     </div>
                   ))
                 ) : (

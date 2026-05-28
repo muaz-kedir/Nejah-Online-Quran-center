@@ -42,6 +42,12 @@ export class Schedule {
   @Column({ nullable: true })
   meetingLink: string;
 
+  @Column({ nullable: true })
+  classType: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
   @Column({ default: 'active' })
   status: string; // active, inactive
 

@@ -122,6 +122,7 @@ const AttendanceBar = ({ day, height, active }: { day: string, height: string, a
 function StudentDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [liveClass, setLiveClass] = useState<any>(null);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -133,6 +134,15 @@ function StudentDashboard() {
         if (response.ok) {
           const result = await response.json();
           setData(result);
+        }
+
+        // Fetch live class session if any is active
+        const liveRes = await fetch('http://localhost:3000/api/attendance/student/live', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (liveRes.ok) {
+          const liveResult = await liveRes.json();
+          setLiveClass(liveResult);
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
@@ -232,24 +242,59 @@ function StudentDashboard() {
             {/* Right Column: Class, Attendance, Feedback */}
             <div className="space-y-8">
               
-              {/* Upcoming Class Card */}
-              <div className="bg-emerald-900 rounded-[40px] p-10 text-white relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10 group-hover:translate-x-8 transition-transform">
-                  <div className="w-64 h-64 border-8 border-white rounded-full" />
-                </div>
-
-                <Badge className="bg-white/10 hover:bg-white/20 text-emerald-200 border-none px-3 py-1 mb-8 uppercase text-[10px] tracking-widest font-bold">Upcoming Next</Badge>
-                <h3 className="text-4xl font-extrabold font-serif mb-2">{data?.upcomingClass?.name}</h3>
-                <p className="text-sm text-emerald-100 mb-2 font-medium">with {data?.upcomingClass?.teacher}</p>
-                <p className="text-sm font-bold text-emerald-400 mb-10">{data?.upcomingClass?.time}</p>
-
-                <Button className="w-full h-14 rounded-2xl bg-white text-emerald-950 hover:bg-emerald-50 font-extrabold gap-3 shadow-xl">
-                  <div className="w-6 h-6 bg-emerald-950 rounded-full flex items-center justify-center pl-0.5">
-                    <Play className="h-3 w-3 text-white fill-white" />
+              {/* Upcoming Class / Live Class Card */}
+              {liveClass ? (
+                <div className="bg-gradient-to-br from-emerald-950 to-emerald-900 border-2 border-red-500 rounded-[40px] p-10 text-white relative overflow-hidden group shadow-2xl">
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-red-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest animate-pulse border-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                    Live Now
                   </div>
-                  Join Class
-                </Button>
-              </div>
+                  <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <Video className="w-48 h-48" />
+                  </div>
+
+                  <Badge className="bg-red-500 text-white border-none px-3 py-1 mb-8 uppercase text-[10px] tracking-widest font-black">ACTIVE SESSION</Badge>
+                  <h3 className="text-3xl font-extrabold font-serif mb-2 leading-tight">{liveClass.classTitle}</h3>
+                  <p className="text-sm text-emerald-300 mb-10 font-bold">with {liveClass.teacher?.fullName}</p>
+
+                  <Button 
+                    onClick={() => window.location.href = `/class-session/${liveClass.id}`}
+                    className="w-full h-14 rounded-2xl bg-white text-emerald-950 hover:bg-emerald-50 font-black gap-3 shadow-xl cursor-pointer"
+                  >
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center pl-0.5">
+                      <Play className="h-3 w-3 text-white fill-white" />
+                    </div>
+                    Enter Live Class
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-emerald-900 rounded-[40px] p-10 text-white relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-10 -translate-y-10 group-hover:translate-x-8 transition-transform">
+                    <div className="w-64 h-64 border-8 border-white rounded-full" />
+                  </div>
+
+                  <Badge className="bg-white/10 hover:bg-white/20 text-emerald-200 border-none px-3 py-1 mb-8 uppercase text-[10px] tracking-widest font-bold">Upcoming Next</Badge>
+                  <h3 className="text-4xl font-extrabold font-serif mb-2">{data?.upcomingClass?.name || 'Tajweed Essentials'}</h3>
+                  <p className="text-sm text-emerald-100 mb-2 font-medium">with {data?.upcomingClass?.teacher || 'Sheikh Abdullah'}</p>
+                  <p className="text-sm font-bold text-emerald-400 mb-10">{data?.upcomingClass?.time || 'Today at 4:30 PM'}</p>
+
+                  <Button 
+                    onClick={() => {
+                      if (data?.upcomingClass?.id) {
+                        window.location.href = `/class-session/${data.upcomingClass.id}`;
+                      } else {
+                        toast.info('No active online meeting started yet. Please wait for your teacher.');
+                      }
+                    }}
+                    className="w-full h-14 rounded-2xl bg-white text-emerald-950 hover:bg-emerald-50 font-extrabold gap-3 shadow-xl cursor-pointer"
+                  >
+                    <div className="w-6 h-6 bg-emerald-950 rounded-full flex items-center justify-center pl-0.5">
+                      <Play className="h-3 w-3 text-white fill-white" />
+                    </div>
+                    Join Class
+                  </Button>
+                </div>
+              )}
 
               {/* Attendance Card */}
               <div className="bg-gray-50/50 rounded-[32px] p-8 border border-gray-100">

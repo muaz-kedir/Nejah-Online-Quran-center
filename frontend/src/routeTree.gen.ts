@@ -20,9 +20,12 @@ import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
+import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
+import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
@@ -79,6 +82,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -94,9 +102,20 @@ const TeachersIdRoute = TeachersIdRouteImport.update({
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClassSessionIdRoute = ClassSessionIdRouteImport.update({
+  id: '/class-session_/$id',
+  path: '/class-session/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeachersIdScheduleDayRoute = TeachersIdScheduleDayRouteImport.update({
+  id: '/schedule/$day',
+  path: '/schedule/$day',
+  getParentRoute: () => TeachersIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -108,11 +127,14 @@ export interface FileRoutesByFullPath {
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/teachers/$id': typeof TeachersIdRoute
+  '/class-session/$id': typeof ClassSessionIdRoute
+  '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
+  '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -124,12 +146,15 @@ export interface FileRoutesByTo {
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/teachers/$id': typeof TeachersIdRoute
+  '/class-session/$id': typeof ClassSessionIdRoute
+  '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
+  '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -141,13 +166,16 @@ export interface FileRoutesById {
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
-  '/teachers_/$id': typeof TeachersIdRoute
+  '/class-session_/$id': typeof ClassSessionIdRoute
+  '/teachers_/$id': typeof TeachersIdRouteWithChildren
   '/teachers_/create': typeof TeachersCreateRoute
+  '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/attendance'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -159,11 +187,14 @@ export interface FileRouteTypes {
     | '/teacher_dashboard'
     | '/teachers'
     | '/users'
+    | '/class-session/$id'
     | '/teachers/$id'
     | '/teachers/create'
+    | '/teachers/$id/schedule/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/attendance'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -175,11 +206,14 @@ export interface FileRouteTypes {
     | '/teacher_dashboard'
     | '/teachers'
     | '/users'
+    | '/class-session/$id'
     | '/teachers/$id'
     | '/teachers/create'
+    | '/teachers/$id/schedule/$day'
   id:
     | '__root__'
     | '/'
+    | '/attendance'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -191,12 +225,15 @@ export interface FileRouteTypes {
     | '/teacher_dashboard'
     | '/teachers'
     | '/users'
+    | '/class-session_/$id'
     | '/teachers_/$id'
     | '/teachers_/create'
+    | '/teachers_/$id/schedule/$day'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -208,7 +245,8 @@ export interface RootRouteChildren {
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
   TeachersRoute: typeof TeachersRoute
   UsersRoute: typeof UsersRoute
-  TeachersIdRoute: typeof TeachersIdRoute
+  ClassSessionIdRoute: typeof ClassSessionIdRoute
+  TeachersIdRoute: typeof TeachersIdRouteWithChildren
   TeachersCreateRoute: typeof TeachersCreateRoute
 }
 
@@ -291,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -312,11 +357,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/class-session_/$id': {
+      id: '/class-session_/$id'
+      path: '/class-session/$id'
+      fullPath: '/class-session/$id'
+      preLoaderRoute: typeof ClassSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teachers_/$id/schedule/$day': {
+      id: '/teachers_/$id/schedule/$day'
+      path: '/schedule/$day'
+      fullPath: '/teachers/$id/schedule/$day'
+      preLoaderRoute: typeof TeachersIdScheduleDayRouteImport
+      parentRoute: typeof TeachersIdRoute
+    }
   }
 }
 
+interface TeachersIdRouteChildren {
+  TeachersIdScheduleDayRoute: typeof TeachersIdScheduleDayRoute
+}
+
+const TeachersIdRouteChildren: TeachersIdRouteChildren = {
+  TeachersIdScheduleDayRoute: TeachersIdScheduleDayRoute,
+}
+
+const TeachersIdRouteWithChildren = TeachersIdRoute._addFileChildren(
+  TeachersIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
@@ -328,7 +400,8 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_dashboardRoute: Teacher_dashboardRoute,
   TeachersRoute: TeachersRoute,
   UsersRoute: UsersRoute,
-  TeachersIdRoute: TeachersIdRoute,
+  ClassSessionIdRoute: ClassSessionIdRoute,
+  TeachersIdRoute: TeachersIdRouteWithChildren,
   TeachersCreateRoute: TeachersCreateRoute,
 }
 export const routeTree = rootRouteImport

@@ -16,6 +16,9 @@ import {
   Trash2,
   RotateCcw,
   AlertTriangle,
+  Plus,
+  Search,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,10 +39,13 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
+import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/teachers_/$id')({
   component: TeacherProfilePage,
 });
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function TeacherProfilePage() {
   const { id } = useParams({ from: '/teachers_/$id' });
@@ -58,8 +64,14 @@ function TeacherProfilePage() {
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  // Schedule State
+  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+  const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
+  const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
+  const [confirmDeleteScheduleId, setConfirmDeleteScheduleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const fetchTeacher = async () => {
-    // Keep internal loading if it's a refresh, only show skeleton for first load
     if (!teacher) setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -79,13 +91,11 @@ function TeacherProfilePage() {
   const fetchUnassignedStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Fetch list of students
       const response = await fetch('http://localhost:3000/api/students?limit=100', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       if (data && Array.isArray(data.data)) {
-        // Find students who are NOT assigned to ANY teacher (teacherId is null/undefined)
         const filtered = data.data.filter((s: any) => !s.teacherId || s.teacherId === null);
         setAllStudents(filtered);
       }
@@ -139,7 +149,6 @@ function TeacherProfilePage() {
 
   const handleRemoveStudent = async (studentId: string) => {
     setConfirmUnassignId(studentId);
-    // Find the student name for the dialog
     const student = teacher.students?.find((s: any) => s.id === studentId);
     if (student) setConfirmUnassignName(student.fullName);
   };
@@ -168,7 +177,6 @@ function TeacherProfilePage() {
 
       toast.success('Student removed and schedule cleared');
       
-      // Wait a bit for DB consistency before re-fetching
       setTimeout(() => {
         fetchTeacher();
         setUnassigningId(null);
@@ -176,6 +184,29 @@ function TeacherProfilePage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove student');
       setUnassigningId(null);
+    }
+  };
+
+  const executeDeleteSchedule = async () => {
+    if (!confirmDeleteScheduleId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/api/schedules/${confirmDeleteScheduleId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete schedule');
+      }
+
+      toast.success('Schedule deleted successfully');
+      setConfirmDeleteScheduleId(null);
+      fetchTeacher();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete schedule');
+      setConfirmDeleteScheduleId(null);
     }
   };
 
@@ -188,8 +219,6 @@ function TeacherProfilePage() {
       default: return 'bg-gray-400';
     }
   };
-
-
 
   if (loading) {
     return (
@@ -211,6 +240,15 @@ function TeacherProfilePage() {
     );
   }
 
+  // Filter schedules for the selected day and apply search query
+  const dailySchedules = teacher.schedules?.filter((s: any) => s.dayOfWeek === selectedDay) || [];
+  const filteredDailySchedules = dailySchedules.filter((s: any) => {
+    if (!searchQuery) return true;
+    const studentName = s.student?.fullName || s.studentId;
+    return studentName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           s.classType?.toLowerCase().includes(searchQuery.toLowerCase());
+  }).sort((a: any, b: any) => a.startTimeString.localeCompare(b.startTimeString));
+
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-12">
@@ -228,7 +266,6 @@ function TeacherProfilePage() {
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center gap-6 justify-between relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              {/* Photo Avatar */}
               <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 border-4 border-white dark:border-gray-800 shadow-lg flex items-center justify-center font-bold text-3xl text-emerald-850 dark:text-emerald-300">
                 {teacher.fullName.charAt(0)}
               </div>
@@ -251,7 +288,6 @@ function TeacherProfilePage() {
               </div>
             </div>
 
-            {/* Admin Actions */}
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 variant="outline"
@@ -266,201 +302,235 @@ function TeacherProfilePage() {
                 <Pencil className="h-4 w-4" /> Edit Profile
               </Button>
               <Button
-                onClick={() => setIsAssignModalOpen(true)}
+                onClick={() => {
+                  setScheduleToEdit(null);
+                  setIsEditScheduleOpen(true);
+                }}
                 className="h-10 rounded-xl px-4 bg-emerald-900 hover:bg-emerald-800 text-white gap-1.5 text-xs font-bold uppercase tracking-wider"
               >
-                <UserPlus className="h-4 w-4" /> Assign Student
+                <Plus className="h-4 w-4" /> Add Schedule
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Dashboard Metrics Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Active Students</p>
-            <h3 className="text-3xl font-extrabold text-gray-850 dark:text-gray-100 mt-1 font-serif">{teacher.students?.length || 0}</h3>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Teaching Quality</p>
-            <h3 className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-1 font-serif">98.5%</h3>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Punctuality</p>
-            <h3 className="text-3xl font-extrabold text-amber-600 dark:text-amber-500 mt-1 font-serif">99.2%</h3>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Feedback Rating</p>
-            <h3 className="text-3xl font-extrabold text-emerald-950 dark:text-gray-100 mt-1 font-serif">4.9/5.0</h3>
-          </div>
-        </div>
-
-        {/* Main Details Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Active Students List */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-4 mb-4">
-                <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100 font-serif flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-emerald-700" />
-                  Assigned Students List
-                </h2>
-                <Badge className="bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 rounded-full font-bold">
-                  {teacher.students?.length || 0} Registered
-                </Badge>
-              </div>
-
-              {teacher.students?.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 font-medium font-serif">
-                  No students assigned to this teacher yet. Click 'Assign Student' to map them.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left border-b border-gray-100 dark:border-gray-700 pb-2">
-                        <th className="py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student</th>
-                        <th className="py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level</th>
-                        <th className="py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Progress</th>
-                        <th className="py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {teacher.students?.map((s: any) => (
-                        <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
-                          <td className="py-3.5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-850 dark:text-emerald-300 font-bold text-sm flex items-center justify-center">
-                                {s.fullName.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-extrabold text-gray-850 dark:text-gray-200">{s.fullName}</p>
-                                <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider">{s.gender}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3.5">
-                            <Badge className="bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-full font-bold text-[9px] uppercase tracking-wider">
-                              {s.level || 'Beginner'}
-                            </Badge>
-                          </td>
-                          <td className="py-3.5 text-right">
-                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                              {s.attendanceRate ? `${s.attendanceRate}%` : '95.0%'} Attendance
-                            </span>
-                          </td>
-                          <td className="py-3.5 text-right">
-                             <button
-                               onClick={() => handleRemoveStudent(s.id)}
-                               disabled={unassigningId === s.id}
-                               className={cn(
-                                 "p-1.5 rounded-lg transition-colors",
-                                 unassigningId === s.id 
-                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-                                   : "hover:bg-red-50 dark:hover:bg-red-950/20 text-gray-300 hover:text-red-500"
-                               )}
-                               title="Remove Student Assignment"
-                             >
-                               {unassigningId === s.id ? (
-                                 <RotateCcw className="h-4 w-4 animate-spin" />
-                               ) : (
-                                 <Trash2 className="h-4 w-4" />
-                               )}
-                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Performance Insights */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100 font-serif flex items-center gap-2 border-b border-gray-100 dark:border-gray-750 pb-3">
-                <Award className="h-5 w-5 text-emerald-700" />
-                Performance Insights
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/30">
-                  <h3 className="font-extrabold text-sm text-emerald-900 dark:text-emerald-400 font-serif flex items-center gap-1.5">
-                    <CheckCircle className="h-4 w-4" /> Qualities & Strength
-                  </h3>
-                  <ul className="text-xs text-gray-600 dark:text-gray-400 mt-2.5 space-y-1.5 list-disc pl-4 font-medium">
-                    <li>Exemplary virtual tajwid instruction technique.</li>
-                    <li>Highly active student checking & feedback notes.</li>
-                    <li>Timely class logs & attendance uploads.</li>
-                  </ul>
-                </div>
-                <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
-                  <h3 className="font-extrabold text-sm text-amber-900 dark:text-amber-500 font-serif flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" /> Teaching Statistics
-                  </h3>
-                  <div className="mt-2.5 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-500 font-medium">Syllabus Completion</span>
-                      <span className="font-bold text-gray-700 dark:text-gray-300">92%</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-500 font-medium">Monthly Teaching Hours</span>
-                      <span className="font-bold text-gray-700 dark:text-gray-300">120 Hours</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Schedule Calendar Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100 font-serif flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
-              <Calendar className="h-5 w-5 text-emerald-700" />
-              Weekly Schedule
+        {/* Schedule Detail Section (Redesigned) */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif flex items-center gap-2">
+              <Calendar className="h-6 w-6 text-emerald-700" />
+              Weekly Schedule Management
             </h2>
+          </div>
 
-            <div className="space-y-3">
-              {!teacher.schedules || teacher.schedules.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 font-medium font-serif border border-dashed rounded-2xl">
-                  No classes scheduled yet.
+          {/* Interactive Day Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            {DAYS_OF_WEEK.map((day) => {
+              const daySlots = teacher.schedules?.filter((s: any) => s.dayOfWeek === day) || [];
+              const isSelected = selectedDay === day;
+              
+              return (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(day)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-200 text-center relative overflow-hidden",
+                    isSelected 
+                      ? "bg-emerald-900 border-emerald-900 shadow-md transform -translate-y-1" 
+                      : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 hover:shadow-sm"
+                  )}
+                >
+                  {isSelected && (
+                    <div className="absolute top-0 left-0 w-full h-1 bg-emerald-400" />
+                  )}
+                  <span className={cn(
+                    "text-sm font-extrabold font-serif mb-1",
+                    isSelected ? "text-white" : "text-gray-700 dark:text-gray-300"
+                  )}>
+                    {day.substring(0, 3)}
+                  </span>
+                  <Badge className={cn(
+                    "font-bold text-[10px] px-2 py-0.5 rounded-full",
+                    isSelected 
+                      ? "bg-emerald-800/80 text-emerald-100 border-none" 
+                      : daySlots.length > 0 
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/50 dark:bg-emerald-900/30 dark:text-emerald-400" 
+                        : "bg-gray-100 text-gray-400 border-none dark:bg-gray-800"
+                  )}>
+                    {daySlots.length} {daySlots.length === 1 ? 'class' : 'classes'}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Daily Schedule List */}
+          <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-750 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-900/20">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 font-serif flex items-center gap-2">
+                  <span className="text-emerald-700 dark:text-emerald-400">{selectedDay}</span> Schedule
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {filteredDailySchedules.length} assigned classes for this day
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search student..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-64 pl-9 pr-4 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow"
+                  />
+                </div>
+                <Button variant="outline" className="h-10 px-3 rounded-xl border-gray-200 dark:border-gray-700 text-gray-500">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {filteredDailySchedules.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <h4 className="text-gray-900 dark:text-gray-100 font-bold font-serif">No classes found</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {searchQuery ? "Try adjusting your search query." : `There are no scheduled classes for ${selectedDay}.`}
+                  </p>
+                  {!searchQuery && (
+                    <Button
+                      onClick={() => {
+                        setScheduleToEdit(null);
+                        setIsEditScheduleOpen(true);
+                      }}
+                      variant="outline"
+                      className="mt-6 rounded-xl text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Schedule a Class
+                    </Button>
+                  )}
                 </div>
               ) : (
-                // Group schedules by day of week for a cleaner view
-                ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                  const daySlots = teacher.schedules.filter((s: any) => s.dayOfWeek === day);
-                  if (daySlots.length === 0) return null;
-
-                  return (
-                    <div
-                      key={day}
-                      className="p-3.5 rounded-2xl border bg-gray-50/70 border-gray-100 dark:bg-gray-900/40 dark:border-gray-800 flex flex-col gap-2 transition-shadow hover:shadow-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-extrabold text-emerald-950 dark:text-gray-200 font-serif">{day}</span>
-                        <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 border-none font-bold text-[9px] uppercase tracking-wider rounded-lg px-2">
-                          {daySlots.length} {daySlots.length === 1 ? 'Session' : 'Sessions'}
-                        </Badge>
-                      </div>
-                      <div className="space-y-2">
-                        {daySlots.map((slot: any, idx: number) => (
-                          <div key={idx} className="flex border-t border-gray-100 dark:border-gray-800 pt-2 items-center justify-between">
-                            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                              <span className="text-emerald-700 dark:text-emerald-400 font-bold">{slot.startTimeString} - {slot.endTimeString}</span>
-                            </p>
-                            <p className="text-[10px] font-bold text-gray-400 italic">
-                               1:1 Session
-                            </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredDailySchedules.map((schedule: any) => {
+                    const studentName = schedule.student?.fullName || 'Unknown Student';
+                    const studentAvatar = studentName.charAt(0);
+                    
+                    return (
+                      <div key={schedule.id} className="group p-5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-all hover:border-emerald-100 dark:hover:border-emerald-900/50 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm border border-emerald-100/50">
+                              {studentAvatar}
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-gray-900 dark:text-gray-100 line-clamp-1">{studentName}</h4>
+                              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-500">{schedule.classType || schedule.className || 'Quran Class'}</p>
+                            </div>
                           </div>
-                        ))}
+                          
+                          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                            <button
+                              onClick={() => {
+                                setScheduleToEdit(schedule);
+                                setIsEditScheduleOpen(true);
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteScheduleId(schedule.id)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-400">
+                            <Clock className="h-4 w-4 opacity-70" />
+                            <span className="text-sm font-bold tracking-tight">
+                              {schedule.startTimeString} - {schedule.endTimeString}
+                            </span>
+                          </div>
+                          <Badge className="bg-emerald-100/80 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-none text-[10px] font-bold uppercase tracking-wider px-2">
+                            {schedule.status || 'Active'}
+                          </Badge>
+                        </div>
+                        
+                        {schedule.notes && (
+                          <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2 italic border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+                            "{schedule.notes}"
+                          </p>
+                        )}
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
         </div>
+
       </div>
+
+      {/* Edit Schedule Modal */}
+      <EditScheduleModal
+        open={isEditScheduleOpen}
+        onClose={() => {
+          setIsEditScheduleOpen(false);
+          setScheduleToEdit(null);
+        }}
+        onSuccess={fetchTeacher}
+        teacher={teacher}
+        schedule={scheduleToEdit}
+        defaultDay={selectedDay}
+      />
+
+      {/* Delete Schedule Confirmation */}
+      <Dialog open={!!confirmDeleteScheduleId} onOpenChange={(open) => !open && setConfirmDeleteScheduleId(null)}>
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none rounded-[32px] shadow-2xl">
+          <div className="bg-white dark:bg-gray-900 p-8 space-y-6">
+            <div className="w-16 h-16 rounded-3xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto">
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 font-serif">Delete Schedule?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                Are you sure you want to delete this schedule slot? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="destructive" 
+                className="rounded-2xl h-11 font-bold text-sm bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none"
+                onClick={executeDeleteSchedule}
+              >
+                Yes, Delete Schedule
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="rounded-2xl h-11 font-bold text-sm text-gray-400 hover:text-gray-600"
+                onClick={() => setConfirmDeleteScheduleId(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Assign Student Modal */}
       <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
@@ -475,7 +545,6 @@ function TeacherProfilePage() {
           <div className="py-4 space-y-4">
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               Select an active student to map to <span className="font-bold text-gray-850 dark:text-gray-200">{teacher.fullName}</span>. 
-              The student will automatically see the teacher's schedule on their dashboard and gain access to shared resources.
             </p>
 
             <div className="grid gap-2">

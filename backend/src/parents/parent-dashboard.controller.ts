@@ -89,22 +89,31 @@ export class ParentDashboardController {
       status: s.status?.toUpperCase() || 'ACTIVE',
     })) || [];
 
-    // 4. Recent Activities
+    // 4. Recent Activities & Detailed Feedbacks
     let activities = [];
+    let feedbacks = [];
     if (totalChildren > 0) {
       const recentFeedback = await this.feedbackRepository.find({
         where: { studentId: In(studentIds) },
         order: { createdAt: 'DESC' },
-        take: 5,
-        relations: ['teacher']
+        relations: ['teacher', 'student']
       });
 
-      activities = recentFeedback.map(f => ({
+      activities = recentFeedback.slice(0, 5).map(f => ({
         id: f.id,
         type: 'Message',
         title: 'New Message',
-        content: `${f.teacher?.fullName} sent a progress report`,
+        content: `${f.teacher?.fullName || 'Teacher'} sent a progress report for ${f.student?.fullName || 'student'}`,
         date: f.createdAt,
+      }));
+
+      feedbacks = recentFeedback.map(f => ({
+        id: f.id,
+        content: f.content,
+        createdAt: f.createdAt,
+        studentId: f.studentId,
+        childName: f.student?.fullName || 'Child',
+        teacherName: f.teacher?.fullName || 'Teacher',
       }));
     }
 
@@ -120,30 +129,54 @@ export class ParentDashboardController {
       ];
     }
 
-    // 5. Today's Schedule
+    // 5. Schedules (All Schedules for Children)
     let schedules = [];
     if (totalChildren > 0) {
-       const todaySchedules = await this.schedulesRepository.find({
+      const allSchedules = await this.schedulesRepository.find({
         where: { studentId: In(studentIds) },
-        order: { startTime: 'ASC' },
-        relations: ['teacher']
+        relations: ['teacher', 'student']
       });
 
-      schedules = todaySchedules.map(sc => ({
+      schedules = allSchedules.map(sc => ({
         id: sc.id,
-        childName: children.find(c => c.id === sc.studentId)?.name || 'Child',
+        studentId: sc.studentId,
+        childName: sc.student?.fullName || 'Child',
         className: sc.className,
         teacher: sc.teacher?.fullName || 'Teacher',
-        time: '04:30 PM', // Simplified format for frontend
-        status: 'upcoming'
+        dayOfWeek: sc.dayOfWeek,
+        startTimeString: sc.startTimeString,
+        endTimeString: sc.endTimeString,
+        time: sc.startTimeString && sc.endTimeString ? `${sc.startTimeString} - ${sc.endTimeString}` : '04:30 PM',
+        meetingLink: sc.meetingLink,
+        status: sc.status
       }));
     }
 
     if (schedules.length === 0) {
       schedules = [
-        { id: '1', childName: 'Zaid', className: 'Hifz Class', teacher: 'Sheikh Abdullah', time: '04:30 PM' },
-        { id: '2', childName: 'Lina', className: 'Qaida Class', teacher: 'Ustadha Maryam', time: '05:30 PM' }
+        { id: '1', studentId: studentIds[0] || '1', childName: children[0]?.name || 'Zaid', className: 'Hifz Class', teacher: 'Sheikh Abdullah', time: '04:30 PM', dayOfWeek: 'Monday', startTimeString: '16:30', endTimeString: '17:30', status: 'active' },
+        { id: '2', studentId: studentIds[1] || '2', childName: children[1]?.name || 'Lina', className: 'Qaida Class', teacher: 'Ustadha Maryam', time: '05:30 PM', dayOfWeek: 'Tuesday', startTimeString: '17:30', endTimeString: '18:30', status: 'active' }
       ];
+    }
+
+    // 6. Homework list
+    let homeworkList = [];
+    if (totalChildren > 0) {
+      const allHomework = await this.homeworkRepository.find({
+        where: { studentId: In(studentIds) },
+        order: { dueDate: 'DESC' },
+        relations: ['student'],
+      });
+      homeworkList = allHomework.map(h => ({
+        id: h.id,
+        title: h.title,
+        description: h.description,
+        difficulty: h.difficulty,
+        status: h.status,
+        dueDate: h.dueDate,
+        studentId: h.studentId,
+        childName: h.student?.fullName || 'Child',
+      }));
     }
 
     return {
@@ -151,7 +184,7 @@ export class ParentDashboardController {
         id: parent.id,
         name: parent.fullName,
         email: parent.email,
-        photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed",
+        photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + parent.fullName,
       },
       stats: {
         totalChildren,
@@ -163,7 +196,9 @@ export class ParentDashboardController {
       },
       children,
       activities,
-      schedules
+      schedules,
+      homework: homeworkList,
+      feedbacks
     };
   }
 }

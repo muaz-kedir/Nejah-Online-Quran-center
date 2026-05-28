@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Progress as ProgressBar } from '@/components/ui/progress';
+import { toast } from 'sonner';
 
 // --- Components ---
 
@@ -159,18 +160,63 @@ const StatCard = ({ icon: Icon, title, value, subValue, label, color, bgColor }:
 
 function TeacherDashboard() {
   const [data, setData] = useState<any>(null);
+  const [todaySessions, setTodaySessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Dynamic time status logic
+  const getSessionStatus = (startTime: string, endTime: string) => {
+    const now = new Date();
+    const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    if (currentTimeStr > endTime) return 'COMPLETED';
+    if (currentTimeStr >= startTime && currentTimeStr <= endTime) return 'LIVE NOW';
+    return 'READY TO START';
+  };
+
+  const handleLaunchSession = async (scheduleId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!scheduleId || scheduleId.startsWith('s') || scheduleId.length < 10) {
+        toast.info("Opening simulated online session.");
+        window.location.href = `/class-session/demo-session-id`;
+        return;
+      }
+      const response = await fetch(`http://localhost:3000/api/attendance/sessions/by-schedule-today/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const session = await response.json();
+        window.location.href = `/class-session/${session.id}`;
+      } else {
+        const err = await response.json();
+        toast.error(err.message || 'Failed to initialize session');
+      }
+    } catch (error) {
+      toast.error('Network error launching classroom');
+    }
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/api/teacher/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const result = await response.json();
+        const [dashboardRes, sessionsRes] = await Promise.all([
+          fetch('http://localhost:3000/api/teacher/dashboard', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('http://localhost:3000/api/teacher/dashboard/today-sessions', {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ]);
+
+        if (dashboardRes.ok) {
+          const result = await dashboardRes.json();
           setData(result);
+        }
+        
+        if (sessionsRes.ok) {
+          const sessionsData = await sessionsRes.json();
+          setTodaySessions(sessionsData);
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data', error);
@@ -179,6 +225,12 @@ function TeacherDashboard() {
       }
     };
     fetchDashboard();
+    
+    // Auto refresh status every minute to keep tags dynamic
+    const interval = setInterval(() => {
+      setTodaySessions(prev => [...prev]); // Trigger re-render to update statuses
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) return (
@@ -352,45 +404,58 @@ function TeacherDashboard() {
           <div className="space-y-8 pt-8">
             <h3 className="text-2xl font-bold text-emerald-950 font-serif">Today's Remaining Sessions</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {data?.sessions?.map((session: any) => (
-                  <div key={session.id} className={cn("rounded-[40px] p-10 overflow-hidden relative group", session.title === 'Office Hours' ? "bg-gray-50/50 border border-gray-100" : "bg-white shadow-sm border border-gray-100")}>
-                      <div className="flex items-center gap-3 mb-8">
-                         <Clock className={cn("h-5 w-5", session.title === 'Office Hours' ? "text-gray-400" : "text-amber-500")} />
-                         <span className="text-sm font-bold text-emerald-950">{session.time}</span>
-                      </div>
-                      
-                      <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2">{session.title}</h4>
-                      <p className="text-sm text-gray-400 font-semibold mb-10">{session.type}</p>
-                      
-                      <div className="flex items-center justify-between">
-                         <div className="flex -space-x-3">
-                            {session.students && Array.isArray(session.students) && session.students.map((initial: string, idx: number) => (
-                               <div key={idx} className={cn(
-                                 "w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white",
-                                 idx === 0 ? "bg-emerald-900" : (idx === 1 ? "bg-emerald-800" : (idx === 2 ? "bg-emerald-700" : "bg-gray-300"))
-                               )}>
-                                  {initial}
-                               </div>
-                            ))}
-                         </div>
-                         
-                         {session.status === 'READY TO START' ? (
-                            <div className="flex items-center gap-4">
-                                <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1">Ready To Start</Badge>
-                                <button className="text-sm font-extrabold text-emerald-800 hover:underline">Open Quran View</button>
-                            </div>
-                         ) : (session.status ? (
-                            <span className="text-xs italic text-gray-400 font-medium">{session.status}</span>
-                         ) : (
-                            <Button className="rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold px-6 border-none shadow-none text-xs">
-                               Join Class
-                            </Button>
-                         ))}
-                      </div>
+            {todaySessions.length === 0 ? (
+               <div className="bg-white rounded-[32px] p-12 border border-gray-100 flex flex-col items-center justify-center text-center">
+                  <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+                     <Calendar className="h-10 w-10 text-emerald-600" />
                   </div>
-               ))}
-            </div>
+                  <h4 className="text-2xl font-bold text-emerald-950 font-serif mb-2">No remaining sessions for today.</h4>
+                  <p className="text-gray-400 font-medium">You have completed all your scheduled classes or have a day off.</p>
+               </div>
+            ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {todaySessions.map((session: any) => {
+                     const dynamicStatus = getSessionStatus(session.startTime, session.endTime);
+                     return (
+                        <div key={session.scheduleId} className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100">
+                           <div className="flex items-center gap-3 mb-8">
+                              <Clock className="h-5 w-5 text-amber-500" />
+                              <span className="text-sm font-bold text-emerald-950">{session.startTime} - {session.endTime}</span>
+                           </div>
+                           
+                           <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2 line-clamp-1">{session.title}</h4>
+                           <p className="text-sm text-gray-400 font-semibold mb-10">{session.sessionType}</p>
+                           
+                           <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white">
+                                    {session.studentAvatar}
+                                 </div>
+                                 <span className="text-xs font-bold text-emerald-950">{session.studentName}</span>
+                              </div>
+                              
+                              <div className="flex items-center gap-4">
+                                  <Badge className={cn(
+                                     "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
+                                     dynamicStatus === 'COMPLETED' ? "bg-gray-100 text-gray-500" :
+                                     dynamicStatus === 'LIVE NOW' ? "bg-red-50 text-red-600 animate-pulse" :
+                                     "bg-emerald-50 text-emerald-600"
+                                  )}>
+                                     {dynamicStatus}
+                                  </Badge>
+                                  <button 
+                                    onClick={() => handleLaunchSession(session.scheduleId)}
+                                    className="text-sm font-extrabold text-emerald-850 hover:underline cursor-pointer"
+                                  >
+                                    Open Quran View
+                                  </button>
+                              </div>
+                           </div>
+                        </div>
+                     );
+                  })}
+               </div>
+            )}
           </div>
         </main>
       </div>
