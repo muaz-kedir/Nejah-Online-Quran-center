@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Clock, MapPin, Wifi } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -64,7 +64,7 @@ const todaysClasses: ClassSession[] = [
 
 const ITEMS_PER_PAGE = 2;
 
-export function TodaysClasses() {
+export const TodaysClasses = memo(function TodaysClasses() {
   const { t } = useApp();
   const [page, setPage] = useState(0);
   const maxPage = Math.ceil(todaysClasses.length / ITEMS_PER_PAGE) - 1;
@@ -158,4 +158,4 @@ export function TodaysClasses() {
       </div>
     </div>
   );
-}
+});

@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -58,6 +59,19 @@ export class StudentsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PARENT)
   update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
     return this.studentsService.update(id, updateStudentDto);
+  }
+
+  @Post(':id/reset-password')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async resetPassword(
+    @Param('id') id: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters');
+    }
+    await this.studentsService.resetPassword(id, newPassword);
+    return { message: 'Password reset successfully' };
   }
 
   @Delete(':id')

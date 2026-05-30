@@ -61,6 +61,23 @@ export class Student {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  // Family information (optional)
+  @Column({ nullable: true })
+  familyName: string;
+
+  @Column({ nullable: true })
+  familyPhone: string;
+
+  @Column({ nullable: true })
+  familyAddress: string;
+
+  @Column({ nullable: true })
+  familyCountry: string;
+
+  // Learning goals
+  @Column({ type: 'text', nullable: true })
+  learningGoals: string;
+
   // Attendance & Progress (maintained separately but cached here for fast display)
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   attendanceRate: number;

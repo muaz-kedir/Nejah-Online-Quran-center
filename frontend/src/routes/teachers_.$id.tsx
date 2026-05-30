@@ -38,11 +38,13 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/teachers_/$id')({
   component: TeacherProfilePage,
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

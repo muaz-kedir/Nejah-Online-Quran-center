@@ -1,28 +1,34 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { menuByRole } from './menuConfig';
 import {
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
-export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
   const location = useLocation();
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
-  const [userRole, setUserRole] = useState('student');
   const [mobileOpen, setMobileOpen] = useState(isOpen);
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || 'student' : 'student';
 
   useEffect(() => {
     setMobileOpen(isOpen);
   }, [isOpen]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUserRole(localStorage.getItem('userRole') || 'student');
-    }
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    window.location.href = '/login';
   }, []);
+
+  const toggleCollapse = useCallback(() => setSidebarCollapsed(!sidebarCollapsed), [sidebarCollapsed, setSidebarCollapsed]);
 
   const menuItems = menuByRole[userRole] || menuByRole.student;
 
@@ -89,7 +95,7 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
 
           {/* Desktop collapse toggle */}
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onClick={toggleCollapse}
             className={cn(
               'hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-emerald-800 hover:bg-emerald-700 text-emerald-200 hover:text-white transition-all duration-200 flex-shrink-0',
               sidebarCollapsed && 'mt-3'
@@ -178,6 +184,28 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
           </ul>
         </nav>
 
+        {/* Logout */}
+        <div className="p-2 border-t border-emerald-800 flex-shrink-0 group">
+          <button
+            onClick={handleLogout}
+            className={cn(
+              'flex items-center gap-3 rounded-xl transition-all duration-200 w-full text-emerald-200 hover:bg-red-500/20 hover:text-red-300 relative',
+              sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'
+            )}
+            title={!sidebarCollapsed ? 'Logout' : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!sidebarCollapsed && (
+              <span className="font-medium text-sm">Logout</span>
+            )}
+            {sidebarCollapsed && (
+              <div className="absolute left-full ml-3 hidden group-hover:flex items-center bg-gray-900 text-white text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none">
+                Logout
+              </div>
+            )}
+          </button>
+        </div>
+
         {/* Footer */}
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-emerald-800 flex-shrink-0">
@@ -187,4 +215,4 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
       </aside>
     </>
   );
-}
+});

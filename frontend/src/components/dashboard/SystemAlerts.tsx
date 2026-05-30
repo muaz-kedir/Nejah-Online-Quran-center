@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ArrowRight, Megaphone } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -52,7 +53,7 @@ const alertConfig = {
   },
 };
 
-export function SystemAlerts() {
+export const SystemAlerts = memo(function SystemAlerts() {
   const { t } = useApp();
 
   return (
@@ -117,4 +118,4 @@ export function SystemAlerts() {
       </div>
     </div>
   );
-}
+});

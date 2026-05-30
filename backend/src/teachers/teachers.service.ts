@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Teacher } from './entities/teacher.entity';
 import { Student } from '../students/entities/student.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import { Schedule } from '../schedules/entities/schedule.entity';
 import { UsersService } from '../users/users.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
@@ -17,6 +19,10 @@ export class TeachersService {
     private teachersRepository: Repository<Teacher>,
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
+    @InjectRepository(Progress)
+    private progressRepository: Repository<Progress>,
+    @InjectRepository(Schedule)
+    private schedulesRepository: Repository<Schedule>,
     private usersService: UsersService,
   ) {}
 
@@ -205,6 +211,63 @@ export class TeachersService {
       todayClassesCount: students.length > 0 ? Math.ceil(students.length * 0.4) : 0,
       attendanceRate: Number(avgAttendance.toFixed(1)),
       homeworkPending: students.length > 0 ? Math.ceil(students.length * 0.6) : 0,
+    };
+  }
+
+  async getOverallStats() {
+    const total = await this.teachersRepository.count();
+    const active = await this.teachersRepository.count({ where: { status: 'active' } });
+    const onLeave = await this.teachersRepository.count({ where: { status: 'on leave' } });
+    const pending = await this.teachersRepository.count({ where: { status: 'pending' } });
+
+    return { total, active, onLeave, pending };
+  }
+
+  async getTeacherAnalytics(id: string) {
+    const teacher = await this.findOne(id);
+    const studentIds = teacher.students?.map((s) => s.id) || [];
+
+    // Per-student progress
+    const progressRecords = studentIds.length > 0
+      ? await this.progressRepository
+          .createQueryBuilder('p')
+          .leftJoinAndSelect('p.student', 'student')
+          .where('p.studentId IN (:...studentIds)', { studentIds })
+          .orderBy('p.updatedAt', 'DESC')
+          .getMany()
+      : [];
+
+    // Compute live teaching hours from schedules
+    const schedules = teacher.schedules || [];
+    let totalWeeklyHours = 0;
+    for (const schedule of schedules) {
+      if (schedule.startTimeString && schedule.endTimeString) {
+        const [sh, sm] = schedule.startTimeString.split(':').map(Number);
+        const [eh, em] = schedule.endTimeString.split(':').map(Number);
+        const diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+        if (diffMinutes > 0) totalWeeklyHours += diffMinutes / 60;
+      }
+    }
+
+    // Topics derived from teachingTopics field or from student progress
+    const topics = teacher.teachingTopics
+      ? teacher.teachingTopics.split(',').map((t) => t.trim()).filter(Boolean)
+      : [];
+
+    return {
+      studentCount: studentIds.length,
+      studentDetails: progressRecords.map((p) => ({
+        studentId: p.studentId,
+        studentName: (p.student as any)?.fullName || 'Unknown',
+        progressPercentage: p.progressPercentage,
+        rank: p.rank,
+        lastStudiedSurah: p.lastStudiedSurah,
+        surahsCount: p.surahsCount,
+      })),
+      totalWeeklyHours: Math.round(totalWeeklyHours * 100) / 100,
+      topics,
+      monthlySalary: teacher.monthlySalary,
+      islamicEducationLevel: teacher.islamicEducationLevel,
     };
   }
 }

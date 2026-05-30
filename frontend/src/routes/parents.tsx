@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
@@ -32,46 +32,176 @@ import { EditParentModal } from '@/components/parents/EditParentModal';
 import { DeleteParentModal } from '@/components/parents/DeleteParentModal';
 import { ViewParentModal } from '@/components/parents/ViewParentModal';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/parents')({
   component: ParentsPage,
-  beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
-      }
-    }
-  },
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
 
-interface Student {
-  id: string;
-  fullName: string;
-  email?: string;
-  level?: string;
-  age?: number;
-  gender?: string;
-  status?: string;
-  currentResidency?: string;
-  studentCode?: string;
-  attendanceRate?: number;
-  progressRate?: number;
-  avatarUrl?: string;
-}
+const getInitials = (name: string) => {
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
-interface Parent {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber?: string;
-  residency?: string;
-  relationshipWithStudent?: string;
-  status: string;
-  students: Student[];
-  createdAt: string;
-}
+const getAvatarBg = (name: string) => {
+  const palettes = [
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+  ];
+  return palettes[name.charCodeAt(0) % palettes.length];
+};
+
+const getStudentBadgeColor = (level?: string) => {
+  switch (level?.toLowerCase()) {
+    case 'beginner':
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300';
+    case 'intermediate':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300';
+    case 'advanced':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300';
+    case 'hifz':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300';
+    default:
+      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+  }
+};
+
+const parentIdCode = (id: string) => {
+  const hash = id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase();
+  return `NEJ-${hash || '0000'}`;
+};
+
+const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: {
+  parent: any;
+  onView: (p: any) => void;
+  onEdit: (p: any) => void;
+  onDelete: (p: any) => void;
+}) {
+  return (
+    <tr
+      className="hover:bg-gray-50/60 dark:hover:bg-gray-750/30 transition-colors group"
+    >
+      {/* Parent Name */}
+      <td className="py-5 px-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              'w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0',
+              getAvatarBg(parent.fullName)
+            )}
+          >
+            {getInitials(parent.fullName)}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
+              {parent.fullName}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              ID: {parentIdCode(parent.id)}
+            </p>
+          </div>
+        </div>
+      </td>
+
+      {/* Students */}
+      <td className="py-5 px-6">
+        {parent.students && parent.students.length > 0 ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">
+              {parent.students.length > 2
+                ? `${parent.students[0].fullName} +${parent.students.length - 1}`
+                : parent.students.map((s: any) => s.fullName).join(' & ')}
+            </span>
+            <span
+              className={cn(
+                'text-[10px] font-bold px-2 py-0.5 rounded-full w-fit',
+                parent.students.length > 1
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                  : getStudentBadgeColor(parent.students[0]?.level)
+              )}
+            >
+              {parent.students.length > 1
+                ? 'Mixed Grades'
+                : parent.students[0]?.level || 'Unassigned'}
+            </span>
+          </div>
+        ) : (
+          <span className="text-sm text-gray-400 dark:text-gray-500 italic">
+            No students linked
+          </span>
+        )}
+      </td>
+
+      {/* Contact Information */}
+      <td className="py-5 px-6">
+        <div className="space-y-1.5 text-sm">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <Phone className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+            <span>{parent.phoneNumber || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+            <Mail className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+            <span className="truncate max-w-[200px]">{parent.email}</span>
+          </div>
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="py-5 px-6">
+        <div className="flex justify-center">
+          <Badge
+            className={cn(
+              'text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center gap-1.5 w-max',
+              parent.status?.toLowerCase() === 'active'
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+            )}
+          >
+            <span
+              className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                parent.status?.toLowerCase() === 'active'
+                  ? 'bg-emerald-500'
+                  : 'bg-gray-400'
+              )}
+            />
+            {parent.status || 'Active'}
+          </Badge>
+        </div>
+      </td>
+
+      {/* Actions */}
+      <td className="py-5 px-6">
+        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={() => onView(parent)}
+            className="p-2 hover:bg-emerald-50 dark:hover:bg-gray-700 text-gray-400 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-lg transition-colors"
+            title="View Profile"
+          >
+            <Eye className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            onClick={() => onEdit(parent)}
+            className="p-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Pencil className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            onClick={() => onDelete(parent)}
+            className="p-2 hover:bg-red-50 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <Trash2 className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
 
 function ParentsPage() {
   const [parents, setParents] = useState<Parent[]>([]);
@@ -181,40 +311,9 @@ function ParentsPage() {
     setMeta({ ...meta, page: 1 });
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const getAvatarBg = (name: string) => {
-    const palettes = [
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-      'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-      'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
-    ];
-    return palettes[name.charCodeAt(0) % palettes.length];
-  };
-
-  const getStudentBadgeColor = (level?: string) => {
-    switch (level?.toLowerCase()) {
-      case 'beginner':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300';
-      case 'intermediate':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300';
-      case 'advanced':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300';
-      case 'hifz':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-    }
-  };
-
-  const parentIdCode = (id: string) => {
-    const hash = id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase();
-    return `NEJ-${hash || '0000'}`;
-  };
+  const handleViewParent = useCallback((parent: any) => setViewingParent(parent), []);
+  const handleEditParent = useCallback((parent: any) => setEditingParent(parent), []);
+  const handleDeleteParent = useCallback((parent: any) => setDeletingParent(parent), []);
 
   return (
     <DashboardLayout>
@@ -378,126 +477,7 @@ function ParentsPage() {
                   </tr>
                 ) : (
                   parents.map((parent) => (
-                    <tr
-                      key={parent.id}
-                      className="hover:bg-gray-50/60 dark:hover:bg-gray-750/30 transition-colors group"
-                    >
-                      {/* Parent Name */}
-                      <td className="py-5 px-6">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={cn(
-                              'w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0',
-                              getAvatarBg(parent.fullName)
-                            )}
-                          >
-                            {getInitials(parent.fullName)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
-                              {parent.fullName}
-                            </p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                              ID: {parentIdCode(parent.id)}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Students */}
-                      <td className="py-5 px-6">
-                        {parent.students && parent.students.length > 0 ? (
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">
-                              {parent.students.length > 2
-                                ? `${parent.students[0].fullName} +${parent.students.length - 1}`
-                                : parent.students.map((s) => s.fullName).join(' & ')}
-                            </span>
-                            <span
-                              className={cn(
-                                'text-[10px] font-bold px-2 py-0.5 rounded-full w-fit',
-                                parent.students.length > 1
-                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
-                                  : getStudentBadgeColor(parent.students[0]?.level)
-                              )}
-                            >
-                              {parent.students.length > 1
-                                ? 'Mixed Grades'
-                                : parent.students[0]?.level || 'Unassigned'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-400 dark:text-gray-500 italic">
-                            No students linked
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Contact Information */}
-                      <td className="py-5 px-6">
-                        <div className="space-y-1.5 text-sm">
-                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                            <Phone className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                            <span>{parent.phoneNumber || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                            <Mail className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                            <span className="truncate max-w-[200px]">{parent.email}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-5 px-6">
-                        <div className="flex justify-center">
-                          <Badge
-                            className={cn(
-                              'text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center gap-1.5 w-max',
-                              parent.status?.toLowerCase() === 'active'
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                'w-1.5 h-1.5 rounded-full',
-                                parent.status?.toLowerCase() === 'active'
-                                  ? 'bg-emerald-500'
-                                  : 'bg-gray-400'
-                              )}
-                            />
-                            {parent.status || 'Active'}
-                          </Badge>
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-5 px-6">
-                        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button
-                            onClick={() => setViewingParent(parent)}
-                            className="p-2 hover:bg-emerald-50 dark:hover:bg-gray-700 text-gray-400 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-lg transition-colors"
-                            title="View Profile"
-                          >
-                            <Eye className="h-[18px] w-[18px]" />
-                          </button>
-                          <button
-                            onClick={() => setEditingParent(parent)}
-                            className="p-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors"
-                            title="Edit"
-                          >
-                            <Pencil className="h-[18px] w-[18px]" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingParent(parent)}
-                            className="p-2 hover:bg-red-50 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-[18px] w-[18px]" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <ParentRow key={parent.id} parent={parent} onView={handleViewParent} onEdit={handleEditParent} onDelete={handleDeleteParent} />
                   ))
                 )}
               </tbody>

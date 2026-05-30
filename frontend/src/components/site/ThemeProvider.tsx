@@ -14,19 +14,25 @@ interface Ctx {
 
 const ThemeCtx = createContext<Ctx | null>(null);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [lang, setLang] = useState<Lang>("en");
+const getInitialTheme = (): Theme => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("theme") as Theme | null;
+    if (stored) return stored;
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+  }
+  return "light";
+};
+const getInitialLang = (): Lang => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("lang") as Lang | null;
+    if (stored && translations[stored]) return stored;
+  }
+  return "en";
+};
 
-  useEffect(() => {
-    const stored = (typeof window !== "undefined" && localStorage.getItem("theme")) as Theme | null;
-    if (stored) setTheme(stored);
-    else if (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    }
-    const storedLang = typeof window !== "undefined" ? (localStorage.getItem("lang") as Lang | null) : null;
-    if (storedLang && translations[storedLang]) setLang(storedLang);
-  }, []);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [lang, setLang] = useState<Lang>(getInitialLang);
 
   useEffect(() => {
     const root = document.documentElement;

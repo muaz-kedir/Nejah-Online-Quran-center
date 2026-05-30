@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -20,14 +21,9 @@ import { toast } from 'sonner';
 
 interface Teacher {
   id: string;
+  fullName?: string;
   user?: { name: string };
-  specialty?: string;
   specialization?: string;
-}
-
-interface Parent {
-  id: string;
-  fullName: string;
 }
 
 interface Student {
@@ -40,7 +36,11 @@ interface Student {
   email: string;
   status: string;
   teacherId?: string;
-  parentId?: string;
+  familyName?: string;
+  familyPhone?: string;
+  familyAddress?: string;
+  familyCountry?: string;
+  learningGoals?: string;
 }
 
 interface EditStudentModalProps {
@@ -49,10 +49,9 @@ interface EditStudentModalProps {
   onSuccess: () => void;
   student: Student | null;
   teachers: Teacher[];
-  parents: Parent[];
 }
 
-export function EditStudentModal({ open, onClose, onSuccess, student, teachers, parents }: EditStudentModalProps) {
+export function EditStudentModal({ open, onClose, onSuccess, student, teachers }: EditStudentModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -63,7 +62,11 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
     email: '',
     status: 'active',
     teacherId: '',
-    parentId: '',
+    familyName: '',
+    familyPhone: '',
+    familyAddress: '',
+    familyCountry: '',
+    learningGoals: '',
   });
 
   useEffect(() => {
@@ -77,7 +80,11 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
         email: student.email || '',
         status: student.status || 'active',
         teacherId: student.teacherId || '',
-        parentId: student.parentId || '',
+        familyName: student.familyName || '',
+        familyPhone: student.familyPhone || '',
+        familyAddress: student.familyAddress || '',
+        familyCountry: student.familyCountry || '',
+        learningGoals: student.learningGoals || '',
       });
     }
   }, [student]);
@@ -93,10 +100,13 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
         ...formData,
         age: parseInt(formData.age, 10),
       };
-      
-      // Clean up empty IDs
+
       if (!body.teacherId) body.teacherId = null;
-      if (!body.parentId) body.parentId = null;
+      if (!body.familyName) delete body.familyName;
+      if (!body.familyPhone) delete body.familyPhone;
+      if (!body.familyAddress) delete body.familyAddress;
+      if (!body.familyCountry) delete body.familyCountry;
+      if (!body.learningGoals) delete body.learningGoals;
 
       const response = await fetch(`http://localhost:3000/api/students/${student.id}`, {
         method: 'PATCH',
@@ -124,12 +134,12 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[580px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-gray-800 dark:border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold dark:text-gray-100">Edit Student</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-fullName" className="dark:text-gray-300">Full Name *</Label>
@@ -192,7 +202,7 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-               <div className="grid gap-2">
+              <div className="grid gap-2">
                 <Label className="dark:text-gray-300">Status *</Label>
                 <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                   <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
@@ -214,30 +224,72 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers, 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Teacher</Label>
-                <Select value={formData.teacherId} onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    {teachers?.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.user?.name || 'Unknown'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="grid gap-2">
+              <Label className="dark:text-gray-300">Teacher</Label>
+              <Select value={formData.teacherId} onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
+                <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
+                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  {teachers?.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.fullName || t.user?.name || 'Unknown'} {t.specialization ? `— ${t.specialization}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="dark:text-gray-300">Learning Goals</Label>
+              <Textarea
+                value={formData.learningGoals}
+                onChange={(e) => setFormData({ ...formData, learningGoals: e.target.value })}
+                className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                placeholder="e.g. Memorize Juz 30, improve Tajweed..."
+                rows={2}
+              />
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Family Information (Optional)</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-familyName" className="dark:text-gray-300">Parent/Guardian Name</Label>
+                  <Input
+                    id="edit-familyName"
+                    value={formData.familyName}
+                    onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
+                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-familyPhone" className="dark:text-gray-300">Phone Number</Label>
+                  <Input
+                    id="edit-familyPhone"
+                    value={formData.familyPhone}
+                    onChange={(e) => setFormData({ ...formData, familyPhone: e.target.value })}
+                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Parent</Label>
-                <Select value={formData.parentId} onValueChange={(v) => setFormData({ ...formData, parentId: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue placeholder="Select parent..." /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    {parents?.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.fullName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-familyAddress" className="dark:text-gray-300">Address</Label>
+                  <Input
+                    id="edit-familyAddress"
+                    value={formData.familyAddress}
+                    onChange={(e) => setFormData({ ...formData, familyAddress: e.target.value })}
+                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-familyCountry" className="dark:text-gray-300">Country</Label>
+                  <Input
+                    id="edit-familyCountry"
+                    value={formData.familyCountry}
+                    onChange={(e) => setFormData({ ...formData, familyCountry: e.target.value })}
+                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </div>
               </div>
             </div>
           </div>

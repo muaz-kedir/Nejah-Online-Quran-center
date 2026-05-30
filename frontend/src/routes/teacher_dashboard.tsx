@@ -12,7 +12,6 @@ import {
   Users,
   Calendar,
   ClipboardList,
-  Settings,
   Filter,
   Pencil,
   Trash2,
@@ -47,16 +46,12 @@ const noteTypeLabelColor: Record<NoteType, string> = {
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────────
 const TeacherSidebar = ({ activePath }: { activePath: string }) => {
+  const navigate = (path: string) => {
+    if (typeof window !== 'undefined') window.location.href = path;
+  };
+
   const menuItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/teachers/dashboard' },
-    { label: 'My Students', icon: Users, path: '/teacher/students' },
-    { label: 'Schedule', icon: Calendar, path: '/teacher/schedule' },
-    { label: 'Resources', icon: BookOpen, path: '/teacher/resources' },
-    { label: 'Assessments', icon: ClipboardList, path: '/teacher/assessments' },
-  ];
-  const bottomItems = [
-    { label: 'Settings', icon: Settings, path: '/teacher/settings' },
-    { label: 'Support', icon: HelpCircle, path: '/teacher/support' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
   ];
 
   return (
@@ -81,7 +76,7 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
         {menuItems.map((item) => {
           const isActive = activePath === item.path;
           return (
-            <button key={item.path} className={cn(
+            <button key={item.path} onClick={() => navigate(item.path)} className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
               isActive ? "bg-emerald-900/50 text-white" : "text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white"
             )}>
@@ -91,15 +86,6 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
           );
         })}
       </nav>
-
-      <div className="p-4 px-4 space-y-1 border-t border-emerald-900/50">
-        {bottomItems.map((item) => (
-          <button key={item.path} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white transition-all">
-            <item.icon className="h-5 w-5 text-emerald-100/40" />
-            <span className="font-semibold text-sm">{item.label}</span>
-          </button>
-        ))}
-      </div>
     </div>
   );
 };
@@ -408,10 +394,10 @@ function TeacherDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard icon={Users} value={data?.stats?.totalStudents || 0} subValue="+2 this week" label="My Students" color="text-emerald-700" bgColor="bg-emerald-50/50" />
-            <StatCard icon={Calendar} value={data?.stats?.todayClasses || 0} subValue="Next: 2:00 PM" label="Today's Classes" color="text-amber-700" bgColor="bg-amber-50/50" />
-            <StatCard icon={Filter} value={`${data?.stats?.overallAttendance || 0}%`} subValue="Average" label="Overall Attendance" color="text-emerald-600" bgColor="bg-emerald-50/50" />
-            <StatCard icon={ClipboardList} value={data?.stats?.homeworkPending || 0} subValue="Requires Review" label="Homework Pending" color="text-red-700" bgColor="bg-red-50/50" />
+            <StatCard icon={Users} value={data?.stats?.totalStudents || 0} label="My Students" color="text-emerald-700" bgColor="bg-emerald-50/50" />
+            <StatCard icon={Calendar} value={data?.stats?.todayClasses || 0} label="Today's Classes" color="text-amber-700" bgColor="bg-amber-50/50" />
+            <StatCard icon={Filter} value={`${data?.stats?.overallAttendance || 0}%`} label="Overall Attendance" color="text-emerald-600" bgColor="bg-emerald-50/50" />
+            <StatCard icon={ClipboardList} value={data?.stats?.homeworkPending || 0} label="Homework Pending" color="text-red-700" bgColor="bg-red-50/50" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">

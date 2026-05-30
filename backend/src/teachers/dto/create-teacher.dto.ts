@@ -57,6 +57,19 @@ export class CreateTeacherDto {
   @IsNumber()
   hourlyRate?: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  monthlySalary?: number;
+
+  @IsString()
+  @IsOptional()
+  islamicEducationLevel?: string;
+
+  @IsString()
+  @IsOptional()
+  teachingTopics?: string;
+
   @IsString()
   @IsOptional()
   notes?: string;

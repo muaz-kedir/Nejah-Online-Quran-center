@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { memo } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,19 +25,12 @@ const LANGUAGES = [
   { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
 ];
 
-export function Topbar({ onMenuClick }: TopbarProps) {
+function TopbarInner({ onMenuClick }: TopbarProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme, language, setLanguage, t } = useApp();
-  const [notifications] = useState(3);
-  const [userName, setUserName] = useState('Admin User');
-  const [userRole, setUserRole] = useState('super_admin');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUserName(localStorage.getItem('userName') || 'Admin User');
-      setUserRole(localStorage.getItem('userRole') || 'super_admin');
-    }
-  }, []);
+  const notifications = 3;
+  const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Admin User' : 'Admin User';
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || 'super_admin' : 'super_admin';
 
   const handleLogout = () => {
     localStorage.clear();
@@ -192,3 +185,5 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     </header>
   );
 }
+
+export const Topbar = memo(TopbarInner);

@@ -23,9 +23,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/class-session_/$id')({
   component: ClassSessionPage,
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'teacher']),
 });
 
 function ClassSessionPage() {
@@ -102,10 +104,9 @@ function ClassSessionPage() {
 
     fetchSessionDetails();
 
-    // Set up polling interval to check session meeting updates
     pollIntervalRef.current = setInterval(() => {
       fetchSessionDetails(false);
-    }, 4000);
+    }, 10000);
 
     return () => {
       if (pollIntervalRef.current) {
