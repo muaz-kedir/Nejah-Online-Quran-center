@@ -58,13 +58,7 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
     <div className="w-64 bg-[#052c22] text-white flex flex-col h-screen fixed inset-y-0 left-0">
       <div className="p-8 pb-12">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#052c22]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <img src="/logo.png" alt="Nejah" className="h-10 w-auto rounded-xl" />
           <div>
             <h1 className="font-bold text-base leading-none">Teacher Suite</h1>
             <p className="text-[10px] text-emerald-400 font-medium tracking-widest mt-1 uppercase">Modern Maqam</p>
