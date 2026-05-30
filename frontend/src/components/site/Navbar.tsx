@@ -47,10 +47,7 @@ export function Navbar() {
     >
       <nav className="container-x flex items-center justify-between h-16 md:h-20">
         <a href="#home" className="flex items-center gap-2 group">
-          <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center shadow-soft group-hover:scale-105 transition">
-            <BookOpen className="size-5" />
-          </div>
-          <span className="font-display text-xl font-bold tracking-tight">Nejah</span>
+          <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
         </a>
 
         <div className="hidden lg:flex items-center gap-1">
@@ -161,7 +158,7 @@ export function Navbar() {
               className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-background z-50 lg:hidden p-6 flex flex-col gap-6 shadow-elevated"
             >
               <div className="flex items-center justify-between">
-                <span className="font-display text-xl font-bold">Nejah</span>
+                <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="size-10 grid place-items-center rounded-full hover:bg-muted"

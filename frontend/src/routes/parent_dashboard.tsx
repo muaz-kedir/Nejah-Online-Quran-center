@@ -74,9 +74,7 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
       {/* Brand Logo */}
       <div className="p-8 pb-10">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#084133] shadow-lg shadow-black/20">
-             <BookOpen className="h-7 w-7" />
-          </div>
+          <img src="/logo.png" alt="Nejah" className="h-12 w-auto rounded-2xl" />
           <div>
             <h1 className="font-extrabold text-xl leading-none tracking-tight">Nejah Online</h1>
             <p className="text-[10px] text-emerald-300 font-bold tracking-[0.2em] mt-1.5 uppercase">Islamic Center</p>
