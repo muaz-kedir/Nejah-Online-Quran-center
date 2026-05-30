@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="540" y="215" width="120" height="120" rx="24" fill="rgba(255,255,255,0.15)"/>
+  <text x="600" y="298" font-family="system-ui" font-size="72" font-weight="bold" fill="white" text-anchor="middle">ن</text>
+  <text x="600" y="380" font-family="system-ui" font-size="48" font-weight="700" fill="white" text-anchor="middle">Nejah Online Quran Center</text>
+  <text x="600" y="430" font-family="system-ui" font-size="24" fill="rgba(255,255,255,0.8)" text-anchor="middle">Learn Quran Online with Expert Teachers</text>
+</svg>

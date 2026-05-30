@@ -1,0 +1,17 @@
+{
+  "name": "Nejah Online Quran Center",
+  "short_name": "Nejah",
+  "description": "Learn Quran Online with Expert Teachers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
