@@ -19,7 +19,10 @@ import {
   Clock, 
   ExternalLink,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Globe,
+  Home,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -74,7 +77,6 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
         <div className="relative h-60 bg-gradient-to-br from-[#084133] via-[#0a5c48] to-[#107c62]">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')]" />
           
-          {/* Decorative circles */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-20 -left-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl" />
 
@@ -112,7 +114,6 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
         </div>
 
         <div className="pt-28 px-8 pb-10 space-y-8">
-          {/* Bento Grid Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-5 rounded-3xl border border-emerald-100 dark:border-emerald-900/30">
               <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1">Attendance</p>
@@ -139,7 +140,6 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Contact & Personal Info */}
             <div className="space-y-6">
               <div>
                 <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -164,15 +164,73 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
                       <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.currentResidency || 'Not provided'}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
-                      <Shield className="h-3.5 w-3.5 text-gray-400" />
+                  {student.learningGoals && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                        <Target className="h-3.5 w-3.5 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Learning Goals</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.learningGoals}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Parent / Guardian</p>
-                      <p className="text-sm font-bold text-emerald-900 dark:text-emerald-400">{student.parent?.fullName || 'No parent linked'}</p>
-                    </div>
-                  </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Home className="h-4 w-4 text-[#084133]" /> Family Information
+                </h4>
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 space-y-4">
+                  {student.familyName ? (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                          <User className="h-3.5 w-3.5 text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Parent/Guardian</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.familyName}</p>
+                        </div>
+                      </div>
+                      {student.familyPhone && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.familyPhone}</p>
+                          </div>
+                        </div>
+                      )}
+                      {student.familyAddress && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                            <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Address</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.familyAddress}</p>
+                          </div>
+                        </div>
+                      )}
+                      {student.familyCountry && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                            <Globe className="h-3.5 w-3.5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Country</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.familyCountry}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-4">No family information provided</p>
+                  )}
                 </div>
               </div>
 
@@ -187,7 +245,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
                       </div>
                       <div>
                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Assigned Teacher</p>
-                         <p className="text-lg font-black text-[#084133] dark:text-emerald-400">{student.teacher?.fullName || 'Seeking teacher...'}</p>
+                         <p className="text-lg font-black text-[#084133] dark:text-emerald-400">{student.teacher?.fullName || student.teacher?.user?.name || 'Seeking teacher...'}</p>
                       </div>
                    </div>
                    {student.teacher && (
@@ -199,7 +257,6 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
               </div>
             </div>
 
-            {/* Schedule Section */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -215,7 +272,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
                     <div key={idx} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                        <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex flex-col items-center justify-center">
-                             <span className="text-[9px] font-black text-emerald-600 uppercase">{slot.dayOfWeek.substring(0, 3)}</span>
+                             <span className="text-[9px] font-black text-emerald-600 uppercase">{slot.dayOfWeek?.substring(0, 3)}</span>
                           </div>
                           <div>
                              <p className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-tight">{slot.dayOfWeek}</p>

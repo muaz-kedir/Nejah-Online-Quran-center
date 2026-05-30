@@ -226,18 +226,11 @@ import {
   Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/teachers_/create')({
   component: AddTeacherPage,
-  beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
-      }
-    }
-  },
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
 
 function AddTeacherPage() {

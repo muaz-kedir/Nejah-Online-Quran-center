@@ -9,6 +9,8 @@ import { Student } from '../students/entities/student.entity';
 import { UsersModule } from '../users/users.module';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import { Attendance } from '../attendance/entities/attendance.entity';
 
 @Module({
   imports: [
@@ -17,7 +19,9 @@ import { Homework } from '../homework/entities/homework.entity';
       TeacherNote, 
       Student, 
       Schedule, 
-      Homework
+      Homework,
+      Progress,
+      Attendance,
     ]),
     UsersModule,
   ],

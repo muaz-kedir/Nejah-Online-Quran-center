@@ -1,9 +1,12 @@
 import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { ParentsService } from '../parents/parents.service';
 import { StudentsService } from '../students/students.service';
+import { Student } from '../students/entities/student.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UserRole } from '../common/enums/user-role.enum';
@@ -17,6 +20,8 @@ export class AuthService {
     private parentsService: ParentsService,
     private studentsService: StudentsService,
     private jwtService: JwtService,
+    @InjectRepository(Student)
+    private studentsRepository: Repository<Student>,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -133,22 +138,41 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    console.log(`[AuthService] Attempting login for email: ${loginDto.email}`);
-    const user = await this.usersService.findByEmail(loginDto.email);
+    const { email: identifier, password } = loginDto;
+    console.log(`[AuthService] Attempting login for: ${identifier}`);
+
+    let user = await this.usersService.findByEmail(identifier);
 
     if (!user) {
-      console.log(`[AuthService] User not found: ${loginDto.email}`);
+      const student = await this.studentsRepository.findOne({
+        where: [
+          { email: identifier },
+          { familyPhone: identifier },
+        ],
+        relations: ['user'],
+      });
+
+      if (student?.userId) {
+        try {
+          user = await this.usersService.findOne(student.userId);
+        } catch {
+          throw new UnauthorizedException('Invalid credentials');
+        }
+      }
+    }
+
+    if (!user) {
+      console.log(`[AuthService] User not found: ${identifier}`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
     console.log(`[AuthService] User found. ID: ${user.id}, Role: ${user.role}, IsActive: ${user.isActive}`);
-    // Check if password exists on user object
     if (!user.password) {
       console.error(`[AuthService] CRITICAL: Password field is missing on user object from database!`);
     }
 
     console.log(`[AuthService] Stored Hash: ${user.password}`);
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     console.log(`[AuthService] Password valid: ${isPasswordValid}`);
 
     if (!isPasswordValid) {

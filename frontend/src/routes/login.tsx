@@ -121,13 +121,13 @@ function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700">Email Address</FormLabel>
+                    <FormLabel className="text-gray-700">Email or Phone</FormLabel>
                     <FormControl>
                       <div className="relative group">
                         <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors" />
                         <Input 
                           className="pl-10 h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all" 
-                          placeholder="name@example.com" 
+                          placeholder="email@example.com or phone" 
                           {...field} 
                         />
                       </div>

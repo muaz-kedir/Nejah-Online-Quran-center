@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
@@ -31,19 +31,109 @@ import { cn } from '@/lib/utils';
 import { AddTeacherModal } from '@/components/teachers/AddTeacherModal';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
+import { TeacherDetailsModal } from '@/components/teachers/TeacherDetailsModal';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/teachers')({
   component: TeachersPage,
-  beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
-      }
-    }
-  },
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+});
+
+const getStatusBadge = (s: string) => {
+  switch (s?.toLowerCase()) {
+    case 'active':
+      return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30';
+    case 'inactive':
+      return 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200/50 dark:border-red-900/30';
+    case 'pending':
+      return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-red-900/30';
+    case 'on leave':
+      return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30';
+    default:
+      return 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+  }
+};
+
+const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete }: {
+  teacher: any;
+  onView: (t: any) => void;
+  onEdit: (t: any) => void;
+  onDelete: (t: any) => void;
+}) {
+  return (
+    <tr className="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition-colors group">
+      <td className="py-4 px-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex-shrink-0 flex items-center justify-center font-bold text-lg text-emerald-800 dark:text-emerald-300">
+            {teacher.fullName.charAt(0)}
+          </div>
+          <div>
+            <p className="font-extrabold text-emerald-900 dark:text-gray-100 group-hover:text-emerald-700 transition-colors text-base font-serif">
+              {teacher.fullName}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+              {teacher.specialization || 'General Islamic Studies'}
+            </p>
+          </div>
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+            {teacher.students?.length || 0} Students
+          </span>
+          <div className="w-16 bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-600 h-full rounded-full"
+              style={{ width: `${Math.min((teacher.students?.length || 0) * 10, 100)}%` }}
+            />
+          </div>
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+          {teacher.experience || 0} Years
+        </p>
+      </td>
+      <td className="py-4 px-4">
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {teacher.currentResidency || 'Full-time'}
+        </p>
+      </td>
+      <td className="py-4 px-4">
+        <Badge className={cn('text-[10px] font-extrabold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center w-max gap-1.5', getStatusBadge(teacher.status))}>
+          <span className={cn('w-1.5 h-1.5 rounded-full', teacher.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
+          {teacher.status || 'Active'}
+        </Badge>
+      </td>
+      <td className="py-4 px-6 text-right">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => onView(teacher)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-700 transition-colors"
+            title="View Faculty Profile"
+          >
+            <Eye className="h-4.5 w-4.5" />
+          </button>
+          <button
+            onClick={() => onEdit(teacher)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+            title="Edit Profile"
+          >
+            <Pencil className="h-4.5 w-4.5" />
+          </button>
+          <button
+            onClick={() => onDelete(teacher)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+            title="Delete Teacher"
+          >
+            <Trash2 className="h-4.5 w-4.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 });
 
 function TeachersPage() {
@@ -55,21 +145,24 @@ function TeachersPage() {
   
   // Dashboard stats
   const [stats, setStats] = useState({
-    total: 42,
-    active: 38,
-    onLeave: 4,
-    applications: 12
+    total: 0,
+    active: 0,
+    onLeave: 0,
+    pending: 0,
   });
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
+  const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
+
+  const API_BASE = 'http://localhost:3000/api';
 
   const fetchTeachers = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = `http://localhost:3000/api/teachers?page=${meta.page}&limit=${meta.limit}`;
+      let url = `${API_BASE}/teachers?page=${meta.page}&limit=${meta.limit}`;
       if (search) url += `&search=${search}`;
       if (status !== 'all') url += `&status=${status}`;
 
@@ -80,24 +173,6 @@ function TeachersPage() {
       if (res && Array.isArray(res.data)) {
         setTeachers(res.data);
         setMeta(res.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
-        
-        // Dynamically compute stats from DB for realistic indicators
-        const allRes = await fetch(`http://localhost:3000/api/teachers?limit=100`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const allData = await allRes.json();
-        if (allData && Array.isArray(allData.data)) {
-          const list = allData.data;
-          const total = list.length;
-          const active = list.filter((t: any) => t.status?.toLowerCase() === 'active').length;
-          const onLeave = list.filter((t: any) => t.status?.toLowerCase() === 'on leave').length;
-          setStats({
-            total: total || 42,
-            active: active || 38,
-            onLeave: onLeave || 4,
-            applications: 12
-          });
-        }
       } else {
         setTeachers([]);
         setMeta({ total: 0, page: 1, limit: 10, totalPages: 1 });
@@ -109,9 +184,33 @@ function TeachersPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/teachers/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStats({
+          total: data.total || 0,
+          active: data.active || 0,
+          onLeave: data.onLeave || 0,
+          pending: data.pending || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats', error);
+    }
+  };
+
   useEffect(() => {
     fetchTeachers();
   }, [meta.page, status]);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,20 +224,9 @@ function TeachersPage() {
     setMeta({ ...meta, page: 1 });
   };
 
-  const getStatusBadge = (s: string) => {
-    switch (s?.toLowerCase()) {
-      case 'active':
-        return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30';
-      case 'inactive':
-        return 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border border-red-200/50 dark:border-red-900/30';
-      case 'pending':
-        return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-red-900/30';
-      case 'on leave':
-        return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30';
-      default:
-        return 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-    }
-  };
+  const handleViewTeacher = useCallback((teacher: any) => setViewingTeacher(teacher), []);
+  const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
+  const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
 
   return (
     <DashboardLayout>
@@ -152,7 +240,7 @@ function TeachersPage() {
             <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">Teachers</h1>
           </div>
           <Button
-            onClick={() => window.location.href = '/teachers/create'}
+            onClick={() => setIsAddModalOpen(true)}
             className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
           >
             <Plus className="h-5 w-5" />
@@ -184,8 +272,8 @@ function TeachersPage() {
             </div>
           </div>
           <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-5 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-800 dark:text-emerald-400">Applications</p>
-            <h2 className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-100 mt-2 font-serif">{stats.applications}</h2>
+            <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-800 dark:text-emerald-400">Pending</p>
+            <h2 className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-100 mt-2 font-serif">{stats.pending}</h2>
             <div className="absolute top-4 right-4">
               <BookOpen className="h-10 w-10 text-emerald-100/60 dark:text-emerald-900/40" />
             </div>
@@ -269,78 +357,7 @@ function TeachersPage() {
                   </tr>
                 ) : (
                   teachers.map((teacher) => (
-                    <tr key={teacher.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition-colors group">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex-shrink-0 flex items-center justify-center font-bold text-lg text-emerald-800 dark:text-emerald-300">
-                            {teacher.fullName.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-extrabold text-emerald-900 dark:text-gray-100 group-hover:text-emerald-700 transition-colors text-base font-serif">
-                              {teacher.fullName}
-                            </p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                              {teacher.specialization || 'General Islamic Studies'}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                            {teacher.students?.length || 0} Students
-                          </span>
-                          {/* Mini capacity bar */}
-                          <div className="w-16 bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-                            <div
-                              className="bg-emerald-600 h-full rounded-full"
-                              style={{ width: `${Math.min((teacher.students?.length || 0) * 10, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                          {teacher.experience || 0} Years
-                        </p>
-                      </td>
-                      <td className="py-4 px-4">
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                          {teacher.currentResidency || 'Full-time'}
-                        </p>
-                      </td>
-                      <td className="py-4 px-4">
-                        <Badge className={cn('text-[10px] font-extrabold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center w-max gap-1.5', getStatusBadge(teacher.status))}>
-                          <span className={cn('w-1.5 h-1.5 rounded-full', teacher.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
-                          {teacher.status || 'Active'}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => window.location.href = `/teachers/${teacher.id}`}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-700 transition-colors"
-                            title="View Faculty Profile"
-                          >
-                            <Eye className="h-4.5 w-4.5" />
-                          </button>
-                          <button
-                            onClick={() => setEditingTeacher(teacher)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
-                            title="Edit Profile"
-                          >
-                            <Pencil className="h-4.5 w-4.5" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingTeacher(teacher)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
-                            title="Delete Teacher"
-                          >
-                            <Trash2 className="h-4.5 w-4.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <TeacherRow key={teacher.id} teacher={teacher} onView={handleViewTeacher} onEdit={handleEditTeacher} onDelete={handleDeleteTeacher} />
                   ))
                 )}
               </tbody>
@@ -444,6 +461,12 @@ function TeachersPage() {
         onSuccess={fetchTeachers}
         teacherId={deletingTeacher?.id}
         teacherName={deletingTeacher?.fullName}
+      />
+
+      <TeacherDetailsModal
+        open={!!viewingTeacher}
+        onClose={() => setViewingTeacher(null)}
+        teacher={viewingTeacher}
       />
     </DashboardLayout>
   );

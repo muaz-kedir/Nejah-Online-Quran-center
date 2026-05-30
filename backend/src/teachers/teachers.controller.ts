@@ -31,6 +31,11 @@ export class TeachersController {
     return this.teachersService.findAll(queryDto);
   }
 
+  @Get('stats')
+  getOverallStats() {
+    return this.teachersService.getOverallStats();
+  }
+
   @Get('my-dashboard-stats')
   async getMyDashboardStats(@Req() req: any) {
     // req.user has { sub: userId, email, role } from JwtAuthGuard
@@ -41,6 +46,11 @@ export class TeachersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.teachersService.findOne(id);
+  }
+
+  @Get(':id/analytics')
+  getAnalytics(@Param('id') id: string) {
+    return this.teachersService.getTeacherAnalytics(id);
   }
 
   @Patch(':id')

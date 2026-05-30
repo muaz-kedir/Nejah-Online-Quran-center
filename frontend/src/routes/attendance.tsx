@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { 
@@ -30,9 +30,11 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/attendance')({
   component: AdminAttendancePage,
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
 
 function AdminAttendancePage() {
@@ -104,10 +106,9 @@ function AdminAttendancePage() {
   useEffect(() => {
     fetchAttendanceData();
 
-    // Poll live classes every 5 seconds
     pollIntervalRef.current = setInterval(() => {
       fetchAttendanceData(false);
-    }, 5000);
+    }, 15000);
 
     return () => {
       if (pollIntervalRef.current) {
@@ -136,26 +137,31 @@ function AdminAttendancePage() {
   // Stats calculation
   const totalClassesCount = sessions.length;
   const liveCount = liveSessions.length;
-  const completedCount = sessions.filter(s => s.status === 'COMPLETED').length;
-  const scheduledCount = sessions.filter(s => s.status === 'SCHEDULED').length;
 
-  const totalStudentsPresent = sessions.reduce((acc, s) => acc + (s.totalStudentsPresent || 0), 0);
-  const totalStudentsLate = sessions.reduce((acc, s) => acc + (s.totalStudentsLate || 0), 0);
-  const totalStudentsAbsent = sessions.reduce((acc, s) => acc + (s.totalStudentsAbsent || 0), 0);
-  const totalStudentsLeftEarly = sessions.reduce((acc, s) => acc + (s.totalStudentsLeftEarly || 0), 0);
+  const { completedCount, scheduledCount, totalStudentsPresent, totalStudentsLate, totalStudentsAbsent, totalStudentsLeftEarly, attendanceRate } = useMemo(() => {
+    let present = 0, late = 0, absent = 0, leftEarly = 0, completed = 0, scheduled = 0;
+    for (const s of sessions) {
+      if (s.status === 'COMPLETED') completed++;
+      else if (s.status === 'SCHEDULED') scheduled++;
+      present += s.totalStudentsPresent || 0;
+      late += s.totalStudentsLate || 0;
+      absent += s.totalStudentsAbsent || 0;
+      leftEarly += s.totalStudentsLeftEarly || 0;
+    }
+    const totalAssigned = present + late + absent + leftEarly;
+    const rate = totalAssigned > 0 ? ((present + late) / totalAssigned) * 100 : 92.5;
+    return { completedCount: completed, scheduledCount: scheduled, totalStudentsPresent: present, totalStudentsLate: late, totalStudentsAbsent: absent, totalStudentsLeftEarly: leftEarly, attendanceRate: rate };
+  }, [sessions]);
 
-  const totalAssigned = totalStudentsPresent + totalStudentsLate + totalStudentsAbsent + totalStudentsLeftEarly;
-  const attendanceRate = totalAssigned > 0 
-    ? ((totalStudentsPresent + totalStudentsLate) / totalAssigned) * 100 
-    : 92.5;
-
-  const filteredSessions = sessions.filter(session => {
-    const matchesSearch = session.classTitle.toLowerCase().includes(search.toLowerCase()) || 
-                          (session.teacher?.fullName && session.teacher.fullName.toLowerCase().includes(search.toLowerCase()));
-    
-    if (statusFilter === 'all') return matchesSearch;
-    return matchesSearch && session.status === statusFilter;
-  });
+  const filteredSessions = useMemo(() => {
+    if (!search && statusFilter === 'all') return sessions;
+    const q = search.toLowerCase();
+    return sessions.filter(session => {
+      const matchesSearch = !search || session.classTitle.toLowerCase().includes(q) || (session.teacher?.fullName && session.teacher.fullName.toLowerCase().includes(q));
+      if (statusFilter === 'all') return matchesSearch;
+      return matchesSearch && session.status === statusFilter;
+    });
+  }, [sessions, search, statusFilter]);
 
   return (
     <DashboardLayout>

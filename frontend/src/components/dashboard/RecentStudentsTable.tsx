@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 
 interface Student {
   id: string;
@@ -23,7 +23,7 @@ const avatarColors = [
   'from-green-400 to-green-600',
 ];
 
-export function RecentStudentsTable() {
+export const RecentStudentsTable = memo(function RecentStudentsTable() {
   const { t } = useApp();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,4 +154,4 @@ export function RecentStudentsTable() {
       </div>
     </div>
   );
-}
+});

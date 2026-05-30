@@ -313,18 +313,9 @@ function UsersPage() {
   );
 }
 import { createFileRoute } from '@tanstack/react-router'
+import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/users')({
   component: UsersPage,
-  beforeLoad: () => {
-    // Check if user is authenticated
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        // Redirect to login if not authenticated
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
-      }
-    }
-  },
+  beforeLoad: () => requireAuth(['super_admin']),
 });

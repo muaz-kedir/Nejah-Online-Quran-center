@@ -12,8 +12,11 @@ import {
 import { toast } from 'sonner';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
+import { requireAuth } from '@/lib/auth';
+
 export const Route = createFileRoute('/teachers_/$id/schedule/$day')({
   component: TeacherDailySchedulePage,
+  beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
 
 function TeacherDailySchedulePage() {

@@ -80,4 +80,28 @@ export class CreateStudentDto {
   @IsOptional()
   @IsNumber()
   progressRate?: number;
+
+  @IsOptional()
+  @IsString()
+  familyName?: string;
+
+  @IsOptional()
+  @IsString()
+  familyPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  familyAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  familyCountry?: string;
+
+  @IsOptional()
+  @IsString()
+  learningGoals?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
 }

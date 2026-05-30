@@ -7,6 +7,8 @@ import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
 import { DelegateStudentDto } from './dto/delegate-student.dto';
 import { Schedule } from '../schedules/entities/schedule.entity';
+import { UsersService } from '../users/users.service';
+import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
 export class StudentsService {
@@ -15,6 +17,7 @@ export class StudentsService {
     private studentsRepository: Repository<Student>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
+    private usersService: UsersService,
   ) {}
 
   private async generateStudentCode(): Promise<string> {
@@ -33,11 +36,35 @@ export class StudentsService {
       throw new ConflictException('A student with this email already exists');
     }
 
+    let userId: string | undefined;
+
+    // If password is provided, create a companion User account
+    if (createStudentDto.password) {
+      const existingUser = await this.usersService.findByEmail(createStudentDto.email);
+      if (existingUser) {
+        throw new ConflictException('A user account with this email already exists');
+      }
+
+      const user = await this.usersService.create({
+        email: createStudentDto.email,
+        password: createStudentDto.password,
+        name: createStudentDto.fullName,
+        role: UserRole.STUDENT,
+        phone: createStudentDto.familyPhone || '',
+        avatar: createStudentDto.avatarUrl || '',
+        isActive: true,
+      });
+
+      userId = user.id;
+    }
+
+    const { password, ...rest } = createStudentDto;
     const studentCode = await this.generateStudentCode();
 
     const student = this.studentsRepository.create({
-      ...createStudentDto,
+      ...rest,
       studentCode,
+      userId,
     });
 
     return this.studentsRepository.save(student);
@@ -199,5 +226,28 @@ export class StudentsService {
       student,
       schedule: savedSchedule,
     };
+  }
+
+  async resetPassword(studentId: string, newPassword: string): Promise<void> {
+    const student = await this.findOne(studentId);
+
+    if (!student.userId) {
+      // If no companion user exists, create one
+      const user = await this.usersService.create({
+        email: student.email,
+        password: newPassword,
+        name: student.fullName,
+        role: UserRole.STUDENT,
+        isActive: true,
+      });
+
+      await this.studentsRepository.update(studentId, { userId: user.id });
+      return;
+    }
+
+    // Update existing user's password
+    await this.usersService.update(student.userId, { password: newPassword } as any, {
+      role: UserRole.SUPER_ADMIN,
+    } as any);
   }
 }

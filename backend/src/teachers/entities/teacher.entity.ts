@@ -61,6 +61,15 @@ export class Teacher {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   hourlyRate: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  monthlySalary: number;
+
+  @Column({ nullable: true })
+  islamicEducationLevel: string; // Beginner, Intermediate, Advanced, Ijazah
+
+  @Column({ type: 'text', nullable: true })
+  teachingTopics: string; // comma-separated list
+
   @Column({ type: 'text', nullable: true })
   notes: string;
 

@@ -1,7 +1,7 @@
+import { memo, useState, useEffect } from 'react';
 import { Users, GraduationCap, BookOpen, TrendingUp } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -27,7 +27,6 @@ function StatCard({
   if (variant === 'dark') {
     return (
       <div className="relative rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-6 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group">
-        {/* Background decorative circle */}
         <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-emerald-800/50 dark:bg-emerald-900/60 group-hover:scale-110 transition-transform duration-500" />
         <div className="absolute right-4 top-4 w-16 h-16 rounded-full bg-emerald-800/30 dark:bg-emerald-900/40" />
 
@@ -36,7 +35,6 @@ function StatCard({
             <div className="w-10 h-10 rounded-xl bg-emerald-700/50 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-emerald-300" />
             </div>
-            {/* Circular progress indicator */}
             <div className="relative w-14 h-14">
               <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
                 <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
@@ -58,13 +56,12 @@ function StatCard({
           <h3 className="text-4xl font-bold text-white mb-1">{value}</h3>
           <p className="text-sm text-emerald-300 uppercase tracking-wider font-medium">{title}</p>
 
-          {/* Progress bar */}
           <div className="mt-4 h-1.5 rounded-full bg-emerald-800/60">
             <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300" style={{ width: '94.5%' }} />
           </div>
         </div>
-      </div>
-    );
+    </div>
+  );
   }
 
   return (
@@ -111,7 +108,7 @@ function StatCard({
   );
 }
 
-export function DashboardCards() {
+export const DashboardCards = memo(function DashboardCards() {
   const { t } = useApp();
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -202,4 +199,4 @@ export function DashboardCards() {
       />
     </div>
   );
-}
+});

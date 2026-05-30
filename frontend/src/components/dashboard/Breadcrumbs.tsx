@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { ChevronRight, Home } from 'lucide-react';
 
-export function Breadcrumbs() {
+export const Breadcrumbs = memo(function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
 
@@ -43,4 +44,4 @@ export function Breadcrumbs() {
       })}
     </nav>
   );
-}
+});

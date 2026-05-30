@@ -244,9 +244,7 @@ function RegisterPage() {
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center">
-          <div className="mx-auto h-24 w-auto mb-4 flex items-center justify-center">
-            <img src="/logo.png" alt="Nejah Logo" className="object-contain h-full w-full max-w-[120px]" />
-          </div>
+          <img src="/logo.png" alt="Nejah" className="mx-auto h-20 w-auto mb-4" />
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Join Nejah Online Quran & Islamic Center
           </h2>

@@ -2,7 +2,7 @@ import { MoreVertical, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 
 interface StaffMember {
   id: string;
@@ -29,7 +29,7 @@ const statusConfig = {
   offline: { dot: 'bg-gray-400', label: 'Offline', pulse: false },
 };
 
-export function StaffOverview() {
+export const StaffOverview = memo(function StaffOverview() {
   const { t } = useApp();
   const [teachers, setTeachers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,4 +143,4 @@ export function StaffOverview() {
       </div>
     </div>
   );
-}
+});

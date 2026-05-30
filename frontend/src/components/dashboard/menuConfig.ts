@@ -49,16 +49,10 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Settings', icon: Settings, path: '/settings' },
   ],
   teacher: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'My Students', icon: Users, path: '/my-students' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
-    { label: 'Homework', icon: ClipboardList, path: '/homework' },
-    { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
-    { label: 'Messages', icon: MessageSquare, path: '/messages' },
-    { label: 'Schedule', icon: Calendar, path: '/schedule' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
   ],
   student: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/student/dashboard' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/student_dashboard' },
     { label: 'My Classes', icon: Users, path: '/student/classes' },
     { label: 'My Progress', icon: TrendingUp, path: '/student/progress' },
     { label: 'Homework', icon: ClipboardList, path: '/student/homework' },
@@ -66,10 +60,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Messages', icon: MessageSquare, path: '/student/messages' },
   ],
   parent: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Child Progress', icon: TrendingUp, path: '/child-progress' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
-    { label: 'Messages', icon: MessageSquare, path: '/messages' },
-    { label: 'Reports', icon: BarChart3, path: '/reports' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/parent_dashboard' },
   ],
 };
