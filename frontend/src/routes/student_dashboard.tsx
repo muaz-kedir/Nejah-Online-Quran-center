@@ -80,7 +80,7 @@ const StudentSidebar = ({
     <div className="w-64 bg-gray-50/50 border-r border-gray-100 flex flex-col h-screen">
       <div className="p-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center text-white font-bold text-xl">N</div>
+          <img src="/logo.png" alt="Nejah" className="h-10 w-auto" />
           <div>
             <h1 className="font-extrabold text-emerald-900 tracking-tight leading-none text-lg">Nejah</h1>
             <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">Student Portal</p>
