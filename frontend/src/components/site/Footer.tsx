@@ -8,10 +8,7 @@ export function Footer() {
       <div className="container-x grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center">
-              <BookOpen className="size-5" />
-            </div>
-            <span className="font-display text-xl font-bold">Nejah</span>
+            <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
           </div>
           <p className="text-sm text-[oklch(0.95_0.01_160/0.65)] leading-relaxed">
             {t.footer.tagline}
