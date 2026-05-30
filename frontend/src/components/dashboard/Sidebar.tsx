@@ -70,8 +70,8 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
         >
           {!sidebarCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-emerald-400 rounded-lg flex items-center justify-center font-bold text-xl text-emerald-900 shadow-lg flex-shrink-0">
-                N
+              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                <img src="/logo.png" alt="Nejah Logo" className="object-contain w-full h-full drop-shadow-md" />
               </div>
               <div>
                 <h1 className="text-lg font-bold leading-none">Nejah</h1>
@@ -82,8 +82,8 @@ export function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-9 h-9 bg-emerald-400 rounded-lg flex items-center justify-center font-bold text-xl text-emerald-900 shadow-lg">
-              N
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src="/logo.png" alt="Nejah Logo" className="object-contain w-full h-full drop-shadow-md" />
             </div>
           )}
 

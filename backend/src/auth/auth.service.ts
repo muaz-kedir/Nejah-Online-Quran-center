@@ -8,7 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { Gender } from '../common/enums/gender.enum';
-import { QuranLevel, StudentStatus } from '../students/entities/student.entity';
+import { AgeRange, QuranLevel, StudentStatus } from '../students/entities/student.entity';
 
 @Injectable()
 export class AuthService {
@@ -28,8 +28,10 @@ export class AuthService {
       if (student.password !== student.confirmPassword) {
         throw new BadRequestException('Student passwords do not match');
       }
-      if (parent.password !== parent.confirmPassword) {
-        throw new BadRequestException('Parent passwords do not match');
+      if (student.ageRange === AgeRange.UNDER_18 && parent) {
+        if (parent.password !== parent.confirmPassword) {
+          throw new BadRequestException('Parent passwords do not match');
+        }
       }
 
       // 2. Check if student email already exists
@@ -40,25 +42,38 @@ export class AuthService {
       }
 
       // 3. Handle Parent logic
-      console.log('[AuthService] Checking if parent email exists:', parent.email);
-      let parentEntity = await this.parentsService.findByEmail(parent.email);
-      let parentMessage = '';
+      let parentEntity = null;
+      let parentMessage = 'Adult student, no parent linked.';
 
-      if (!parentEntity) {
-        console.log('[AuthService] Creating new parent profile and user...');
-        parentEntity = await this.parentsService.create({
-          fullName: parent.fullName,
-          email: parent.email,
-          phoneNumber: parent.phoneNumber,
-          residency: parent.residency,
-          relationshipWithStudent: parent.relationshipWithStudent,
-          password: parent.password, // Pass parent password to service
-        });
-        console.log('[AuthService] Parent profile and user created:', parentEntity.id);
-        parentMessage = 'New parent account created.';
-      } else {
-        console.log('[AuthService] Using existing parent:', parentEntity.id);
-        parentMessage = 'Existing parent found. Student will be connected to the existing parent account.';
+      if (student.ageRange === AgeRange.UNDER_18) {
+        if (!parent) {
+          throw new BadRequestException('Parent information is required for students under 18.');
+        }
+
+        console.log('[AuthService] Checking if parent email or phone exists:', parent.email, parent.phoneNumber);
+        const existingByEmail = await this.parentsService.findByEmail(parent.email);
+        const existingByPhone = parent.phoneNumber ? await this.parentsService['parentsRepository'].findOne({ where: { phoneNumber: parent.phoneNumber } }) : null;
+        
+        parentEntity = existingByEmail || existingByPhone;
+
+        if (!parentEntity) {
+          console.log('[AuthService] Creating new parent profile and user...');
+          parentEntity = await this.parentsService.create({
+            fullName: parent.fullName,
+            email: parent.email,
+            phoneNumber: parent.phoneNumber,
+            residency: parent.residency,
+            country: parent.country,
+            city: parent.city,
+            relationshipWithStudent: parent.relationshipWithStudent,
+            password: parent.password,
+          });
+          console.log('[AuthService] Parent profile and user created:', parentEntity.id);
+          parentMessage = 'New parent account created.';
+        } else {
+          console.log('[AuthService] Using existing parent:', parentEntity.id);
+          parentMessage = 'Existing parent found. Student will be connected to the existing parent account.';
+        }
       }
 
       // 4. Create Student logic
@@ -75,12 +90,20 @@ export class AuthService {
       await this.studentsService.create({
         fullName: student.fullName,
         gender: student.gender.toLowerCase() === 'male' ? Gender.MALE : Gender.FEMALE,
-        age: student.age,
+        ageRange: student.ageRange,
         currentResidency: student.residency,
+        country: student.country,
+        city: student.city,
+        phone: student.phone,
         level: student.levelOfQuran as QuranLevel,
+        kitabRequested: student.kitabRequested,
+        kitabName: student.kitabName,
+        previousTraining: student.previousTraining,
+        trainingDetails: student.trainingDetails,
+        referralSource: student.referralSource,
         email: student.email,
         userId: studentUser.id,
-        parentId: parentEntity.id,
+        parentId: parentEntity ? parentEntity.id : null,
         status: StudentStatus.ACTIVE,
         attendanceRate: 0,
         progressRate: 0,

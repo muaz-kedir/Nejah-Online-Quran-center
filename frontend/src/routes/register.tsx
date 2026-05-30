@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone } from "lucide-react";
+import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info } from "lucide-react";
 import { toast } from "sonner";
+import { Country, City } from "country-state-city";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,37 +26,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const COUNTRIES = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-];
+import { Textarea } from "@/components/ui/textarea";
 
 const registerSchema = z.object({
   student: z.object({
     fullName: z.string().min(2, "Full name is required"),
     gender: z.string().min(1, "Gender is required"),
-    age: z.coerce.number().min(3, "Minimum age is 3").max(100, "Maximum age is 100"),
-    residency: z.string().min(2, "Residency is required"),
+    ageRange: z.enum(["Under 18", "18 - 25", "Above 25"], { required_error: "Age range is required" }),
+    country: z.string().min(1, "Country is required"),
+    city: z.string().min(1, "City is required"),
+    phone: z.string().min(1, "Phone is required"),
     levelOfQuran: z.string().min(1, "Quran level is required"),
+    kitabRequested: z.boolean().default(false),
+    kitabName: z.string().optional(),
+    previousTraining: z.boolean().default(false),
+    trainingDetails: z.string().optional(),
+    referralSource: z.string().min(1, "Source is required"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Confirm password is required"),
+    password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "Must contain uppercase, lowercase, number, and special character"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
   }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   }),
   parent: z.object({
-    fullName: z.string().min(2, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[\+]?[0-9\s\-\(\)]+$/, "Invalid phone number format"),
-    residency: z.string().min(2, "Residency is required"),
-    relationshipWithStudent: z.string().min(1, "Relationship is required"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Confirm password is required"),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  }),
+    fullName: z.string().optional(),
+    email: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    relationshipWithStudent: z.string().optional(),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+  }).optional(),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -70,6 +73,8 @@ function RegisterPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState<"student" | "parent">("student");
 
+  const countries = useMemo(() => Country.getAllCountries(), []);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: "onChange",
@@ -77,9 +82,16 @@ function RegisterPage() {
       student: {
         fullName: "",
         gender: "",
-        age: "" as any,
-        residency: "",
+        ageRange: undefined,
+        country: "",
+        city: "",
+        phone: "",
         levelOfQuran: "",
+        kitabRequested: false,
+        kitabName: "",
+        previousTraining: false,
+        trainingDetails: "",
+        referralSource: "",
         email: "",
         password: "",
         confirmPassword: "",
@@ -88,7 +100,8 @@ function RegisterPage() {
         fullName: "",
         email: "",
         phoneNumber: "",
-        residency: "",
+        country: "",
+        city: "",
         relationshipWithStudent: "",
         password: "",
         confirmPassword: "",
@@ -96,25 +109,57 @@ function RegisterPage() {
     },
   });
 
+  const watchAgeRange = form.watch("student.ageRange");
+  const watchStudentCountry = form.watch("student.country");
+  const watchParentCountry = form.watch("parent.country");
+  const watchKitabRequested = form.watch("student.kitabRequested");
+  const watchPreviousTraining = form.watch("student.previousTraining");
+  const watchReferralSource = form.watch("student.referralSource");
+
+  const studentCities = useMemo(() => {
+    if (!watchStudentCountry) return [];
+    const cities = City.getCitiesOfCountry(watchStudentCountry) || [];
+    return Array.from(new Set(cities.map(c => c.name))).map(name => ({ name }));
+  }, [watchStudentCountry]);
+
+  const parentCities = useMemo(() => {
+    if (!watchParentCountry) return [];
+    const cities = City.getCitiesOfCountry(watchParentCountry) || [];
+    return Array.from(new Set(cities.map(c => c.name))).map(name => ({ name }));
+  }, [watchParentCountry]);
+
+  const studentCountryData = useMemo(() => countries.find(c => c.isoCode === watchStudentCountry), [countries, watchStudentCountry]);
+  const parentCountryData = useMemo(() => countries.find(c => c.isoCode === watchParentCountry), [countries, watchParentCountry]);
+
   async function handleNext() {
-    // Validate student fields before moving to parent step
     const studentFields = [
-      "student.fullName",
-      "student.gender",
-      "student.age",
-      "student.residency",
-      "student.levelOfQuran",
-      "student.email",
-      "student.password",
-      "student.confirmPassword",
+      "student.fullName", "student.gender", "student.ageRange", 
+      "student.country", "student.city", "student.phone", "student.levelOfQuran",
+      "student.referralSource", "student.email", "student.password", "student.confirmPassword"
     ] as const;
 
     const isValid = await form.trigger(studentFields);
     
-    if (isValid) {
-      setCurrentStep("parent");
+    // Additional check for dependent fields
+    let dependentFieldsValid = true;
+    if (watchKitabRequested && !form.getValues("student.kitabName")) {
+      form.setError("student.kitabName", { message: "Kitab Name is required" });
+      dependentFieldsValid = false;
+    }
+    if (watchPreviousTraining && !form.getValues("student.trainingDetails")) {
+      form.setError("student.trainingDetails", { message: "Training details are required" });
+      dependentFieldsValid = false;
+    }
+    
+    if (isValid && dependentFieldsValid) {
+      if (watchAgeRange === "Under 18") {
+        setCurrentStep("parent");
+      } else {
+        // Adult student, submit directly
+        onSubmit(form.getValues());
+      }
     } else {
-      toast.error("Please fill in all student information correctly");
+      toast.error("Please fill in all required student information correctly");
     }
   }
 
@@ -123,26 +168,55 @@ function RegisterPage() {
   }
 
   async function onSubmit(values: RegisterFormValues) {
+    if (watchAgeRange === "Under 18" && currentStep === "student") {
+      // Should not happen naturally due to UI buttons, but to be safe
+      setCurrentStep("parent");
+      return;
+    }
+
+    if (watchAgeRange === "Under 18") {
+      // Validate parent fields
+      const p = values.parent;
+      if (!p?.fullName || !p?.email || !p?.phoneNumber || !p?.country || !p?.city || !p?.relationshipWithStudent || !p?.password) {
+        toast.error("Please fill in all parent information.");
+        return;
+      }
+      if (p.password !== p.confirmPassword) {
+        toast.error("Parent passwords do not match.");
+        return;
+      }
+    } else {
+      // Clear parent data for adults
+      values.parent = undefined;
+    }
+
     setIsLoading(true);
     try {
+      // Append country code to phone before sending if not already added
+      const submissionValues = JSON.parse(JSON.stringify(values));
+      
+      if (studentCountryData && submissionValues.student.phone && !submissionValues.student.phone.startsWith("+")) {
+         submissionValues.student.phone = `+${studentCountryData.phonecode}${submissionValues.student.phone}`;
+      }
+      if (watchAgeRange === "Under 18" && parentCountryData && submissionValues.parent?.phoneNumber && !submissionValues.parent.phoneNumber.startsWith("+")) {
+         submissionValues.parent.phoneNumber = `+${parentCountryData.phonecode}${submissionValues.parent.phoneNumber}`;
+      }
+
+      // Convert full country names back from isoCode for DB
+      if (studentCountryData) submissionValues.student.country = studentCountryData.name;
+      if (submissionValues.parent && parentCountryData) submissionValues.parent.country = parentCountryData.name;
+
       const response = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(submissionValues),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle specific error cases
         if (response.status === 409) {
-          if (data.message.includes("Student email")) {
-            toast.error("This student email is already registered. Please use a different email or login.");
-          } else if (data.message.includes("Email already exists")) {
-            toast.error("This email is already registered. Please use a different email or login.");
-          } else {
-            toast.error(data.message || "This email is already registered.");
-          }
+          toast.error(data.message || "This email is already registered.");
         } else {
           toast.error(data.message || "Registration failed. Please try again.");
         }
@@ -168,21 +242,21 @@ function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center">
-          <div className="mx-auto h-20 w-20 mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
-            <span className="text-3xl font-bold text-white">N</span>
+          <div className="mx-auto h-24 w-auto mb-4 flex items-center justify-center">
+            <img src="/logo.png" alt="Nejah Logo" className="object-contain h-full w-full max-w-[120px]" />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Join Nejah Online Quran & Islamic Center
           </h2>
           <p className="mt-2 text-sm text-gray-600 max-w-lg mx-auto">
-            Embark on your journey of Quranic learning. Please fill in both student and parent information to create your account.
+            Embark on your journey of Quranic learning. Fill in your information to get started.
           </p>
         </div>
 
         {/* Progress Indicator */}
-        {!isSuccess && (
+        {!isSuccess && watchAgeRange === "Under 18" && (
           <div className="flex items-center justify-center space-x-4">
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
@@ -228,7 +302,7 @@ function RegisterPage() {
             </motion.div>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={(e) => { e.preventDefault(); if(watchAgeRange !== "Under 18" || currentStep === "parent") form.handleSubmit(onSubmit)(e); else handleNext(); }} className="space-y-6">
                 <AnimatePresence mode="wait">
                   {currentStep === "student" ? (
                     <motion.div
@@ -246,31 +320,32 @@ function RegisterPage() {
                           </div>
                           <CardDescription>Details of the student enrolling in our programs.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="student.fullName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Abdullah Ahmed" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-2 gap-4">
+                        <CardContent className="space-y-6">
+                          {/* Name & Gender */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="student.fullName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Full Name *</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Abdullah Ahmed" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                             <FormField
                               control={form.control}
                               name="student.gender"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Gender</FormLabel>
+                                  <FormLabel>Gender *</FormLabel>
                                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                       <SelectTrigger>
-                                        <SelectValue placeholder="Select" />
+                                        <SelectValue placeholder="Select Gender" />
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -282,64 +357,249 @@ function RegisterPage() {
                                 </FormItem>
                               )}
                             />
+                          </div>
+
+                          {/* Age Range */}
+                          <FormField
+                            control={form.control}
+                            name="student.ageRange"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Age Range *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Age Range" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Under 18">Under 18</SelectItem>
+                                    <SelectItem value="18 - 25">18 - 25</SelectItem>
+                                    <SelectItem value="Above 25">Above 25</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {field.value === "Under 18" && (
+                                  <p className="text-sm text-amber-600 mt-1">Parent information will be required in the next step.</p>
+                                )}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Location */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
-                              name="student.age"
+                              name="student.country"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Age</FormLabel>
-                                  <FormControl>
-                                    <Input type="number" placeholder="10" {...field} />
-                                  </FormControl>
+                                  <FormLabel>Country *</FormLabel>
+                                  <Select onValueChange={(val) => { field.onChange(val); form.setValue("student.city", ""); }} defaultValue={field.value}>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <SelectTrigger className="pl-9">
+                                          <SelectValue placeholder="Select Country" />
+                                        </SelectTrigger>
+                                      </div>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {countries.map((c) => (
+                                        <SelectItem key={c.isoCode} value={c.isoCode}>
+                                          {c.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="student.city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City *</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={!watchStudentCountry}>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <SelectTrigger className="pl-9">
+                                          <SelectValue placeholder={watchStudentCountry ? "Select City" : "Select Country First"} />
+                                        </SelectTrigger>
+                                      </div>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {studentCities.map((city, idx) => (
+                                        <SelectItem key={`${city.name}-${idx}`} value={city.name}>
+                                          {city.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </div>
+
+                          {/* Phone */}
                           <FormField
                             control={form.control}
-                            name="student.residency"
+                            name="student.phone"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Current Residency</FormLabel>
+                                <FormLabel>Phone Number *</FormLabel>
+                                <FormControl>
+                                  <div className="relative flex items-center">
+                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                      <Phone className="h-4 w-4" />
+                                      {studentCountryData ? `+${studentCountryData.phonecode}` : ""}
+                                    </div>
+                                    <Input 
+                                      className="pl-20"
+                                      placeholder="123456789" 
+                                      {...field} 
+                                      disabled={!watchStudentCountry}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Quran Program */}
+                          <FormField
+                            control={form.control}
+                            name="student.levelOfQuran"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Level of Qira'at / Study Program *</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <div className="relative">
-                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <BookOpen className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
                                       <SelectTrigger className="pl-9">
-                                        <SelectValue placeholder="Select Country" />
+                                        <SelectValue placeholder="Select Program" />
                                       </SelectTrigger>
                                     </div>
                                   </FormControl>
                                   <SelectContent>
-                                    {COUNTRIES.map((country) => (
-                                      <SelectItem key={country} value={country}>
-                                        {country}
-                                      </SelectItem>
-                                    ))}
+                                    <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
+                                    <SelectItem value="Quran Reading">Quran Reading</SelectItem>
+                                    <SelectItem value="Hifz Program">Hifz Program</SelectItem>
+                                    <SelectItem value="Tajweed Program">Tajweed Program</SelectItem>
+                                    <SelectItem value="Hifz Muraja'a">Hifz Muraja'a</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
+
+                          {/* Kitab */}
                           <FormField
                             control={form.control}
-                            name="student.levelOfQuran"
+                            name="student.kitabRequested"
                             render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Level of Quran / Education</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormItem className="flex flex-col space-y-3 border p-4 rounded-md">
+                                <FormLabel>Do you want additional Deen Knowledge (Kitab)?</FormLabel>
+                                <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Select Level" />
+                                      <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="Beginner">Beginner</SelectItem>
-                                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="Hifz">Hifz</SelectItem>
-                                    <SelectItem value="Advanced">Advanced</SelectItem>
+                                    <SelectItem value="true">Yes</SelectItem>
+                                    <SelectItem value="false">No</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                          {watchKitabRequested && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
+                              <FormField
+                                control={form.control}
+                                name="student.kitabName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Kitab Name *</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="e.g. Aqeedah, Fiqh, Hadith, Seerah" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </motion.div>
+                          )}
+
+                          {/* Previous Training */}
+                          <FormField
+                            control={form.control}
+                            name="student.previousTraining"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col space-y-3 border p-4 rounded-md">
+                                <FormLabel>Have you received Quran training before?</FormLabel>
+                                <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="true">Yes</SelectItem>
+                                    <SelectItem value="false">No</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                          {watchPreviousTraining && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
+                              <FormField
+                                control={form.control}
+                                name="student.trainingDetails"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Training Details *</FormLabel>
+                                    <FormControl>
+                                      <Textarea placeholder="e.g. Local Madrasa, Private Teacher, Online Academy" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </motion.div>
+                          )}
+
+                          {/* Referral Source */}
+                          <FormField
+                            control={form.control}
+                            name="student.referralSource"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>How did you hear about us? *</FormLabel>
+                                <Select onValueChange={(val) => { field.onChange(val); if (val !== 'Other') form.setValue('student.referralSource', val); }} defaultValue={field.value === "Other" || !["YouTube","TikTok","Facebook","Instagram","Friend Referral","Google Search"].includes(field.value) && field.value ? "Other" : field.value}>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Info className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <SelectTrigger className="pl-9">
+                                        <SelectValue placeholder="Select Source" />
+                                      </SelectTrigger>
+                                    </div>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="YouTube">YouTube</SelectItem>
+                                    <SelectItem value="TikTok">TikTok</SelectItem>
+                                    <SelectItem value="Facebook">Facebook</SelectItem>
+                                    <SelectItem value="Instagram">Instagram</SelectItem>
+                                    <SelectItem value="Friend Referral">Friend Referral</SelectItem>
+                                    <SelectItem value="Google Search">Google Search</SelectItem>
                                     <SelectItem value="Other">Other</SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -347,68 +607,112 @@ function RegisterPage() {
                               </FormItem>
                             )}
                           />
-                          <FormField
-                            control={form.control}
-                            name="student.email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Student Email</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                    <Input className="pl-9" placeholder="student@example.com" {...field} />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-2 gap-4">
+                          {(!["YouTube","TikTok","Facebook","Instagram","Friend Referral","Google Search",""].includes(watchReferralSource) || form.getValues("student.referralSource") === "Other") && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
+                              <FormField
+                                control={form.control}
+                                name="student.referralSource"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Specify Source *</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Please specify" value={field.value !== "Other" ? field.value : ""} onChange={(e) => field.onChange(e.target.value || "Other")} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </motion.div>
+                          )}
+
+                          {/* Account Settings */}
+                          <div className="border-t pt-6 mt-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Credentials</h3>
                             <FormField
                               control={form.control}
-                              name="student.password"
+                              name="student.email"
                               render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Password</FormLabel>
+                                <FormItem className="mb-4">
+                                  <FormLabel>Email Address *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
-                                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                      <Input className="pl-9" type="password" {...field} />
+                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                      <Input className="pl-9" placeholder="student@example.com" {...field} />
                                     </div>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                            <FormField
-                              control={form.control}
-                              name="student.confirmPassword"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Confirm Password</FormLabel>
-                                  <FormControl>
-                                    <div className="relative">
-                                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                      <Input className="pl-9" type="password" {...field} />
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="student.password"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Password *</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Input className="pl-9" type="password" {...field} />
+                                      </div>
+                                    </FormControl>
+                                    <p className="text-xs text-gray-500 mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="student.confirmPassword"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Confirm Password *</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Input className="pl-9" type="password" {...field} />
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
+
                         </CardContent>
                       </Card>
 
                       <div className="flex justify-end pt-6">
-                        <Button
-                          type="button"
-                          onClick={handleNext}
-                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
-                        >
-                          Next: Parent Information
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
+                        {watchAgeRange === "Under 18" ? (
+                          <Button
+                            type="button"
+                            onClick={handleNext}
+                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          >
+                            Next: Parent Information
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                          </Button>
+                        ) : (
+                          <Button
+                            type="submit"
+                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                Create Account
+                                <CheckCircle2 className="ml-2 h-5 w-5" />
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </motion.div>
                   ) : (
@@ -425,144 +729,185 @@ function RegisterPage() {
                             <Users className="h-5 w-5 text-blue-600" />
                             <CardTitle>Parent Information</CardTitle>
                           </div>
-                          <CardDescription>Guardian details for communication and progress tracking.</CardDescription>
+                          <CardDescription>Guardian details for communication. If account exists with this Email/Phone, it will be linked automatically.</CardDescription>
                         </CardHeader>
-                                <CardContent className="space-y-4">
-                                  <FormField
-                                    control={form.control}
-                                    name="parent.fullName"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Parent Full Name</FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="Omar Ahmed" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="parent.email"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Parent Email</FormLabel>
-                                        <FormControl>
-                                          <div className="relative">
-                                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                            <Input className="pl-9" placeholder="parent@example.com" {...field} />
-                                          </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="parent.phoneNumber"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Contact Phone Number</FormLabel>
-                                        <FormControl>
-                                          <div className="relative">
-                                            <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                            <Input className="pl-9" placeholder="+1 (555) 123-4567" {...field} />
-                                          </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="parent.residency"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Parent Residency</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                          <FormControl>
-                                            <div className="relative">
-                                              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
-                                              <SelectTrigger className="pl-9">
-                                                <SelectValue placeholder="Select Country" />
-                                              </SelectTrigger>
-                                            </div>
-                                          </FormControl>
-                                          <SelectContent>
-                                            {COUNTRIES.map((country) => (
-                                              <SelectItem key={country} value={country}>
-                                                {country}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={form.control}
-                                    name="parent.relationshipWithStudent"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Relationship With Student</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                          <FormControl>
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select Relationship" />
-                                            </SelectTrigger>
-                                          </FormControl>
-                                          <SelectContent>
-                                            <SelectItem value="father">Father</SelectItem>
-                                            <SelectItem value="mother">Mother</SelectItem>
-                                            <SelectItem value="brother">Brother</SelectItem>
-                                            <SelectItem value="sister">Sister</SelectItem>
-                                            <SelectItem value="uncle">Uncle</SelectItem>
-                                            <SelectItem value="aunt">Aunt</SelectItem>
-                                            <SelectItem value="guardian">Guardian</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                      control={form.control}
-                                      name="parent.password"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Password</FormLabel>
-                                          <FormControl>
-                                            <div className="relative">
-                                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                              <Input className="pl-9" type="password" {...field} />
-                                            </div>
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={form.control}
-                                      name="parent.confirmPassword"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Confirm Password</FormLabel>
-                                          <FormControl>
-                                            <div className="relative">
-                                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                              <Input className="pl-9" type="password" {...field} />
-                                            </div>
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
+                        <CardContent className="space-y-6">
+                          <FormField
+                            control={form.control}
+                            name="parent.fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Parent Full Name *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Omar Ahmed" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="parent.relationshipWithStudent"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Relationship With Student *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Relationship" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Father">Father</SelectItem>
+                                    <SelectItem value="Mother">Mother</SelectItem>
+                                    <SelectItem value="Brother">Brother</SelectItem>
+                                    <SelectItem value="Sister">Sister</SelectItem>
+                                    <SelectItem value="Guardian">Guardian</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="parent.country"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Country *</FormLabel>
+                                  <Select onValueChange={(val) => { field.onChange(val); form.setValue("parent.city", ""); }} defaultValue={field.value}>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <SelectTrigger className="pl-9">
+                                          <SelectValue placeholder="Select Country" />
+                                        </SelectTrigger>
+                                      </div>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {countries.map((c) => (
+                                        <SelectItem key={c.isoCode} value={c.isoCode}>
+                                          {c.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="parent.city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City *</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={!watchParentCountry}>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <SelectTrigger className="pl-9">
+                                          <SelectValue placeholder={watchParentCountry ? "Select City" : "Select Country First"} />
+                                        </SelectTrigger>
+                                      </div>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {parentCities.map((city, idx) => (
+                                        <SelectItem key={`${city.name}-${idx}`} value={city.name}>
+                                          {city.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name="parent.phoneNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Contact Phone Number *</FormLabel>
+                                <FormControl>
+                                  <div className="relative flex items-center">
+                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                      <Phone className="h-4 w-4" />
+                                      {parentCountryData ? `+${parentCountryData.phonecode}` : ""}
+                                    </div>
+                                    <Input 
+                                      className="pl-20"
+                                      placeholder="123456789" 
+                                      {...field} 
+                                      disabled={!watchParentCountry}
                                     />
                                   </div>
-                                </CardContent>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <div className="border-t pt-6 mt-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Parent Account Credentials</h3>
+                            <FormField
+                              control={form.control}
+                              name="parent.email"
+                              render={({ field }) => (
+                                <FormItem className="mb-4">
+                                  <FormLabel>Parent Email *</FormLabel>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                      <Input className="pl-9" placeholder="parent@example.com" {...field} />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="parent.password"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Password *</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Input className="pl-9" type="password" {...field} />
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="parent.confirmPassword"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Confirm Password *</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Input className="pl-9" type="password" {...field} />
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
                       </Card>
 
                       <div className="flex justify-between pt-6">

@@ -6,7 +6,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Teacher } from './entities/teacher.entity';
-import { Student } from '../students/entities/student.entity';
+import { Student, QuranLevel } from '../students/entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { TeacherNote } from './entities/teacher-note.entity';
@@ -63,7 +63,7 @@ export class TeacherDashboardController {
       id: s.id,
       name: s.fullName,
       initials: s.fullName.split(' ').map(n => n[0]).join(''),
-      currentSurah: s.level === 'Hifz' ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)',
+      currentSurah: s.level === QuranLevel.HIFZ_PROGRAM ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)',
       status: s.progressRate > 0.8 ? 'EXCEEDING' : s.progressRate > 0.5 ? 'ON TRACK' : 'NEEDS REVIEW',
       progress: s.progressRate || 65,
     }));
@@ -206,7 +206,7 @@ export class TeacherDashboardController {
       endTime: s.endTimeString,
       meetingLink: s.meetingLink,
       status: s.status,
-      level: s.student?.level || 'Beginner'
+      level: s.student?.level || QuranLevel.QURAN_READING
     }));
   }
 

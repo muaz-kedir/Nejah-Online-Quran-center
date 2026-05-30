@@ -31,6 +31,12 @@ export class Parent {
   residency: string;
 
   @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
   phoneNumber: string;
 
   @Column()
