@@ -6,7 +6,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Teacher } from './entities/teacher.entity';
-import { Student } from '../students/entities/student.entity';
+import { Student, QuranLevel } from '../students/entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { TeacherNote } from './entities/teacher-note.entity';

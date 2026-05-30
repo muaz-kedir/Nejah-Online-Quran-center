@@ -1,5 +1,6 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber, IsOptional, IsBoolean, ValidateIf, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { AgeRange } from '../../students/entities/student.entity';
 
 export class StudentRegisterDto {
   @IsString()
@@ -10,13 +11,45 @@ export class StudentRegisterDto {
   @IsNotEmpty()
   gender: string;
 
-  @IsNumber()
+  @IsEnum(AgeRange)
   @IsNotEmpty()
-  age: number;
+  ageRange: AgeRange;
+
+  @IsString()
+  @IsOptional()
+  residency?: string;
 
   @IsString()
   @IsNotEmpty()
-  residency: string;
+  country: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsBoolean()
+  @IsOptional()
+  kitabRequested?: boolean;
+
+  @IsString()
+  @IsOptional()
+  kitabName?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  previousTraining?: boolean;
+
+  @IsString()
+  @IsOptional()
+  trainingDetails?: string;
+
+  @IsString()
+  @IsOptional()
+  referralSource?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -50,8 +83,16 @@ export class ParentRegisterDto {
   phoneNumber: string;
 
   @IsString()
+  @IsOptional()
+  residency?: string;
+
+  @IsString()
   @IsNotEmpty()
-  residency: string;
+  country: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city: string;
 
   @IsString()
   @IsNotEmpty()
@@ -73,8 +114,9 @@ export class RegisterDto {
   @Type(() => StudentRegisterDto)
   student: StudentRegisterDto;
 
+  @ValidateIf((o) => o.student?.ageRange === AgeRange.UNDER_18)
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => ParentRegisterDto)
-  parent: ParentRegisterDto;
+  parent?: ParentRegisterDto;
 }

@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
-import { QuranLevel, StudentStatus } from '../entities/student.entity';
+import { AgeRange, QuranLevel, StudentStatus } from '../entities/student.entity';
 import { Gender } from '../../common/enums/gender.enum';
 
 export class CreateStudentDto {
@@ -10,14 +10,42 @@ export class CreateStudentDto {
   @IsEnum(Gender)
   gender: Gender;
 
-  @IsNumber()
-  @Min(3)
-  @Max(80)
-  age: number;
+  @IsEnum(AgeRange)
+  ageRange: AgeRange;
 
   @IsOptional()
   @IsString()
   currentResidency?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  kitabRequested?: boolean;
+
+  @IsOptional()
+  @IsString()
+  kitabName?: string;
+
+  @IsOptional()
+  previousTraining?: boolean;
+
+  @IsOptional()
+  @IsString()
+  trainingDetails?: string;
+
+  @IsOptional()
+  @IsString()
+  referralSource?: string;
 
   @IsEnum(QuranLevel)
   level: QuranLevel;

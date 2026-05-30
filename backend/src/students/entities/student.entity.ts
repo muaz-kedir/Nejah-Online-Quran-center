@@ -15,11 +15,17 @@ import { Gender } from '../../common/enums/gender.enum';
 import { Schedule } from '../../schedules/entities/schedule.entity';
 
 export enum QuranLevel {
-  BEGINNER = 'Beginner',
-  INTERMEDIATE = 'Intermediate',
-  HIFZ = 'Hifz',
-  ADVANCED = 'Advanced',
-  OTHER = 'Other',
+  QAIDA_NOORANIYA = 'Qaida Nooraniya',
+  QURAN_READING = 'Quran Reading',
+  HIFZ_PROGRAM = 'Hifz Program',
+  TAJWEED_PROGRAM = 'Tajweed Program',
+  HIFZ_MURAJAA = 'Hifz Muraja\'a',
+}
+
+export enum AgeRange {
+  UNDER_18 = 'Under 18',
+  EIGHTEEN_TO_TWENTY_FIVE = '18 - 25',
+  ABOVE_TWENTY_FIVE = 'Above 25',
 }
 
 export enum StudentStatus {
@@ -39,14 +45,38 @@ export class Student {
   @Column({ type: 'enum', enum: Gender, default: Gender.MALE })
   gender: Gender;
 
-  @Column()
-  age: number;
+  @Column({ type: 'varchar', default: AgeRange.UNDER_18 })
+  ageRange: AgeRange;
 
   @Column({ nullable: true })
   currentResidency: string;
 
-  @Column({ type: 'enum', enum: QuranLevel, default: QuranLevel.BEGINNER })
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ type: 'varchar', default: QuranLevel.QURAN_READING })
   level: QuranLevel;
+
+  @Column({ default: false })
+  kitabRequested: boolean;
+
+  @Column({ nullable: true })
+  kitabName: string;
+
+  @Column({ default: false })
+  previousTraining: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  trainingDetails: string;
+
+  @Column({ nullable: true })
+  referralSource: string;
 
   @Column({ unique: true })
   email: string;
