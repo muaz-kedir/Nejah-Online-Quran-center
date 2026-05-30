@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen } from "lucide-react";
 
 export function Loader() {
   const [show, setShow] = useState(true);
@@ -20,9 +19,9 @@ export function Loader() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1.4, ease: "linear" }}
-            className="size-16 rounded-2xl bg-primary text-primary-foreground grid place-items-center"
+            className="size-16 rounded-2xl bg-primary grid place-items-center p-2"
           >
-            <BookOpen className="size-7" />
+            <img src="/logo.png" alt="Nejah" className="h-full w-auto" />
           </motion.div>
         </motion.div>
       )}
