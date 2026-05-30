@@ -76,9 +76,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
         >
           {!sidebarCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-emerald-400 rounded-lg flex items-center justify-center font-bold text-xl text-emerald-900 shadow-lg flex-shrink-0">
-                N
-              </div>
+              <img src="/logo.png" alt="Nejah" className="h-9 w-auto rounded-lg flex-shrink-0" />
               <div>
                 <h1 className="text-lg font-bold leading-none">Nejah</h1>
                 <p className="text-[10px] text-emerald-300 uppercase tracking-widest mt-0.5">
@@ -88,9 +86,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-9 h-9 bg-emerald-400 rounded-lg flex items-center justify-center font-bold text-xl text-emerald-900 shadow-lg">
-              N
-            </div>
+            <img src="/logo.png" alt="Nejah" className="h-9 w-auto rounded-lg shadow-lg flex-shrink-0" />
           )}
 
           {/* Desktop collapse toggle */}
