@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star } from 'lucide-react';
+import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Country, City } from 'country-state-city';
+import { getCountryIsoByName } from '@/lib/geo-data';
+import { buildUpdateTeacherPayload } from '@/lib/teacher-payload';
 
 const API = 'http://localhost:3000/api';
 
@@ -42,12 +45,14 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
     qualification: '',
     specialization: '',
     experience: '',
-    currentResidency: '',
     status: 'active',
     monthlySalary: '',
     islamicEducationLevel: '',
     teachingTopics: '',
     avatarUrl: '',
+    country: '',
+    city: '',
+    streetAddress: '',
   });
 
   useEffect(() => {
@@ -60,12 +65,14 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
         qualification: teacher.qualification || '',
         specialization: teacher.specialization || '',
         experience: teacher.experience !== undefined ? String(teacher.experience) : '',
-        currentResidency: teacher.currentResidency || '',
         status: teacher.status || 'active',
         monthlySalary: teacher.monthlySalary !== undefined ? String(teacher.monthlySalary) : '',
         islamicEducationLevel: teacher.islamicEducationLevel || '',
         teachingTopics: teacher.teachingTopics || '',
         avatarUrl: teacher.avatarUrl || '',
+        country: teacher.country || '',
+        city: teacher.city || '',
+        streetAddress: teacher.streetAddress || '',
       });
     }
   }, [teacher]);
@@ -113,11 +120,11 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
 
     try {
       const token = localStorage.getItem('token');
-      const body = {
+      const body = buildUpdateTeacherPayload({
         ...formData,
         experience: formData.experience ? parseInt(formData.experience, 10) : 0,
         monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
-      };
+      });
 
       const response = await fetch(`${API}/teachers/${teacher.id}`, {
         method: 'PATCH',
@@ -146,6 +153,13 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
+
+  const cityOptions = useMemo(() => {
+    const iso = getCountryIsoByName(formData.country);
+    if (!iso) return [];
+    const cities = City.getCitiesOfCountry(iso) ?? [];
+    return [...new Set(cities.map((c) => c.name))];
+  }, [formData.country]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -246,6 +260,69 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                   placeholder="+1 (555) 000-0000"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
                 />
+              </div>
+
+              {/* Address Information */}
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-gray-300">Country</Label>
+                <Select
+                  value={getCountryIsoByName(formData.country)}
+                  onValueChange={(val) => {
+                    const country = Country.getCountryByCode(val);
+                    setFormData({ ...formData, country: country?.name || val, city: '' });
+                  }}
+                >
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select Country" /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                    {Country.getAllCountries().map((c) => (
+                      <SelectItem key={c.isoCode} value={c.isoCode}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-gray-300">City</Label>
+                <Select
+                  value={formData.city}
+                  onValueChange={(val) => setFormData({ ...formData, city: val })}
+                  disabled={!formData.country}
+                >
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select City" /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                    {cityOptions.map((cityName) => (
+                      <SelectItem key={cityName} value={cityName}>
+                        {cityName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Street Address</Label>
+                <Input
+                  value={formData.streetAddress}
+                  onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                  placeholder="Enter street address"
+                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                />
+              </div>
+
+              {/* Professional Details merged */}
+              <div className="grid gap-1.5">
+                <Label htmlFor="edit-status" className="text-xs font-semibold dark:text-gray-300">Status</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="on leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -353,41 +430,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
             </div>
           </div>
 
-          {/* Section 4: Professional Details */}
-          <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-              <span className="p-1.5 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-blue-600">
-                <Briefcase className="h-4 w-4" />
-              </span>
-              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Professional Details</h3>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="edit-residency" className="text-xs font-semibold dark:text-gray-300">Current Residency</Label>
-                <Input
-                  id="edit-residency"
-                  value={formData.currentResidency}
-                  onChange={(e) => setFormData({ ...formData, currentResidency: e.target.value })}
-                  placeholder="e.g. Cairo, Egypt (Remote)"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
-                />
-              </div>
-
-              <div className="grid gap-1.5">
-                <Label htmlFor="edit-status" className="text-xs font-semibold dark:text-gray-300">Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="on leave">On Leave</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-gray-200 dark:border-gray-700 dark:text-gray-300">

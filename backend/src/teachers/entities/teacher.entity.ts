@@ -47,7 +47,34 @@ export class Teacher {
   experience: number;
 
   @Column({ nullable: true })
-  currentResidency: string;
+  country: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
+  streetAddress: string;
+
+  @Column({ nullable: true })
+  dateOfBirth: string; // YYYY-MM-DD format
+
+  @Column('simple-array', { nullable: true })
+  languages: string[];
+
+  @Column({ nullable: true })
+  internetConnectionType: string;
+
+  @Column({ nullable: true })
+  qiratEducationLevel: string;
+
+  @Column('simple-array', { nullable: true })
+  teachingTimeAvailability: string[];
+
+  @Column({ nullable: true })
+  marketingSource: string;
+
+  @Column({ type: 'text', nullable: true })
+  additionalComments: string;
 
   @Column({ default: 'active' })
   status: string; // active, inactive, pending, on leave

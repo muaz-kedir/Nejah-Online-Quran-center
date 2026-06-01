@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,8 +29,16 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme, language, setLanguage, t } = useApp();
   const notifications = 3;
-  const userName = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Admin User' : 'Admin User';
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || 'super_admin' : 'super_admin';
+  const [userName, setUserName] = useState('Admin User');
+  const [userRole, setUserRole] = useState('super_admin');
+
+  useEffect(() => {
+    // Only set user data on client side to avoid hydration mismatch
+    if (typeof window !== 'undefined') {
+      setUserName(localStorage.getItem('userName') || 'Admin User');
+      setUserRole(localStorage.getItem('userRole') || 'super_admin');
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();

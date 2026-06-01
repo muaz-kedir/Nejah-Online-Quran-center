@@ -13,7 +13,16 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
   const location = useLocation();
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
   const [mobileOpen, setMobileOpen] = useState(isOpen);
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || 'student' : 'student';
+  // Use a default role that will be updated on client side
+  const [userRole, setUserRole] = useState('student');
+
+  useEffect(() => {
+    // Only set userRole on client side to avoid hydration mismatch
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('userRole') || 'student';
+      setUserRole(role);
+    }
+  }, []);
 
   useEffect(() => {
     setMobileOpen(isOpen);

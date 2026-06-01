@@ -284,7 +284,7 @@ function TeacherProfilePage() {
                   <GraduationCap className="h-4 w-4" /> {teacher.specialization || 'Quranic Sciences & Hadith'}
                 </p>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {teacher.currentResidency || 'Cairo, Egypt'}</span>
+                  <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {teacher.city || 'Cairo, Egypt'}</span>
                   <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {teacher.experience || 0} Years Experience</span>
                 </div>
               </div>

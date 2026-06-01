@@ -164,6 +164,28 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
                       <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.currentResidency || 'Not provided'}</p>
                     </div>
                   </div>
+                  {student.country && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                        <Globe className="h-3.5 w-3.5 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Country</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.country}</p>
+                      </div>
+                    </div>
+                  )}
+                  {student.city && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                        <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">City</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-200">{student.city}</p>
+                      </div>
+                    </div>
+                  )}
                   {student.learningGoals && (
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
