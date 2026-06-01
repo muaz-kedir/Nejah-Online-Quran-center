@@ -11,8 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Country } from 'country-state-city';
+import { getCountryIsoByName, getUniqueCityNamesByCountryName } from '@/lib/geo-data';
+import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
 
-// List of all world countries (ISO 3166‑1 English short names)
+// List of all world countries (ISO 3166‑1 English short names)
 const COUNTRIES = [
   "Afghanistan",
   "Albania",
@@ -248,13 +251,46 @@ function AddTeacherPage() {
     qualification: '',
     specialization: '',
     experience: 0,
-    currentResidency: '',
+    country: '',
+    city: '',
+    streetAddress: '',
+    languages: [] as string[],
+    internetConnectionType: '',
+    qiratEducationLevel: '',
+    islamicEducationLevel: '',
+    teachingTimeAvailability: [] as string[],
+    marketingSource: '',
+    additionalComments: '',
     weeklySchedule: '',
     hourlyRate: 20,
     notes: '',
     avatarUrl: '',
     status: 'active',
   });
+
+  const [otherStates, setOtherStates] = useState({
+    languages: '',
+    internetConnectionType: '',
+    qiratEducationLevel: '',
+    islamicEducationLevel: '',
+    marketingSource: '',
+  });
+
+  const handleOtherChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setOtherStates(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMultiSelect = (name: string, value: string) => {
+    setFormData((prev: any) => {
+      const arr = prev[name] || [];
+      if (arr.includes(value)) {
+        return { ...prev, [name]: arr.filter((v: string) => v !== value) };
+      } else {
+        return { ...prev, [name]: [...arr, value] };
+      }
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -306,16 +342,15 @@ function AddTeacherPage() {
     try {
       const token = localStorage.getItem('token');
       
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...teacherData } = formData;
-      
+      const payload = buildCreateTeacherPayload(formData, { otherStates });
+
       const response = await fetch('http://localhost:3000/api/teachers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(teacherData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -465,8 +500,70 @@ function AddTeacherPage() {
                     />
                   </div>
                 </div>
+
+                {/* Address Information Merged */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">
+                    Country <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    value={getCountryIsoByName(formData.country)}
+                    onValueChange={(val) => {
+                      const cName = Country.getCountryByCode(val)?.name || val;
+                      handleSelectChange('country', cName);
+                      handleSelectChange('city', '');
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl">
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                      {Country.getAllCountries().map((c) => (
+                        <SelectItem key={c.isoCode} value={c.isoCode}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    value={formData.city}
+                    onValueChange={(val) => handleSelectChange('city', val)}
+                  >
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl">
+                      <SelectValue placeholder="Select City" />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                      {getUniqueCityNamesByCountryName(formData.country).map((cityName) => (
+                          <SelectItem key={cityName} value={cityName}>
+                            {cityName}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">
+                    Street Address
+                  </label>
+                  <Input
+                    name="streetAddress"
+                    value={formData.streetAddress}
+                    onChange={handleInputChange}
+                    placeholder="Enter street address"
+                    className="h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                  />
+                </div>
+
               </div>
             </div>
+
 
             {/* Card 2: Academic & Specialties */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-150 dark:border-gray-700 shadow-sm space-y-4">
@@ -520,6 +617,137 @@ function AddTeacherPage() {
                       className="pl-10 min-h-[90px] bg-gray-50 dark:bg-gray-900 border-none rounded-xl pt-3.5 resize-none"
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2B: Teacher Specifics */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-150 dark:border-gray-700 shadow-sm space-y-4">
+              <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100 font-serif flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                <FileText className="h-5 w-5 text-emerald-800" />
+                Additional Details
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Languages */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Languages Spoken</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French', 'Other'].map(lang => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => handleMultiSelect('languages', lang)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.languages.includes(lang) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300'}`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                  {formData.languages.includes('Other') && (
+                    <Input name="languages" value={otherStates.languages} onChange={handleOtherChange} placeholder="Specify other languages" className="mt-2 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl" />
+                  )}
+                </div>
+
+                {/* Internet Connection */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Internet Connection Type</label>
+                  <Select value={formData.internetConnectionType} onValueChange={(val) => handleSelectChange('internetConnectionType', val)}>
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Wi-Fi">Wi-Fi</SelectItem>
+                      <SelectItem value="Mobile Data Connection">Mobile Data Connection</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.internetConnectionType === 'Other' && (
+                    <Input name="internetConnectionType" value={otherStates.internetConnectionType} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl" />
+                  )}
+                </div>
+
+                {/* Marketing Source */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Where Did You Hear About Us?</label>
+                  <Select value={formData.marketingSource} onValueChange={(val) => handleSelectChange('marketingSource', val)}>
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TikTok">TikTok</SelectItem>
+                      <SelectItem value="YouTube">YouTube</SelectItem>
+                      <SelectItem value="Telegram">Telegram</SelectItem>
+                      <SelectItem value="Facebook">Facebook</SelectItem>
+                      <SelectItem value="Instagram">Instagram</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.marketingSource === 'Other' && (
+                    <Input name="marketingSource" value={otherStates.marketingSource} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl" />
+                  )}
+                </div>
+
+                {/* Qirat Level */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Qirat / Quran Education Level</label>
+                  <Select value={formData.qiratEducationLevel} onValueChange={(val) => handleSelectChange('qiratEducationLevel', val)}>
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Fully Hafiz">Fully Hafiz</SelectItem>
+                      <SelectItem value="Partial Hafiz">Partial Hafiz</SelectItem>
+                      <SelectItem value="Learned Quran with Tajweed">Learned Quran with Tajweed</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.qiratEducationLevel === 'Other' && (
+                    <Input name="qiratEducationLevel" value={otherStates.qiratEducationLevel} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl" />
+                  )}
+                </div>
+
+                {/* Extra Islamic Level */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Additional Islamic Education Level</label>
+                  <Select value={formData.islamicEducationLevel} onValueChange={(val) => handleSelectChange('islamicEducationLevel', val)}>
+                    <SelectTrigger className="w-full h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Mukhtasar Books">Mukhtasar Books</SelectItem>
+                      <SelectItem value="Mutawwal Books">Mutawwal Books</SelectItem>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                      <SelectItem value="Ijazah">Ijazah</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.islamicEducationLevel === 'Other' && (
+                    <Input name="islamicEducationLevel" value={otherStates.islamicEducationLevel} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl" />
+                  )}
+                </div>
+
+                {/* Availability */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Available Teaching Times</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['After Fajr Prayer until Dhuhr Prayer', 'Between Dhuhr and Asr', 'Between Asr and Maghrib', 'Between Maghrib and Isha', 'After Isha Prayer'].map(slot => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => handleMultiSelect('teachingTimeAvailability', slot)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.teachingTimeAvailability.includes(slot) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300'}`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Comments */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest ml-1">Additional Comments</label>
+                  <Textarea
+                    name="additionalComments"
+                    value={formData.additionalComments}
+                    onChange={handleInputChange}
+                    placeholder="Enter any additional information you would like us to know."
+                    className="min-h-[80px] bg-gray-50 dark:bg-gray-900 border-none rounded-xl resize-none"
+                  />
                 </div>
               </div>
             </div>
@@ -583,22 +811,6 @@ function AddTeacherPage() {
                       value={formData.hourlyRate}
                       onChange={handleInputChange}
                       placeholder="20"
-                      className="pl-9 bg-emerald-850/40 border-none text-white placeholder-emerald-400/60 rounded-xl h-11"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider">
-                    Current Residence (City / Country)
-                  </label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-300" />
-                    <Input
-                      name="currentResidency"
-                      value={formData.currentResidency}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Cairo, Egypt"
                       className="pl-9 bg-emerald-850/40 border-none text-white placeholder-emerald-400/60 rounded-xl h-11"
                     />
                   </div>

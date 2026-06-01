@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { UserPlus, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star } from 'lucide-react';
+import { UserPlus, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const API = 'http://localhost:3000/api';
+import { Country, City } from 'country-state-city';
+import { getCountryIsoByName } from '@/lib/geo-data';
+import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
+import { API_BASE, formatApiError } from '@/lib/api';
 
 interface AddTeacherModalProps {
   open: boolean;
@@ -31,6 +33,7 @@ interface AddTeacherModalProps {
 
 export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalProps) {
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
@@ -43,13 +46,50 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
     qualification: '',
     specialization: '',
     experience: '',
-    currentResidency: '',
+    country: '',
+    city: '',
+    streetAddress: '',
+    dateOfBirth: '',
+    languages: [] as string[],
+    internetConnectionType: '',
+    qiratEducationLevel: '',
+    islamicEducationLevel: '',
+    teachingTimeAvailability: [] as string[],
+    marketingSource: '',
+    additionalComments: '',
     status: 'active',
     monthlySalary: '',
-    islamicEducationLevel: '',
     teachingTopics: '',
     avatarUrl: '',
   });
+
+  const [otherStates, setOtherStates] = useState({
+    languages: '',
+    internetConnectionType: '',
+    qiratEducationLevel: '',
+    islamicEducationLevel: '',
+    marketingSource: '',
+  });
+
+  useEffect(() => {
+    if (open) setSubmitError(null);
+  }, [open]);
+
+  const handleOtherChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setOtherStates(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMultiSelect = (name: string, value: string) => {
+    setFormData((prev: any) => {
+      const arr = prev[name] || [];
+      if (arr.includes(value)) {
+        return { ...prev, [name]: arr.filter((v: string) => v !== value) };
+      } else {
+        return { ...prev, [name]: [...arr, value] };
+      }
+    });
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +111,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
       const form = new FormData();
       form.append('file', file);
 
-      const response = await fetch(`${API}/uploads`, {
+      const response = await fetch(`${API_BASE}/uploads`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: form,
@@ -90,6 +130,25 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
+    // Basic validation
+    if (!formData.fullName.trim()) {
+      toast.error('Full Name is required');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error('Email Address is required');
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
 
     if (!formData.password || formData.password.length < 6) {
       toast.error('Password must be at least 6 characters');
@@ -101,28 +160,79 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
       return;
     }
 
+    if (!formData.country) {
+      toast.error('Country is required');
+      return;
+    }
+
+    if (!formData.city) {
+      toast.error('City is required');
+      return;
+    }
+
+    // Validate "Other" fields have custom input
+    if (formData.languages.includes('Other') && !otherStates.languages.trim()) {
+      toast.error('Please specify other languages');
+      return;
+    }
+
+    if (formData.internetConnectionType === 'Other' && !otherStates.internetConnectionType.trim()) {
+      toast.error('Please specify internet connection type');
+      return;
+    }
+
+    if (formData.qiratEducationLevel === 'Other' && !otherStates.qiratEducationLevel.trim()) {
+      toast.error('Please specify your Qirat/Quran education level');
+      return;
+    }
+
+    if (formData.islamicEducationLevel === 'Other' && !otherStates.islamicEducationLevel.trim()) {
+      toast.error('Please specify your Islamic education level');
+      return;
+    }
+
+    if (formData.marketingSource === 'Other' && !otherStates.marketingSource.trim()) {
+      toast.error('Please specify where you heard about us');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      const msg = 'You must be logged in to add a teacher. Please sign in again.';
+      setSubmitError(msg);
+      toast.error(msg);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const { confirmPassword, ...teacherData } = {
-        ...formData,
-        experience: formData.experience ? parseInt(formData.experience, 10) : 0,
-        monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
-      };
+      const payload = buildCreateTeacherPayload(
+        {
+          ...formData,
+          experience: formData.experience ? parseInt(formData.experience as string, 10) : 0,
+          monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary as string) : undefined,
+        },
+        { otherStates },
+      );
 
-      const response = await fetch(`${API}/teachers`, {
+      if (!payload.password || !payload.email || !payload.fullName) {
+        throw new Error('Full name, email, and password are required.');
+      }
+
+      const response = await fetch(`${API_BASE}/teachers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(teacherData),
+        body: JSON.stringify(payload),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add teacher');
+        throw new Error(formatApiError(data, 'Failed to add teacher'));
       }
 
       toast.success('Teacher added successfully');
@@ -139,16 +249,34 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
         qualification: '',
         specialization: '',
         experience: '',
-        currentResidency: '',
+        country: '',
+        city: '',
+        streetAddress: '',
+        dateOfBirth: '',
+        languages: [],
+        internetConnectionType: '',
+        qiratEducationLevel: '',
+        islamicEducationLevel: '',
+        teachingTimeAvailability: [],
+        marketingSource: '',
+        additionalComments: '',
         status: 'active',
         monthlySalary: '',
-        islamicEducationLevel: '',
         teachingTopics: '',
         avatarUrl: '',
       });
-    } catch (error: any) {
+      setOtherStates({
+        languages: '',
+        internetConnectionType: '',
+        qiratEducationLevel: '',
+        islamicEducationLevel: '',
+        marketingSource: '',
+      });
+    } catch (error: unknown) {
       console.error('Teacher creation error:', error);
-      toast.error(error.message || 'Something went wrong');
+      const msg = error instanceof Error ? error.message : 'Something went wrong';
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -158,8 +286,15 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
     fileInputRef.current?.click();
   };
 
+  const cityOptions = useMemo(() => {
+    const iso = getCountryIsoByName(formData.country);
+    if (!iso) return [];
+    const cities = City.getCitiesOfCountry(iso) ?? [];
+    return [...new Set(cities.map((c) => c.name))];
+  }, [formData.country]);
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-emerald-900 dark:text-gray-100 flex items-center gap-2">
@@ -168,7 +303,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 mt-4">
           {/* Avatar Upload */}
           <div className="flex items-center gap-5">
             <div
@@ -218,7 +353,6 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  required
                   placeholder="e.g. Dr. Amina Mansour"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
                 />
@@ -236,13 +370,23 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
               </div>
 
               <div className="grid gap-1.5">
+                <Label htmlFor="dateOfBirth" className="text-xs font-semibold dark:text-gray-300">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
                 <Label htmlFor="email" className="text-xs font-semibold dark:text-gray-300">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
                   placeholder="name@nejah-center.com"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
                 />
@@ -268,7 +412,6 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Min. 6 characters"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
-                  required
                 />
               </div>
 
@@ -281,8 +424,70 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   placeholder="Re-enter password"
                   className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
-                  required
                 />
+              </div>
+
+              {/* Address Information merged into Personal Details */}
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-gray-300">Country *</Label>
+                <Select
+                  value={getCountryIsoByName(formData.country)}
+                  onValueChange={(val) => {
+                    const cName = Country.getCountryByCode(val)?.name || val;
+                    setFormData({ ...formData, country: cName, city: '' });
+                  }}
+                >
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select Country" /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                    {Country.getAllCountries().map((c) => (
+                      <SelectItem key={c.isoCode} value={c.isoCode}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-gray-300">City *</Label>
+                <Select
+                  value={formData.city}
+                  onValueChange={(val) => setFormData({ ...formData, city: val })}
+                  disabled={!formData.country}
+                >
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select City" /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                    {cityOptions.map((cityName) => (
+                      <SelectItem key={cityName} value={cityName}>
+                        {cityName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Street Address</Label>
+                <Input
+                  value={formData.streetAddress}
+                  onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                  placeholder="Enter street address"
+                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                />
+              </div>
+
+              {/* Professional Details merged into Personal Details */}
+              <div className="grid gap-1.5">
+                <Label htmlFor="status" className="text-xs font-semibold dark:text-gray-300">Status</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="on leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -352,12 +557,18 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
                 >
                   <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select level" /></SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="Mukhtasar Books">Mukhtasar Books</SelectItem>
+                    <SelectItem value="Mutawwal Books">Mutawwal Books</SelectItem>
                     <SelectItem value="Beginner">Beginner</SelectItem>
                     <SelectItem value="Intermediate">Intermediate</SelectItem>
                     <SelectItem value="Advanced">Advanced</SelectItem>
                     <SelectItem value="Ijazah">Ijazah</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {formData.islamicEducationLevel === 'Other' && (
+                  <Input name="islamicEducationLevel" value={otherStates.islamicEducationLevel} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 dark:bg-gray-900 dark:border-gray-600 rounded-xl" />
+                )}
               </div>
 
               <div className="grid gap-1.5">
@@ -390,41 +601,119 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
             </div>
           </div>
 
-          {/* Section 4: Professional Details */}
+
+
+          {/* Section 4: Additional Details */}
           <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-              <span className="p-1.5 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-blue-600">
-                <Briefcase className="h-4 w-4" />
+              <span className="p-1.5 bg-orange-50 dark:bg-orange-950/50 rounded-lg text-orange-600">
+                <FileText className="h-4 w-4" />
               </span>
-              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Professional Details</h3>
+              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Additional Details</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="residency" className="text-xs font-semibold dark:text-gray-300">Current Residency</Label>
-                <Input
-                  id="residency"
-                  value={formData.currentResidency}
-                  onChange={(e) => setFormData({ ...formData, currentResidency: e.target.value })}
-                  placeholder="e.g. Cairo, Egypt (Remote)"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
-                />
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Languages Spoken</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French', 'Other'].map(lang => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => handleMultiSelect('languages', lang)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.languages.includes(lang) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300'}`}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+                {formData.languages.includes('Other') && (
+                  <Input name="languages" value={otherStates.languages} onChange={handleOtherChange} placeholder="Specify other languages" className="mt-2 h-10 dark:bg-gray-900 dark:border-gray-600 rounded-xl" />
+                )}
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="status" className="text-xs font-semibold dark:text-gray-300">Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="on leave">On Leave</SelectItem>
+                <Label className="text-xs font-semibold dark:text-gray-300">Internet Connection Type</Label>
+                <Select value={formData.internetConnectionType} onValueChange={(val) => setFormData({ ...formData, internetConnectionType: val })}>
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Wi-Fi">Wi-Fi</SelectItem>
+                    <SelectItem value="Mobile Data Connection">Mobile Data Connection</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {formData.internetConnectionType === 'Other' && (
+                  <Input name="internetConnectionType" value={otherStates.internetConnectionType} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 dark:bg-gray-900 dark:border-gray-600 rounded-xl" />
+                )}
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-gray-300">Where Did You Hear About Us?</Label>
+                <Select value={formData.marketingSource} onValueChange={(val) => setFormData({ ...formData, marketingSource: val })}>
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TikTok">TikTok</SelectItem>
+                    <SelectItem value="YouTube">YouTube</SelectItem>
+                    <SelectItem value="Telegram">Telegram</SelectItem>
+                    <SelectItem value="Facebook">Facebook</SelectItem>
+                    <SelectItem value="Instagram">Instagram</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formData.marketingSource === 'Other' && (
+                  <Input name="marketingSource" value={otherStates.marketingSource} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 dark:bg-gray-900 dark:border-gray-600 rounded-xl" />
+                )}
+              </div>
+
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Qirat / Quran Education Level</Label>
+                <Select value={formData.qiratEducationLevel} onValueChange={(val) => setFormData({ ...formData, qiratEducationLevel: val })}>
+                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Fully Hafiz">Fully Hafiz</SelectItem>
+                    <SelectItem value="Partial Hafiz">Partial Hafiz</SelectItem>
+                    <SelectItem value="Learned Quran with Tajweed">Learned Quran with Tajweed</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formData.qiratEducationLevel === 'Other' && (
+                  <Input name="qiratEducationLevel" value={otherStates.qiratEducationLevel} onChange={handleOtherChange} placeholder="Specify" className="mt-2 h-10 dark:bg-gray-900 dark:border-gray-600 rounded-xl" />
+                )}
+              </div>
+
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Available Teaching Times</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['After Fajr Prayer until Dhuhr Prayer', 'Between Dhuhr and Asr', 'Between Asr and Maghrib', 'Between Maghrib and Isha', 'After Isha Prayer'].map(slot => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleMultiSelect('teachingTimeAvailability', slot)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.teachingTimeAvailability.includes(slot) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300'}`}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-1.5 col-span-2">
+                <Label className="text-xs font-semibold dark:text-gray-300">Additional Comments</Label>
+                <Textarea
+                  value={formData.additionalComments}
+                  onChange={(e) => setFormData({ ...formData, additionalComments: e.target.value })}
+                  placeholder="Enter any additional information you would like us to know."
+                  className="min-h-[80px] dark:bg-gray-900 dark:border-gray-600 rounded-xl resize-none"
+                />
               </div>
             </div>
           </div>
+
+          {submitError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-3">
+              {submitError}
+            </p>
+          )}
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-gray-200 dark:border-gray-700 dark:text-gray-300">

@@ -19,6 +19,7 @@ import {
   TrendingUp,
   ArrowRight,
   MapPin,
+  Globe,
 } from 'lucide-react';
 
 const API = 'http://localhost:3000/api';
@@ -131,10 +132,16 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
           {/* Info Section */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
-              {teacher.currentResidency && (
+              {teacher.country && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Globe className="h-4 w-4 text-gray-400" />
+                  <span>{teacher.country}</span>
+                </div>
+              )}
+              {teacher.city && (
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{teacher.currentResidency}</span>
+                  <span>{teacher.city}</span>
                 </div>
               )}
               {analytics?.monthlySalary && (

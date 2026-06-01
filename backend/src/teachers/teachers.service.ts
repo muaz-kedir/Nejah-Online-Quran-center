@@ -51,9 +51,10 @@ export class TeachersService {
       isActive: true,
     });
 
-    // 3. Create the Teacher record linked to the companion User
+    // 3. Create the Teacher record linked to the companion User (password is for User only)
+    const { password: _password, ...teacherFields } = createTeacherDto;
     const teacher = this.teachersRepository.create({
-      ...createTeacherDto,
+      ...teacherFields,
       userId: user.id,
     });
 

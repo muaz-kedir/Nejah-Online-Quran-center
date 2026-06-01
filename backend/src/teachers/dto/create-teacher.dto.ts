@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Gender } from '../../common/enums/gender.enum';
 
@@ -38,7 +38,45 @@ export class CreateTeacherDto {
 
   @IsString()
   @IsOptional()
-  currentResidency?: string;
+  country?: string;
+
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @IsString()
+  @IsOptional()
+  streetAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  dateOfBirth?: string; // YYYY-MM-DD format
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  languages?: string[];
+
+  @IsString()
+  @IsOptional()
+  internetConnectionType?: string;
+
+  @IsString()
+  @IsOptional()
+  qiratEducationLevel?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  teachingTimeAvailability?: string[];
+
+  @IsString()
+  @IsOptional()
+  marketingSource?: string;
+
+  @IsString()
+  @IsOptional()
+  additionalComments?: string;
 
   @IsString()
   @IsOptional()

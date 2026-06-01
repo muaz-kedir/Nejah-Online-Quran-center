@@ -128,22 +128,18 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const getInitialTheme = (): Theme => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('theme') as Theme) || 'light';
-    return 'light';
-  };
-  const getInitialLang = (): Language => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('language') as Language) || 'en';
-    return 'en';
-  };
-  const getInitialSidebar = (): boolean => {
-    if (typeof window !== 'undefined') return localStorage.getItem('sidebarCollapsed') === 'true';
-    return false;
-  };
+  const [theme, setTheme] = useState<Theme>('light');
+  const [language, setLanguageState] = useState<Language>('en');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [language, setLanguageState] = useState<Language>(getInitialLang);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebar);
+  // Only set initial values on client side to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setTheme((localStorage.getItem('theme') as Theme) || 'light');
+      setLanguageState((localStorage.getItem('language') as Language) || 'en');
+      setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

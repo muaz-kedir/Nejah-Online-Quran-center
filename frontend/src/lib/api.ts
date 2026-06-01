@@ -23,3 +23,12 @@ export async function api<T = any>(path: string, options?: RequestInit): Promise
 export function apiUrl(path: string) {
   return `${API_BASE}${path}`;
 }
+
+/** NestJS validation errors return message as a string or string[]. */
+export function formatApiError(data: unknown, fallback = 'Something went wrong'): string {
+  if (!data || typeof data !== 'object') return fallback;
+  const message = (data as { message?: unknown }).message;
+  if (Array.isArray(message)) return message.join(', ');
+  if (typeof message === 'string' && message.trim()) return message;
+  return fallback;
+}

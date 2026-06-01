@@ -97,11 +97,6 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
         </p>
       </td>
       <td className="py-4 px-4">
-        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          {teacher.currentResidency || 'Full-time'}
-        </p>
-      </td>
-      <td className="py-4 px-4">
         <Badge className={cn('text-[10px] font-extrabold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center w-max gap-1.5', getStatusBadge(teacher.status))}>
           <span className={cn('w-1.5 h-1.5 rounded-full', teacher.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
           {teacher.status || 'Active'}
@@ -337,7 +332,6 @@ function TeachersPage() {
                   <th className="text-left py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Teacher Name</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Students Count</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Experience</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
                   <th className="text-right py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
                 </tr>
@@ -346,12 +340,12 @@ function TeachersPage() {
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={6} className="h-24" />
+                      <td colSpan={5} className="h-24" />
                     </tr>
                   ))
                 ) : teachers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-gray-400 font-medium font-serif">
+                    <td colSpan={5} className="py-20 text-center text-gray-400 font-medium font-serif">
                       No teachers found matching your search.
                     </td>
                   </tr>
