@@ -9,8 +9,11 @@ import {
   Query,
   UseGuards,
   BadRequestException,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { StudentsService } from './students.service';
+import { TeachersService } from '../teachers/teachers.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
@@ -23,7 +26,10 @@ import { UserRole } from '../common/enums/user-role.enum';
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class StudentsController {
-  constructor(private readonly studentsService: StudentsService) {}
+  constructor(
+    private readonly studentsService: StudentsService,
+    private readonly teachersService: TeachersService,
+  ) {}
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PARENT)
@@ -33,7 +39,11 @@ export class StudentsController {
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
-  findAll(@Query() queryDto: QueryStudentDto) {
+  async findAll(@Request() req, @Query() queryDto: QueryStudentDto) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      queryDto.teacherId = teacher.id;
+    }
     return this.studentsService.findAll(queryDto);
   }
 
@@ -51,8 +61,15 @@ export class StudentsController {
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
-  findOne(@Param('id') id: string) {
-    return this.studentsService.findOne(id);
+  async findOne(@Request() req, @Param('id') id: string) {
+    const student = await this.studentsService.findOne(id);
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      if (student.teacherId !== teacher.id) {
+        throw new ForbiddenException('You do not have access to this student');
+      }
+    }
+    return student;
   }
 
   @Patch(':id')

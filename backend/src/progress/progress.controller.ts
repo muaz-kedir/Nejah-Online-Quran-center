@@ -14,41 +14,66 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../common/enums/user-role.enum';
+import { TeachersService } from '../teachers/teachers.service';
 
 @Controller('progress')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProgressController {
-  constructor(private progressService: ProgressService) {}
+  constructor(
+    private progressService: ProgressService,
+    private teachersService: TeachersService,
+  ) {}
 
   @Get('student/:studentId')
-  @Roles('super_admin', 'admin', 'teacher', 'student', 'parent')
-  async getProgress(@Param('studentId') studentId: string) {
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  async getProgress(@Request() req, @Param('studentId') studentId: string) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+    }
     return this.progressService.getOrCreateProgress(studentId);
   }
 
   @Patch('student/:studentId/log')
-  @Roles('super_admin', 'admin', 'teacher')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   async logProgress(
+    @Request() req,
     @Param('studentId') studentId: string,
     @Body() dto: UpdateProgressDto,
   ) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+    }
     return this.progressService.logProgress(studentId, dto);
   }
 
   @Post('student/:studentId/feedback')
-  @Roles('super_admin', 'admin', 'teacher')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   async addFeedback(
+    @Request() req,
     @Param('studentId') studentId: string,
     @Body() dto: CreateFeedbackDto,
-    @Request() req,
   ) {
-    const teacherId = req.user.teacherId || req.user.id;
+    let teacherId: string;
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      teacherId = teacher.id;
+    } else {
+      teacherId = req.user.id;
+    }
     return this.progressService.addFeedback(teacherId, studentId, dto.content);
   }
 
   @Get('student/:studentId/feedback')
-  @Roles('super_admin', 'admin', 'teacher', 'student', 'parent')
-  async getFeedback(@Param('studentId') studentId: string) {
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  async getFeedback(@Request() req, @Param('studentId') studentId: string) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+    }
     return this.progressService.getStudentFeedback(studentId);
   }
 }

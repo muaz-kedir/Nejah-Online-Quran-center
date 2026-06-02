@@ -27,7 +27,10 @@ function TeacherProfilePage() {
       
       if (response.ok) {
         const data = await response.json();
-        setTeacher(data.teacher);
+        setTeacher({ ...data.teacher, stats: data.stats });
+      } else {
+        const err = await response.json().catch(() => ({}));
+        console.error(err.message || 'Failed to load profile');
       }
     } catch (error) {
       console.error('Failed to fetch teacher profile:', error);

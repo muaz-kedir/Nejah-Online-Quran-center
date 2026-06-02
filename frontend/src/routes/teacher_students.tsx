@@ -20,6 +20,8 @@ function TeacherStudentsPage() {
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [accessDenied, setAccessDenied] = useState<string | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -165,7 +167,23 @@ function TeacherStudentsPage() {
                       </td>
                       <td className="py-4 px-6 text-right">
                         <Button
-                          onClick={() => setSelectedStudent(student)}
+                          onClick={async () => {
+                            setAccessDenied(null);
+                            try {
+                              const token = localStorage.getItem('token');
+                              const res = await fetch(`${API_BASE}/teachers/students/${student.id}`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              if (res.ok) {
+                                setSelectedStudent(await res.json());
+                              } else {
+                                const err = await res.json().catch(() => ({}));
+                                setAccessDenied(err.message || 'You do not have access to this student');
+                              }
+                            } catch {
+                              setAccessDenied('Failed to load student details');
+                            }
+                          }}
                           className="h-9 px-4 bg-emerald-900 hover:bg-emerald-800 text-white rounded-lg text-sm font-medium"
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -221,6 +239,29 @@ function TeacherStudentsPage() {
             </div>
           )}
         </div>
+
+        {accessDenied && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            {accessDenied}
+          </p>
+        )}
+
+        {selectedStudent && (
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100">{selectedStudent.fullName}</h2>
+              <Button variant="outline" onClick={() => setSelectedStudent(null)} className="rounded-lg">
+                Close
+              </Button>
+            </div>
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div><dt className="text-gray-500">Email</dt><dd className="font-medium">{selectedStudent.email || '—'}</dd></div>
+              <div><dt className="text-gray-500">Level</dt><dd className="font-medium">{selectedStudent.level || '—'}</dd></div>
+              <div><dt className="text-gray-500">Status</dt><dd className="font-medium">{selectedStudent.status || '—'}</dd></div>
+              <div><dt className="text-gray-500">Attendance</dt><dd className="font-medium">{selectedStudent.attendanceRate ?? 0}%</dd></div>
+            </dl>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

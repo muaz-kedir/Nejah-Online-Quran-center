@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClassSession, SessionStatus, TeacherAttendanceStatus } from './entities/class-session.entity';
@@ -69,7 +69,10 @@ export class AttendanceService {
     return this.getClassSessionWithAttendance(savedSession.id);
   }
 
-  async getLiveClassSessionByScheduleToday(scheduleId: string): Promise<ClassSession> {
+  async getLiveClassSessionByScheduleToday(
+    scheduleId: string,
+    requestingTeacherId?: string,
+  ): Promise<ClassSession> {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
@@ -89,6 +92,10 @@ export class AttendanceService {
 
       if (!schedule) {
         throw new NotFoundException('Schedule not found');
+      }
+
+      if (requestingTeacherId && schedule.teacherId !== requestingTeacherId) {
+        throw new ForbiddenException('You do not have access to this schedule');
       }
 
       session = this.classSessionRepository.create({
@@ -116,6 +123,10 @@ export class AttendanceService {
       }
 
       session = await this.getClassSessionWithAttendance(savedSession.id);
+    }
+
+    if (requestingTeacherId && session.teacherId !== requestingTeacherId) {
+      throw new ForbiddenException('You do not have access to this class session');
     }
 
     return session;

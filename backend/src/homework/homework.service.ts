@@ -42,26 +42,22 @@ export class HomeworkService {
     });
   }
 
-  async updateStatus(id: string, status: HomeworkStatus): Promise<Homework> {
-    const homework = await this.homeworkRepository.findOne({
-      where: { id },
-    });
+  async findOne(id: string): Promise<Homework> {
+    const homework = await this.homeworkRepository.findOne({ where: { id } });
     if (!homework) {
       throw new NotFoundException('Homework not found');
     }
+    return homework;
+  }
 
+  async updateStatus(id: string, status: HomeworkStatus): Promise<Homework> {
+    const homework = await this.findOne(id);
     homework.status = status;
     return this.homeworkRepository.save(homework);
   }
 
   async remove(id: string): Promise<void> {
-    const homework = await this.homeworkRepository.findOne({
-      where: { id },
-    });
-    if (!homework) {
-      throw new NotFoundException('Homework not found');
-    }
-
+    const homework = await this.findOne(id);
     await this.homeworkRepository.remove(homework);
   }
 }

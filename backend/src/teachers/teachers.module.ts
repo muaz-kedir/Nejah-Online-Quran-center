@@ -11,6 +11,7 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Attendance } from '../attendance/entities/attendance.entity';
       Attendance,
     ]),
     UsersModule,
+    NotificationsModule,
   ],
   controllers: [TeachersController, TeacherDashboardController],
   providers: [TeachersService],

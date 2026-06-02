@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -11,15 +22,13 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { TeacherNote } from './entities/teacher-note.entity';
 import { Progress } from '../progress/entities/progress.entity';
-import { Attendance } from '../attendance/entities/attendance.entity';
+import { TeachersService } from './teachers.service';
 
 @Controller('teacher/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.TEACHER)
 export class TeacherDashboardController {
   constructor(
-    @InjectRepository(Teacher)
-    private teachersRepository: Repository<Teacher>,
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
     @InjectRepository(Schedule)
@@ -30,94 +39,84 @@ export class TeacherDashboardController {
     private notesRepository: Repository<TeacherNote>,
     @InjectRepository(Progress)
     private progressRepository: Repository<Progress>,
-    @InjectRepository(Attendance)
-    private attendanceRepository: Repository<Attendance>,
+    private teachersService: TeachersService,
   ) {}
+
+  private async requireTeacher(req: { user: { id: string } }): Promise<Teacher> {
+    return this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+  }
 
   @Get()
   async getDashboardData(@Request() req) {
-    const userId = req.user.id;
-    const userEmail = req.user.email;
-    console.log('[TeacherDashboard] Request user:', { id: userId, email: userEmail });
-
-    // First try to find teacher by userId (the User entity's id)
-    let teacher = await this.teachersRepository.findOne({
-      where: { userId },
-      relations: ['user'],
-    });
-    console.log('[TeacherDashboard] Found by userId:', teacher?.id || 'none');
-
-    // If not found, try to find by email (matching the logged-in user's email)
-    if (!teacher) {
-      teacher = await this.teachersRepository.findOne({
-        where: { email: userEmail },
-        relations: ['user'],
-      });
-      console.log('[TeacherDashboard] Found by email:', teacher?.id || 'none');
-    }
-
-    if (!teacher) {
-      console.error('[TeacherDashboard] NO TEACHER FOUND for user:', { id: userId, email: userEmail });
-      return { message: 'Teacher profile not found' };
-    }
-
-    console.log('[TeacherDashboard] Using teacher:', teacher.id, teacher.email);
-
+    const teacher = await this.requireTeacher(req);
     const teacherId = teacher.id;
 
-    // Stats
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = days[new Date().getDay()];
+
     const totalStudents = await this.studentsRepository.count({ where: { teacherId } });
-    const todayClassesCount = await this.schedulesRepository.count({ where: { teacherId } });
+    const todayClassesCount = await this.schedulesRepository.count({
+      where: { teacherId, dayOfWeek: currentDay, status: 'active' },
+    });
 
     const studentsRes = await this.studentsRepository.find({ where: { teacherId } });
-    const avgAttendance = studentsRes.length > 0
-      ? studentsRes.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / studentsRes.length
-      : 0;
+    const avgAttendance =
+      studentsRes.length > 0
+        ? studentsRes.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / studentsRes.length
+        : 0;
 
     const homeworkPending = await this.homeworkRepository.count({
       where: { student: { teacherId }, status: 'Pending' as any },
     });
 
-    // Student progress with real progress data
-    const studentIds = studentsRes.map(s => s.id);
-    const progressRecords = studentIds.length > 0 ? await this.progressRepository.find({
-      where: { studentId: In(studentIds) },
-      order: { updatedAt: 'DESC' },
-    }) : [];
+    const studentIds = studentsRes.map((s) => s.id);
+    const progressRecords =
+      studentIds.length > 0
+        ? await this.progressRepository.find({
+            where: { studentId: In(studentIds) },
+            order: { updatedAt: 'DESC' },
+          })
+        : [];
 
-    const progressMap = new Map(progressRecords.map(p => [p.studentId, p]));
+    const progressMap = new Map(progressRecords.map((p) => [p.studentId, p]));
 
-    const studentProgress = studentsRes.map(s => {
+    const studentProgress = studentsRes.map((s) => {
       const prog = progressMap.get(s.id);
       const rate = prog?.progressPercentage ?? s.progressRate ?? 0;
       return {
         id: s.id,
         name: s.fullName,
-        initials: s.fullName.split(' ').map(n => n[0]).join(''),
-        currentSurah: prog?.lastStudiedSurah || (s.level === QuranLevel.HIFZ_PROGRAM ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)'),
+        initials: s.fullName
+          .split(' ')
+          .map((n) => n[0])
+          .join(''),
+        currentSurah:
+          prog?.lastStudiedSurah ||
+          (s.level === QuranLevel.HIFZ_PROGRAM ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)'),
         status: rate >= 80 ? 'EXCEEDING' : rate >= 50 ? 'ON TRACK' : 'NEEDS REVIEW',
         progress: rate,
       };
     });
 
-    // Real notes (no fallback)
     const notes = await this.notesRepository.find({
       where: { teacherId },
       order: { createdAt: 'DESC' },
       take: 3,
     });
 
-    // Real sessions with proper time formatting
     const sessions = await this.schedulesRepository.find({
-      where: { teacherId },
+      where: { teacherId, dayOfWeek: currentDay, status: 'active' },
       order: { startTimeString: 'ASC' },
       relations: ['student'],
-      take: 3,
+      take: 5,
     });
 
-    const formattedSessions = sessions.map(s => ({
+    const formattedSessions = sessions.map((s) => ({
       id: s.id,
-      time: s.startTimeString && s.endTimeString ? `${s.startTimeString} - ${s.endTimeString}` : '',
+      time:
+        s.startTimeString && s.endTimeString
+          ? `${s.startTimeString} - ${s.endTimeString}`
+          : '',
       title: s.className,
       type: s.classType || (s.student ? 'Private Hifz • 1:1 Session' : 'Group Session'),
       students: s.student ? [s.student.fullName] : [],
@@ -129,9 +128,7 @@ export class TeacherDashboardController {
         id: teacher.id,
         name: teacher.fullName,
         title: teacher.specialization || 'Teacher',
-        avatar: teacher.avatarUrl
-          ? `http://localhost:3000${teacher.avatarUrl}`
-          : null,
+        avatar: teacher.avatarUrl ? `http://localhost:3000${teacher.avatarUrl}` : null,
       },
       stats: {
         totalStudents,
@@ -140,7 +137,7 @@ export class TeacherDashboardController {
         homeworkPending,
       },
       studentProgress,
-      notes: notes.map(n => ({
+      notes: notes.map((n) => ({
         id: n.id,
         type: n.type,
         title: n.title,
@@ -153,18 +150,7 @@ export class TeacherDashboardController {
 
   @Get('today-sessions')
   async getTodaySessions(@Request() req) {
-    const userId = req.user.id;
-
-    // First try to find teacher by userId
-    let teacher = await this.teachersRepository.findOne({ where: { userId } });
-    
-    // If not found, try to find by email
-    if (!teacher) {
-      const userEmail = req.user.email;
-      teacher = await this.teachersRepository.findOne({ where: { email: userEmail } });
-    }
-
-    if (!teacher) return [];
+    const teacher = await this.requireTeacher(req);
 
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const currentDay = days[new Date().getDay()];
@@ -175,7 +161,7 @@ export class TeacherDashboardController {
       relations: ['student'],
     });
 
-    return sessions.map(s => ({
+    return sessions.map((s) => ({
       scheduleId: s.id,
       title: s.className || 'Quran Class',
       studentName: s.student?.fullName || 'Unknown Student',
@@ -189,25 +175,9 @@ export class TeacherDashboardController {
     }));
   }
 
-  private async getTeacherFromRequest(req: any) {
-    const userId = req.user.id;
-
-    // First try to find teacher by userId
-    let teacher = await this.teachersRepository.findOne({ where: { userId } });
-    
-    // If not found, try to find by email
-    if (!teacher) {
-      const userEmail = req.user.email;
-      teacher = await this.teachersRepository.findOne({ where: { email: userEmail } });
-    }
-
-    return teacher;
-  }
-
   @Get('notes')
   async getNotes(@Request() req) {
-    const teacher = await this.getTeacherFromRequest(req);
-    if (!teacher) return [];
+    const teacher = await this.requireTeacher(req);
     return this.notesRepository.find({
       where: { teacherId: teacher.id },
       order: { createdAt: 'DESC' },
@@ -215,9 +185,11 @@ export class TeacherDashboardController {
   }
 
   @Post('notes')
-  async createNote(@Request() req, @Body() body: { title: string; content: string; type: string }) {
-    const teacher = await this.getTeacherFromRequest(req);
-    if (!teacher) return { error: 'Teacher not found' };
+  async createNote(
+    @Request() req,
+    @Body() body: { title: string; content: string; type: string },
+  ) {
+    const teacher = await this.requireTeacher(req);
     const note = this.notesRepository.create({
       teacherId: teacher.id,
       title: body.title,
@@ -233,20 +205,26 @@ export class TeacherDashboardController {
     @Param('id') id: string,
     @Body() body: { title?: string; content?: string; type?: string },
   ) {
-    const teacher = await this.getTeacherFromRequest(req);
-    if (!teacher) return { error: 'Teacher not found' };
-    const note = await this.notesRepository.findOne({ where: { id, teacherId: teacher.id } });
-    if (!note) return { error: 'Note not found' };
+    const teacher = await this.requireTeacher(req);
+    const note = await this.notesRepository.findOne({
+      where: { id, teacherId: teacher.id },
+    });
+    if (!note) {
+      throw new NotFoundException('Note not found');
+    }
     Object.assign(note, body);
     return this.notesRepository.save(note);
   }
 
   @Delete('notes/:id')
   async deleteNote(@Request() req, @Param('id') id: string) {
-    const teacher = await this.getTeacherFromRequest(req);
-    if (!teacher) return { error: 'Teacher not found' };
-    const note = await this.notesRepository.findOne({ where: { id, teacherId: teacher.id } });
-    if (!note) return { error: 'Note not found' };
+    const teacher = await this.requireTeacher(req);
+    const note = await this.notesRepository.findOne({
+      where: { id, teacherId: teacher.id },
+    });
+    if (!note) {
+      throw new NotFoundException('Note not found');
+    }
     await this.notesRepository.remove(note);
     return { success: true };
   }

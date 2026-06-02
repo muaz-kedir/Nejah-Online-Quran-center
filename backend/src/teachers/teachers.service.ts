@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +12,8 @@ import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { QueryTeacherDto } from './dto/query-teacher.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Homework } from '../homework/entities/homework.entity';
 
 @Injectable()
 export class TeachersService {
@@ -24,7 +26,10 @@ export class TeachersService {
     private progressRepository: Repository<Progress>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
+    @InjectRepository(Homework)
+    private homeworkRepository: Repository<Homework>,
     private usersService: UsersService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createTeacherDto: CreateTeacherDto): Promise<Teacher> {
@@ -123,6 +128,36 @@ export class TeachersService {
     }
 
     return teacher;
+  }
+
+  /** Resolve Teacher entity from authenticated User id (JWT `req.user.id`). */
+  async resolveAuthenticatedTeacher(userId: string): Promise<Teacher> {
+    if (!userId) {
+      throw new ForbiddenException('Authentication required');
+    }
+    return this.findByUserId(userId);
+  }
+
+  async assertStudentBelongsToTeacher(teacherId: string, studentId: string): Promise<Student> {
+    const student = await this.studentsRepository.findOne({ where: { id: studentId } });
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    if (student.teacherId !== teacherId) {
+      throw new ForbiddenException('You do not have access to this student');
+    }
+    return student;
+  }
+
+  async assertScheduleBelongsToTeacher(teacherId: string, scheduleId: string): Promise<Schedule> {
+    const schedule = await this.schedulesRepository.findOne({ where: { id: scheduleId } });
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found');
+    }
+    if (schedule.teacherId !== teacherId) {
+      throw new ForbiddenException('You do not have access to this schedule');
+    }
+    return schedule;
   }
 
   async update(id: string, updateTeacherDto: UpdateTeacherDto): Promise<Teacher> {
@@ -320,8 +355,9 @@ export class TeachersService {
       ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
       : 0;
 
-    // Get homework pending (from students' homework)
-    const homeworkPending = students.length * 3; // Estimate
+    const homeworkPending = await this.homeworkRepository.count({
+      where: { student: { teacherId }, status: 'Pending' as any },
+    });
 
     // Calculate average progress
     const totalProgressRate = students.length > 0
@@ -420,13 +456,29 @@ export class TeachersService {
     }));
   }
 
-  // Get teacher's notifications
+  // Get teacher's notifications (scoped to the teacher's User account)
   async getTeacherNotifications(teacherId: string, page = 1, limit = 20) {
-    // This would integrate with the notifications service
-    // For now, returning placeholder data structure
+    const teacher = await this.findOne(teacherId);
+    if (!teacher.userId) {
+      return {
+        notifications: [],
+        meta: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const all = await this.notificationsService.getNotifications(teacher.userId);
+    const total = all.length;
+    const start = (page - 1) * limit;
+    const notifications = all.slice(start, start + limit);
+
     return {
-      notifications: [],
-      meta: { total: 0, page, limit, totalPages: 0 },
+      notifications,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
     };
   }
 }

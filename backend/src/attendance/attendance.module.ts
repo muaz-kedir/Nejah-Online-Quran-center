@@ -8,11 +8,13 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { TeachersModule } from '../teachers/teachers.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ClassSession, StudentAttendance, Student, Teacher, Schedule]),
     NotificationsModule,
+    TeachersModule,
   ],
   controllers: [AttendanceController],
   providers: [AttendanceService],

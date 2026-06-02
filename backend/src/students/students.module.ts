@@ -12,11 +12,13 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { Feedback } from '../progress/entities/feedback.entity';
 import { SchedulesModule } from '../schedules/schedules.module';
 import { UsersModule } from '../users/users.module';
+import { TeachersModule } from '../teachers/teachers.module';
 
 @Module({
   imports: [
     SchedulesModule,
     UsersModule,
+    TeachersModule,
     TypeOrmModule.forFeature([
       Student,
       Progress,

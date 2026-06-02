@@ -127,11 +127,15 @@ const Topbar = ({ teacher }: any) => (
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-3 text-right">
         <div>
-          <p className="text-sm font-bold text-emerald-950 leading-tight">{teacher?.name || 'Prof. Ibrahim'}</p>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{teacher?.title || 'Senior Tajweed Instructor'}</p>
+          <p className="text-sm font-bold text-emerald-950 leading-tight">{teacher?.name || 'Teacher'}</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{teacher?.title || 'Instructor'}</p>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-emerald-100 p-0.5">
-          <img src={teacher?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Ibrahim"} alt="Profile" className="w-full h-full rounded-full bg-emerald-50" />
+        <div className="w-10 h-10 rounded-full border-2 border-emerald-100 p-0.5 bg-emerald-50 flex items-center justify-center text-emerald-800 font-bold">
+          {teacher?.avatar ? (
+            <img src={teacher.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+          ) : (
+            <span>{(teacher?.name || 'T').charAt(0)}</span>
+          )}
         </div>
       </div>
       <div className="w-px h-8 bg-gray-100" />
@@ -318,7 +322,17 @@ function TeacherDashboard() {
           fetch(`${API}/teacher/dashboard/today-sessions`, { headers: authHeaders() }),
           fetch(`${API}/teacher/dashboard/notes`, { headers: authHeaders() }),
         ]);
-        if (dashRes.ok) setData(await dashRes.json());
+        if (dashRes.ok) {
+          const dash = await dashRes.json();
+          if (dash.message) {
+            toast.error(dash.message);
+          } else {
+            setData(dash);
+          }
+        } else if (dashRes.status === 403 || dashRes.status === 404) {
+          const err = await dashRes.json().catch(() => ({}));
+          toast.error(err.message || 'Teacher profile not found for your account');
+        }
         if (sessRes.ok) setTodaySessions(await sessRes.json());
         if (notesRes.ok) setNotes(await notesRes.json());
       } catch {
@@ -389,7 +403,7 @@ function TeacherDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#f8f9fc] text-gray-900 font-sans">
-      <TeacherSidebar activePath="/teacher/dashboard" />
+      <TeacherSidebar activePath="/teacher_dashboard" />
 
       <div className="flex-1 flex flex-col ml-64">
         <Topbar teacher={data?.teacher} />
