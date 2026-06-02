@@ -37,15 +37,31 @@ export class TeacherDashboardController {
   @Get()
   async getDashboardData(@Request() req) {
     const userId = req.user.id;
+    const userEmail = req.user.email;
+    console.log('[TeacherDashboard] Request user:', { id: userId, email: userEmail });
 
-    const teacher = await this.teachersRepository.findOne({
+    // First try to find teacher by userId (the User entity's id)
+    let teacher = await this.teachersRepository.findOne({
       where: { userId },
       relations: ['user'],
     });
+    console.log('[TeacherDashboard] Found by userId:', teacher?.id || 'none');
+
+    // If not found, try to find by email (matching the logged-in user's email)
+    if (!teacher) {
+      teacher = await this.teachersRepository.findOne({
+        where: { email: userEmail },
+        relations: ['user'],
+      });
+      console.log('[TeacherDashboard] Found by email:', teacher?.id || 'none');
+    }
 
     if (!teacher) {
+      console.error('[TeacherDashboard] NO TEACHER FOUND for user:', { id: userId, email: userEmail });
       return { message: 'Teacher profile not found' };
     }
+
+    console.log('[TeacherDashboard] Using teacher:', teacher.id, teacher.email);
 
     const teacherId = teacher.id;
 
@@ -139,7 +155,15 @@ export class TeacherDashboardController {
   async getTodaySessions(@Request() req) {
     const userId = req.user.id;
 
-    const teacher = await this.teachersRepository.findOne({ where: { userId } });
+    // First try to find teacher by userId
+    let teacher = await this.teachersRepository.findOne({ where: { userId } });
+    
+    // If not found, try to find by email
+    if (!teacher) {
+      const userEmail = req.user.email;
+      teacher = await this.teachersRepository.findOne({ where: { email: userEmail } });
+    }
+
     if (!teacher) return [];
 
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -167,7 +191,17 @@ export class TeacherDashboardController {
 
   private async getTeacherFromRequest(req: any) {
     const userId = req.user.id;
-    return this.teachersRepository.findOne({ where: { userId } });
+
+    // First try to find teacher by userId
+    let teacher = await this.teachersRepository.findOne({ where: { userId } });
+    
+    // If not found, try to find by email
+    if (!teacher) {
+      const userEmail = req.user.email;
+      teacher = await this.teachersRepository.findOne({ where: { email: userEmail } });
+    }
+
+    return teacher;
   }
 
   @Get('notes')
