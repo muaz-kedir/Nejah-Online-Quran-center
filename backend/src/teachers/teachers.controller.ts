@@ -26,14 +26,11 @@ export class TeachersController {
     return this.teachersService.create(createTeacherDto);
   }
 
-  @Get()
-  findAll(@Query() queryDto: QueryTeacherDto) {
-    return this.teachersService.findAll(queryDto);
-  }
-
-  @Get('stats')
-  getOverallStats() {
-    return this.teachersService.getOverallStats();
+  // Teacher Dashboard Endpoints - Real Data from Database
+  @Get('dashboard')
+  async getTeacherDashboard(@Req() req: any) {
+    const teacher = await this.teachersService.findByUserId(req.user.sub);
+    return this.teachersService.getTeacherDashboardData(teacher.id);
   }
 
   @Get('my-dashboard-stats')
@@ -41,6 +38,36 @@ export class TeachersController {
     // req.user has { sub: userId, email, role } from JwtAuthGuard
     const teacher = await this.teachersService.findByUserId(req.user.sub);
     return this.teachersService.getTeacherDashboardStats(teacher.id);
+  }
+
+  @Get('stats')
+  getOverallStats() {
+    return this.teachersService.getOverallStats();
+  }
+
+  @Get('students')
+  async getTeacherStudents(@Req() req: any, @Query() query: any) {
+    const teacher = await this.teachersService.findByUserId(req.user.sub);
+    const page = parseInt(query.page) || 1;
+    const limit = parseInt(query.limit) || 10;
+    return this.teachersService.getTeacherStudents(teacher.id, page, limit);
+  }
+
+  @Get('schedule')
+  async getTeacherSchedule(@Req() req: any) {
+    const teacher = await this.teachersService.findByUserId(req.user.sub);
+    return this.teachersService.getTeacherSchedule(teacher.id);
+  }
+
+  @Get('notifications')
+  async getTeacherNotifications(@Req() req: any) {
+    const teacher = await this.teachersService.findByUserId(req.user.sub);
+    return this.teachersService.getTeacherNotifications(teacher.id);
+  }
+
+  @Get()
+  findAll(@Query() queryDto: QueryTeacherDto) {
+    return this.teachersService.findAll(queryDto);
   }
 
   @Get(':id')

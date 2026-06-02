@@ -13,6 +13,8 @@ import {
   Shield,
   UsersRound,
   FolderOpen,
+  Bell,
+  UserCircle,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -50,6 +52,11 @@ export const menuByRole: Record<string, MenuItem[]> = {
   ],
   teacher: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
+    { label: 'Students', icon: Users, path: '/teacher_students' },
+    { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
+    { label: 'Profile', icon: UserCircle, path: '/teacher_profile' },
+    { label: 'Settings', icon: Settings, path: '/teacher_settings' },
   ],
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/student_dashboard' },

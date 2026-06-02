@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TeachersRouteImport } from './routes/teachers'
+import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
+import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
+import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
+import { Route as Teacher_notificationsRouteImport } from './routes/teacher_notifications'
 import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
@@ -48,6 +52,26 @@ const UsersRoute = UsersRouteImport.update({
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
   path: '/teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_studentsRoute = Teacher_studentsRouteImport.update({
+  id: '/teacher_students',
+  path: '/teacher_students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_scheduleRoute = Teacher_scheduleRouteImport.update({
+  id: '/teacher_schedule',
+  path: '/teacher_schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_profileRoute = Teacher_profileRouteImport.update({
+  id: '/teacher_profile',
+  path: '/teacher_profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_notificationsRoute = Teacher_notificationsRouteImport.update({
+  id: '/teacher_notifications',
+  path: '/teacher_notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
@@ -211,6 +235,10 @@ export interface FileRoutesByFullPath {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
+  '/teacher_notifications': typeof Teacher_notificationsRoute
+  '/teacher_profile': typeof Teacher_profileRoute
+  '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
   '/class-session/$id': typeof ClassSessionIdRoute
@@ -243,6 +271,10 @@ export interface FileRoutesByTo {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
+  '/teacher_notifications': typeof Teacher_notificationsRoute
+  '/teacher_profile': typeof Teacher_profileRoute
+  '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
   '/class-session/$id': typeof ClassSessionIdRoute
@@ -276,6 +308,10 @@ export interface FileRoutesById {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
+  '/teacher_notifications': typeof Teacher_notificationsRoute
+  '/teacher_profile': typeof Teacher_profileRoute
+  '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
   '/users': typeof UsersRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
@@ -310,6 +346,10 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher_dashboard'
+    | '/teacher_notifications'
+    | '/teacher_profile'
+    | '/teacher_schedule'
+    | '/teacher_students'
     | '/teachers'
     | '/users'
     | '/class-session/$id'
@@ -342,6 +382,10 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher_dashboard'
+    | '/teacher_notifications'
+    | '/teacher_profile'
+    | '/teacher_schedule'
+    | '/teacher_students'
     | '/teachers'
     | '/users'
     | '/class-session/$id'
@@ -374,6 +418,10 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher_dashboard'
+    | '/teacher_notifications'
+    | '/teacher_profile'
+    | '/teacher_schedule'
+    | '/teacher_students'
     | '/teachers'
     | '/users'
     | '/class-session_/$id'
@@ -407,6 +455,10 @@ export interface RootRouteChildren {
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
+  Teacher_notificationsRoute: typeof Teacher_notificationsRoute
+  Teacher_profileRoute: typeof Teacher_profileRoute
+  Teacher_scheduleRoute: typeof Teacher_scheduleRoute
+  Teacher_studentsRoute: typeof Teacher_studentsRoute
   TeachersRoute: typeof TeachersRoute
   UsersRoute: typeof UsersRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
@@ -433,6 +485,34 @@ declare module '@tanstack/react-router' {
       path: '/teachers'
       fullPath: '/teachers'
       preLoaderRoute: typeof TeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_students': {
+      id: '/teacher_students'
+      path: '/teacher_students'
+      fullPath: '/teacher_students'
+      preLoaderRoute: typeof Teacher_studentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_schedule': {
+      id: '/teacher_schedule'
+      path: '/teacher_schedule'
+      fullPath: '/teacher_schedule'
+      preLoaderRoute: typeof Teacher_scheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_profile': {
+      id: '/teacher_profile'
+      path: '/teacher_profile'
+      fullPath: '/teacher_profile'
+      preLoaderRoute: typeof Teacher_profileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_notifications': {
+      id: '/teacher_notifications'
+      path: '/teacher_notifications'
+      fullPath: '/teacher_notifications'
+      preLoaderRoute: typeof Teacher_notificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher_dashboard': {
@@ -666,6 +746,10 @@ const rootRouteChildren: RootRouteChildren = {
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   Teacher_dashboardRoute: Teacher_dashboardRoute,
+  Teacher_notificationsRoute: Teacher_notificationsRoute,
+  Teacher_profileRoute: Teacher_profileRoute,
+  Teacher_scheduleRoute: Teacher_scheduleRoute,
+  Teacher_studentsRoute: Teacher_studentsRoute,
   TeachersRoute: TeachersRoute,
   UsersRoute: UsersRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,

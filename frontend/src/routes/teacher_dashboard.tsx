@@ -16,7 +16,8 @@ import {
   Pencil,
   Trash2,
   X,
-  Save
+  Save,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,10 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
+    { label: 'Students', icon: Users, path: '/teacher_students' },
+    { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
+    { label: 'Profile', icon: User, path: '/teacher_profile' },
   ];
 
   return (
@@ -80,6 +85,24 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
           );
         })}
       </nav>
+
+      <div className="px-4 py-3 border-t border-emerald-800">
+        <button 
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('token');
+              localStorage.removeItem('userRole');
+              window.location.href = '/login';
+            }
+          }}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100/50 hover:bg-red-500/20 hover:text-red-300 transition-all"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="font-semibold text-sm">Logout</span>
+        </button>
+      </div>
     </div>
   );
 };

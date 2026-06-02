@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StudentsModule } from './students/students.module';
@@ -13,8 +13,6 @@ import { ProgressModule } from './progress/progress.module';
 import { ExamsModule } from './exams/exams.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ChatModule } from './chat/chat.module';
-import { SessionsModule } from './sessions/sessions.module';
-import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -25,7 +23,43 @@ import { UploadsModule } from './uploads/uploads.module';
     }),
 
     // Database
-    DatabaseModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+        
+        // Prefer DATABASE_URL if available
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: configService.get('NODE_ENV') === 'development',
+            logging: configService.get('NODE_ENV') === 'development',
+            ssl: {
+              rejectUnauthorized: false,
+            },
+          };
+        }
+        
+        // Fallback to individual credentials
+        return {
+          type: 'postgres',
+          host: configService.get('DB_HOST'),
+          port: configService.get('DB_PORT'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_DATABASE'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: configService.get('NODE_ENV') === 'development',
+          logging: configService.get('NODE_ENV') === 'development',
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
 
     // Feature modules
     AuthModule,
@@ -40,8 +74,6 @@ import { UploadsModule } from './uploads/uploads.module';
     ExamsModule,
     NotificationsModule,
     ChatModule,
-    SessionsModule,
-    UploadsModule,
   ],
 })
 export class AppModule {}
