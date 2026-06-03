@@ -18,6 +18,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Student } from '../students/entities/student.entity';
+import { ForbiddenException } from '@nestjs/common';
 
 @Controller('attendance')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,7 +29,29 @@ export class AttendanceController {
   constructor(
     private attendanceService: AttendanceService,
     private teachersService: TeachersService,
+    @InjectRepository(Student)
+    private studentsRepository: Repository<Student>,
   ) {}
+
+  private async resolveStudentIdForUser(req: {
+    user: { id: string; role: string };
+    query?: { studentId?: string };
+  }): Promise<string> {
+    if (req.user.role === UserRole.STUDENT) {
+      const student = await this.studentsRepository.findOne({
+        where: { userId: req.user.id },
+      });
+      if (!student) {
+        throw new ForbiddenException('Student profile not found');
+      }
+      return student.id;
+    }
+    const queryId = req.query?.studentId;
+    if (!queryId) {
+      throw new ForbiddenException('studentId is required');
+    }
+    return queryId;
+  }
 
   private async resolveTeacherIdForUser(req: { user: { id: string; role: string } }): Promise<string> {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -82,7 +108,7 @@ export class AttendanceController {
   @Get('student/live')
   @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async getStudentLiveClass(@Request() req) {
-    const studentId = req.user.studentId || req.user.id;
+    const studentId = await this.resolveStudentIdForUser(req);
     return this.attendanceService.getStudentLiveClass(studentId);
   }
 
@@ -104,14 +130,20 @@ export class AttendanceController {
   @Get('student/history')
   @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async getStudentHistory(@Request() req, @Query('studentId') studentIdQuery?: string) {
-    const studentId = studentIdQuery || req.user.studentId || req.user.id;
+    const studentId = await this.resolveStudentIdForUser({
+      user: req.user,
+      query: { studentId: studentIdQuery },
+    });
     return this.attendanceService.getStudentAttendanceHistory(studentId);
   }
 
   @Get('student/stats')
   @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async getStudentStats(@Request() req, @Query('studentId') studentIdQuery?: string) {
-    const studentId = studentIdQuery || req.user.studentId || req.user.id;
+    const studentId = await this.resolveStudentIdForUser({
+      user: req.user,
+      query: { studentId: studentIdQuery },
+    });
     return this.attendanceService.getAttendanceStats(studentId);
   }
 

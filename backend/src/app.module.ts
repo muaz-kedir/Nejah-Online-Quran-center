@@ -13,6 +13,8 @@ import { ProgressModule } from './progress/progress.module';
 import { ExamsModule } from './exams/exams.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ChatModule } from './chat/chat.module';
+import { ResourcesModule } from './resources/resources.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -72,6 +74,8 @@ import { ChatModule } from './chat/chat.module';
     ExamsModule,
     NotificationsModule,
     ChatModule,
+    ResourcesModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}
