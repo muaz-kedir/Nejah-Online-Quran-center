@@ -39,6 +39,13 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { api, API_BASE } from '@/lib/api';
+import {
+  getSchedulesForDay,
+  getTodayDayName,
+  sortSchedulesByStartTime,
+  WEEK_DISPLAY_ORDER_MONDAY_FIRST,
+} from '@/lib/schedule-day';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
@@ -46,8 +53,6 @@ export const Route = createFileRoute('/teachers_/$id')({
   component: TeacherProfilePage,
   beforeLoad: () => requireAuth(['admin', 'super_admin']),
 });
-
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function TeacherProfilePage() {
   const { id } = useParams({ from: '/teachers_/$id' });
@@ -67,7 +72,9 @@ function TeacherProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Schedule State
-  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+  const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
+  const [daySchedules, setDaySchedules] = useState<any[]>([]);
+  const [loadingDaySchedules, setLoadingDaySchedules] = useState(false);
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
   const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
   const [confirmDeleteScheduleId, setConfirmDeleteScheduleId] = useState<string | null>(null);
@@ -77,7 +84,7 @@ function TeacherProfilePage() {
     if (!teacher) setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/teachers/${id}?t=${Date.now()}`, {
+      const response = await fetch(`${API_BASE}/teachers/${id}?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error();
@@ -109,6 +116,32 @@ function TeacherProfilePage() {
   useEffect(() => {
     fetchTeacher();
   }, [id]);
+
+  const fetchDaySchedules = async (teacherId: string, day: string) => {
+    setLoadingDaySchedules(true);
+    try {
+      const data = await api<any[]>(
+        `/schedules/teacher/${teacherId}/day/${encodeURIComponent(day)}`,
+      );
+      setDaySchedules(Array.isArray(data) ? data : []);
+    } catch {
+      setDaySchedules(getSchedulesForDay(teacher?.schedules, day));
+    } finally {
+      setLoadingDaySchedules(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id || !selectedDay) return;
+    fetchDaySchedules(id, selectedDay);
+  }, [id, selectedDay]);
+
+  const refreshScheduleData = async () => {
+    await fetchTeacher();
+    if (id && selectedDay) {
+      await fetchDaySchedules(id, selectedDay);
+    }
+  };
 
   useEffect(() => {
     if (isAssignModalOpen) {
@@ -205,7 +238,7 @@ function TeacherProfilePage() {
 
       toast.success('Schedule deleted successfully');
       setConfirmDeleteScheduleId(null);
-      fetchTeacher();
+      await refreshScheduleData();
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete schedule');
       setConfirmDeleteScheduleId(null);
@@ -242,14 +275,17 @@ function TeacherProfilePage() {
     );
   }
 
-  // Filter schedules for the selected day and apply search query
-  const dailySchedules = teacher.schedules?.filter((s: any) => s.dayOfWeek === selectedDay) || [];
-  const filteredDailySchedules = dailySchedules.filter((s: any) => {
-    if (!searchQuery) return true;
-    const studentName = s.student?.fullName || s.studentId;
-    return studentName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-           s.classType?.toLowerCase().includes(searchQuery.toLowerCase());
-  }).sort((a: any, b: any) => a.startTimeString.localeCompare(b.startTimeString));
+  const filteredDailySchedules = sortSchedulesByStartTime(
+    daySchedules.filter((s: any) => {
+      if (!searchQuery) return true;
+      const studentName = s.student?.fullName || s.studentId;
+      return (
+        studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.classType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.className?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }),
+  );
 
   return (
     <DashboardLayout>
@@ -327,8 +363,8 @@ function TeacherProfilePage() {
 
           {/* Interactive Day Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {DAYS_OF_WEEK.map((day) => {
-              const daySlots = teacher.schedules?.filter((s: any) => s.dayOfWeek === day) || [];
+            {WEEK_DISPLAY_ORDER_MONDAY_FIRST.map((day) => {
+              const daySlots = getSchedulesForDay(teacher.schedules, day);
               const isSelected = selectedDay === day;
               
               return (
@@ -396,7 +432,11 @@ function TeacherProfilePage() {
             </div>
 
             <div className="p-6">
-              {filteredDailySchedules.length === 0 ? (
+              {loadingDaySchedules ? (
+                <div className="py-16 text-center text-gray-500 animate-pulse font-serif">
+                  Loading {selectedDay}&apos;s schedule...
+                </div>
+              ) : filteredDailySchedules.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center mx-auto mb-4">
                     <Calendar className="h-6 w-6 text-gray-400" />
@@ -493,7 +533,7 @@ function TeacherProfilePage() {
           setIsEditScheduleOpen(false);
           setScheduleToEdit(null);
         }}
-        onSuccess={fetchTeacher}
+        onSuccess={refreshScheduleData}
         teacher={teacher}
         schedule={scheduleToEdit}
         defaultDay={selectedDay}

@@ -6,21 +6,24 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, MapPin, Wifi } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-const API_BASE = 'http://localhost:3000/api';
+import { API_BASE } from '@/lib/api';
+import {
+  DAYS_OF_WEEK,
+  getSchedulesForDay,
+  getTodayDayName,
+  sortSchedulesByStartTime,
+} from '@/lib/schedule-day';
 
 export const Route = createFileRoute('/teacher_schedule')({
   component: TeacherSchedulePage,
   beforeLoad: () => requireAuth(['teacher']),
 });
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
 function TeacherSchedulePage() {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'day' | 'week'>('week');
-  const [selectedDay, setSelectedDay] = useState<string>(DAYS[new Date().getDay()]);
+  const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
 
   const fetchSchedule = async () => {
     setLoading(true);
@@ -45,9 +48,12 @@ function TeacherSchedulePage() {
     fetchSchedule();
   }, []);
 
-  const getSchedulesForDay = (day: string) => {
-    return schedules.filter(s => s.dayOfWeek === day);
-  };
+  const schedulesForSelectedDay = sortSchedulesByStartTime(
+    getSchedulesForDay(schedules, selectedDay),
+  );
+  const schedulesForToday = sortSchedulesByStartTime(
+    getSchedulesForDay(schedules, getTodayDayName()),
+  );
 
   const formatTime = (timeString: string) => {
     if (!timeString) return 'N/A';
@@ -98,7 +104,7 @@ function TeacherSchedulePage() {
         {/* Day Selector (Week View) */}
         {currentView === 'week' && (
           <div className="flex gap-2 overflow-x-auto pb-4">
-            {DAYS.map(day => (
+            {DAYS_OF_WEEK.map(day => (
               <Button
                 key={day}
                 variant={selectedDay === day ? 'default' : 'outline'}
@@ -131,7 +137,7 @@ function TeacherSchedulePage() {
                     <Calendar className="h-5 w-5" />
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h2>
-                  {getSchedulesForDay(DAYS[new Date().getDay()]).length === 0 ? (
+                  {schedulesForToday.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Calendar className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
@@ -139,7 +145,7 @@ function TeacherSchedulePage() {
                       <p className="text-gray-500 dark:text-gray-400 font-medium">No classes scheduled for today</p>
                     </div>
                   ) : (
-                    getSchedulesForDay(DAYS[new Date().getDay()]).map(schedule => (
+                    schedulesForToday.map(schedule => (
                       <div key={schedule.id} className="mb-4 last:mb-0">
                         <div className="flex items-start gap-4 p-6 rounded-2xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all">
                           <div className="flex-shrink-0">
@@ -184,11 +190,21 @@ function TeacherSchedulePage() {
                   )}
                 </div>
               ) : (
+                <>
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20">
+                  <h2 className="text-xl font-bold text-emerald-950 dark:text-gray-100 flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    {selectedDay} Schedule
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {schedulesForSelectedDay.length}{' '}
+                    {schedulesForSelectedDay.length === 1 ? 'class' : 'classes'} scheduled
+                  </p>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                        <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Day</th>
                         <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Time</th>
                         <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student</th>
                         <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -196,20 +212,15 @@ function TeacherSchedulePage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {schedules.length === 0 ? (
+                      {schedulesForSelectedDay.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-12 text-center text-gray-400">
-                            No schedules found
+                          <td colSpan={4} className="py-12 text-center text-gray-400">
+                            No classes scheduled for {selectedDay}
                           </td>
                         </tr>
                       ) : (
-                        schedules.map((schedule, index) => (
+                        schedulesForSelectedDay.map((schedule) => (
                           <tr key={schedule.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition-colors">
-                            <td className="py-4 px-6">
-                              <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-3 py-1 rounded-lg text-xs">
-                                {schedule.dayOfWeek}
-                              </Badge>
-                            </td>
                             <td className="py-4 px-6">
                               <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
                                 {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
@@ -243,6 +254,7 @@ function TeacherSchedulePage() {
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </>
           )}

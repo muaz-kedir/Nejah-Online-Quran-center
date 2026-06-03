@@ -6,6 +6,7 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
+import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
 
 @Injectable()
 export class SchedulesService {
@@ -99,17 +100,20 @@ export class SchedulesService {
   }
 
   async getTeacherSchedulesByDay(teacherId: string, day: string) {
-    return this.schedulesRepository.find({
-      where: { 
+    const schedules = await this.schedulesRepository.find({
+      where: {
         teacherId,
-        dayOfWeek: day,
-        status: 'active'
+        status: 'active',
       },
       relations: ['student', 'teacher', 'teacher.user'],
       order: {
-        startTimeString: 'ASC'
-      }
+        startTimeString: 'ASC',
+      },
     });
+
+    return schedules.filter((schedule) =>
+      matchesDayOfWeek(schedule.dayOfWeek, day),
+    );
   }
 
   async updateSchedule(id: string, updateData: UpdateScheduleDto) {

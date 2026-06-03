@@ -13,6 +13,12 @@ import { toast } from 'sonner';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 import { requireAuth } from '@/lib/auth';
+import { api, API_BASE } from '@/lib/api';
+import {
+  getSchedulesForDay,
+  normalizeDayOfWeek,
+  sortSchedulesByStartTime,
+} from '@/lib/schedule-day';
 
 export const Route = createFileRoute('/teachers_/$id/schedule/$day')({
   component: TeacherDailySchedulePage,
@@ -24,6 +30,7 @@ function TeacherDailySchedulePage() {
   const navigate = useNavigate();
   
   const [teacher, setTeacher] = useState<any | null>(null);
+  const [daySchedules, setDaySchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -35,21 +42,39 @@ function TeacherDailySchedulePage() {
   const fetchTeacher = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/teachers/${id}?t=${Date.now()}`, {
+      const response = await fetch(`${API_BASE}/teachers/${id}?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error();
       const data = await response.json();
       setTeacher(data);
+      return data;
     } catch (error) {
       toast.error('Failed to load teacher profile');
-    } finally {
-      setLoading(false);
+      return null;
+    }
+  };
+
+  const fetchDaySchedules = async (teacherData?: any) => {
+    try {
+      const data = await api<any[]>(
+        `/schedules/teacher/${id}/day/${encodeURIComponent(day)}`,
+      );
+      setDaySchedules(Array.isArray(data) ? data : []);
+    } catch {
+      const source = teacherData ?? teacher;
+      setDaySchedules(getSchedulesForDay(source?.schedules, day));
     }
   };
 
   useEffect(() => {
-    fetchTeacher();
+    const load = async () => {
+      setLoading(true);
+      const teacherData = await fetchTeacher();
+      await fetchDaySchedules(teacherData);
+      setLoading(false);
+    };
+    load();
   }, [id, day]);
 
   const executeDeleteSchedule = async () => {
@@ -68,7 +93,8 @@ function TeacherDailySchedulePage() {
 
       toast.success('Schedule deleted successfully');
       setConfirmDeleteScheduleId(null);
-      fetchTeacher();
+      const teacherData = await fetchTeacher();
+      await fetchDaySchedules(teacherData);
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete schedule');
       setConfirmDeleteScheduleId(null);
@@ -95,16 +121,19 @@ function TeacherDailySchedulePage() {
     );
   }
 
-  // Ensure 'day' matches one of the week days or redirect/default
-  const displayDay = day.charAt(0).toUpperCase() + day.slice(1);
-  
-  const dailySchedules = teacher.schedules?.filter((s: any) => s.dayOfWeek.toLowerCase() === day.toLowerCase()) || [];
-  const filteredDailySchedules = dailySchedules.filter((s: any) => {
-    if (!searchQuery) return true;
-    const studentName = s.student?.fullName || s.studentId;
-    return studentName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-           s.classType?.toLowerCase().includes(searchQuery.toLowerCase());
-  }).sort((a: any, b: any) => a.startTimeString.localeCompare(b.startTimeString));
+  const displayDay = normalizeDayOfWeek(day) ?? day;
+
+  const filteredDailySchedules = sortSchedulesByStartTime(
+    daySchedules.filter((s: any) => {
+      if (!searchQuery) return true;
+      const studentName = s.student?.fullName || s.studentId;
+      return (
+        studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.classType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.className?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }),
+  );
 
   return (
     <DashboardLayout>
@@ -269,7 +298,10 @@ function TeacherDailySchedulePage() {
           setIsEditScheduleOpen(false);
           setScheduleToEdit(null);
         }}
-        onSuccess={fetchTeacher}
+        onSuccess={async () => {
+          const teacherData = await fetchTeacher();
+          await fetchDaySchedules(teacherData);
+        }}
         teacher={teacher}
         schedule={scheduleToEdit}
         defaultDay={displayDay}
