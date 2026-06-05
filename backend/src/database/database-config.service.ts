@@ -11,7 +11,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
     const port = this.configService.get<number>('DB_PORT', 5432);
     const username = this.configService.get<string>('DB_USERNAME', 'postgres');
     const password = this.configService.get<string>('DB_PASSWORD', 'password');
-    const database = this.configService.get<string>('DB_NAME', 'nejah_db');
+    const database = this.configService.get<string>('DB_DATABASE', 'nejah_db');
 
     return {
       type: 'postgres',
