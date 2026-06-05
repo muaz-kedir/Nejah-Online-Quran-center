@@ -78,7 +78,7 @@ export class TeacherDashboardController {
         id: s.id,
         name: s.fullName,
         initials: s.fullName.split(' ').map(n => n[0]).join(''),
-        currentSurah: prog?.lastStudiedSurah || (s.level === 'Hifz' ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)'),
+        currentSurah: prog?.lastStudiedSurah || (s.level === QuranLevel.HIFZ_PROGRAM ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)'),
         status: rate >= 80 ? 'EXCEEDING' : rate >= 50 ? 'ON TRACK' : 'NEEDS REVIEW',
         progress: rate,
       };
