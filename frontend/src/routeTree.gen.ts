@@ -10,12 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsersRouteImport } from './routes/users'
+import { Route as TrackApplicationRouteImport } from './routes/track-application'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
 import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
 import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
 import { Route as Teacher_notificationsRouteImport } from './routes/teacher_notifications'
 import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
+import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -31,11 +33,13 @@ import { Route as HomeworkRouteImport } from './routes/homework'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
+import { Route as TeacherApplicationsIdRouteImport } from './routes/teacher-applications_.$id'
 import { Route as StudentResourcesRouteImport } from './routes/student_.resources'
 import { Route as StudentProgressRouteImport } from './routes/student_.progress'
 import { Route as StudentNotificationsRouteImport } from './routes/student_.notifications'
@@ -48,6 +52,11 @@ import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$i
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackApplicationRoute = TrackApplicationRouteImport.update({
+  id: '/track-application',
+  path: '/track-application',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeachersRoute = TeachersRouteImport.update({
@@ -78,6 +87,11 @@ const Teacher_notificationsRoute = Teacher_notificationsRouteImport.update({
 const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
   id: '/teacher_dashboard',
   path: '/teacher_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherApplicationsRoute = TeacherApplicationsRouteImport.update({
+  id: '/teacher-applications',
+  path: '/teacher-applications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentsRoute = StudentsRouteImport.update({
@@ -155,6 +169,11 @@ const AttendanceRoute = AttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplyAsTeacherRoute = ApplyAsTeacherRouteImport.update({
+  id: '/apply-as-teacher',
+  path: '/apply-as-teacher',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -178,6 +197,11 @@ const TeachersCreateRoute = TeachersCreateRouteImport.update({
 const TeachersIdRoute = TeachersIdRouteImport.update({
   id: '/teachers_/$id',
   path: '/teachers/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherApplicationsIdRoute = TeacherApplicationsIdRouteImport.update({
+  id: '/teacher-applications_/$id',
+  path: '/teacher-applications/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentResourcesRoute = StudentResourcesRouteImport.update({
@@ -225,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -240,12 +265,14 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
+  '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/student/classes': typeof StudentClassesRoute
@@ -254,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
+  '/teacher-applications/$id': typeof TeacherApplicationsIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -262,6 +290,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -277,12 +306,14 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
+  '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/student/classes': typeof StudentClassesRoute
@@ -291,6 +322,7 @@ export interface FileRoutesByTo {
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
+  '/teacher-applications/$id': typeof TeacherApplicationsIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -300,6 +332,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -315,12 +348,14 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teachers': typeof TeachersRoute
+  '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/student_/classes': typeof StudentClassesRoute
@@ -329,6 +364,7 @@ export interface FileRoutesById {
   '/student_/notifications': typeof StudentNotificationsRoute
   '/student_/progress': typeof StudentProgressRoute
   '/student_/resources': typeof StudentResourcesRoute
+  '/teacher-applications_/$id': typeof TeacherApplicationsIdRoute
   '/teachers_/$id': typeof TeachersIdRouteWithChildren
   '/teachers_/create': typeof TeachersCreateRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -339,6 +375,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
     | '/forgot-password'
@@ -354,12 +391,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/teacher-applications'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
     | '/teachers'
+    | '/track-application'
     | '/users'
     | '/class-session/$id'
     | '/student/classes'
@@ -368,6 +407,7 @@ export interface FileRouteTypes {
     | '/student/notifications'
     | '/student/progress'
     | '/student/resources'
+    | '/teacher-applications/$id'
     | '/teachers/$id'
     | '/teachers/create'
     | '/teachers/$id/schedule/$day'
@@ -376,6 +416,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
     | '/forgot-password'
@@ -391,12 +432,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/teacher-applications'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
     | '/teachers'
+    | '/track-application'
     | '/users'
     | '/class-session/$id'
     | '/student/classes'
@@ -405,6 +448,7 @@ export interface FileRouteTypes {
     | '/student/notifications'
     | '/student/progress'
     | '/student/resources'
+    | '/teacher-applications/$id'
     | '/teachers/$id'
     | '/teachers/create'
     | '/teachers/$id/schedule/$day'
@@ -413,6 +457,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
     | '/forgot-password'
@@ -428,12 +473,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/teacher-applications'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
     | '/teachers'
+    | '/track-application'
     | '/users'
     | '/class-session_/$id'
     | '/student_/classes'
@@ -442,6 +489,7 @@ export interface FileRouteTypes {
     | '/student_/notifications'
     | '/student_/progress'
     | '/student_/resources'
+    | '/teacher-applications_/$id'
     | '/teachers_/$id'
     | '/teachers_/create'
     | '/teachers_/$id/schedule/$day'
@@ -451,6 +499,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminsRoute: typeof AdminsRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -466,12 +515,14 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
+  TeacherApplicationsRoute: typeof TeacherApplicationsRoute
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
   Teacher_notificationsRoute: typeof Teacher_notificationsRoute
   Teacher_profileRoute: typeof Teacher_profileRoute
   Teacher_scheduleRoute: typeof Teacher_scheduleRoute
   Teacher_studentsRoute: typeof Teacher_studentsRoute
   TeachersRoute: typeof TeachersRoute
+  TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   StudentClassesRoute: typeof StudentClassesRoute
@@ -480,6 +531,7 @@ export interface RootRouteChildren {
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentProgressRoute: typeof StudentProgressRoute
   StudentResourcesRoute: typeof StudentResourcesRoute
+  TeacherApplicationsIdRoute: typeof TeacherApplicationsIdRoute
   TeachersIdRoute: typeof TeachersIdRouteWithChildren
   TeachersCreateRoute: typeof TeachersCreateRoute
 }
@@ -491,6 +543,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track-application': {
+      id: '/track-application'
+      path: '/track-application'
+      fullPath: '/track-application'
+      preLoaderRoute: typeof TrackApplicationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teachers': {
@@ -533,6 +592,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher_dashboard'
       fullPath: '/teacher_dashboard'
       preLoaderRoute: typeof Teacher_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher-applications': {
+      id: '/teacher-applications'
+      path: '/teacher-applications'
+      fullPath: '/teacher-applications'
+      preLoaderRoute: typeof TeacherApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/students': {
@@ -640,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/apply-as-teacher': {
+      id: '/apply-as-teacher'
+      path: '/apply-as-teacher'
+      fullPath: '/apply-as-teacher'
+      preLoaderRoute: typeof ApplyAsTeacherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics': {
       id: '/analytics'
       path: '/analytics'
@@ -673,6 +746,13 @@ declare module '@tanstack/react-router' {
       path: '/teachers/$id'
       fullPath: '/teachers/$id'
       preLoaderRoute: typeof TeachersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher-applications_/$id': {
+      id: '/teacher-applications_/$id'
+      path: '/teacher-applications/$id'
+      fullPath: '/teacher-applications/$id'
+      preLoaderRoute: typeof TeacherApplicationsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student_/resources': {
@@ -750,6 +830,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminsRoute: AdminsRoute,
   AnalyticsRoute: AnalyticsRoute,
+  ApplyAsTeacherRoute: ApplyAsTeacherRoute,
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -765,12 +846,14 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
+  TeacherApplicationsRoute: TeacherApplicationsRoute,
   Teacher_dashboardRoute: Teacher_dashboardRoute,
   Teacher_notificationsRoute: Teacher_notificationsRoute,
   Teacher_profileRoute: Teacher_profileRoute,
   Teacher_scheduleRoute: Teacher_scheduleRoute,
   Teacher_studentsRoute: Teacher_studentsRoute,
   TeachersRoute: TeachersRoute,
+  TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   StudentClassesRoute: StudentClassesRoute,
@@ -779,6 +862,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentProgressRoute: StudentProgressRoute,
   StudentResourcesRoute: StudentResourcesRoute,
+  TeacherApplicationsIdRoute: TeacherApplicationsIdRoute,
   TeachersIdRoute: TeachersIdRouteWithChildren,
   TeachersCreateRoute: TeachersCreateRoute,
 }

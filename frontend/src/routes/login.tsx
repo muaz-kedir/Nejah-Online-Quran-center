@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const loginSchema = z.object({
@@ -34,6 +35,15 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
+
+  useEffect(() => {
+    // Check if teacher applications are open
+    fetch(`${API_BASE}/teacher-applications/settings`)
+      .then(res => res.json())
+      .then(data => setIsApplicationsOpen(data.isApplicationsOpen))
+      .catch(() => {});
+  }, []);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -202,7 +212,7 @@ function LoginPage() {
                 )}
               </Button>
 
-              <div className="text-center pt-4 border-t border-slate-100">
+              <div className="text-center pt-4 border-t border-slate-100 space-y-2">
                 <p className="text-sm text-gray-600">
                   New student?{" "}
                   <button
@@ -213,6 +223,18 @@ function LoginPage() {
                     Join our Programs
                   </button>
                 </p>
+                {isApplicationsOpen && (
+                  <p className="text-sm text-gray-600">
+                    Are you a teacher?{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/apply-as-teacher" })}
+                      className="font-bold text-emerald-800 hover:text-emerald-700"
+                    >
+                      Apply as Teacher
+                    </button>
+                  </p>
+                )}
               </div>
             </form>
           </Form>

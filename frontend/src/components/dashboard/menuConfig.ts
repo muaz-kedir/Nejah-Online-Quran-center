@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Bell,
   UserCircle,
+  FileCheck,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -29,6 +30,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Admins', icon: Shield, path: '/admins' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
+    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
     { label: 'Attendance', icon: UserCheck, path: '/attendance' },
@@ -43,6 +45,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
   admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
+    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
     { label: 'Attendance', icon: UserCheck, path: '/attendance' },

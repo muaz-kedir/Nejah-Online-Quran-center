@@ -1,6 +1,6 @@
-import { API_BASE, api, apiHeaders } from '@/lib/api';
+import { API_BASE, api, apiHeaders, apiUrl } from '@/lib/api';
 
-export { API_BASE, api, apiHeaders };
+export { API_BASE, api, apiHeaders, apiUrl };
 
 export function requireStudentAuth() {
   if (typeof window === 'undefined') return;

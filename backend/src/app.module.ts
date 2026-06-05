@@ -15,6 +15,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ChatModule } from './chat/chat.module';
 import { ResourcesModule } from './resources/resources.module';
 import { MessagesModule } from './messages/messages.module';
+import { EmailModule } from './email/email.module';
+import { TeacherApplicationsModule } from './teacher-applications/teacher-applications.module';
 
 @Module({
   imports: [
@@ -76,6 +78,8 @@ import { MessagesModule } from './messages/messages.module';
     ChatModule,
     ResourcesModule,
     MessagesModule,
+    EmailModule,
+    TeacherApplicationsModule,
   ],
 })
 export class AppModule {}

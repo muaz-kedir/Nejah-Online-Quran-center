@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
@@ -14,13 +14,9 @@ import {
   UserCheck,
   TrendingUp,
   Award,
-  Users,
-  KeyRound,
-  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -29,13 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { AddStudentModal } from '@/components/students/AddStudentModal';
 import { EditStudentModal } from '@/components/students/EditStudentModal';
@@ -43,141 +32,9 @@ import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
 import { AssignStudentModal } from '@/components/students/AssignStudentModal';
 import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
 import { toast } from 'sonner';
-import { requireAuth } from '@/lib/auth';
-
-const API = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/students')({
   component: StudentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
-});
-
-const getLevelColor = (lvl: string) => {
-  switch (lvl?.toLowerCase()) {
-    case 'beginner': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    case 'intermediate': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    case 'advanced': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-    case 'hifz': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-    default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-  }
-};
-
-const getStatusColor = (s: string) => {
-  switch (s?.toLowerCase()) {
-    case 'active': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-    case 'inactive': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-    case 'pending': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    default: return 'bg-gray-100 text-gray-700';
-  }
-};
-
-const StudentRow = memo(function StudentRow({ student, onView, onEdit, onResetPassword, onDelete }: {
-  student: any;
-  onView: (s: any) => void;
-  onEdit: (s: any) => void;
-  onResetPassword: (s: any) => void;
-  onDelete: (s: any) => void;
-}) {
-  return (
-    <tr className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors group">
-      <td className="py-5 px-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex-shrink-0">
-            {student.avatarUrl ? (
-              <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-bold">
-                {student.fullName?.charAt(0)}
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
-              {student.fullName}
-            </p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-              ID: {student.studentCode || 'N/A'}
-            </p>
-          </div>
-        </div>
-      </td>
-      <td className="py-5 px-4">
-        <div className="flex flex-wrap gap-1.5">
-           <Badge className={cn('text-[10px] font-bold uppercase tracking-wider rounded-md border-none px-2 py-0.5', getLevelColor(student.level))}>
-              {student.level}
-           </Badge>
-        </div>
-      </td>
-      <td className="py-5 px-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          {student.teacher?.fullName || student.teacher?.user?.name || 'Unassigned'}
-        </p>
-      </td>
-      <td className="py-5 px-4">
-        <div className="w-24">
-          <div className="flex items-center justify-between mb-1.5">
-             <span className="text-[10px] font-bold text-gray-400">{student.attendanceRate || 0}%</span>
-          </div>
-          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-             <div
-                className={cn('h-full rounded-full', parseFloat(student.attendanceRate) < 50 ? 'bg-red-500' : 'bg-emerald-600')}
-                style={{ width: `${student.attendanceRate || 0}%` }}
-             />
-          </div>
-        </div>
-      </td>
-      <td className="py-5 px-4">
-        <div className="w-24">
-          <div className="flex items-center justify-between mb-1.5">
-             <span className="text-[10px] font-bold text-gray-400">{student.progressRate || 0}%</span>
-          </div>
-          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-             <div
-                className="bg-amber-600 h-full rounded-full"
-                style={{ width: `${student.progressRate || 0}%` }}
-             />
-          </div>
-        </div>
-      </td>
-      <td className="py-5 px-4">
-        <Badge className={cn('text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none', getStatusColor(student.status))}>
-          <span className={cn('w-1.5 h-1.5 rounded-full mr-2', student.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
-          {student.status}
-        </Badge>
-      </td>
-      <td className="py-5 px-6 text-right">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => onView(student)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onEdit(student)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onResetPassword(student)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-amber-600 transition-colors"
-            title="Reset Password"
-          >
-            <KeyRound className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onDelete(student)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
 });
 
 function StudentsPage() {
@@ -188,32 +45,28 @@ function StudentsPage() {
   const [level, setLevel] = useState('all');
   const [teacherId, setTeacherId] = useState('all');
   const [status, setStatus] = useState('all');
-
+  
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
-
+  const [parents, setParents] = useState<any[]>([]);
+  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [viewingStudent, setViewingStudent] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
-  const [resetPasswordStudent, setResetPasswordStudent] = useState<any | null>(null);
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [resettingPassword, setResettingPassword] = useState(false);
-
-  const token = () => localStorage.getItem('token');
 
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      let url = `${API}/students?page=${meta.page}&limit=${meta.limit}`;
+      const token = localStorage.getItem('token');
+      let url = `http://localhost:3000/api/students?page=${meta.page}&limit=${meta.limit}`;
       if (search) url += `&search=${search}`;
       if (level !== 'all') url += `&level=${level}`;
       if (teacherId !== 'all') url += `&teacherId=${teacherId}`;
       if (status !== 'all') url += `&status=${status}`;
 
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const res = await response.json();
       if (res && Array.isArray(res.data)) {
@@ -232,8 +85,9 @@ function StudentsPage() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await fetch(`${API}/teachers?limit=1000`, {
-        headers: { Authorization: `Bearer ${token()}` },
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/teachers', {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       if (data && Array.isArray(data.data)) {
@@ -248,17 +102,22 @@ function StudentsPage() {
     }
   };
 
-  const fetchStats = async () => {
+  const fetchParents = async () => {
     try {
-      const response = await fetch(`${API}/students/stats`, {
-        headers: { Authorization: `Bearer ${token()}` },
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3000/api/parents', {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setTeachers(data);
+      } else if (data && Array.isArray(data.data)) {
+        setTeachers(data.data);
+      } else {
+        setTeachers([]);
       }
     } catch (error) {
-      console.error('Failed to fetch stats', error);
+      console.error('Failed to fetch parents', error);
     }
   };
 
@@ -268,7 +127,7 @@ function StudentsPage() {
 
   useEffect(() => {
     fetchTeachers();
-    fetchStats();
+    fetchParents();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -285,13 +144,24 @@ function StudentsPage() {
     setMeta({ ...meta, page: 1 });
   };
 
-  const handleViewStudent = useCallback((student: any) => setViewingStudent(student), []);
-  const handleEditStudent = useCallback((student: any) => setEditingStudent(student), []);
-  const handleResetPassword = useCallback((student: any) => {
-    setResetPasswordStudent(student);
-    setResetNewPassword('');
-  }, []);
-  const handleDeleteStudent = useCallback((student: any) => setDeletingStudent(student), []);
+  const getLevelColor = (lvl: string) => {
+    switch (lvl?.toLowerCase()) {
+      case 'beginner': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      case 'intermediate': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'advanced': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      case 'hifz': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+    }
+  };
+
+  const getStatusColor = (s: string) => {
+    switch (s?.toLowerCase()) {
+      case 'active': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      case 'inactive': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      case 'pending': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -336,7 +206,7 @@ function StudentsPage() {
               />
             </form>
           </div>
-
+          
           <div className="flex items-center gap-3">
              <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Level</span>
@@ -363,21 +233,21 @@ function StudentsPage() {
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectItem value="all">All Faculty</SelectItem>
                     {teachers.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.fullName || t.user?.name || 'Unknown'}</SelectItem>
+                      <SelectItem key={t.id} value={t.id}>{t.user?.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
              </div>
 
-             <Button
+             <Button 
                 onClick={fetchStudents}
                 className="mt-5 h-11 px-6 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl border-none"
              >
                 Apply Filters
              </Button>
-
-             <Button
-                variant="ghost"
+             
+             <Button 
+                variant="ghost" 
                 onClick={resetFilters}
                 className="mt-5 h-11 w-11 rounded-xl p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
              >
@@ -415,9 +285,102 @@ function StudentsPage() {
                     </td>
                   </tr>
                 ) : (
-                    students.map((student) => (
-                      <StudentRow key={student.id} student={student} onView={handleViewStudent} onEdit={handleEditStudent} onResetPassword={handleResetPassword} onDelete={handleDeleteStudent} />
-                    ))
+                  students.map((student) => (
+                    <tr key={student.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors group">
+                      <td className="py-5 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex-shrink-0">
+                            {student.avatarUrl ? (
+                              <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-bold">
+                                {student.fullName.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
+                              {student.fullName}
+                            </p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                              ID: {student.studentCode || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-5 px-4">
+                        <div className="flex flex-wrap gap-1.5">
+                           <Badge className={cn('text-[10px] font-bold uppercase tracking-wider rounded-md border-none px-2 py-0.5', getLevelColor(student.level))}>
+                              {student.level}
+                           </Badge>
+                           {student.level === 'Advanced' && (
+                             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-bold rounded-md border-none px-2 py-0.5">
+                               HIFZ
+                             </Badge>
+                           )}
+                        </div>
+                      </td>
+                      <td className="py-5 px-4">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          {student.teacher?.user?.name || 'Unassigned'}
+                        </p>
+                      </td>
+                      <td className="py-5 px-4">
+                        <div className="w-24">
+                          <div className="flex items-center justify-between mb-1.5">
+                             <span className="text-[10px] font-bold text-gray-400">{student.attendanceRate || 0}%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                             <div 
+                                className={cn('h-full rounded-full', parseFloat(student.attendanceRate) < 50 ? 'bg-red-500' : 'bg-emerald-600')} 
+                                style={{ width: `${student.attendanceRate || 0}%` }} 
+                             />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-5 px-4">
+                        <div className="w-24">
+                          <div className="flex items-center justify-between mb-1.5">
+                             <span className="text-[10px] font-bold text-gray-400">{student.progressRate || 0}%</span>
+                          </div>
+                          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                             <div 
+                                className="bg-amber-600 h-full rounded-full" 
+                                style={{ width: `${student.progressRate || 0}%` }} 
+                             />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-5 px-4">
+                        <Badge className={cn('text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none', getStatusColor(student.status))}>
+                          <span className={cn('w-1.5 h-1.5 rounded-full mr-2', student.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
+                          {student.status}
+                        </Badge>
+                      </td>
+                      <td className="py-5 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => setViewingStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => setEditingStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => setDeletingStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -464,36 +427,34 @@ function StudentsPage() {
           </div>
         </div>
 
-        {/* Real Stats Section */}
+        {/* Stats Section (Bottom as per design) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
            <div className="bg-emerald-900 dark:bg-emerald-950 p-6 rounded-3xl text-white relative overflow-hidden shadow-xl">
               <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-              <p className="text-[10px] font-bold tracking-widest uppercase opacity-60 mb-2">Total Students</p>
-              <h2 className="text-4xl font-bold mb-3">{stats?.total || 0}</h2>
+              <p className="text-[10px] font-bold tracking-widest uppercase opacity-60 mb-2">Enrolled Capacity</p>
+              <h2 className="text-4xl font-bold mb-3">84%</h2>
               <p className="text-xs text-emerald-100/70 leading-relaxed max-w-[200px]">
-                {stats?.active || 0} active students enrolled in the program.
+                Your institution currently hosts 428 active students across 12 spiritual disciplines.
               </p>
            </div>
-
+           
            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
               <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500 mb-2">Average Attendance</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{stats?.averageAttendance || 0}%</h2>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">91.4%</h2>
               <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full mb-3 overflow-hidden">
-                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${stats?.averageAttendance || 0}%` }} />
+                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: '91.4%' }} />
               </div>
               <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                 <TrendingUp className="h-3 w-3" /> Overall attendance rate
+                 <TrendingUp className="h-3 w-3" /> +2.4% from last month
               </p>
            </div>
 
            <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-3xl shadow-sm border border-amber-100/50 dark:border-amber-900/30">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-amber-600/60 dark:text-amber-500/60 mb-2">Active Students</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">{stats?.active || 0}</h2>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-amber-600/60 dark:text-amber-500/60 mb-2">Learning Milestones</p>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">1,208</h2>
               <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-amber-100 dark:border-amber-900/30">
-                 <Users className="h-5 w-5 text-amber-600" />
-                 <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">
-                   {stats?.inactive || 0} inactive students
-                 </p>
+                 <Award className="h-5 w-5 text-amber-600" />
+                 <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Students completed Juz 30 this year</p>
               </div>
            </div>
         </div>
@@ -504,6 +465,7 @@ function StudentsPage() {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={fetchStudents}
         teachers={teachers}
+        parents={parents}
       />
 
       <EditStudentModal
@@ -512,6 +474,7 @@ function StudentsPage() {
         onSuccess={fetchStudents}
         student={editingStudent}
         teachers={teachers}
+        parents={parents}
       />
 
       <AssignStudentModal
@@ -533,80 +496,6 @@ function StudentsPage() {
         studentId={deletingStudent?.id}
         studentName={deletingStudent?.fullName}
       />
-
-      {/* Reset Password Dialog */}
-      <Dialog open={!!resetPasswordStudent} onOpenChange={(open) => !open && setResetPasswordStudent(null)}>
-        <DialogContent aria-describedby={undefined} className="sm:max-w-[420px] dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-emerald-900 dark:text-gray-100 flex items-center gap-2">
-              <Lock className="h-5 w-5 text-amber-600" />
-              Reset Password
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Set a new password for <span className="font-bold text-gray-800 dark:text-gray-200">{resetPasswordStudent?.fullName}</span>.
-              The student can use this password to log in with their email or family phone number.
-            </p>
-            <div className="grid gap-2">
-              <Label htmlFor="resetPw" className="dark:text-gray-300">New Password</Label>
-              <Input
-                id="resetPw"
-                type="password"
-                value={resetNewPassword}
-                onChange={(e) => setResetNewPassword(e.target.value)}
-                placeholder="Min. 6 characters"
-                className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setResetPasswordStudent(null)}
-              className="rounded-xl dark:border-gray-600 dark:text-gray-300"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={async () => {
-                if (!resetNewPassword || resetNewPassword.length < 6) {
-                  toast.error('Password must be at least 6 characters');
-                  return;
-                }
-                setResettingPassword(true);
-                try {
-                  const response = await fetch(`${API}/students/${resetPasswordStudent.id}/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${token()}`,
-                    },
-                    body: JSON.stringify({ newPassword: resetNewPassword }),
-                  });
-                  if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to reset password');
-                  }
-                  toast.success('Password reset successfully');
-                  setResetPasswordStudent(null);
-                  setResetNewPassword('');
-                } catch (error: any) {
-                  toast.error(error.message);
-                } finally {
-                  setResettingPassword(false);
-                }
-              }}
-              disabled={resettingPassword}
-              className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl"
-            >
-              {resettingPassword ? 'Resetting...' : 'Reset Password'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

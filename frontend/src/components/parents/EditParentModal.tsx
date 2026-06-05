@@ -161,4 +161,34 @@ export function EditParentModal({ parent, open, onClose, onSuccess }: EditParent
                 <SelectItem value="father">Father</SelectItem>
                 <SelectItem value="mother">Mother</SelectItem>
                 <SelectItem value="brother">Brother</SelectItem>
-                <SelectItem value="sister">Sis
+                <SelectItem value="sister">Sister</SelectItem>
+                <SelectItem value="guardian">Guardian</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Updating..." : "Update Parent"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
