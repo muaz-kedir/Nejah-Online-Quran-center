@@ -84,18 +84,6 @@ export class Student {
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;
 
-  @Column({ nullable: true })
-  statusChangedAt: Date;
-
-  @Column({ nullable: true })
-  statusChangedBy: string;
-
-  @Column({ nullable: true })
-  statusChangeReason: string;
-
-  @Column({ type: 'text', nullable: true })
-  statusNotes: string;
-
   @Column({ default: false })
   isAssigned: boolean;
 
