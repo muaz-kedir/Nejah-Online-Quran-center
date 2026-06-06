@@ -71,11 +71,7 @@ export class StudentsService {
   }
 
   async findAll(queryDto: QueryStudentDto & { isAssigned?: boolean }) {
-    const { 
-      search, level, teacherId, status, 
-      country, city, startDate, endDate,
-      page = 1, limit = 10, isAssigned 
-    } = queryDto;
+    const { search, level, teacherId, status, page = 1, limit = 10, isAssigned } = queryDto;
 
     const qb = this.studentsRepository
       .createQueryBuilder('student')
@@ -85,17 +81,10 @@ export class StudentsService {
       .leftJoinAndSelect('teacher.user', 'teacherUser')
       .leftJoinAndSelect('student.schedules', 'schedules');
 
-    // Search by name, email, studentCode, parent name, or family properties
+    // Search by name or email
     if (search) {
       qb.andWhere(
-        '(LOWER(student.fullName) LIKE LOWER(:search) ' +
-        'OR LOWER(student.email) LIKE LOWER(:search) ' +
-        'OR LOWER(student.studentCode) LIKE LOWER(:search) ' +
-        'OR LOWER(student.phone) LIKE LOWER(:search) ' +
-        'OR LOWER(student.familyName) LIKE LOWER(:search) ' +
-        'OR LOWER(student.familyPhone) LIKE LOWER(:search) ' +
-        'OR LOWER(parent.name) LIKE LOWER(:search) ' +
-        'OR LOWER(parent.phone) LIKE LOWER(:search))',
+        '(LOWER(student.fullName) LIKE LOWER(:search) OR LOWER(student.email) LIKE LOWER(:search) OR LOWER(student.studentCode) LIKE LOWER(:search))',
         { search: `%${search}%` },
       );
     }
@@ -118,22 +107,6 @@ export class StudentsService {
     // Filter by assignment status
     if (isAssigned !== undefined) {
       qb.andWhere('student.isAssigned = :isAssigned', { isAssigned });
-    }
-
-    // Filter by location
-    if (country) {
-      qb.andWhere('student.country = :country', { country });
-    }
-    if (city) {
-      qb.andWhere('student.city = :city', { city });
-    }
-
-    // Filter by date range
-    if (startDate) {
-      qb.andWhere('student.createdAt >= :startDate', { startDate: new Date(startDate) });
-    }
-    if (endDate) {
-      qb.andWhere('student.createdAt <= :endDate', { endDate: new Date(endDate) });
     }
 
     // Pagination
@@ -210,15 +183,6 @@ export class StudentsService {
   async getStats() {
     const total = await this.studentsRepository.count();
     const active = await this.studentsRepository.count({ where: { status: 'active' as any } });
-    
-    // New Students this month
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const newStudentsThisMonth = await this.studentsRepository
-      .createQueryBuilder('student')
-      .where('student.createdAt >= :firstDay', { firstDay: firstDayOfMonth })
-      .getCount();
-
     const avgAttendance = await this.studentsRepository
       .createQueryBuilder('student')
       .select('AVG(student.attendanceRate)', 'avg')
@@ -228,30 +192,8 @@ export class StudentsService {
       total,
       active,
       inactive: total - active,
-      newStudentsThisMonth,
       averageAttendance: parseFloat(avgAttendance?.avg || '0'),
     };
-  }
-
-  async changeStatus(
-    id: string, 
-    status: any, 
-    reason: string, 
-    notes: string, 
-    adminId: string
-  ): Promise<Student> {
-    const student = await this.findOne(id);
-    
-    student.status = status;
-    student.statusChangeReason = reason;
-    student.statusNotes = notes;
-    student.statusChangedAt = new Date();
-    
-    // Attempt to get admin details
-    const admin = await this.usersService.findOne(adminId).catch(() => null);
-    student.statusChangedBy = admin ? admin.name : 'System Admin';
-
-    return this.studentsRepository.save(student);
   }
 
   async delegateStudentToTeacher(delegateDto: DelegateStudentDto) {
