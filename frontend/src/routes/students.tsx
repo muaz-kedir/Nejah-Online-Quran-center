@@ -14,6 +14,12 @@ import {
   UserCheck,
   TrendingUp,
   Award,
+  Users,
+  Calendar,
+  MapPin,
+  RefreshCw,
+  MoreVertical,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +37,35 @@ import { EditStudentModal } from '@/components/students/EditStudentModal';
 import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
 import { AssignStudentModal } from '@/components/students/AssignStudentModal';
 import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
+import { ChangeStudentStatusModal } from '@/components/students/ChangeStudentStatusModal';
 import { toast } from 'sonner';
+
+// Helper for date ranges
+function getDateRange(range: string) {
+  const now = new Date();
+  const start = new Date();
+  
+  if (range === 'today') {
+    start.setHours(0, 0, 0, 0);
+    return { startDate: start.toISOString(), endDate: now.toISOString() };
+  }
+  if (range === 'week') {
+    start.setDate(now.getDate() - now.getDay());
+    start.setHours(0, 0, 0, 0);
+    return { startDate: start.toISOString(), endDate: now.toISOString() };
+  }
+  if (range === 'month') {
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    return { startDate: start.toISOString(), endDate: now.toISOString() };
+  }
+  if (range === 'year') {
+    start.setMonth(0, 1);
+    start.setHours(0, 0, 0, 0);
+    return { startDate: start.toISOString(), endDate: now.toISOString() };
+  }
+  return { startDate: '', endDate: '' };
+}
 
 export const Route = createFileRoute('/students')({
   component: StudentsPage,
@@ -45,6 +79,11 @@ function StudentsPage() {
   const [level, setLevel] = useState('all');
   const [teacherId, setTeacherId] = useState('all');
   const [status, setStatus] = useState('all');
+  const [country, setCountry] = useState('all');
+  const [city, setCity] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+  
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, newStudentsThisMonth: 0, averageAttendance: 0 });
   
   const [teachers, setTeachers] = useState<any[]>([]);
   const [parents, setParents] = useState<any[]>([]);
@@ -54,6 +93,19 @@ function StudentsPage() {
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [viewingStudent, setViewingStudent] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
+  const [changingStatusStudent, setChangingStatusStudent] = useState<any | null>(null);
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/students/stats', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setStats(await res.json());
+      }
+    } catch {}
+  };
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -64,6 +116,13 @@ function StudentsPage() {
       if (level !== 'all') url += `&level=${level}`;
       if (teacherId !== 'all') url += `&teacherId=${teacherId}`;
       if (status !== 'all') url += `&status=${status}`;
+      if (country !== 'all') url += `&country=${country}`;
+      if (city) url += `&city=${city}`;
+      
+      if (dateFilter !== 'all' && dateFilter !== 'custom') {
+        const { startDate, endDate } = getDateRange(dateFilter);
+        url += `&startDate=${startDate}&endDate=${endDate}`;
+      }
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -123,11 +182,12 @@ function StudentsPage() {
 
   useEffect(() => {
     fetchStudents();
-  }, [meta.page, level, teacherId, status]);
+  }, [meta.page, level, teacherId, status, country, dateFilter]);
 
   useEffect(() => {
     fetchTeachers();
     fetchParents();
+    fetchStats();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -141,6 +201,9 @@ function StudentsPage() {
     setLevel('all');
     setTeacherId('all');
     setStatus('all');
+    setCountry('all');
+    setCity('');
+    setDateFilter('all');
     setMeta({ ...meta, page: 1 });
   };
 
@@ -239,6 +302,65 @@ function StudentsPage() {
                 </Select>
              </div>
 
+             <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Status</span>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="w-[120px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+
+             <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Country</span>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                    <SelectValue placeholder="All Countries" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="all">All Countries</SelectItem>
+                    <SelectItem value="Ethiopia">Ethiopia</SelectItem>
+                    <SelectItem value="Kenya">Kenya</SelectItem>
+                    <SelectItem value="Somalia">Somalia</SelectItem>
+                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+
+             <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">City</span>
+                <Input
+                  placeholder="Enter city..."
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-[120px] h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                />
+             </div>
+
+             <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Date Joined</span>
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                    <SelectValue placeholder="All Time" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+
              <Button 
                 onClick={fetchStudents}
                 className="mt-5 h-11 px-6 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl border-none"
@@ -263,10 +385,9 @@ function StudentsPage() {
               <thead>
                 <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
                   <th className="text-left py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Name</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assigned Teacher</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Attendance %</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Progress %</th>
                   <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
                   <th className="text-right py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
                 </tr>
@@ -275,12 +396,12 @@ function StudentsPage() {
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={7} className="h-20" />
+                      <td colSpan={6} className="h-20" />
                     </tr>
                   ))
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-20 text-center text-gray-400 font-medium">
+                    <td colSpan={6} className="py-20 text-center text-gray-400 font-medium">
                       No students found matching your criteria.
                     </td>
                   </tr>
@@ -318,6 +439,12 @@ function StudentsPage() {
                                HIFZ
                              </Badge>
                            )}
+                        </div>
+                      </td>
+                      <td className="py-5 px-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.country || 'N/A'}</span>
+                          <span className="text-[10px] text-gray-500 uppercase tracking-wider">{student.city || 'N/A'}</span>
                         </div>
                       </td>
                       <td className="py-5 px-4">
@@ -364,6 +491,13 @@ function StudentsPage() {
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
                           >
                             <Eye className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => setChangingStatusStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-amber-600 transition-colors"
+                            title="Change Status"
+                          >
+                            <Activity className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setEditingStudent(student)}
@@ -428,33 +562,38 @@ function StudentsPage() {
         </div>
 
         {/* Stats Section (Bottom as per design) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4">
            <div className="bg-emerald-900 dark:bg-emerald-950 p-6 rounded-3xl text-white relative overflow-hidden shadow-xl">
               <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-              <p className="text-[10px] font-bold tracking-widest uppercase opacity-60 mb-2">Enrolled Capacity</p>
-              <h2 className="text-4xl font-bold mb-3">84%</h2>
-              <p className="text-xs text-emerald-100/70 leading-relaxed max-w-[200px]">
-                Your institution currently hosts 428 active students across 12 spiritual disciplines.
-              </p>
+              <p className="text-[10px] font-bold tracking-widest uppercase opacity-60 mb-2">Total Students</p>
+              <h2 className="text-4xl font-bold mb-3">{stats.total}</h2>
+              <div className="flex items-center gap-2 text-xs text-emerald-100/70">
+                <Users className="h-4 w-4" /> All registered students
+              </div>
            </div>
            
            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500 mb-2">Average Attendance</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">91.4%</h2>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-600 dark:text-emerald-500 mb-2">Active Students</p>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">{stats.active}</h2>
               <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full mb-3 overflow-hidden">
-                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: '91.4%' }} />
+                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${(stats.active / (stats.total || 1)) * 100}%` }} />
               </div>
-              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                 <TrendingUp className="h-3 w-3" /> +2.4% from last month
-              </p>
+           </div>
+
+           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-red-500 dark:text-red-400 mb-2">Inactive Students</p>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">{stats.inactive}</h2>
+              <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full mb-3 overflow-hidden">
+                 <div className="bg-red-400 h-full rounded-full" style={{ width: `${(stats.inactive / (stats.total || 1)) * 100}%` }} />
+              </div>
            </div>
 
            <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-3xl shadow-sm border border-amber-100/50 dark:border-amber-900/30">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-amber-600/60 dark:text-amber-500/60 mb-2">Learning Milestones</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">1,208</h2>
-              <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-amber-100 dark:border-amber-900/30">
-                 <Award className="h-5 w-5 text-amber-600" />
-                 <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Students completed Juz 30 this year</p>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-amber-600/60 dark:text-amber-500/60 mb-2">New This Month</p>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">+{stats.newStudentsThisMonth}</h2>
+              <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 p-2 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                 <Calendar className="h-4 w-4 text-amber-600" />
+                 <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Recently Enrolled</p>
               </div>
            </div>
         </div>
@@ -496,6 +635,20 @@ function StudentsPage() {
         studentId={deletingStudent?.id}
         studentName={deletingStudent?.fullName}
       />
+
+      {changingStatusStudent && (
+        <ChangeStudentStatusModal
+          isOpen={!!changingStatusStudent}
+          onClose={() => setChangingStatusStudent(null)}
+          studentId={changingStatusStudent.id}
+          currentStatus={changingStatusStudent.status}
+          studentName={changingStatusStudent.fullName}
+          onSuccess={() => {
+            fetchStudents();
+            fetchStats();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
