@@ -78,6 +78,16 @@ export class StudentsController {
     return this.studentsService.update(id, updateStudentDto);
   }
 
+  @Patch(':id/status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  changeStatus(
+    @Request() req,
+    @Param('id') id: string, 
+    @Body() body: { status: string; reason: string; notes: string }
+  ) {
+    return this.studentsService.changeStatus(id, body.status, body.reason, body.notes, req.user.id);
+  }
+
   @Post(':id/reset-password')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async resetPassword(
