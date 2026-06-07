@@ -15,7 +15,7 @@ export async function api<T = any>(path: string, options?: RequestInit): Promise
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || `Request failed: ${res.status}`);
+    throw new Error(formatApiError(body, `Request failed: ${res.status}`));
   }
   return res.json();
 }

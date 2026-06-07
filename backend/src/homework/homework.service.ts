@@ -14,7 +14,11 @@ export class HomeworkService {
     private studentRepository: Repository<Student>,
   ) {}
 
-  async create(dto: CreateHomeworkDto): Promise<Homework> {
+  async create(
+    dto: CreateHomeworkDto,
+    assignedByTeacherId?: string,
+    replacementAssignmentId?: string,
+  ): Promise<Homework> {
     const student = await this.studentRepository.findOne({
       where: { id: dto.studentId },
     });
@@ -29,6 +33,8 @@ export class HomeworkService {
       dueDate: new Date(dto.dueDate),
       studentId: dto.studentId,
       status: HomeworkStatus.PENDING,
+      assignedByTeacherId,
+      replacementAssignmentId,
     });
 
     return this.homeworkRepository.save(homework);

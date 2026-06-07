@@ -16,6 +16,7 @@ import {
   Bell,
   UserCircle,
   FileCheck,
+  UserCog,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -37,6 +38,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
+    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
@@ -49,6 +51,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
     { label: 'Attendance', icon: UserCheck, path: '/attendance' },
+    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
     { label: 'Settings', icon: Settings, path: '/settings' },

@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { Eye, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-const API_BASE = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/teacher_students')({
   component: TeacherStudentsPage,
@@ -20,29 +19,21 @@ function TeacherStudentsPage() {
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [accessDenied, setAccessDenied] = useState<string | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const url = `${API_BASE}/teachers/students?page=${meta.page}&limit=${meta.limit}${search ? `&search=${search}` : ''}`;
-      
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+      const query = new URLSearchParams({
+        page: String(meta.page),
+        limit: String(meta.limit),
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStudents(data.data || []);
-        setMeta(data.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
-      } else {
-        setStudents([]);
-        setMeta({ total: 0, page: 1, limit: 10, totalPages: 1 });
-      }
+      if (search) query.set('search', search);
+      const data = await api<any>(`/teachers/students?${query.toString()}`);
+      setStudents(data.data || []);
+      setMeta(data.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
     } catch (error) {
       console.error('Failed to fetch students:', error);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -61,7 +52,6 @@ function TeacherStudentsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 tracking-widest uppercase mb-1">
@@ -73,7 +63,6 @@ function TeacherStudentsPage() {
           </div>
         </div>
 
-        {/* Search */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <form onSubmit={handleSearch} className="flex gap-4 max-w-2xl">
             <div className="flex-1 relative">
@@ -91,7 +80,6 @@ function TeacherStudentsPage() {
           </form>
         </div>
 
-        {/* Students Grid */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -109,7 +97,7 @@ function TeacherStudentsPage() {
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-900 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-900 mx-auto" />
                     </td>
                   </tr>
                 ) : students.length === 0 ? (
@@ -143,12 +131,16 @@ function TeacherStudentsPage() {
                         </Badge>
                       </td>
                       <td className="py-4 px-4">
-                        <Badge className={cn(
-                          "text-xs px-3 py-1 rounded-lg",
-                          student.status === 'active' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" :
-                          student.status === 'inactive' ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400" :
-                          "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                        )}>
+                        <Badge
+                          className={cn(
+                            'text-xs px-3 py-1 rounded-lg',
+                            student.status === 'active'
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                              : student.status === 'inactive'
+                                ? 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
+                          )}
+                        >
                           {student.status === 'active' ? 'Active' : student.status === 'inactive' ? 'Inactive' : 'Pending'}
                         </Badge>
                       </td>
@@ -167,27 +159,13 @@ function TeacherStudentsPage() {
                       </td>
                       <td className="py-4 px-6 text-right">
                         <Button
-                          onClick={async () => {
-                            setAccessDenied(null);
-                            try {
-                              const token = localStorage.getItem('token');
-                              const res = await fetch(`${API_BASE}/teachers/students/${student.id}`, {
-                                headers: { Authorization: `Bearer ${token}` },
-                              });
-                              if (res.ok) {
-                                setSelectedStudent(await res.json());
-                              } else {
-                                const err = await res.json().catch(() => ({}));
-                                setAccessDenied(err.message || 'You do not have access to this student');
-                              }
-                            } catch {
-                              setAccessDenied('Failed to load student details');
-                            }
-                          }}
+                          asChild
                           className="h-9 px-4 bg-emerald-900 hover:bg-emerald-800 text-white rounded-lg text-sm font-medium"
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                          <Link to="/teacher_students/$studentId" params={{ studentId: student.id }}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Link>
                         </Button>
                       </td>
                     </tr>
@@ -197,7 +175,6 @@ function TeacherStudentsPage() {
             </table>
           </div>
 
-          {/* Pagination */}
           {meta.totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-between">
               <p className="text-xs font-medium text-gray-500">
@@ -220,7 +197,9 @@ function TeacherStudentsPage() {
                     onClick={() => setMeta({ ...meta, page: i + 1 })}
                     className={cn(
                       'h-9 w-9 rounded-lg font-medium',
-                      meta.page === i + 1 ? 'bg-emerald-900 hover:bg-emerald-800 text-white' : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      meta.page === i + 1
+                        ? 'bg-emerald-900 hover:bg-emerald-800 text-white'
+                        : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700',
                     )}
                   >
                     {i + 1}
@@ -239,29 +218,6 @@ function TeacherStudentsPage() {
             </div>
           )}
         </div>
-
-        {accessDenied && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-            {accessDenied}
-          </p>
-        )}
-
-        {selectedStudent && (
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100">{selectedStudent.fullName}</h2>
-              <Button variant="outline" onClick={() => setSelectedStudent(null)} className="rounded-lg">
-                Close
-              </Button>
-            </div>
-            <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div><dt className="text-gray-500">Email</dt><dd className="font-medium">{selectedStudent.email || '—'}</dd></div>
-              <div><dt className="text-gray-500">Level</dt><dd className="font-medium">{selectedStudent.level || '—'}</dd></div>
-              <div><dt className="text-gray-500">Status</dt><dd className="font-medium">{selectedStudent.status || '—'}</dd></div>
-              <div><dt className="text-gray-500">Attendance</dt><dd className="font-medium">{selectedStudent.attendanceRate ?? 0}%</dd></div>
-            </dl>
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

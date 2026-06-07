@@ -19,7 +19,8 @@ import {
   MapPin,
   RefreshCw,
   MoreVertical,
-  Activity
+  Activity,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
 import { AssignStudentModal } from '@/components/students/AssignStudentModal';
 import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
 import { ChangeStudentStatusModal } from '@/components/students/ChangeStudentStatusModal';
+import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
 import { toast } from 'sonner';
 
 // Helper for date ranges
@@ -90,6 +92,7 @@ function StudentsPage() {
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isTempReplacementOpen, setIsTempReplacementOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [viewingStudent, setViewingStudent] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
@@ -238,6 +241,14 @@ function StudentsPage() {
             <h1 className="text-3xl font-bold text-emerald-900 dark:text-gray-100">Students</h1>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setIsTempReplacementOpen(true)}
+              variant="outline"
+              className="border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-400 gap-2 h-11 px-6 rounded-xl"
+            >
+              <UserCog className="h-5 w-5" />
+              Assign Temporary Teacher
+            </Button>
             <Button
               onClick={() => setIsAssignModalOpen(true)}
               variant="outline"
@@ -612,6 +623,12 @@ function StudentsPage() {
       <AssignStudentModal
         open={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
+        onSuccess={fetchStudents}
+      />
+
+      <AssignTemporaryTeacherModal
+        open={isTempReplacementOpen}
+        onClose={() => setIsTempReplacementOpen(false)}
         onSuccess={fetchStudents}
       />
 

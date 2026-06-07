@@ -232,4 +232,28 @@ export class NotificationsService {
       await this.notificationRepository.save(notification);
     }
   }
+
+  async sendCustomNotifications(
+    recipientIds: string[],
+    title: string,
+    message: string,
+    data?: Record<string, unknown>,
+  ): Promise<void> {
+    if (!recipientIds.length) return;
+
+    const uniqueRecipientIds = Array.from(new Set(recipientIds));
+    const notificationsToSave = uniqueRecipientIds.map((userId) =>
+      this.notificationRepository.create({
+        userId,
+        type: NotificationType.IN_APP,
+        channel: NotificationChannel.SYSTEM_ALERT,
+        title,
+        content: message,
+        dataJson: data,
+        isRead: false,
+        sentAt: new Date(),
+      }),
+    );
+    await this.notificationRepository.save(notificationsToSave);
+  }
 }

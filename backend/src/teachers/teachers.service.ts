@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +14,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Homework } from '../homework/entities/homework.entity';
+import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
 
 @Injectable()
 export class TeachersService {
@@ -30,6 +31,8 @@ export class TeachersService {
     private homeworkRepository: Repository<Homework>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => TeacherReplacementsService))
+    private replacementsService: TeacherReplacementsService,
   ) {}
 
   async create(createTeacherDto: CreateTeacherDto): Promise<Teacher> {
@@ -139,14 +142,15 @@ export class TeachersService {
   }
 
   async assertStudentBelongsToTeacher(teacherId: string, studentId: string): Promise<Student> {
-    const student = await this.studentsRepository.findOne({ where: { id: studentId } });
-    if (!student) {
-      throw new NotFoundException('Student not found');
-    }
-    if (student.teacherId !== teacherId) {
-      throw new ForbiddenException('You do not have access to this student');
-    }
-    return student;
+    return this.assertTeacherCanTeachStudent(teacherId, studentId);
+  }
+
+  async assertTeacherCanTeachStudent(teacherId: string, studentId: string): Promise<Student> {
+    return this.replacementsService.assertTeacherCanTeachStudent(teacherId, studentId);
+  }
+
+  async assertTeacherCanViewStudent(teacherId: string, studentId: string): Promise<Student> {
+    return this.replacementsService.assertTeacherCanViewStudent(teacherId, studentId);
   }
 
   async assertScheduleBelongsToTeacher(teacherId: string, scheduleId: string): Promise<Schedule> {
@@ -154,7 +158,11 @@ export class TeachersService {
     if (!schedule) {
       throw new NotFoundException('Schedule not found');
     }
-    if (schedule.teacherId !== teacherId) {
+    if (schedule.teacherId === teacherId) {
+      return schedule;
+    }
+    const canTeach = await this.replacementsService.canTeacherTeachStudent(teacherId, schedule.studentId);
+    if (!canTeach) {
       throw new ForbiddenException('You do not have access to this schedule');
     }
     return schedule;
@@ -388,6 +396,8 @@ export class TeachersService {
         averageProgressRate: Number(totalProgressRate.toFixed(1)),
         notificationCount,
       },
+      temporaryStudents: await this.replacementsService.getTemporaryStudentsForTeacher(teacherId),
+      reassignedAwayStudents: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
       todaySchedules: todaySchedules.map(s => ({
         id: s.id,
         studentName: s.student?.fullName || 'Unknown',
@@ -419,21 +429,35 @@ export class TeachersService {
     };
   }
 
-  // Get teacher's students list
+  // Get teacher's students list (permanent + temporary assignments)
   async getTeacherStudents(teacherId: string, page = 1, limit = 10) {
+    const temporaryAssignments = await this.replacementsService.getTemporaryStudentsForTeacher(teacherId);
+    const tempStudentIds = temporaryAssignments.map((r) => r.studentId);
+
     const qb = this.studentsRepository
       .createQueryBuilder('student')
       .leftJoinAndSelect('student.user', 'user')
-      .where('student.teacherId = :teacherId', { teacherId })
+      .where('(student.teacherId = :teacherId OR student.id IN (:...tempStudentIds))', {
+        teacherId,
+        tempStudentIds: tempStudentIds.length ? tempStudentIds : ['00000000-0000-0000-0000-000000000000'],
+      })
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('student.createdAt', 'DESC');
 
     const [students, total] = await qb.getManyAndCount();
 
+    const tempMap = new Map(temporaryAssignments.map((r) => [r.studentId, r]));
+
     return {
-      data: students,
+      data: students.map((s) => ({
+        ...s,
+        isTemporaryAssignment: s.teacherId !== teacherId && tempMap.has(s.id),
+        temporaryReplacement: tempMap.get(s.id) || null,
+      })),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      temporaryAssignments,
+      reassignedAway: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
     };
   }
 

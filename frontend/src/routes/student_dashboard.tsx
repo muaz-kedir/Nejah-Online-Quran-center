@@ -137,6 +137,17 @@ function StudentDashboard() {
           </div>
         </div>
 
+        {student?.isTemporaryTeacher && student?.temporaryTeacher && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900">
+            <p className="font-bold mb-1">Temporary Teacher Assigned</p>
+            <p>
+              <strong>{student.temporaryTeacher.name}</strong> is teaching your classes from{' '}
+              {student.temporaryTeacher.startDate} to {student.temporaryTeacher.endDate}.
+              Your regular teacher is {student.temporaryTeacher.originalTeacher}.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl p-6 border shadow-sm">

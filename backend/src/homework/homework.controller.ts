@@ -17,6 +17,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
+import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
 
 @Controller('homework')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,16 +25,26 @@ export class HomeworkController {
   constructor(
     private homeworkService: HomeworkService,
     private teachersService: TeachersService,
+    private replacementsService: TeacherReplacementsService,
   ) {}
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
   async create(@Request() req, @Body() dto: CreateHomeworkDto) {
+    let assignedByTeacherId: string | undefined;
+    let replacementAssignmentId: string | undefined;
+
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, dto.studentId);
+      await this.teachersService.assertTeacherCanTeachStudent(teacher.id, dto.studentId);
+      assignedByTeacherId = teacher.id;
+      const replacement = await this.replacementsService.getActiveReplacement(dto.studentId);
+      if (replacement?.replacementTeacherId === teacher.id) {
+        replacementAssignmentId = replacement.id;
+      }
     }
-    return this.homeworkService.create(dto);
+
+    return this.homeworkService.create(dto, assignedByTeacherId, replacementAssignmentId);
   }
 
   @Get('student/:studentId')
@@ -41,7 +52,7 @@ export class HomeworkController {
   async findByStudent(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      await this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
     }
     return this.homeworkService.findByStudent(studentId);
   }
@@ -56,7 +67,7 @@ export class HomeworkController {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       const homework = await this.homeworkService.findOne(id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, homework.studentId);
+      await this.teachersService.assertTeacherCanTeachStudent(teacher.id, homework.studentId);
     }
     return this.homeworkService.updateStatus(id, dto.status);
   }
@@ -67,7 +78,7 @@ export class HomeworkController {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       const homework = await this.homeworkService.findOne(id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, homework.studentId);
+      await this.teachersService.assertTeacherCanTeachStudent(teacher.id, homework.studentId);
     }
     await this.homeworkService.remove(id);
     return { message: 'Homework deleted successfully' };

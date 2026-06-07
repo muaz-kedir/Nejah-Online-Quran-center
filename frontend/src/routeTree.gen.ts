@@ -17,6 +17,7 @@ import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
 import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
 import { Route as Teacher_notificationsRouteImport } from './routes/teacher_notifications'
 import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
+import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replacements'
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
@@ -39,6 +40,7 @@ import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
+import { Route as Teacher_studentsStudentIdRouteImport } from './routes/teacher_students_.$studentId'
 import { Route as TeacherApplicationsIdRouteImport } from './routes/teacher-applications_.$id'
 import { Route as StudentResourcesRouteImport } from './routes/student_.resources'
 import { Route as StudentProgressRouteImport } from './routes/student_.progress'
@@ -87,6 +89,11 @@ const Teacher_notificationsRoute = Teacher_notificationsRouteImport.update({
 const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
   id: '/teacher_dashboard',
   path: '/teacher_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherReplacementsRoute = TeacherReplacementsRouteImport.update({
+  id: '/teacher-replacements',
+  path: '/teacher-replacements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherApplicationsRoute = TeacherApplicationsRouteImport.update({
@@ -199,6 +206,12 @@ const TeachersIdRoute = TeachersIdRouteImport.update({
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Teacher_studentsStudentIdRoute =
+  Teacher_studentsStudentIdRouteImport.update({
+    id: '/teacher_students_/$studentId',
+    path: '/teacher_students/$studentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TeacherApplicationsIdRoute = TeacherApplicationsIdRouteImport.update({
   id: '/teacher-applications_/$id',
   path: '/teacher-applications/$id',
@@ -266,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
+  '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
@@ -282,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
   '/teacher-applications/$id': typeof TeacherApplicationsIdRoute
+  '/teacher_students/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -307,6 +322,7 @@ export interface FileRoutesByTo {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
+  '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
@@ -323,6 +339,7 @@ export interface FileRoutesByTo {
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
   '/teacher-applications/$id': typeof TeacherApplicationsIdRoute
+  '/teacher_students/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -349,6 +366,7 @@ export interface FileRoutesById {
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
+  '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
@@ -365,6 +383,7 @@ export interface FileRoutesById {
   '/student_/progress': typeof StudentProgressRoute
   '/student_/resources': typeof StudentResourcesRoute
   '/teacher-applications_/$id': typeof TeacherApplicationsIdRoute
+  '/teacher_students_/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers_/$id': typeof TeachersIdRouteWithChildren
   '/teachers_/create': typeof TeachersCreateRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -392,6 +411,7 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
+    | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
@@ -408,6 +428,7 @@ export interface FileRouteTypes {
     | '/student/progress'
     | '/student/resources'
     | '/teacher-applications/$id'
+    | '/teacher_students/$studentId'
     | '/teachers/$id'
     | '/teachers/create'
     | '/teachers/$id/schedule/$day'
@@ -433,6 +454,7 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
+    | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
@@ -449,6 +471,7 @@ export interface FileRouteTypes {
     | '/student/progress'
     | '/student/resources'
     | '/teacher-applications/$id'
+    | '/teacher_students/$studentId'
     | '/teachers/$id'
     | '/teachers/create'
     | '/teachers/$id/schedule/$day'
@@ -474,6 +497,7 @@ export interface FileRouteTypes {
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
+    | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
@@ -490,6 +514,7 @@ export interface FileRouteTypes {
     | '/student_/progress'
     | '/student_/resources'
     | '/teacher-applications_/$id'
+    | '/teacher_students_/$studentId'
     | '/teachers_/$id'
     | '/teachers_/create'
     | '/teachers_/$id/schedule/$day'
@@ -516,6 +541,7 @@ export interface RootRouteChildren {
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
+  TeacherReplacementsRoute: typeof TeacherReplacementsRoute
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
   Teacher_notificationsRoute: typeof Teacher_notificationsRoute
   Teacher_profileRoute: typeof Teacher_profileRoute
@@ -532,6 +558,7 @@ export interface RootRouteChildren {
   StudentProgressRoute: typeof StudentProgressRoute
   StudentResourcesRoute: typeof StudentResourcesRoute
   TeacherApplicationsIdRoute: typeof TeacherApplicationsIdRoute
+  Teacher_studentsStudentIdRoute: typeof Teacher_studentsStudentIdRoute
   TeachersIdRoute: typeof TeachersIdRouteWithChildren
   TeachersCreateRoute: typeof TeachersCreateRoute
 }
@@ -592,6 +619,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher_dashboard'
       fullPath: '/teacher_dashboard'
       preLoaderRoute: typeof Teacher_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher-replacements': {
+      id: '/teacher-replacements'
+      path: '/teacher-replacements'
+      fullPath: '/teacher-replacements'
+      preLoaderRoute: typeof TeacherReplacementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher-applications': {
@@ -748,6 +782,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher_students_/$studentId': {
+      id: '/teacher_students_/$studentId'
+      path: '/teacher_students/$studentId'
+      fullPath: '/teacher_students/$studentId'
+      preLoaderRoute: typeof Teacher_studentsStudentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher-applications_/$id': {
       id: '/teacher-applications_/$id'
       path: '/teacher-applications/$id'
@@ -847,6 +888,7 @@ const rootRouteChildren: RootRouteChildren = {
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
+  TeacherReplacementsRoute: TeacherReplacementsRoute,
   Teacher_dashboardRoute: Teacher_dashboardRoute,
   Teacher_notificationsRoute: Teacher_notificationsRoute,
   Teacher_profileRoute: Teacher_profileRoute,
@@ -863,6 +905,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentProgressRoute: StudentProgressRoute,
   StudentResourcesRoute: StudentResourcesRoute,
   TeacherApplicationsIdRoute: TeacherApplicationsIdRoute,
+  Teacher_studentsStudentIdRoute: Teacher_studentsStudentIdRoute,
   TeachersIdRoute: TeachersIdRouteWithChildren,
   TeachersCreateRoute: TeachersCreateRoute,
 }

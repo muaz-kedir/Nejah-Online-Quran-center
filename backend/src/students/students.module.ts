@@ -19,6 +19,7 @@ import { UsersModule } from '../users/users.module';
 import { TeachersModule } from '../teachers/teachers.module';
 import { ResourcesModule } from '../resources/resources.module';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AttendanceModule } from '../attendance/attendance.module';
     TeachersModule,
     ResourcesModule,
     AttendanceModule,
+    TeacherReplacementsModule,
     TypeOrmModule.forFeature([
       Student,
       Progress,

@@ -431,12 +431,48 @@ function TeacherDashboard() {
             <StatCard icon={ClipboardList} value={data?.stats?.homeworkPending || 0} label="Homework Pending" color="text-red-700" bgColor="bg-red-50/50" />
           </div>
 
+          {(data?.temporaryStudents?.length > 0 || data?.reassignedAwayStudents?.length > 0) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {data?.temporaryStudents?.length > 0 && (
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-amber-900 mb-3">Temporary Students</h3>
+                  <ul className="space-y-2">
+                    {data.temporaryStudents.map((r: any) => (
+                      <li key={r.id} className="text-sm text-amber-900 bg-white/70 rounded-lg px-3 py-2">
+                        <span className="font-semibold">{r.student?.fullName}</span>
+                        <span className="text-amber-700"> · {r.startDate} to {r.endDate}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {data?.reassignedAwayStudents?.length > 0 && (
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-blue-900 mb-3">Students Temporarily Reassigned</h3>
+                  <ul className="space-y-2">
+                    {data.reassignedAwayStudents.map((r: any) => (
+                      <li key={r.id} className="text-sm text-blue-900 bg-white/70 rounded-lg px-3 py-2">
+                        <span className="font-semibold">{r.student?.fullName}</span>
+                        <span className="text-blue-700"> → {r.replacementTeacher?.fullName}</span>
+                        <span className="text-blue-600"> ({r.startDate} – {r.endDate})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Left: Progress Table */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-emerald-950 font-serif">Active Student Progress</h3>
-                <button className="text-xs font-bold text-[#052c22] flex items-center gap-1 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => { window.location.href = '/teacher_students'; }}
+                  className="text-xs font-bold text-[#052c22] flex items-center gap-1 hover:underline"
+                >
                   View All Students <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
@@ -452,7 +488,13 @@ function TeacherDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {data?.studentProgress?.map((student: any) => (
-                      <tr key={student.id} className="group hover:bg-gray-50/50 transition-colors">
+                      <tr
+                        key={student.id}
+                        className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          window.location.href = `/teacher_students/${student.id}?tab=progress`;
+                        }}
+                      >
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-xs text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">

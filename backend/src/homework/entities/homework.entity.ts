@@ -39,6 +39,12 @@ export class Homework {
   @Column()
   studentId: string;
 
+  @Column({ nullable: true })
+  assignedByTeacherId: string;
+
+  @Column({ nullable: true })
+  replacementAssignmentId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

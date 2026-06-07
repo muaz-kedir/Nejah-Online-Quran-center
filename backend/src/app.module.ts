@@ -17,6 +17,8 @@ import { ResourcesModule } from './resources/resources.module';
 import { MessagesModule } from './messages/messages.module';
 import { EmailModule } from './email/email.module';
 import { TeacherApplicationsModule } from './teacher-applications/teacher-applications.module';
+import { TeacherReplacementsModule } from './teacher-replacements/teacher-replacements.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -80,6 +82,8 @@ import { TeacherApplicationsModule } from './teacher-applications/teacher-applic
     MessagesModule,
     EmailModule,
     TeacherApplicationsModule,
+    TeacherReplacementsModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

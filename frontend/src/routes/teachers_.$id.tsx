@@ -7,6 +7,7 @@ import {
   Pencil,
   UserPlus,
   BookOpen,
+  UserCog,
   MapPin,
   Clock,
   CheckCircle,
@@ -48,6 +49,7 @@ import {
 } from '@/lib/schedule-day';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
+import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
 
 export const Route = createFileRoute('/teachers_/$id')({
   component: TeacherProfilePage,
@@ -76,6 +78,7 @@ function TeacherProfilePage() {
   const [daySchedules, setDaySchedules] = useState<any[]>([]);
   const [loadingDaySchedules, setLoadingDaySchedules] = useState(false);
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
+  const [isTempReplacementOpen, setIsTempReplacementOpen] = useState(false);
   const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
   const [confirmDeleteScheduleId, setConfirmDeleteScheduleId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -340,6 +343,13 @@ function TeacherProfilePage() {
                 <Pencil className="h-4 w-4" /> Edit Profile
               </Button>
               <Button
+                onClick={() => setIsTempReplacementOpen(true)}
+                variant="outline"
+                className="h-10 rounded-xl px-4 border-amber-200 text-amber-800 gap-1.5 text-xs font-bold uppercase tracking-wider"
+              >
+                <UserCog className="h-4 w-4" /> Assign Temporary Teacher
+              </Button>
+              <Button
                 onClick={() => {
                   setScheduleToEdit(null);
                   setIsEditScheduleOpen(true);
@@ -537,6 +547,14 @@ function TeacherProfilePage() {
         teacher={teacher}
         schedule={scheduleToEdit}
         defaultDay={selectedDay}
+      />
+
+      <AssignTemporaryTeacherModal
+        open={isTempReplacementOpen}
+        onClose={() => setIsTempReplacementOpen(false)}
+        onSuccess={() => toast.success('Temporary assignment created')}
+        originalTeacherId={teacher?.id}
+        originalTeacherName={teacher?.fullName}
       />
 
       {/* Delete Schedule Confirmation */}

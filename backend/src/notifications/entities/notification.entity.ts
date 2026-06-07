@@ -23,6 +23,7 @@ export enum NotificationChannel {
   STUDENT_JOINED = 'STUDENT_JOINED',
   STUDENT_LEFT = 'STUDENT_LEFT',
   SYSTEM_ALERT = 'SYSTEM_ALERT',
+  TEMP_REPLACEMENT = 'TEMP_REPLACEMENT',
 }
 
 @Entity('notifications')

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TeachersService } from './teachers.service';
 import { TeachersController } from './teachers.controller';
@@ -12,6 +12,7 @@ import { Homework } from '../homework/entities/homework.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ]),
     UsersModule,
     NotificationsModule,
+    forwardRef(() => TeacherReplacementsModule),
   ],
   controllers: [TeachersController, TeacherDashboardController],
   providers: [TeachersService],

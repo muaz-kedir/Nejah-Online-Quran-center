@@ -70,7 +70,7 @@ export class TeachersController {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(
       this.authenticatedUserId(req),
     );
-    return this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+    return this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
   }
 
   @Get('schedule')

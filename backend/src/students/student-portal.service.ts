@@ -12,6 +12,7 @@ import { StudentAttendance } from '../attendance/entities/student-attendance.ent
 import { ClassSession, SessionStatus } from '../attendance/entities/class-session.entity';
 import { ResourcesService } from '../resources/resources.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -38,6 +39,7 @@ export class StudentPortalService {
     private classSessionRepository: Repository<ClassSession>,
     private resourcesService: ResourcesService,
     private attendanceService: AttendanceService,
+    private replacementsService: TeacherReplacementsService,
   ) {}
 
   async resolveStudent(userId: string): Promise<Student> {
@@ -68,10 +70,9 @@ export class StudentPortalService {
     const attendances = await this.attendanceRepository.find({ where: { studentId } });
     const sessionStats = await this.attendanceService.getAttendanceStats(studentId);
 
-    const schedules = await this.schedulesRepository.find({
-      where: { studentId, status: 'active' },
-      order: { startTimeString: 'ASC' },
-    });
+    const effectiveTeacher = await this.replacementsService.getEffectiveTeacher(studentId);
+    const schedules = await this.replacementsService.getEffectiveSchedulesForStudent(studentId);
+    const activeReplacement = effectiveTeacher.replacement;
 
     const today = this.todayWeekday();
     const todaySchedules = schedules.filter((s) => s.dayOfWeek === today);
@@ -114,12 +115,13 @@ export class StudentPortalService {
     const liveClass = await this.attendanceService.getStudentLiveClass(studentId);
 
     const nextTodaySchedule = todaySchedules[0] || schedules[0];
+    const effectiveTeacherEntity = activeReplacement?.replacementTeacher || student.teacher;
     const upcomingClass = nextTodaySchedule
       ? {
           id: nextTodaySchedule.id,
           name: nextTodaySchedule.className || 'Quran Class',
-          teacher: student.teacher?.fullName || 'Assigned Teacher',
-          teacherId: student.teacherId,
+          teacher: (nextTodaySchedule as any).teacher?.fullName || effectiveTeacherEntity?.fullName || 'Assigned Teacher',
+          teacherId: (nextTodaySchedule as any).teacherId || effectiveTeacher.effectiveTeacherId,
           dayOfWeek: nextTodaySchedule.dayOfWeek,
           startTime: nextTodaySchedule.startTimeString,
           endTime: nextTodaySchedule.endTimeString,
@@ -185,6 +187,17 @@ export class StudentPortalService {
         enrollmentDate: student.createdAt,
         assignedTeacher: student.teacher?.fullName || null,
         assignedTeacherId: student.teacherId,
+        effectiveTeacher: effectiveTeacherEntity?.fullName || student.teacher?.fullName || null,
+        effectiveTeacherId: effectiveTeacher.effectiveTeacherId,
+        isTemporaryTeacher: effectiveTeacher.isTemporary,
+        temporaryTeacher: effectiveTeacher.isTemporary
+          ? {
+              name: activeReplacement?.replacementTeacher?.fullName,
+              startDate: activeReplacement?.startDate,
+              endDate: activeReplacement?.endDate,
+              originalTeacher: activeReplacement?.originalTeacher?.fullName || student.teacher?.fullName,
+            }
+          : null,
         attendanceRate,
         progressRate: percentage,
         avatarUrl: this.avatarUrl(student.avatarUrl),
@@ -192,7 +205,9 @@ export class StudentPortalService {
       welcome: {
         studentName: student.fullName,
         quranLevel: student.level,
-        assignedTeacher: student.teacher?.fullName || 'Not assigned yet',
+        assignedTeacher: effectiveTeacher.isTemporary
+          ? `${activeReplacement?.replacementTeacher?.fullName} (Temporary)`
+          : student.teacher?.fullName || 'Not assigned yet',
         enrollmentDate: student.createdAt,
       },
       progress: {

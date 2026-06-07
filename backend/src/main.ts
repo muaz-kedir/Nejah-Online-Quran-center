@@ -52,9 +52,15 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   const port = configService.get('PORT') || 3000;
-  await app.listen(port);
-  
-  console.log(`🚀 Nejah Backend API is running on: http://localhost:${port}/api`);
+  try {
+    await app.listen(port);
+    console.log(`🚀 Nejah Backend API is running on: http://localhost:${port}/api`);
+  } catch (err: any) {
+    if (err?.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Stop the other process or set PORT to a different value.`);
+    }
+    throw err;
+  }
 }
 
 bootstrap();

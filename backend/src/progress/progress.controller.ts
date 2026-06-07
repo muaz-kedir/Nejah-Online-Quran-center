@@ -30,7 +30,7 @@ export class ProgressController {
   async getProgress(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      await this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
     }
     return this.progressService.getOrCreateProgress(studentId);
   }
@@ -44,7 +44,7 @@ export class ProgressController {
   ) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      await this.teachersService.assertTeacherCanTeachStudent(teacher.id, studentId);
     }
     return this.progressService.logProgress(studentId, dto);
   }
@@ -59,7 +59,7 @@ export class ProgressController {
     let teacherId: string;
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      await this.teachersService.assertTeacherCanTeachStudent(teacher.id, studentId);
       teacherId = teacher.id;
     } else {
       teacherId = req.user.id;
@@ -72,7 +72,7 @@ export class ProgressController {
   async getFeedback(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      await this.teachersService.assertStudentBelongsToTeacher(teacher.id, studentId);
+      await this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
     }
     return this.progressService.getStudentFeedback(studentId);
   }

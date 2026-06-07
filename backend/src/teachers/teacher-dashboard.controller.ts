@@ -23,6 +23,7 @@ import { Homework } from '../homework/entities/homework.entity';
 import { TeacherNote } from './entities/teacher-note.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { TeachersService } from './teachers.service';
+import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
 
 @Controller('teacher/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,6 +41,7 @@ export class TeacherDashboardController {
     @InjectRepository(Progress)
     private progressRepository: Repository<Progress>,
     private teachersService: TeachersService,
+    private replacementsService: TeacherReplacementsService,
   ) {}
 
   private async requireTeacher(req: { user: { id: string } }): Promise<Teacher> {
@@ -136,6 +138,8 @@ export class TeacherDashboardController {
         overallAttendance: Number(avgAttendance.toFixed(1)),
         homeworkPending,
       },
+      temporaryStudents: await this.replacementsService.getTemporaryStudentsForTeacher(teacherId),
+      reassignedAwayStudents: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
       studentProgress,
       notes: notes.map((n) => ({
         id: n.id,
