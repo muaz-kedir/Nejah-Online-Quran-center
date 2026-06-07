@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { SurahSelect } from '@/components/progress/SurahSelect';
+import { getSurahByNumber, TOTAL_MUSHAF_PAGES } from '@/lib/quran-surahs';
 
 const API = 'http://localhost:3000/api';
 
@@ -40,7 +42,8 @@ function ProgressPage() {
   const [feedbackContent, setFeedbackContent] = useState('');
   const [viewFeedbackTarget, setViewFeedbackTarget] = useState<any>(null);
   const [logForm, setLogForm] = useState({
-    lastStudiedSurah: '',
+    surahNumber: undefined as number | undefined,
+    lastStudiedPage: '',
     lastStudiedAyah: '',
   });
 
@@ -105,11 +108,18 @@ function ProgressPage() {
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!logTarget) return;
+    if (!logForm.surahNumber) {
+      toast.error('Please select a surah');
+      return;
+    }
     setLogLoading(true);
     try {
-      const body: any = {};
-      if (logForm.lastStudiedSurah) body.lastStudiedSurah = logForm.lastStudiedSurah;
-      if (logForm.lastStudiedAyah) body.lastStudiedAyah = parseInt(logForm.lastStudiedAyah, 10);
+      const surah = getSurahByNumber(logForm.surahNumber);
+      const body = {
+        surahNumber: logForm.surahNumber,
+        lastStudiedPage: parseInt(logForm.lastStudiedPage, 10),
+        lastStudiedAyah: parseInt(logForm.lastStudiedAyah, 10),
+      };
 
       const res = await fetch(`${API}/progress/student/${logTarget.id}/log`, {
         method: 'PATCH',
@@ -123,9 +133,9 @@ function ProgressPage() {
         const err = await res.json();
         throw new Error(err.message || 'Failed to log progress');
       }
-      toast.success('Progress updated');
+      toast.success(`Progress logged for ${surah?.englishName || 'surah'}`);
       setLogTarget(null);
-      setLogForm({ lastStudiedSurah: '', lastStudiedAyah: '' });
+      setLogForm({ surahNumber: undefined, lastStudiedPage: '', lastStudiedAyah: '' });
       fetchAll();
     } catch (error: any) {
       toast.error(error.message);
@@ -238,7 +248,11 @@ function ProgressPage() {
 
                 <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
                   {p?.lastStudiedSurah ? (
-                    <span>Last studied: {p.lastStudiedSurah} (Ayah {p.lastStudiedAyah})</span>
+                    <span>
+                      Last studied: {p.lastStudiedSurah}
+                      {p.lastStudiedPage ? ` · Page ${p.lastStudiedPage}` : ''}
+                      {p.lastStudiedAyah ? ` · Ayah ${p.lastStudiedAyah}` : ''}
+                    </span>
                   ) : (
                     <span>No recent activity</span>
                   )}
@@ -251,7 +265,11 @@ function ProgressPage() {
                       size="sm"
                       className="flex-1"
                       onClick={() => {
-                        setLogForm({ lastStudiedSurah: p?.lastStudiedSurah || '', lastStudiedAyah: String(p?.lastStudiedAyah || '') });
+                        setLogForm({
+                          surahNumber: p?.surahNumber || undefined,
+                          lastStudiedPage: p?.lastStudiedPage ? String(p.lastStudiedPage) : '',
+                          lastStudiedAyah: p?.lastStudiedAyah ? String(p.lastStudiedAyah) : '',
+                        });
                         setLogTarget(s);
                       }}
                     >
@@ -283,23 +301,39 @@ function ProgressPage() {
       </div>
 
       <Dialog open={!!logTarget} onOpenChange={() => setLogTarget(null)}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
             <DialogTitle>Log Progress - {logTarget?.fullName}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleLogProgress}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="surah">Last Studied Surah</Label>
-                <Input
-                  id="surah"
-                  value={logForm.lastStudiedSurah}
-                  onChange={(e) => setLogForm({ ...logForm, lastStudiedSurah: e.target.value })}
-                  placeholder="e.g. Surah Al-Fatiha"
+                <Label>Surah</Label>
+                <SurahSelect
+                  value={logForm.surahNumber}
+                  onChange={(surahNumber) => setLogForm({ ...logForm, surahNumber })}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="ayah">Last Studied Ayah</Label>
+                <Label htmlFor="page">Mushaf Page (1–{TOTAL_MUSHAF_PAGES})</Label>
+                <Input
+                  id="page"
+                  type="number"
+                  min={1}
+                  max={TOTAL_MUSHAF_PAGES}
+                  value={logForm.lastStudiedPage}
+                  onChange={(e) => setLogForm({ ...logForm, lastStudiedPage: e.target.value })}
+                  placeholder="e.g. 5"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ayah">
+                  Ayah
+                  {logForm.surahNumber && getSurahByNumber(logForm.surahNumber)
+                    ? ` (max ${getSurahByNumber(logForm.surahNumber)!.totalAyahs})`
+                    : ''}
+                </Label>
                 <Input
                   id="ayah"
                   type="number"
@@ -307,6 +341,7 @@ function ProgressPage() {
                   value={logForm.lastStudiedAyah}
                   onChange={(e) => setLogForm({ ...logForm, lastStudiedAyah: e.target.value })}
                   placeholder="e.g. 7"
+                  required
                 />
               </div>
             </div>

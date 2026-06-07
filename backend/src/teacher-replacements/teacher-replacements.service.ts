@@ -21,6 +21,15 @@ import { UpdateTeacherReplacementDto } from './dto/update-teacher-replacement.dt
 import { QueryTeacherReplacementDto } from './dto/query-teacher-replacement.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UserRole } from '../common/enums/user-role.enum';
+import {
+  ClassSession,
+  SessionStatus,
+  TeacherAttendanceStatus,
+} from '../attendance/entities/class-session.entity';
+import {
+  StudentAttendance,
+  StudentAttendanceStatus,
+} from '../attendance/entities/student-attendance.entity';
 
 export interface EffectiveTeacherInfo {
   originalTeacherId: string;
@@ -46,6 +55,10 @@ export class TeacherReplacementsService {
     private schedulesRepository: Repository<Schedule>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(ClassSession)
+    private classSessionRepository: Repository<ClassSession>,
+    @InjectRepository(StudentAttendance)
+    private studentAttendanceRepository: Repository<StudentAttendance>,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -99,13 +112,53 @@ export class TeacherReplacementsService {
 
   async canTeacherTeachStudent(teacherId: string, studentId: string): Promise<boolean> {
     const student = await this.studentsRepository.findOne({ where: { id: studentId } });
-    if (!student?.teacherId) return false;
+    if (!student) return false;
 
-    const replacement = await this.getActiveReplacement(studentId);
-    if (replacement) {
-      return replacement.replacementTeacherId === teacherId;
+    const activeReplacement = await this.getActiveReplacement(studentId);
+    if (activeReplacement) {
+      return activeReplacement.replacementTeacherId === teacherId;
     }
-    return student.teacherId === teacherId;
+
+    if (student.teacherId === teacherId) {
+      return true;
+    }
+
+    return this.schedulesRepository.exist({
+      where: { studentId, teacherId, status: 'active' },
+    });
+  }
+
+  /**
+   * Teachers who may log progress, assign homework, and add feedback.
+   * Includes the permanent assigned teacher even during an active temporary replacement,
+   * plus the effective/replacement teacher and schedule-based access.
+   */
+  async canTeacherManageStudent(teacherId: string, studentId: string): Promise<boolean> {
+    if (await this.canTeacherTeachStudent(teacherId, studentId)) {
+      return true;
+    }
+
+    const student = await this.studentsRepository.findOne({ where: { id: studentId } });
+    if (!student) return false;
+
+    if (student.teacherId === teacherId) {
+      return true;
+    }
+
+    const tempAssignment = await this.replacementsRepository.findOne({
+      where: {
+        studentId,
+        replacementTeacherId: teacherId,
+        status: In([ReplacementStatus.ACTIVE, ReplacementStatus.UPCOMING]),
+      },
+    });
+    if (tempAssignment && this.todayDateString() <= tempAssignment.endDate) {
+      return true;
+    }
+
+    return this.schedulesRepository.exist({
+      where: { studentId, teacherId, status: 'active' },
+    });
   }
 
   async canTeacherViewStudent(teacherId: string, studentId: string): Promise<boolean> {
@@ -130,6 +183,16 @@ export class TeacherReplacementsService {
     const student = await this.studentsRepository.findOne({ where: { id: studentId } });
     if (!student) throw new NotFoundException('Student not found');
     const allowed = await this.canTeacherTeachStudent(teacherId, studentId);
+    if (!allowed) {
+      throw new ForbiddenException('You do not have teaching access to this student');
+    }
+    return student;
+  }
+
+  async assertTeacherCanManageStudent(teacherId: string, studentId: string): Promise<Student> {
+    const student = await this.studentsRepository.findOne({ where: { id: studentId } });
+    if (!student) throw new NotFoundException('Student not found');
+    const allowed = await this.canTeacherManageStudent(teacherId, studentId);
     if (!allowed) {
       throw new ForbiddenException('You do not have teaching access to this student');
     }
@@ -217,6 +280,9 @@ export class TeacherReplacementsService {
     if (dto.startDate >= dto.endDate) {
       throw new BadRequestException('Start date must be before end date');
     }
+    if (dto.startTime >= dto.endTime) {
+      throw new BadRequestException('Start time must be before end time');
+    }
     if (dto.reason === ReplacementReason.OTHER && !dto.customReason?.trim()) {
       throw new BadRequestException('Custom reason is required when reason is Other');
     }
@@ -242,6 +308,8 @@ export class TeacherReplacementsService {
           replacementTeacherId: dto.replacementTeacherId,
           startDate: dto.startDate,
           endDate: dto.endDate,
+          startTimeString: dto.startTime,
+          endTimeString: dto.endTime,
           reason: dto.reason,
           customReason: dto.reason === ReplacementReason.OTHER ? dto.customReason : null,
           notes: dto.notes,
@@ -342,6 +410,8 @@ export class TeacherReplacementsService {
       replacementTeacherId,
       startDate,
       endDate,
+      startTimeString: dto.startTime ?? replacement.startTimeString,
+      endTimeString: dto.endTime ?? replacement.endTimeString,
       updatedBy: userId,
       status: this.deriveStatus(startDate, endDate, replacement.status),
     });
@@ -378,13 +448,39 @@ export class TeacherReplacementsService {
     return saved;
   }
 
-  private async createScheduleOverrides(replacement: TeacherReplacement) {
-    const schedules = await this.schedulesRepository.find({
-      where: { studentId: replacement.studentId, teacherId: replacement.originalTeacherId, status: 'active' },
+  private async ensureReplacementSchedules(replacement: TeacherReplacement) {
+    const existing = await this.schedulesRepository.find({
+      where: {
+        studentId: replacement.studentId,
+        teacherId: replacement.originalTeacherId,
+        status: 'active',
+      },
     });
 
-    const replacementTeacher = await this.teachersRepository.findOne({
-      where: { id: replacement.replacementTeacherId },
+    if (existing.length === 0) {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      for (const dayOfWeek of days) {
+        await this.schedulesRepository.save(
+          this.schedulesRepository.create({
+            studentId: replacement.studentId,
+            teacherId: replacement.originalTeacherId,
+            className: 'Quran Class (Temporary Cover)',
+            dayOfWeek,
+            startTimeString: replacement.startTimeString,
+            endTimeString: replacement.endTimeString,
+            classType: '1:1 Session',
+            status: 'active',
+          }),
+        );
+      }
+    }
+  }
+
+  private async createScheduleOverrides(replacement: TeacherReplacement) {
+    await this.ensureReplacementSchedules(replacement);
+
+    const schedules = await this.schedulesRepository.find({
+      where: { studentId: replacement.studentId, teacherId: replacement.originalTeacherId, status: 'active' },
     });
 
     for (const schedule of schedules) {
@@ -394,6 +490,9 @@ export class TeacherReplacementsService {
       if (existing) {
         existing.status = 'active';
         existing.replacementTeacherId = replacement.replacementTeacherId;
+        existing.meetingLink = replacement.meetingLink || schedule.meetingLink || existing.meetingLink;
+        existing.startTimeString = replacement.startTimeString || schedule.startTimeString;
+        existing.endTimeString = replacement.endTimeString || schedule.endTimeString;
         await this.overridesRepository.save(existing);
         continue;
       }
@@ -403,7 +502,9 @@ export class TeacherReplacementsService {
           replacementId: replacement.id,
           originalScheduleId: schedule.id,
           replacementTeacherId: replacement.replacementTeacherId,
-          meetingLink: schedule.meetingLink || null,
+          meetingLink: replacement.meetingLink || schedule.meetingLink || null,
+          startTimeString: replacement.startTimeString || schedule.startTimeString,
+          endTimeString: replacement.endTimeString || schedule.endTimeString,
           status: 'active',
         }),
       );
@@ -514,17 +615,235 @@ export class TeacherReplacementsService {
 
     return schedules.map((schedule) => {
       const override = overrideMap.get(schedule.id);
-      if (!override) return schedule;
+      if (override) {
+        return {
+          ...schedule,
+          teacherId: override.replacementTeacherId,
+          teacher: override.replacementTeacher,
+          meetingLink: override.meetingLink || replacement.meetingLink || schedule.meetingLink,
+          startTimeString: override.startTimeString || replacement.startTimeString || schedule.startTimeString,
+          endTimeString: override.endTimeString || replacement.endTimeString || schedule.endTimeString,
+          isTemporaryOverride: true,
+          temporaryReplacementId: replacement.id,
+        };
+      }
 
       return {
         ...schedule,
-        teacherId: override.replacementTeacherId,
-        teacher: override.replacementTeacher,
-        meetingLink: override.meetingLink || schedule.meetingLink,
-        isTemporaryOverride: true,
-        temporaryReplacementId: replacement.id,
+        meetingLink: replacement.meetingLink || schedule.meetingLink,
+        startTimeString: replacement.startTimeString || schedule.startTimeString,
+        endTimeString: replacement.endTimeString || schedule.endTimeString,
       };
     });
+  }
+
+  async startReplacementClass(
+    replacementId: string,
+    user: { id: string; role: string },
+    meetingLink: string,
+  ) {
+    const replacement = await this.replacementsRepository.findOne({
+      where: { id: replacementId },
+      relations: ['student', 'replacementTeacher', 'originalTeacher'],
+    });
+    if (!replacement) {
+      throw new NotFoundException('Temporary assignment not found');
+    }
+
+    if (user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersRepository.findOne({ where: { userId: user.id } });
+      if (!teacher || teacher.id !== replacement.replacementTeacherId) {
+        throw new ForbiddenException('Only the assigned replacement teacher can start this class');
+      }
+    }
+
+    const today = this.todayDateString();
+    if (today < replacement.startDate || today > replacement.endDate) {
+      throw new BadRequestException('This temporary assignment is not active today');
+    }
+
+    if (!replacement.startTimeString || !replacement.endTimeString) {
+      throw new BadRequestException('Class start and end times are required on this assignment');
+    }
+
+    if (
+      replacement.status === ReplacementStatus.UPCOMING &&
+      today >= replacement.startDate &&
+      today <= replacement.endDate
+    ) {
+      await this.activateReplacement(replacement.id, user.id, false);
+      replacement.status = ReplacementStatus.ACTIVE;
+    }
+
+    if ([ReplacementStatus.CANCELLED, ReplacementStatus.COMPLETED].includes(replacement.status)) {
+      throw new BadRequestException('Cannot start class for a cancelled or completed assignment');
+    }
+
+    const trimmedLink = meetingLink.trim();
+    replacement.meetingLink = trimmedLink;
+    await this.replacementsRepository.save(replacement);
+
+    await this.overridesRepository.update(
+      { replacementId: replacement.id, status: 'active' },
+      {
+        meetingLink: trimmedLink,
+        startTimeString: replacement.startTimeString,
+        endTimeString: replacement.endTimeString,
+      },
+    );
+
+    const student = replacement.student ||
+      (await this.studentsRepository.findOne({ where: { id: replacement.studentId } }));
+
+    let session: ClassSession | null = null;
+    if (replacement.classSessionId) {
+      session = await this.classSessionRepository.findOne({
+        where: { id: replacement.classSessionId },
+        relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
+      });
+      if (session && String(session.sessionDate).slice(0, 10) !== today) {
+        session = null;
+      }
+    }
+
+    if (!session) {
+      session = await this.classSessionRepository.findOne({
+        where: {
+          teacherId: replacement.replacementTeacherId,
+          sessionDate: today as any,
+          status: In([SessionStatus.SCHEDULED, SessionStatus.LIVE]),
+        },
+        relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
+      });
+
+      const hasStudent = session?.studentAttendances?.some((a) => a.studentId === replacement.studentId);
+      if (session && !hasStudent) {
+        session = null;
+      }
+    }
+
+    if (!session) {
+      session = await this.createReplacementClassSession({
+        classTitle: `${student?.fullName || 'Student'} — Temporary Class`,
+        subject: 'Quran & Islamic Studies',
+        quranLevel: student?.level || 'Beginner',
+        sessionDate: today,
+        scheduledStartTime: replacement.startTimeString,
+        scheduledEndTime: replacement.endTimeString,
+        teacherId: replacement.replacementTeacherId,
+        studentIds: [replacement.studentId],
+        notes: `Temporary replacement assignment ${replacement.id}`,
+      });
+    }
+
+    if (session.status === SessionStatus.COMPLETED) {
+      throw new BadRequestException('Today\'s class session is already completed');
+    }
+
+    if (session.status !== SessionStatus.LIVE || session.meetingLink !== trimmedLink) {
+      session = await this.startReplacementMeeting(session.id, trimmedLink);
+    }
+
+    replacement.classSessionId = session.id;
+    await this.replacementsRepository.save(replacement);
+    await this.logAudit(replacement.id, 'class_started', user.id, { meetingLink: trimmedLink, sessionId: session.id });
+
+    return {
+      message: 'Class created and meeting link sent to student',
+      session,
+      replacement,
+    };
+  }
+
+  private async loadClassSession(sessionId: string): Promise<ClassSession> {
+    return this.classSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
+    });
+  }
+
+  private async createReplacementClassSession(params: {
+    classTitle: string;
+    subject: string;
+    quranLevel: string;
+    sessionDate: string;
+    scheduledStartTime: string;
+    scheduledEndTime: string;
+    teacherId: string;
+    studentIds: string[];
+    notes?: string;
+  }): Promise<ClassSession> {
+    const session = this.classSessionRepository.create({
+      classTitle: params.classTitle,
+      subject: params.subject,
+      quranLevel: params.quranLevel,
+      sessionDate: params.sessionDate as any,
+      scheduledStartTime: params.scheduledStartTime,
+      scheduledEndTime: params.scheduledEndTime,
+      teacherId: params.teacherId,
+      notes: params.notes,
+      status: SessionStatus.SCHEDULED,
+    });
+
+    const saved = await this.classSessionRepository.save(session);
+
+    if (params.studentIds.length > 0) {
+      const records = params.studentIds.map((studentId) =>
+        this.studentAttendanceRepository.create({
+          studentId,
+          classSessionId: saved.id,
+          attendanceStatus: StudentAttendanceStatus.ABSENT,
+        }),
+      );
+      await this.studentAttendanceRepository.save(records);
+      saved.totalStudentsAssigned = params.studentIds.length;
+      await this.classSessionRepository.save(saved);
+    }
+
+    return this.loadClassSession(saved.id);
+  }
+
+  private async startReplacementMeeting(sessionId: string, meetingLink: string): Promise<ClassSession> {
+    const session = await this.classSessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ['teacher'],
+    });
+
+    if (!session) {
+      throw new NotFoundException('Class session not found');
+    }
+
+    if (session.status === SessionStatus.COMPLETED) {
+      throw new BadRequestException('Cannot start a completed session');
+    }
+
+    session.meetingLink = meetingLink;
+    session.status = SessionStatus.LIVE;
+    const now = new Date();
+    session.actualStartTime = now;
+
+    const todayStr = now.toISOString().split('T')[0];
+    const scheduledStart = new Date(`${todayStr}T${session.scheduledStartTime}:00`);
+    session.teacherAttendanceStatus =
+      now > scheduledStart ? TeacherAttendanceStatus.LATE : TeacherAttendanceStatus.PRESENT;
+    session.teacherJoinTime = now;
+
+    const updated = await this.classSessionRepository.save(session);
+
+    const attendances = await this.studentAttendanceRepository.find({
+      where: { classSessionId: session.id },
+    });
+    const studentIds = attendances.map((a) => a.studentId);
+
+    const sessionWithTeacher = await this.loadClassSession(updated.id);
+
+    try {
+      await this.notificationsService.notifyMeetingStarted(sessionWithTeacher, studentIds);
+    } catch (err) {
+      console.error('Failed to trigger meeting started notifications', err);
+    }
+
+    return sessionWithTeacher;
   }
 
   private async notifyReplacementEvent(

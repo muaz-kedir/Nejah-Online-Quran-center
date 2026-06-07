@@ -10,6 +10,8 @@ import { Student } from '../students/entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { Feedback } from '../progress/entities/feedback.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 
 @Controller('parent/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,6 +28,10 @@ export class ParentDashboardController {
     private homeworkRepository: Repository<Homework>,
     @InjectRepository(Feedback)
     private feedbackRepository: Repository<Feedback>,
+    @InjectRepository(Progress)
+    private progressRepository: Repository<Progress>,
+    @InjectRepository(ProgressLog)
+    private progressLogRepository: Repository<ProgressLog>,
   ) {}
 
   @Get()
@@ -71,23 +77,63 @@ export class ParentDashboardController {
     const avgAttendance = totalChildren > 0
       ? parent.students.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / totalChildren
       : 0;
+
+    let progressByStudent: Record<string, Progress> = {};
+    let logsByStudent: Record<string, ProgressLog[]> = {};
+    if (totalChildren > 0) {
+      const progressRecords = await this.progressRepository.find({
+        where: { studentId: In(studentIds) },
+      });
+      progressByStudent = Object.fromEntries(progressRecords.map((p) => [p.studentId, p]));
+
+      const recentLogs = await this.progressLogRepository.find({
+        where: { studentId: In(studentIds) },
+        relations: ['teacher', 'student'],
+        order: { createdAt: 'DESC' },
+        take: totalChildren * 5,
+      });
+      for (const log of recentLogs) {
+        if (!logsByStudent[log.studentId]) {
+          logsByStudent[log.studentId] = [];
+        }
+        if (logsByStudent[log.studentId].length < 5) {
+          logsByStudent[log.studentId].push(log);
+        }
+      }
+    }
     
-    const avgProgress = totalChildren > 0
-      ? parent.students.reduce((acc, s) => acc + Number(s.progressRate || 0), 0) / totalChildren
-      : 0;
+    const avgProgress = totalChildren > 0 && Object.keys(progressByStudent).length > 0
+      ? Object.values(progressByStudent).reduce((acc, p) => acc + (p.progressPercentage || 0), 0) / totalChildren
+      : totalChildren > 0
+        ? parent.students.reduce((acc, s) => acc + Number(s.progressRate || 0), 0) / totalChildren
+        : 0;
 
     // 3. Child Progress Overviews
-    const children = parent.students?.map(s => ({
-      id: s.id,
-      name: s.fullName,
-      photo: s.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.fullName}`,
-      level: s.level || 'Juz 30 (Amma)',
-      teacher: s.teacher?.fullName || 'Sheikh Abdullah',
-      attendance: Number(s.attendanceRate || 99),
-      memorization: Number(s.progressRate || 85),
-      currentSurah: 'Surah Al-Baqarah',
-      status: s.status?.toUpperCase() || 'ACTIVE',
-    })) || [];
+    const children = parent.students?.map(s => {
+      const prog = progressByStudent[s.id];
+      const memorization = prog?.progressPercentage ?? Number(s.progressRate || 0);
+      return {
+        id: s.id,
+        name: s.fullName,
+        photo: s.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.fullName}`,
+        level: s.level || 'Juz 30 (Amma)',
+        teacher: s.teacher?.fullName || 'Sheikh Abdullah',
+        attendance: Number(s.attendanceRate || 99),
+        memorization,
+        currentSurah: prog?.lastStudiedSurah || 'Not started',
+        currentAyah: prog?.lastStudiedAyah || 0,
+        currentPage: prog?.lastStudiedPage || 0,
+        status: s.status?.toUpperCase() || 'ACTIVE',
+        recentLogs: (logsByStudent[s.id] || []).map((log) => ({
+          id: log.id,
+          surahName: log.surahName,
+          lastStudiedPage: log.lastStudiedPage,
+          lastStudiedAyah: log.lastStudiedAyah,
+          teacherName: log.teacher?.fullName || 'Teacher',
+          date: log.createdAt,
+        })),
+      };
+    }) || [];
 
     // 4. Recent Activities & Detailed Feedbacks
     let activities = [];

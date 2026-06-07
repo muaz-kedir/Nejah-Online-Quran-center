@@ -5,6 +5,7 @@ import { Student } from './entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Feedback } from '../progress/entities/feedback.entity';
 import { Homework, HomeworkStatus } from '../homework/entities/homework.entity';
 import { Notification } from '../notifications/entities/notification.entity';
@@ -27,6 +28,8 @@ export class StudentPortalService {
     private attendanceRepository: Repository<Attendance>,
     @InjectRepository(Progress)
     private progressRepository: Repository<Progress>,
+    @InjectRepository(ProgressLog)
+    private progressLogRepository: Repository<ProgressLog>,
     @InjectRepository(Feedback)
     private feedbackRepository: Repository<Feedback>,
     @InjectRepository(Homework)
@@ -116,7 +119,8 @@ export class StudentPortalService {
 
     const nextTodaySchedule = todaySchedules[0] || schedules[0];
     const effectiveTeacherEntity = activeReplacement?.replacementTeacher || student.teacher;
-    const upcomingClass = nextTodaySchedule
+
+    let upcomingClass = nextTodaySchedule
       ? {
           id: nextTodaySchedule.id,
           name: nextTodaySchedule.className || 'Quran Class',
@@ -129,11 +133,27 @@ export class StudentPortalService {
             nextTodaySchedule.startTimeString && nextTodaySchedule.endTimeString
               ? `${nextTodaySchedule.startTimeString} - ${nextTodaySchedule.endTimeString}`
               : 'Scheduled',
-          meetingLink: nextTodaySchedule.meetingLink,
+          meetingLink: liveClass?.meetingLink || nextTodaySchedule.meetingLink,
           status: liveClass ? 'live' : 'scheduled',
           sessionId: liveClass?.id || null,
         }
       : null;
+
+    if (!upcomingClass && activeReplacement?.startTimeString) {
+      upcomingClass = {
+        id: activeReplacement.id,
+        name: 'Quran Class (Temporary)',
+        teacher: effectiveTeacherEntity?.fullName || 'Temporary Teacher',
+        teacherId: effectiveTeacher.effectiveTeacherId,
+        dayOfWeek: this.todayWeekday(),
+        startTime: activeReplacement.startTimeString,
+        endTime: activeReplacement.endTimeString,
+        time: `${activeReplacement.startTimeString} - ${activeReplacement.endTimeString}`,
+        meetingLink: liveClass?.meetingLink || activeReplacement.meetingLink,
+        status: liveClass ? 'live' : 'scheduled',
+        sessionId: liveClass?.id || activeReplacement.classSessionId || null,
+      };
+    }
 
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -216,6 +236,7 @@ export class StudentPortalService {
         totalSurahs: 114,
         currentSurah: progressRecord?.lastStudiedSurah || 'Not started',
         currentAyah: progressRecord?.lastStudiedAyah || 0,
+        currentPage: progressRecord?.lastStudiedPage || 0,
         memorizedSurahs: surahsCount,
         memorizedAyahs: progressRecord?.ayahsCount || 0,
         completedJuz: Math.floor(surahsCount / 4),
@@ -370,6 +391,13 @@ export class StudentPortalService {
     const student = await this.resolveStudent(userId);
     const progressRecord = await this.progressRepository.findOne({ where: { studentId: student.id } });
 
+    const progressLogs = await this.progressLogRepository.find({
+      where: { studentId: student.id },
+      relations: ['teacher'],
+      order: { createdAt: 'DESC' },
+      take: 50,
+    });
+
     const feedbackRecords = await this.feedbackRepository.find({
       where: { studentId: student.id },
       relations: ['teacher'],
@@ -380,16 +408,13 @@ export class StudentPortalService {
     const percentage = progressRecord?.progressPercentage || Number(student.progressRate) || 0;
 
     const timeline = [
-      ...(progressRecord
-        ? [
-            {
-              type: 'progress_update',
-              title: 'Progress updated',
-              description: `Studying ${progressRecord.lastStudiedSurah || 'Quran'}`,
-              date: progressRecord.updatedAt,
-            },
-          ]
-        : []),
+      ...progressLogs.map((log) => ({
+        type: 'daily_log',
+        title: 'Daily progress logged',
+        description: `${log.surahName} — Page ${log.lastStudiedPage}, Ayah ${log.lastStudiedAyah}`,
+        date: log.createdAt,
+        teacherName: log.teacher?.fullName,
+      })),
       ...feedbackRecords.map((f) => ({
         type: 'teacher_note',
         title: `Feedback from ${f.teacher?.fullName || 'Teacher'}`,
@@ -403,6 +428,7 @@ export class StudentPortalService {
         quranLevel: student.level,
         currentSurah: progressRecord?.lastStudiedSurah || 'Not started',
         currentAyah: progressRecord?.lastStudiedAyah || 0,
+        currentPage: progressRecord?.lastStudiedPage || 0,
         memorizationPercentage: percentage,
         completedJuz: Math.floor(surahsCount / 4),
         surahsCompleted: surahsCount,
@@ -418,6 +444,16 @@ export class StudentPortalService {
       currentJuz: progressRecord?.lastStudiedSurah ? `Juz ${Math.ceil(surahsCount / 4) || 1}` : '-',
       rank: progressRecord?.rank || 'Beginner',
       lastStudiedSurah: progressRecord?.lastStudiedSurah || 'N/A',
+      lastStudiedPage: progressRecord?.lastStudiedPage || 0,
+      dailyLogs: progressLogs.map((log) => ({
+        id: log.id,
+        surahName: log.surahName,
+        surahNumber: log.surahNumber,
+        lastStudiedPage: log.lastStudiedPage,
+        lastStudiedAyah: log.lastStudiedAyah,
+        teacherName: log.teacher?.fullName || 'Teacher',
+        date: log.createdAt,
+      })),
       timeline,
       tajweed: feedbackRecords.slice(0, 5).map((f) => ({
         id: f.id,

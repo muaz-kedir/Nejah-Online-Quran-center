@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { TemporaryReplacementClassCard } from '@/components/teachers/TemporaryReplacementClassCard';
 
 const API = 'http://localhost:3000/api';
 const getToken = () => localStorage.getItem('token');
@@ -434,14 +435,25 @@ function TeacherDashboard() {
           {(data?.temporaryStudents?.length > 0 || data?.reassignedAwayStudents?.length > 0) && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {data?.temporaryStudents?.length > 0 && (
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-amber-900 mb-3">Temporary Students</h3>
-                  <ul className="space-y-2">
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 lg:col-span-2">
+                  <h3 className="text-lg font-bold text-amber-900 mb-1">Temporary Students</h3>
+                  <p className="text-xs text-amber-700 mb-4">
+                    Enter your Zoom link and create the class — the student will be notified to join.
+                  </p>
+                  <ul className="space-y-3">
                     {data.temporaryStudents.map((r: any) => (
-                      <li key={r.id} className="text-sm text-amber-900 bg-white/70 rounded-lg px-3 py-2">
-                        <span className="font-semibold">{r.student?.fullName}</span>
-                        <span className="text-amber-700"> · {r.startDate} to {r.endDate}</span>
-                      </li>
+                      <TemporaryReplacementClassCard
+                        key={r.id}
+                        assignment={r}
+                        onStarted={() => {
+                          fetch(`${API}/teacher/dashboard`, {
+                            headers: { Authorization: `Bearer ${getToken()}` },
+                          })
+                            .then((res) => res.json())
+                            .then(setData)
+                            .catch(() => {});
+                        }}
+                      />
                     ))}
                   </ul>
                 </div>

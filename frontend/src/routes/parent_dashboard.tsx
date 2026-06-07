@@ -286,6 +286,13 @@ const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
         <div className="space-y-0.5">
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current Surah</p>
             <p className="text-xs font-bold text-[#084133] truncate max-w-[120px]">{child.currentSurah}</p>
+            {(child.currentPage > 0 || child.currentAyah > 0) && (
+              <p className="text-[9px] text-gray-500">
+                {child.currentPage > 0 ? `Page ${child.currentPage}` : ''}
+                {child.currentPage > 0 && child.currentAyah > 0 ? ' · ' : ''}
+                {child.currentAyah > 0 ? `Ayah ${child.currentAyah}` : ''}
+              </p>
+            )}
         </div>
         <div className="text-right">
              <p className="text-[20px] font-black text-[#084133] leading-none mb-1">{child.attendance}%</p>
@@ -657,6 +664,14 @@ function ParentDashboard() {
                              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Program: Hifz & Tajweed</p>
                              <div className="space-y-2">
                                <p className="text-xs font-bold text-emerald-900">Current Milestone Surah: <strong>{selectedChild.currentSurah}</strong></p>
+                               {(selectedChild.currentPage > 0 || selectedChild.currentAyah > 0) && (
+                                 <p className="text-xs text-gray-500">
+                                   Last studied:{' '}
+                                   {selectedChild.currentPage > 0 ? `Page ${selectedChild.currentPage}` : ''}
+                                   {selectedChild.currentPage > 0 && selectedChild.currentAyah > 0 ? ', ' : ''}
+                                   {selectedChild.currentAyah > 0 ? `Ayah ${selectedChild.currentAyah}` : ''}
+                                 </p>
+                               )}
                                <p className="text-xs text-gray-500">Instructor: <strong>{selectedChild.teacher}</strong></p>
                              </div>
                              
@@ -717,15 +732,25 @@ function ParentDashboard() {
                   {/* Right side widgets */}
                   <div className="lg:col-span-4 space-y-6">
                     <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm space-y-6">
-                      <h4 className="text-sm font-black text-emerald-950 uppercase tracking-widest border-b border-gray-50 pb-3">Recently Memorized</h4>
+                      <h4 className="text-sm font-black text-emerald-950 uppercase tracking-widest border-b border-gray-50 pb-3">Recent Daily Logs</h4>
                       
                       <div className="space-y-3.5">
-                        {['Surah Al-Buruj', 'Surah Al-Inshiqaq', 'Surah Al-Mutaffifin', 'Surah Al-Infitar'].map((surah, idx) => (
-                          <div key={idx} className="flex items-center justify-between bg-emerald-50/30 px-4 py-3 rounded-2xl border border-emerald-100/50">
-                            <span className="text-xs font-bold text-emerald-950">{surah}</span>
-                            <Badge className="bg-emerald-800 text-white border-none font-bold text-[8px] tracking-wider">PASSED</Badge>
-                          </div>
-                        ))}
+                        {(selectedChild.recentLogs?.length ?? 0) === 0 ? (
+                          <p className="text-xs text-gray-400 italic text-center py-4">No daily progress logged yet.</p>
+                        ) : (
+                          selectedChild.recentLogs.map((log: any) => (
+                            <div key={log.id} className="flex flex-col gap-1 bg-emerald-50/30 px-4 py-3 rounded-2xl border border-emerald-100/50">
+                              <span className="text-xs font-bold text-emerald-950">{log.surahName}</span>
+                              <span className="text-[10px] text-gray-500">
+                                Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
+                                {log.teacherName ? ` · ${log.teacherName}` : ''}
+                              </span>
+                              <span className="text-[9px] text-gray-400">
+                                {log.date ? new Date(log.date).toLocaleDateString() : ''}
+                              </span>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
 

@@ -8,6 +8,7 @@ import {
   IsString,
   IsUUID,
   ValidateIf,
+  Matches,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ReplacementReason } from '../../common/enums/replacement-reason.enum';
@@ -34,6 +35,14 @@ export class CreateTeacherReplacementDto {
 
   @IsDateString()
   endDate: string;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Start time must be HH:mm (24-hour)' })
+  startTime: string;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'End time must be HH:mm (24-hour)' })
+  endTime: string;
 
   @IsEnum(ReplacementReason)
   reason: ReplacementReason;

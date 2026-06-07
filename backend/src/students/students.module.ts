@@ -7,6 +7,7 @@ import { StudentPortalService } from './student-portal.service';
 import { AssignmentsController } from './assignments.controller';
 import { Student } from './entities/student.entity';
 import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
@@ -32,6 +33,7 @@ import { TeacherReplacementsModule } from '../teacher-replacements/teacher-repla
     TypeOrmModule.forFeature([
       Student,
       Progress,
+      ProgressLog,
       Homework,
       Attendance,
       Schedule,

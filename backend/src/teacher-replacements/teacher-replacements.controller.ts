@@ -12,6 +12,7 @@ import {
 import { TeacherReplacementsService } from './teacher-replacements.service';
 import { CreateTeacherReplacementDto } from './dto/create-teacher-replacement.dto';
 import { UpdateTeacherReplacementDto } from './dto/update-teacher-replacement.dto';
+import { StartReplacementClassDto } from './dto/start-replacement-class.dto';
 import { QueryTeacherReplacementDto } from './dto/query-teacher-replacement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -63,5 +64,15 @@ export class TeacherReplacementsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   cancel(@Request() req, @Param('id') id: string) {
     return this.replacementsService.cancel(id, req.user.id);
+  }
+
+  @Post(':id/start-class')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  startClass(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: StartReplacementClassDto,
+  ) {
+    return this.replacementsService.startReplacementClass(id, req.user, dto.meetingLink);
   }
 }

@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateIf } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateIf, Matches } from 'class-validator';
 import { ReplacementReason } from '../../common/enums/replacement-reason.enum';
 
 export class UpdateTeacherReplacementDto {
@@ -13,6 +13,16 @@ export class UpdateTeacherReplacementDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+  startTime?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+  endTime?: string;
 
   @IsOptional()
   @IsEnum(ReplacementReason)

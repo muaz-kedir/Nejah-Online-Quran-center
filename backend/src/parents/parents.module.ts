@@ -9,6 +9,8 @@ import { User } from '../users/entities/user.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { Feedback } from '../progress/entities/feedback.entity';
+import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { UsersModule } from '../users/users.module';
 
 @Module({
@@ -20,7 +22,9 @@ import { UsersModule } from '../users/users.module';
       User, 
       Schedule, 
       Homework, 
-      Feedback
+      Feedback,
+      Progress,
+      ProgressLog,
     ]),
   ],
   controllers: [ParentsController, ParentDashboardController],

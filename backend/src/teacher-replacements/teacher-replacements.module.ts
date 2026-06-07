@@ -10,6 +10,8 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { User } from '../users/entities/user.entity';
+import { ClassSession } from '../attendance/entities/class-session.entity';
+import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
@@ -23,6 +25,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
       Teacher,
       Schedule,
       User,
+      ClassSession,
+      StudentAttendance,
     ]),
   ],
   controllers: [TeacherReplacementsController],

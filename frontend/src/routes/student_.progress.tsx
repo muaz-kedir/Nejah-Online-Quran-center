@@ -47,20 +47,24 @@ function StudentProgress() {
             </Badge>
           </div>
           <ProgressBar value={percentage} className="h-3 mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
             <div className="bg-gray-50 p-4 rounded-2xl">
               <p className="text-xs text-gray-400 font-bold uppercase">Quran Level</p>
               <p className="font-bold text-emerald-950 mt-1">{overview?.quranLevel || '—'}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-2xl">
               <p className="text-xs text-gray-400 font-bold uppercase">Current Surah</p>
-              <p className="font-bold text-emerald-950 mt-1">{overview?.currentSurah || '—'}</p>
+              <p className="font-bold text-emerald-950 mt-1 text-sm">{overview?.currentSurah || '—'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-2xl">
+              <p className="text-xs text-gray-400 font-bold uppercase">Current Page</p>
+              <p className="font-bold text-emerald-950 mt-1">{overview?.currentPage || 0}</p>
             </div>
             <div className="bg-gray-50 p-4 rounded-2xl">
               <p className="text-xs text-gray-400 font-bold uppercase">Current Ayah</p>
               <p className="font-bold text-emerald-950 mt-1">{overview?.currentAyah || 0}</p>
             </div>
-            <div className="bg-gray-50 p-4 rounded-2xl">
+            <div className="bg-gray-50 p-4 rounded-2xl col-span-2 md:col-span-1">
               <p className="text-xs text-gray-400 font-bold uppercase">Juz Completed</p>
               <p className="font-bold text-emerald-950 mt-1">{overview?.completedJuz ?? 0}</p>
             </div>

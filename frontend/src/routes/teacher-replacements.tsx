@@ -170,6 +170,11 @@ function TeacherReplacementsPage() {
                   <td className="p-4 text-sm">{r.replacementTeacher?.fullName || '—'}</td>
                   <td className="p-4 text-sm text-gray-600">
                     {r.startDate} → {r.endDate}
+                    {r.startTimeString && r.endTimeString && (
+                      <span className="block text-xs text-gray-400">
+                        {r.startTimeString} – {r.endTimeString}
+                      </span>
+                    )}
                   </td>
                   <td className="p-4 text-sm">
                     {REASON_LABELS[r.reason] || r.reason}

@@ -40,6 +40,12 @@ export class ReplacementScheduleOverride {
   @Column({ nullable: true })
   meetingLink: string;
 
+  @Column({ nullable: true })
+  startTimeString: string;
+
+  @Column({ nullable: true })
+  endTimeString: string;
+
   @Column({ default: 'active' })
   status: string;
 

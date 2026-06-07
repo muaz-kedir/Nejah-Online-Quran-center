@@ -15,33 +15,52 @@ import {
 import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { SurahSelect } from '@/components/progress/SurahSelect';
+import { getSurahByNumber, TOTAL_MUSHAF_PAGES } from '@/lib/quran-surahs';
 
 interface TeacherStudentProgressPanelProps {
   studentId: string;
   studentName?: string;
 }
 
+interface LogFormState {
+  surahNumber: number | undefined;
+  lastStudiedPage: string;
+  lastStudiedAyah: string;
+}
+
+const emptyLogForm = (): LogFormState => ({
+  surahNumber: undefined,
+  lastStudiedPage: '',
+  lastStudiedAyah: '',
+});
+
 export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherStudentProgressPanelProps) {
   const [progress, setProgress] = useState<any>(null);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [dailyLogs, setDailyLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLog, setShowLog] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [logLoading, setLogLoading] = useState(false);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [logForm, setLogForm] = useState({ lastStudiedSurah: '', lastStudiedAyah: '' });
+  const [logForm, setLogForm] = useState<LogFormState>(emptyLogForm());
   const [feedbackContent, setFeedbackContent] = useState('');
+
+  const selectedSurah = logForm.surahNumber ? getSurahByNumber(logForm.surahNumber) : undefined;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [prog, fb] = await Promise.all([
+      const [prog, fb, logs] = await Promise.all([
         api<any>(`/progress/student/${studentId}`),
         api<any[]>(`/progress/student/${studentId}/feedback`).catch(() => []),
+        api<any[]>(`/progress/student/${studentId}/logs?limit=20`).catch(() => []),
       ]);
       setProgress(prog);
       setFeedbacks(Array.isArray(fb) ? fb : []);
+      setDailyLogs(Array.isArray(logs) ? logs : []);
     } catch {
       toast.error('Failed to load progress');
     } finally {
@@ -53,21 +72,40 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
     fetchData();
   }, [fetchData]);
 
+  const openLogDialog = () => {
+    setLogForm({
+      surahNumber: progress?.surahNumber || undefined,
+      lastStudiedPage: progress?.lastStudiedPage ? String(progress.lastStudiedPage) : '',
+      lastStudiedAyah: progress?.lastStudiedAyah ? String(progress.lastStudiedAyah) : '',
+    });
+    setShowLog(true);
+  };
+
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!logForm.surahNumber) {
+      toast.error('Please select a surah');
+      return;
+    }
+    if (!logForm.lastStudiedPage || !logForm.lastStudiedAyah) {
+      toast.error('Please enter page and ayah');
+      return;
+    }
+
     setLogLoading(true);
     try {
-      const body: Record<string, unknown> = {};
-      if (logForm.lastStudiedSurah) body.lastStudiedSurah = logForm.lastStudiedSurah;
-      if (logForm.lastStudiedAyah) body.lastStudiedAyah = parseInt(logForm.lastStudiedAyah, 10);
-
+      const surah = getSurahByNumber(logForm.surahNumber);
       await api(`/progress/student/${studentId}/log`, {
         method: 'PATCH',
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          surahNumber: logForm.surahNumber,
+          lastStudiedPage: parseInt(logForm.lastStudiedPage, 10),
+          lastStudiedAyah: parseInt(logForm.lastStudiedAyah, 10),
+        }),
       });
-      toast.success('Daily progress logged');
+      toast.success(`Daily progress logged for ${surah?.englishName || 'surah'}`);
       setShowLog(false);
-      setLogForm({ lastStudiedSurah: '', lastStudiedAyah: '' });
+      setLogForm(emptyLogForm());
       fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Failed to log progress');
@@ -124,24 +162,13 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             </div>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl"
-              onClick={() => {
-                setLogForm({
-                  lastStudiedSurah: progress?.lastStudiedSurah || '',
-                  lastStudiedAyah: String(progress?.lastStudiedAyah || ''),
-                });
-                setShowLog(true);
-              }}
-            >
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={openLogDialog}>
               <Plus className="h-3 w-3 mr-1" /> Log Daily Progress
             </Button>
             <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowFeedback(true)}>
               <MessageSquare className="h-3 w-3 mr-1" /> Add Feedback
             </Button>
-            {feedbacks.length > 0 && (
+            {(dailyLogs.length > 0 || feedbacks.length > 0) && (
               <Button variant="ghost" size="sm" onClick={() => setShowHistory(true)}>
                 <History className="h-4 w-4" />
               </Button>
@@ -158,7 +185,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           </div>
           <ProgressBar value={progress?.progressPercentage || 0} className="h-2" />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
               <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
               <p className="text-xs text-gray-400 font-bold uppercase">Surahs</p>
@@ -176,12 +203,38 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+              <p className="text-xs text-gray-400 font-bold uppercase">Last Page</p>
+              <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.lastStudiedPage || '—'}</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
               <p className="text-xs text-gray-400 font-bold uppercase">Last Ayah</p>
               <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.lastStudiedAyah || '—'}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {dailyLogs.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+          <h4 className="text-sm font-bold text-emerald-950 dark:text-gray-100 mb-4">Daily Log History</h4>
+          <div className="space-y-3">
+            {dailyLogs.slice(0, 5).map((log) => (
+              <div key={log.id} className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-emerald-800">{log.surahName}</span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(log.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
+                  {log.teacher?.fullName ? ` · ${log.teacher.fullName}` : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {feedbacks.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
@@ -205,30 +258,46 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       )}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
             <DialogTitle>Log Daily Progress{studentName ? ` — ${studentName}` : ''}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleLogProgress}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="surah">Last Studied Surah</Label>
-                <Input
-                  id="surah"
-                  value={logForm.lastStudiedSurah}
-                  onChange={(e) => setLogForm({ ...logForm, lastStudiedSurah: e.target.value })}
-                  placeholder="e.g. Surah Al-Fatiha"
+                <Label>Surah</Label>
+                <SurahSelect
+                  value={logForm.surahNumber}
+                  onChange={(surahNumber) => setLogForm({ ...logForm, surahNumber })}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="ayah">Last Studied Ayah</Label>
+                <Label htmlFor="page">Mushaf Page (1–{TOTAL_MUSHAF_PAGES})</Label>
+                <Input
+                  id="page"
+                  type="number"
+                  min={1}
+                  max={TOTAL_MUSHAF_PAGES}
+                  value={logForm.lastStudiedPage}
+                  onChange={(e) => setLogForm({ ...logForm, lastStudiedPage: e.target.value })}
+                  placeholder="e.g. 5"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ayah">
+                  Ayah
+                  {selectedSurah ? ` (max ${selectedSurah.totalAyahs} for ${selectedSurah.englishName})` : ''}
+                </Label>
                 <Input
                   id="ayah"
                   type="number"
                   min={1}
+                  max={selectedSurah?.totalAyahs || 286}
                   value={logForm.lastStudiedAyah}
                   onChange={(e) => setLogForm({ ...logForm, lastStudiedAyah: e.target.value })}
                   placeholder="e.g. 7"
+                  required
                 />
               </div>
             </div>
@@ -272,27 +341,44 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       </Dialog>
 
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
-            <DialogTitle>Feedback History</DialogTitle>
+            <DialogTitle>Progress History</DialogTitle>
           </DialogHeader>
-          <div className="py-4 max-h-80 overflow-y-auto space-y-4">
-            {feedbacks.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No feedback yet</p>
+          <div className="py-4 max-h-96 overflow-y-auto space-y-4">
+            {dailyLogs.length === 0 && feedbacks.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">No history yet</p>
             ) : (
-              feedbacks.map((fb) => (
-                <div key={fb.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-emerald-700">
-                      {fb.teacher?.fullName || 'Teacher'}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(fb.createdAt).toLocaleDateString()}
-                    </span>
+              <>
+                {dailyLogs.map((log) => (
+                  <div key={log.id} className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-900">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-emerald-800 uppercase">Daily Log</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(log.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-emerald-950">{log.surahName}</p>
+                    <p className="text-sm text-gray-600">
+                      Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
+                      {log.teacher?.fullName ? ` · ${log.teacher.fullName}` : ''}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{fb.content}</p>
-                </div>
-              ))
+                ))}
+                {feedbacks.map((fb) => (
+                  <div key={fb.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-emerald-700">
+                        {fb.teacher?.fullName || 'Teacher'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(fb.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{fb.content}</p>
+                  </div>
+                ))}
+              </>
             )}
           </div>
           <DialogFooter>

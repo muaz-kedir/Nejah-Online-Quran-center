@@ -60,6 +60,8 @@ export function AssignTemporaryTeacherModal({
   const [selectAllStudents, setSelectAllStudents] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('10:00');
   const [reason, setReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [notes, setNotes] = useState('');
@@ -95,6 +97,8 @@ export function AssignTemporaryTeacherModal({
     setReplacementTeacherId('');
     setStartDate('');
     setEndDate('');
+    setStartTime('09:00');
+    setEndTime('10:00');
     setReason('');
     setCustomReason('');
     setNotes('');
@@ -134,8 +138,12 @@ export function AssignTemporaryTeacherModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!originalTeacherId || !replacementTeacherId || !startDate || !endDate || !reason) {
+    if (!originalTeacherId || !replacementTeacherId || !startDate || !endDate || !startTime || !endTime || !reason) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+    if (startTime >= endTime) {
+      toast.error('Start time must be before end time');
       return;
     }
     if (reason === 'other' && !customReason.trim()) {
@@ -158,6 +166,8 @@ export function AssignTemporaryTeacherModal({
           selectAllStudents,
           startDate,
           endDate,
+          startTime,
+          endTime,
           reason,
           customReason: reason === 'other' ? customReason : undefined,
           notes: notes || undefined,
@@ -304,6 +314,27 @@ export function AssignTemporaryTeacherModal({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Class Start Time</Label>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Class End Time</Label>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
                 required
               />
             </div>

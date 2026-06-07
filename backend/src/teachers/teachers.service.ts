@@ -149,6 +149,10 @@ export class TeachersService {
     return this.replacementsService.assertTeacherCanTeachStudent(teacherId, studentId);
   }
 
+  async assertTeacherCanManageStudent(teacherId: string, studentId: string): Promise<Student> {
+    return this.replacementsService.assertTeacherCanManageStudent(teacherId, studentId);
+  }
+
   async assertTeacherCanViewStudent(teacherId: string, studentId: string): Promise<Student> {
     return this.replacementsService.assertTeacherCanViewStudent(teacherId, studentId);
   }

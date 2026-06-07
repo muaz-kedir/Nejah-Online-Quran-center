@@ -22,7 +22,13 @@ export class Progress {
   rank: string;
 
   @Column({ nullable: true })
+  surahNumber: number;
+
+  @Column({ nullable: true })
   lastStudiedSurah: string;
+
+  @Column({ nullable: true })
+  lastStudiedPage: number;
 
   @Column({ nullable: true })
   lastStudiedAyah: number;
