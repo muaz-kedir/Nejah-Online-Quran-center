@@ -73,7 +73,7 @@ export const Route = createFileRoute('/students')({
 
 function StudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
-  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 2, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('all');
@@ -130,10 +130,10 @@ function StudentsPage() {
       const res = await response.json();
       if (res && Array.isArray(res.data)) {
         setStudents(res.data);
-        setMeta(res.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
+        setMeta(res.meta || { total: 0, page: 1, limit: 2, totalPages: 1 });
       } else {
         setStudents([]);
-        setMeta({ total: 0, page: 1, limit: 10, totalPages: 1 });
+        setMeta({ total: 0, page: 1, limit: 2, totalPages: 1 });
       }
     } catch (error) {
       toast.error('Failed to fetch students');
@@ -497,7 +497,7 @@ function StudentsPage() {
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-amber-600 transition-colors"
                             title="Change Status"
                           >
-                            <Activity className="h-4 w-4" />
+                            <RefreshCw className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setEditingStudent(student)}
@@ -535,19 +535,12 @@ function StudentsPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              {Array.from({ length: meta.totalPages }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={meta.page === i + 1 ? 'default' : 'outline'}
-                  onClick={() => setMeta({ ...meta, page: i + 1 })}
-                  className={cn(
-                    'h-9 w-9 rounded-xl font-bold border-none',
-                    meta.page === i + 1 ? 'bg-emerald-900 hover:bg-emerald-800' : 'bg-transparent text-gray-400 hover:text-emerald-800'
-                  )}
-                >
-                  {i + 1}
-                </Button>
-              ))}
+              <Button
+                variant="default"
+                className="h-9 w-9 rounded-xl font-bold border-none bg-emerald-900 hover:bg-emerald-800 pointer-events-none"
+              >
+                {meta.page}
+              </Button>
               <Button
                 variant="outline"
                 size="icon"

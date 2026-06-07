@@ -98,7 +98,7 @@ export function ChangeStudentStatusModal({
                 <SelectItem value="Temporary Leave">Temporary Leave</SelectItem>
                 <SelectItem value="Payment Issue">Payment Issue</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
-                <SelectItem value="N/A">Not Applicable (Active)</SelectItem>
+                <SelectItem value="N/A">Not Applicable (Active/Pending)</SelectItem>
               </SelectContent>
             </Select>
           </div>
