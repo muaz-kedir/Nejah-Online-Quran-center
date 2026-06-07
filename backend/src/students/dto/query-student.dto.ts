@@ -20,22 +20,6 @@ export class QueryStudentDto {
   status?: StudentStatus;
 
   @IsOptional()
-  @IsString()
-  country?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  startDate?: string;
-
-  @IsOptional()
-  @IsString()
-  endDate?: string;
-
-  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
