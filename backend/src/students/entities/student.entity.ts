@@ -63,6 +63,10 @@ export class Student {
   @Column({ type: 'varchar', default: QuranLevel.QURAN_READING })
   level: QuranLevel;
 
+  // When true, automatic level progression is suspended for this student.
+  @Column({ default: false })
+  progressionPaused: boolean;
+
   @Column({ default: false })
   kitabRequested: boolean;
 

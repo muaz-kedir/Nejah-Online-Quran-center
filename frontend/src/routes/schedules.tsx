@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Calendar, Clock, User, BookOpen } from 'lucide-react';
+import { Plus, Search, Calendar, Clock, User, BookOpen, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -17,6 +17,7 @@ import {
   normalizeDayOfWeek,
   sortSchedulesByStartTime,
 } from '@/lib/schedule-day';
+import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/schedules')({
   component: SchedulesPage,
@@ -24,16 +25,45 @@ export const Route = createFileRoute('/schedules')({
 });
 
 function SchedulesPage() {
+  const navigate = useNavigate();
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
+  
+  // Edit Modal State
+  const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
+  const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
+  const [schedulesWithDetails, setSchedulesWithDetails] = useState<any[]>([]);
 
   const fetchSchedules = async () => {
     try {
       setLoading(true);
       const data = await api<any[]>('/schedules');
-      setSchedules(Array.isArray(data) ? data : data?.data ?? []);
+      const schedulesArray = Array.isArray(data) ? data : [];
+      setSchedules(schedulesArray);
+      
+      // Load teacher details for each schedule
+      const detailedSchedules = await Promise.all(
+        schedulesArray.map(async (schedule: any) => {
+          if (schedule.teacherId) {
+            try {
+              const token = localStorage.getItem('token');
+              const response = await fetch(`http://localhost:3000/api/teachers/${schedule.teacherId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (response.ok) {
+                const teacherData = await response.json();
+                return { ...schedule, teacher: teacherData };
+              }
+            } catch {
+              // Continue with original data if fetch fails
+            }
+          }
+          return schedule;
+        })
+      );
+      setSchedulesWithDetails(detailedSchedules);
     } catch {
       toast.error('Failed to load schedules');
     } finally {
@@ -46,8 +76,8 @@ function SchedulesPage() {
   }, []);
 
   const daySchedules = useMemo(
-    () => sortSchedulesByStartTime(getSchedulesForDay(schedules, selectedDay)),
-    [schedules, selectedDay],
+    () => sortSchedulesByStartTime(getSchedulesForDay(schedulesWithDetails, selectedDay)),
+    [schedulesWithDetails, selectedDay],
   );
 
   const filtered = useMemo(
@@ -57,7 +87,9 @@ function SchedulesPage() {
         return (
           s.className?.toLowerCase().includes(q) ||
           s.teacher?.fullName?.toLowerCase().includes(q) ||
-          s.student?.fullName?.toLowerCase().includes(q)
+          (s.isGroupSession 
+            ? (s.scheduleStudents?.length || 0) > 0 
+            : s.student?.fullName?.toLowerCase().includes(q))
         );
       }),
     [daySchedules, search],
@@ -71,6 +103,19 @@ function SchedulesPage() {
     return counts;
   }, [schedules]);
 
+  const handleEditSchedule = (schedule: any) => {
+    setScheduleToEdit(schedule);
+    setIsEditScheduleOpen(true);
+  };
+
+  const getStudentInfo = (schedule: any) => {
+    if (schedule?.isGroupSession) {
+      const count = schedule?.scheduleStudents?.length || 0;
+      return `${count} ${count === 1 ? 'student' : 'students'}`;
+    }
+    return schedule?.student?.fullName || 'N/A';
+  };
+
   return (
     <DashboardLayout>
       <Breadcrumbs />
@@ -79,8 +124,13 @@ function SchedulesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Class Schedules</h1>
           <p className="text-gray-600 mt-1">View and manage teaching schedules by day</p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="mr-2 h-4 w-4" /> Add Schedule
+        <Button 
+          className="bg-emerald-600 hover:bg-emerald-700"
+          onClick={() => {
+            navigate({ to: '/teachers' });
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" /> Schedule a Class
         </Button>
       </div>
 
@@ -155,7 +205,7 @@ function SchedulesPage() {
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <BookOpen className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-gray-900">{s.className}</span>
+                      <span className="font-medium text-gray-900">{s.className || s.classType || 'Quran Class'}</span>
                     </div>
                   </td>
                   <td className="p-4">
@@ -164,7 +214,9 @@ function SchedulesPage() {
                       <span className="text-sm text-gray-600">{s.teacher?.fullName || 'N/A'}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-sm text-gray-600">{s.student?.fullName || 'N/A'}</td>
+                  <td className="p-4 text-sm text-gray-600">
+                    {getStudentInfo(s)}
+                  </td>
                   <td className="p-4">
                     <Badge className="bg-blue-100 text-blue-700">
                       {normalizeDayOfWeek(s.dayOfWeek) || s.dayOfWeek}
@@ -182,8 +234,13 @@ function SchedulesPage() {
                     </Badge>
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="outline" size="sm">
-                      Edit
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditSchedule(s)}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
                     </Button>
                   </td>
                 </tr>
@@ -192,6 +249,51 @@ function SchedulesPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Schedule Modal */}
+      <EditScheduleModal
+        open={isEditScheduleOpen}
+        onClose={() => {
+          setIsEditScheduleOpen(false);
+          setScheduleToEdit(null);
+        }}
+        onSuccess={async () => {
+          // Refresh schedules
+          try {
+            const data = await api<any[]>('/schedules');
+            const schedulesArray = Array.isArray(data) ? data : [];
+            setSchedules(schedulesArray);
+            
+            const detailedSchedules = await Promise.all(
+              schedulesArray.map(async (schedule: any) => {
+                if (schedule.teacherId) {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`http://localhost:3000/api/teachers/${schedule.teacherId}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (response.ok) {
+                      const teacherData = await response.json();
+                      return { ...schedule, teacher: teacherData };
+                    }
+                  } catch {
+                    // Continue with original data if fetch fails
+                  }
+                }
+                return schedule;
+              })
+            );
+            setSchedulesWithDetails(detailedSchedules);
+            toast.success('Schedule updated successfully');
+          } catch {
+            toast.error('Failed to refresh schedules');
+          }
+        }}
+        teacher={scheduleToEdit?.teacher || null}
+        schedule={scheduleToEdit}
+        defaultDay={selectedDay}
+        unassignedStudents={[]}
+      />
     </DashboardLayout>
   );
 }

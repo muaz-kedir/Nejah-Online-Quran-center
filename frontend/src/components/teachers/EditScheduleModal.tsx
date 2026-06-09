@@ -61,8 +61,6 @@ export function EditScheduleModal({
     notes: '',
   });
 
-  const assignedStudents = teacher?.students || [];
-
   useEffect(() => {
     if (open) {
       if (schedule) {
@@ -179,6 +177,13 @@ export function EditScheduleModal({
     }
   };
 
+  // Check if teacher is valid
+  const isValidTeacher = teacher?.id && teacher?.fullName;
+  
+  // Get students list from teacher or use unassigned students
+  const assignedStudents = isValidTeacher ? (teacher?.students || []) : [];
+  
+  // Group student names for display
   const groupStudentNames = schedule?.isGroupSession
     ? (schedule.scheduleStudents || [])
         .map((ss: any) => ss.student?.fullName)

@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, apiHeaders, requireStudentAuth, storeStudentId, studentPaths } from '@/lib/student-portal';
+import { LearningPathCard, useLearningPath } from '@/components/progress/LearningPathCard';
 
 const dayLabels: Record<string, string> = {
   Sunday: 'S', Monday: 'M', Tuesday: 'T', Wednesday: 'W',
@@ -45,6 +46,7 @@ function StudentDashboard() {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [changingPw, setChangingPw] = useState(false);
   const [profileForm, setProfileForm] = useState({ phone: '', email: '' });
+  const { path: learningPath } = useLearningPath(profile?.student?.id);
 
   useEffect(() => {
     Promise.all([
@@ -167,6 +169,12 @@ function StudentDashboard() {
               {student.temporaryTeacher.startDate} to {student.temporaryTeacher.endDate}.
               Your regular teacher is {student.temporaryTeacher.originalTeacher}.
             </p>
+          </div>
+        )}
+
+        {learningPath && (
+          <div className="bg-white rounded-3xl p-6 border shadow-sm">
+            <LearningPathCard path={learningPath} />
           </div>
         )}
 

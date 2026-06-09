@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,13 +18,16 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History, Play, Pause, Clock, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { SurahSelect } from '@/components/progress/SurahSelect';
 import { TopicSelect, type TopicOption } from '@/components/progress/TopicSelect';
+import { LearningPathCard, type LearningPathData } from '@/components/progress/LearningPathCard';
 import { getSurahByNumber, TOTAL_MUSHAF_PAGES } from '@/lib/quran-surahs';
 
 type LearningTrack = 'qaidah' | 'quran_reading' | 'tajweed' | 'hifz';
@@ -43,6 +46,8 @@ interface LearningContext {
     remaining: number;
     percentage: number;
   };
+  promotionStatus?: string;
+  progressionPaused?: boolean;
   lastPosition: {
     surahNumber?: number;
     lastStudiedSurah?: string;
@@ -125,6 +130,8 @@ function formatLogEntry(log: any): { title: string; detail: string } {
 
 export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherStudentProgressPanelProps) {
   const [context, setContext] = useState<LearningContext | null>(null);
+  const [learningPath, setLearningPath] = useState<LearningPathData | null>(null);
+  const [promoting, setPromoting] = useState(false);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [dailyLogs, setDailyLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,6 +142,12 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [logForm, setLogForm] = useState<LogFormState>(emptyLogForm());
   const [feedbackContent, setFeedbackContent] = useState('');
+  
+  // Session tracking for Quran reading level
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionTime, setSessionTime] = useState(0);
+  const [sessionProgress, setSessionProgress] = useState(0);
+  const sessionRef = useRef<NodeJS.Timeout | null>(null);
 
   const track = context?.learningTrack || 'quran_reading';
   const selectedSurah = logForm.surahNumber ? getSurahByNumber(logForm.surahNumber) : undefined;
@@ -142,12 +155,14 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ctx, fb, logs] = await Promise.all([
+      const [ctx, fb, logs, path] = await Promise.all([
         api<LearningContext>(`/progress/student/${studentId}/learning-context`),
         api<any[]>(`/progress/student/${studentId}/feedback`).catch(() => []),
         api<any[]>(`/progress/student/${studentId}/logs?limit=50`).catch(() => []),
+        api<LearningPathData>(`/progress/student/${studentId}/learning-path`).catch(() => null),
       ]);
       setContext(ctx);
+      setLearningPath(path);
       setFeedbacks(Array.isArray(fb) ? fb : []);
       setDailyLogs(Array.isArray(logs) ? logs : []);
     } catch {
@@ -160,6 +175,31 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Session timer effect
+  useEffect(() => {
+    if (sessionActive) {
+      sessionRef.current = setInterval(() => {
+        setSessionTime((prev) => prev + 1);
+        
+        // Progress increase calculation: 
+        // For quran_reading track, assume 15 minutes for full surah = 100% progress
+        // So 1 minute = ~0.67% progress
+        const progressPerSecond = 0.67 / 60; // ~0.67% per minute
+        setSessionProgress((prev) => Math.min(prev + progressPerSecond, 100));
+      }, 1000);
+    } else {
+      if (sessionRef.current) {
+        clearInterval(sessionRef.current);
+        sessionRef.current = null;
+      }
+    }
+    return () => {
+      if (sessionRef.current) {
+        clearInterval(sessionRef.current);
+      }
+    };
+  }, [sessionActive]);
 
   const openLogDialog = () => {
     const lp = context?.lastPosition;
@@ -212,8 +252,46 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
     };
   };
 
+  const startSession = () => {
+    setSessionActive(true);
+    setSessionProgress(0);
+    setSessionTime(0);
+  };
+
+  const pauseSession = () => {
+    setSessionActive(false);
+  };
+
+  const resetSession = () => {
+    setSessionActive(false);
+    setSessionProgress(0);
+    setSessionTime(0);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // For quran_reading track, use session progress for final calculation
+    if (track === 'quran_reading' && sessionActive) {
+      // Calculate final progress based on time spent
+      const finalProgress = sessionProgress;
+      
+      // Add session metadata to notes
+      const timeSpent = formatTime(sessionTime);
+      setLogForm({
+        ...logForm,
+        notes: `${logForm.notes}\n\nSession Duration: ${timeSpent}\nEstimated Progress: ${finalProgress.toFixed(1)}%`
+      });
+      
+      // Reset session after logging
+      resetSession();
+    }
 
     if ((track === 'qaidah' || track === 'tajweed') && !logForm.topicId) {
       toast.error('Please select a topic');
@@ -249,6 +327,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       setShowLog(false);
       setLogForm(emptyLogForm());
       fetchData();
+      resetSession(); // Reset session after logging
     } catch (err: any) {
       toast.error(err.message || 'Failed to log progress');
     } finally {
@@ -276,6 +355,22 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
     }
   };
 
+  const handleRecommendPromotion = async () => {
+    setPromoting(true);
+    try {
+      await api(`/progress/student/${studentId}/recommend-promotion`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: 'Teacher evaluation passed' }),
+      });
+      toast.success('Student promoted to the next level');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to promote student');
+    } finally {
+      setPromoting(false);
+    }
+  };
+
   const getRankColor = (rank: string) => {
     const map: Record<string, string> = {
       Beginner: 'bg-blue-100 text-blue-700',
@@ -295,6 +390,34 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
 
   return (
     <div className="space-y-6">
+      {learningPath && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+          <LearningPathCard path={learningPath} compact />
+        </div>
+      )}
+
+      {context?.promotionStatus === 'ready' && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div>
+            <p className="font-bold text-amber-900 dark:text-amber-200 text-sm">
+              {studentName || 'This student'} completed all {context.learningTrackLabel} topics
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+              Pass the evaluation to promote them to the next level.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shrink-0"
+            disabled={promoting}
+            onClick={handleRecommendPromotion}
+          >
+            <Award className="h-3 w-3 mr-1" />
+            {promoting ? 'Promoting...' : 'Pass Evaluation & Promote'}
+          </Button>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -366,7 +489,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                 <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
                 <p className="text-xs text-gray-400 font-bold uppercase">Surahs</p>
                 <p className="font-bold text-emerald-950 dark:text-gray-100">
-                  {context?.progress?.surahsCount || 0}/114
+                  {context?.completedTopicIds?.filter((id) => id.startsWith('surah-')).length ?? 0}/114
                 </p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
@@ -398,6 +521,82 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           )}
         </div>
       </div>
+
+      {/* Session Timer for Quran Reading Level */}
+      {track === 'quran_reading' && (
+        <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-2xl border border-emerald-800 dark:border-emerald-900 p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-800 flex items-center justify-center">
+                {sessionActive ? (
+                  <Pause className="h-6 w-6" />
+                ) : (
+                  <Play className="h-6 w-6" />
+                )}
+              </div>
+              <div>
+                <h4 className="font-bold text-lg">Session Timer</h4>
+                <p className="text-xs text-emerald-200">
+                  Track time and auto-increase progress
+                </p>
+              </div>
+            </div>
+            <div className="text-3xl font-mono font-bold tabular-nums">
+              {formatTime(sessionTime)}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="bg-emerald-950/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-emerald-300">Progress</span>
+                <span className="text-sm font-bold">{sessionProgress.toFixed(1)}%</span>
+              </div>
+              <ProgressBar value={sessionProgress} className="h-1.5 bg-emerald-800" />
+            </div>
+            <div className="bg-emerald-950/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-emerald-300">Session Status</span>
+                <span className={cn(
+                  "text-xs font-bold px-2 py-1 rounded-lg",
+                  sessionActive 
+                    ? "bg-emerald-500 text-white" 
+                    : "bg-gray-500 dark:bg-gray-600 text-white"
+                )}>
+                  {sessionActive ? "Active" : "Paused"}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            {!sessionActive ? (
+              <Button 
+                onClick={startSession} 
+                className="flex-1 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl"
+              >
+                <Play className="h-4 w-4 mr-2" /> Start Session
+              </Button>
+            ) : (
+              <Button 
+                onClick={pauseSession} 
+                className="flex-1 bg-amber-500 text-white hover:bg-amber-600 font-bold rounded-xl"
+              >
+                <Pause className="h-4 w-4 mr-2" /> Pause Session
+              </Button>
+            )}
+            {sessionTime > 0 && (
+              <Button 
+                onClick={resetSession} 
+                variant="outline"
+                className="border-emerald-700 text-emerald-300 hover:bg-emerald-900 rounded-xl"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" /> Reset
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {dailyLogs.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
@@ -454,9 +653,9 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             <DialogTitle>
               Log Daily Progress{studentName ? ` — ${studentName}` : ''}
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">
+            <DialogDescription>
               {context?.learningTrackLabel} · Auto-selected based on student program
-            </p>
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleLogProgress}>
             <div className="grid gap-4 py-4">
@@ -498,6 +697,9 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                     <SurahSelect
                       value={logForm.surahNumber}
                       onChange={(surahNumber) => setLogForm({ ...logForm, surahNumber })}
+                      completedSurahs={context?.completedTopicIds
+                        .filter(id => id.startsWith('surah-'))
+                        .map(id => parseInt(id.replace('surah-', ''))) || []}
                     />
                   </div>
                   {track === 'quran_reading' && (
@@ -612,6 +814,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Add Feedback{studentName ? ` — ${studentName}` : ''}</DialogTitle>
+            <DialogDescription>Share notes about the student's performance.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddFeedback}>
             <div className="grid gap-4 py-4">
@@ -643,6 +846,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
         <DialogContent className="sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>Progress History</DialogTitle>
+            <DialogDescription>All logged lessons and feedback for this student.</DialogDescription>
           </DialogHeader>
           <div className="py-4 max-h-96 overflow-y-auto space-y-4">
             {dailyLogs.length === 0 && feedbacks.length === 0 ? (

@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { BookOpen, Award, TrendingUp, CalendarCheck } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, CalendarCheck, GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
-import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import { api, getLinkedStudentId, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import {
+  LearningPathCard,
+  LevelHistoryList,
+  type LearningPathData,
+  type LevelHistoryEntry,
+} from '@/components/progress/LearningPathCard';
 
 function StudentProgress() {
   const [data, setData] = useState<any>(null);
   const [attendance, setAttendance] = useState<any>(null);
+  const [learningPath, setLearningPath] = useState<LearningPathData | null>(null);
+  const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +29,16 @@ function StudentProgress() {
         setAttendance(att);
       })
       .finally(() => setLoading(false));
+
+    getLinkedStudentId().then((studentId) => {
+      if (!studentId) return;
+      api<LearningPathData>(`/progress/student/${studentId}/learning-path`)
+        .then(setLearningPath)
+        .catch(() => null);
+      api<LevelHistoryEntry[]>(`/progress/student/${studentId}/level-history`)
+        .then((h) => setLevelHistory(h || []))
+        .catch(() => null);
+    });
   }, []);
 
   if (loading) return <StudentPageLoader />;
@@ -35,6 +53,12 @@ function StudentProgress() {
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
           <h1 className="text-4xl font-extrabold text-emerald-950 font-serif">My Progress</h1>
         </div>
+
+        {learningPath && (
+          <div className="bg-white rounded-[32px] p-8 border mb-8">
+            <LearningPathCard path={learningPath} />
+          </div>
+        )}
 
         <div className="bg-white rounded-[32px] p-8 border mb-8">
           <div className="flex justify-between items-start mb-6">
@@ -82,6 +106,15 @@ function StudentProgress() {
               <div><p className="text-2xl font-bold text-red-600">{attendance.stats.absent}</p><p className="text-xs text-gray-400">Absent</p></div>
               <div><p className="text-2xl font-bold">{Math.round(attendance.stats.attendancePercentage || 0)}%</p><p className="text-xs text-gray-400">Rate</p></div>
             </div>
+          </div>
+        )}
+
+        {levelHistory.length > 0 && (
+          <div className="bg-white rounded-[32px] p-8 border mb-8">
+            <h3 className="text-lg font-bold text-emerald-950 mb-6 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" /> Level History
+            </h3>
+            <LevelHistoryList history={levelHistory} />
           </div>
         )}
 

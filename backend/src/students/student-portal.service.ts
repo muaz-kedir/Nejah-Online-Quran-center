@@ -14,6 +14,7 @@ import { ClassSession, SessionStatus } from '../attendance/entities/class-sessio
 import { ResourcesService } from '../resources/resources.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
+import { resolveLearningTrack } from '../common/constants/learning-curricula';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -61,6 +62,20 @@ export class StudentPortalService {
     return path.startsWith('http') ? path : `http://localhost:3000${path}`;
   }
 
+  /** Progress row for the student's current learning track, falling back to the latest record. */
+  private async findCurrentProgress(student: Student): Promise<Progress | null> {
+    const track = resolveLearningTrack(student.level);
+    const current = await this.progressRepository.findOne({
+      where: { studentId: student.id, learningTrack: track },
+      order: { createdAt: 'DESC' },
+    });
+    if (current) return current;
+    return this.progressRepository.findOne({
+      where: { studentId: student.id },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
   private todayWeekday(): string {
     return DAYS[new Date().getDay()];
   }
@@ -69,7 +84,7 @@ export class StudentPortalService {
     const student = await this.resolveStudent(userId);
     const studentId = student.id;
 
-    const progressRecord = await this.progressRepository.findOne({ where: { studentId } });
+    const progressRecord = await this.findCurrentProgress(student);
     const attendances = await this.attendanceRepository.find({ where: { studentId } });
     const sessionStats = await this.attendanceService.getAttendanceStats(studentId);
 
@@ -388,7 +403,7 @@ export class StudentPortalService {
 
   async getProgressDetail(userId: string) {
     const student = await this.resolveStudent(userId);
-    const progressRecord = await this.progressRepository.findOne({ where: { studentId: student.id } });
+    const progressRecord = await this.findCurrentProgress(student);
 
     const progressLogs = await this.progressLogRepository.find({
       where: { studentId: student.id },
@@ -563,7 +578,7 @@ export class StudentPortalService {
     const effectiveTeacher = await this.replacementsService.getEffectiveTeacher(student.id);
     const effectiveTeacherEntity =
       effectiveTeacher.replacement?.replacementTeacher || student.teacher;
-    const progressRecord = await this.progressRepository.findOne({ where: { studentId: student.id } });
+    const progressRecord = await this.findCurrentProgress(student);
     const sessionStats = await this.attendanceService.getAttendanceStats(student.id);
 
     const homeworkItems = await this.homeworkRepository.find({ where: { studentId: student.id } });

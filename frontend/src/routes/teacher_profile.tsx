@@ -5,6 +5,8 @@ import { requireAuth } from '@/lib/auth';
 import { User, Mail, Phone, MapPin, GraduationCap, Clock, Calendar, ChevronRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
+import { toast } from 'sonner';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -16,6 +18,7 @@ export const Route = createFileRoute('/teacher_profile')({
 function TeacherProfilePage() {
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchTeacherProfile = async () => {
     setLoading(true);
@@ -81,7 +84,10 @@ function TeacherProfilePage() {
               Teacher Profile
             </h1>
           </div>
-          <Button className="h-11 px-6 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl">
+          <Button 
+            className="h-11 px-6 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl"
+            onClick={() => setIsEditModalOpen(true)}
+          >
             <Pencil className="h-4 w-4 mr-2" />
             Edit Profile
           </Button>
@@ -228,6 +234,19 @@ function TeacherProfilePage() {
           </Card>
         </div>
       </div>
+
+      {/* Edit Teacher Modal */}
+      <EditTeacherModal
+        open={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={async () => {
+          // Refresh teacher data
+          await fetchTeacherProfile();
+          setIsEditModalOpen(false);
+          toast.success('Profile updated successfully');
+        }}
+        teacher={teacher}
+      />
     </DashboardLayout>
   );
 }

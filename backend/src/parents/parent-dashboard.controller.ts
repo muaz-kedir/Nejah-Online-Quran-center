@@ -83,6 +83,9 @@ export class ParentDashboardController {
     if (totalChildren > 0) {
       const progressRecords = await this.progressRepository.find({
         where: { studentId: In(studentIds) },
+        // ASC so the most recently updated record wins in the map below
+        // (students may have one progress row per learning track).
+        order: { updatedAt: 'ASC' },
       });
       progressByStudent = Object.fromEntries(progressRecords.map((p) => [p.studentId, p]));
 

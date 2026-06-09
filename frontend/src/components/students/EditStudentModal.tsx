@@ -58,7 +58,7 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
     gender: 'Male',
     age: '',
     currentResidency: '',
-    level: 'Beginner',
+    level: 'Quran Reading',
     email: '',
     status: 'active',
     teacherId: '',
@@ -76,7 +76,7 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
         gender: student.gender || 'Male',
         age: student.age?.toString() || '',
         currentResidency: student.currentResidency || '',
-        level: student.level || 'Beginner',
+        level: student.level || 'Quran Reading',
         email: student.email || '',
         status: student.status || 'active',
         teacherId: student.teacherId || '',
@@ -191,11 +191,11 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
                 <Select value={formData.level} onValueChange={(v) => setFormData({ ...formData, level: v })}>
                   <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Hifz">Hifz</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
+                    <SelectItem value="Quran Reading">Quran Reading</SelectItem>
+                    <SelectItem value="Tajweed Program">Tajweed Program</SelectItem>
+                    <SelectItem value="Hifz Program">Hifz Program</SelectItem>
+                    <SelectItem value="Hifz Muraja'a">Hifz Muraja&apos;a</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

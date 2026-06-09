@@ -21,6 +21,7 @@ import {
   MoreVertical,
   Activity,
   UserCog,
+  GraduationCap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
 import { AssignStudentModal } from '@/components/students/AssignStudentModal';
 import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
 import { ChangeStudentStatusModal } from '@/components/students/ChangeStudentStatusModal';
+import { ManageLevelModal } from '@/components/students/ManageLevelModal';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
 import { toast } from 'sonner';
 
@@ -97,6 +99,7 @@ function StudentsPage() {
   const [viewingStudent, setViewingStudent] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
   const [changingStatusStudent, setChangingStatusStudent] = useState<any | null>(null);
+  const [managingLevelStudent, setManagingLevelStudent] = useState<any | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -290,10 +293,11 @@ function StudentsPage() {
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Hifz">Hifz</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
+                    <SelectItem value="Quran Reading">Quran Reading</SelectItem>
+                    <SelectItem value="Tajweed Program">Tajweed Program</SelectItem>
+                    <SelectItem value="Hifz Program">Hifz Program</SelectItem>
+                    <SelectItem value="Hifz Muraja'a">Hifz Muraja&apos;a</SelectItem>
                   </SelectContent>
                 </Select>
              </div>
@@ -510,6 +514,13 @@ function StudentsPage() {
                           >
                             <RefreshCw className="h-4 w-4" />
                           </button>
+                          <button
+                            onClick={() => setManagingLevelStudent(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-700 transition-colors"
+                            title="Manage Level"
+                          >
+                            <GraduationCap className="h-4 w-4" />
+                          </button>
                           <button 
                             onClick={() => setEditingStudent(student)}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
@@ -609,6 +620,13 @@ function StudentsPage() {
         onSuccess={fetchStudents}
         teachers={teachers}
         parents={parents}
+      />
+
+      <ManageLevelModal
+        open={!!managingLevelStudent}
+        onClose={() => setManagingLevelStudent(null)}
+        onSuccess={fetchStudents}
+        student={managingLevelStudent}
       />
 
       <EditStudentModal

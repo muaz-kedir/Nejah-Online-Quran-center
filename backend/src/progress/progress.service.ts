@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
 import { ProgressLog } from './entities/progress-log.entity';
 import { Feedback } from './entities/feedback.entity';
@@ -8,6 +8,7 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { UpdateProgressDto } from './dto/update-progress.dto';
+import { LevelProgressionService } from './level-progression.service';
 import {
   QURAN_SURAHS,
   TOTAL_MUSHAF_PAGES,
@@ -52,6 +53,7 @@ export class ProgressService {
     private teacherRepository: Repository<Teacher>,
     @InjectRepository(Parent)
     private parentRepository: Repository<Parent>,
+    private levelProgressionService: LevelProgressionService,
   ) {}
 
   getSurahList() {
@@ -84,18 +86,37 @@ export class ProgressService {
     }
   }
 
-  async getOrCreateProgress(studentId: string): Promise<Progress> {
-    const existing = await this.progressRepository.findOne({
-      where: { studentId },
-      relations: ['student'],
-    });
+  /**
+   * Progress records are kept per (student, learning track). When a student is
+   * promoted, the old track's record is preserved and a fresh one is created,
+   * so no historical learning data is ever lost.
+   */
+  async getOrCreateProgress(studentId: string, track?: LearningTrack): Promise<Progress> {
+    let learningTrack = track;
+    if (!learningTrack) {
+      const student = await this.studentRepository.findOne({ where: { id: studentId } });
+      learningTrack = resolveLearningTrack(student?.level);
+    }
 
+    const existing = await this.progressRepository.findOne({
+      where: { studentId, learningTrack },
+      relations: ['student'],
+      order: { createdAt: 'DESC' },
+    });
     if (existing) {
       return existing;
     }
 
-    const student = await this.studentRepository.findOne({ where: { id: studentId } });
-    const learningTrack = resolveLearningTrack(student?.level);
+    // Adopt a legacy untracked row instead of creating a duplicate.
+    const legacy = await this.progressRepository.findOne({
+      where: { studentId, learningTrack: IsNull() },
+      relations: ['student'],
+      order: { createdAt: 'DESC' },
+    });
+    if (legacy) {
+      legacy.learningTrack = learningTrack;
+      return this.progressRepository.save(legacy);
+    }
 
     const progress = this.progressRepository.create({
       studentId,
@@ -106,6 +127,7 @@ export class ProgressService {
       rank: 'Beginner',
       learningTrack,
       completedTopicIds: [],
+      promotionStatus: 'none',
     });
 
     return this.progressRepository.save(progress);
@@ -120,7 +142,8 @@ export class ProgressService {
     }
 
     if (track === 'quran_reading' || track === 'hifz') {
-      const completed = completedIds.length;
+      // Ticked surahs are the single source of truth for the completed count.
+      const completed = completedIds.filter((id) => id.startsWith('surah-')).length;
       const percentage = Math.min(Math.round((completed / TOTAL_SURAHS) * 1000) / 10, 100);
       return { completed, total: TOTAL_SURAHS, remaining: Math.max(TOTAL_SURAHS - completed, 0), percentage };
     }
@@ -134,13 +157,8 @@ export class ProgressService {
       throw new NotFoundException('Student not found');
     }
 
-    const progress = await this.getOrCreateProgress(studentId);
     const learningTrack = resolveLearningTrack(student.level);
-
-    if (progress.learningTrack !== learningTrack) {
-      progress.learningTrack = learningTrack;
-      await this.progressRepository.save(progress);
-    }
+    const progress = await this.getOrCreateProgress(studentId, learningTrack);
 
     const completedTopicIds = normalizeCompletedIds(progress.completedTopicIds);
     const curriculumTopics = getTopicsForTrack(learningTrack);
@@ -173,6 +191,8 @@ export class ProgressService {
         ? { ...suggestedTopic, label: formatTopicLabel(suggestedTopic) }
         : null,
       progressSummary,
+      promotionStatus: progress.promotionStatus || 'none',
+      progressionPaused: student.progressionPaused,
       lastPosition: {
         surahNumber: progress.surahNumber,
         lastStudiedSurah: progress.lastStudiedSurah,
@@ -294,7 +314,7 @@ export class ProgressService {
 
     progress.surahNumber = surahNumber;
     progress.lastStudiedAyah = endAyah;
-    progress.surahsCount = Math.max(progress.surahsCount, completedIds.length);
+    progress.surahsCount = completedIds.filter((id) => id.startsWith('surah-')).length;
     progress.ayahsCount += endAyah;
 
     const summary = this.buildProgressSummary(track, completedIds);
@@ -318,8 +338,7 @@ export class ProgressService {
     }
 
     const learningTrack = resolveLearningTrack(student.level);
-    const progress = await this.getOrCreateProgress(studentId);
-    progress.learningTrack = learningTrack;
+    const progress = await this.getOrCreateProgress(studentId, learningTrack);
 
     const completedIds = normalizeCompletedIds(progress.completedTopicIds);
     const completionStatus = dto.completionStatus || (dto.isReview ? 'review' : 'completed');
@@ -358,26 +377,17 @@ export class ProgressService {
         endAyah: validated.endAyah,
       };
 
-      progress.surahNumber = validated.surahNumber;
+      // Tick the surah as passed/finished: persists in completedTopicIds
+      // so it stays checked in the teacher's form and counts only once.
+      await this.applySurahCompletion(
+        progress,
+        learningTrack,
+        validated.surahNumber,
+        validated.endAyah,
+        dto.isReview || false,
+      );
       progress.lastStudiedSurah = validated.surahName;
       progress.lastStudiedPage = validated.lastStudiedPage!;
-      progress.lastStudiedAyah = validated.endAyah;
-
-      if (dto.surahsCount !== undefined) {
-        progress.surahsCount = dto.surahsCount;
-      }
-      if (dto.ayahsCount !== undefined) {
-        progress.ayahsCount = dto.ayahsCount;
-      } else {
-        progress.ayahsCount += validated.endAyah;
-      }
-
-      progress.progressPercentage = Math.min(
-        Math.round((progress.surahsCount / TOTAL_SURAHS) * 100),
-        100,
-      );
-      progress.rank = calculateRank(progress.progressPercentage);
-      progress.currentTopicId = `surah-${validated.surahNumber}`;
     } else if (learningTrack === 'hifz') {
       const validated = this.validateSurahLog(dto, false);
 
@@ -409,7 +419,13 @@ export class ProgressService {
     const log = this.progressLogRepository.create(logData);
     await this.progressLogRepository.save(log);
 
-    return this.progressRepository.save(progress);
+    const saved = await this.progressRepository.save(progress);
+
+    // Automatic level progression: promotes the student (or flags them as
+    // ready for evaluation) when the level's completion criteria are met.
+    await this.levelProgressionService.checkAndPromote(student, saved);
+
+    return saved;
   }
 
   async getStudentLogs(studentId: string, limit = 50): Promise<ProgressLog[]> {

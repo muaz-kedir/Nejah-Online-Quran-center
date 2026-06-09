@@ -76,7 +76,9 @@ export class TeacherDashboardController {
       studentIds.length > 0
         ? await this.progressRepository.find({
             where: { studentId: In(studentIds) },
-            order: { updatedAt: 'DESC' },
+            // ASC so the most recently updated record wins in the map below
+            // (students may have one progress row per learning track).
+            order: { updatedAt: 'ASC' },
           })
         : [];
 
