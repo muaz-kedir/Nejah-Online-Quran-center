@@ -38,6 +38,22 @@ export class ProgressController {
     return this.progressService.getSurahList();
   }
 
+  @Get('student/:studentId/learning-context')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  async getLearningContext(@Request() req, @Param('studentId') studentId: string) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
+    } else if (req.user.role === UserRole.STUDENT || req.user.role === UserRole.PARENT) {
+      await this.progressService.assertUserCanViewStudentProgress(
+        req.user.id,
+        req.user.role,
+        studentId,
+      );
+    }
+    return this.progressService.getLearningContext(studentId);
+  }
+
   @Get('student/:studentId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getProgress(@Request() req, @Param('studentId') studentId: string) {

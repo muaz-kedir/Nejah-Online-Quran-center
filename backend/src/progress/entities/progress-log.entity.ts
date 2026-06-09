@@ -28,17 +28,50 @@ export class ProgressLog {
   @Column({ nullable: true })
   teacherId: string;
 
-  @Column()
+  @Column({ type: 'varchar', nullable: true })
+  learningTrack: string;
+
+  @Column({ nullable: true })
+  topicId: string;
+
+  @Column({ nullable: true })
+  topicName: string;
+
+  @Column({ nullable: true })
+  topicNameAr: string;
+
+  @Column({ nullable: true })
   surahNumber: number;
 
-  @Column()
+  @Column({ nullable: true })
   surahName: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastStudiedPage: number;
 
-  @Column()
+  @Column({ nullable: true })
+  startAyah: number;
+
+  @Column({ nullable: true })
   lastStudiedAyah: number;
+
+  @Column({ nullable: true })
+  endAyah: number;
+
+  @Column({ nullable: true })
+  memorizationStatus: string;
+
+  @Column({ nullable: true })
+  revisionStatus: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
+  @Column({ default: 'completed' })
+  completionStatus: string;
+
+  @Column({ default: false })
+  isReview: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

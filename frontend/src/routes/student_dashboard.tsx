@@ -59,7 +59,10 @@ function StudentDashboard() {
           setProfileForm({ phone: prof.student.phone || '', email: prof.student.email || '' });
         }
       })
-      .catch((e) => console.error(e))
+      .catch((e) => {
+        console.error(e);
+        toast.error('Could not load your dashboard. Please refresh the page.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -107,6 +110,24 @@ function StudentDashboard() {
   const progress = data?.progress;
   const attendance = data?.attendance;
 
+  const displayLevel =
+    student?.level || welcome?.quranLevel || profile?.student?.level || '—';
+  const displayTeacher =
+    student?.effectiveTeacher ||
+    student?.assignedTeacher ||
+    welcome?.assignedTeacher ||
+    profile?.student?.assignedTeacher ||
+    'Not assigned yet';
+  const enrollmentRaw =
+    student?.enrollmentDate || welcome?.enrollmentDate || profile?.student?.enrollmentDate;
+  const displayEnrolled = enrollmentRaw
+    ? new Date(enrollmentRaw).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '—';
+
   const joinClass = () => {
     if (data?.liveClass?.id) {
       window.location.href = `/class-session/${data.liveClass.id}`;
@@ -120,7 +141,7 @@ function StudentDashboard() {
   return (
     <StudentPortalLayout
       activePath={studentPaths.dashboard}
-      student={student}
+      student={student ? { ...student, level: displayLevel } : undefined}
       unreadNotifications={data?.unreadNotifications}
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenProfile={() => setProfileOpen(true)}
@@ -131,10 +152,10 @@ function StudentDashboard() {
             Assalamu Alaikum, {welcome?.studentName?.split(' ')[0] || student?.name?.split(' ')[0] || 'Student'}!
           </p>
           <h2 className="text-3xl font-extrabold text-emerald-950 font-serif">Your Learning Center</h2>
-          <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
-            <span><strong>Level:</strong> {welcome?.quranLevel}</span>
-            <span><strong>Teacher:</strong> {welcome?.assignedTeacher}</span>
-            <span><strong>Enrolled:</strong> {welcome?.enrollmentDate ? new Date(welcome.enrollmentDate).toLocaleDateString() : '—'}</span>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+            <span><strong>Level:</strong> {displayLevel}</span>
+            <span><strong>Teacher:</strong> {displayTeacher}</span>
+            <span><strong>Enrolled:</strong> {displayEnrolled}</span>
           </div>
         </div>
 
@@ -286,8 +307,9 @@ function StudentDashboard() {
           <DialogHeader><DialogTitle>My Profile</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2 text-sm">
             <p><strong>Name:</strong> {profile?.student?.fullName}</p>
-            <p><strong>Level:</strong> {profile?.student?.level}</p>
-            <p><strong>Teacher:</strong> {profile?.student?.assignedTeacher}</p>
+            <p><strong>Level:</strong> {displayLevel}</p>
+            <p><strong>Teacher:</strong> {displayTeacher}</p>
+            <p><strong>Enrolled:</strong> {displayEnrolled}</p>
             <div><Label>Phone</Label><Input value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} /></div>
             <div><Label>Email</Label><Input value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-2 pt-2 text-center">

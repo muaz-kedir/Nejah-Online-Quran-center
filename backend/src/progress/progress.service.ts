@@ -14,6 +14,15 @@ import {
   getSurahByNumber,
   formatSurahName,
 } from '../common/constants/quran-surahs';
+import {
+  LearningTrack,
+  resolveLearningTrack,
+  getTopicsForTrack,
+  getTopicById,
+  getNextTopic,
+  formatTopicLabel,
+  getTrackLabel,
+} from '../common/constants/learning-curricula';
 
 const TOTAL_SURAHS = 114;
 
@@ -22,6 +31,10 @@ function calculateRank(percentage: number): string {
   if (percentage >= 70) return 'Advanced';
   if (percentage >= 40) return 'Intermediate';
   return 'Beginner';
+}
+
+function normalizeCompletedIds(ids: string[] | null | undefined): string[] {
+  return Array.isArray(ids) ? ids : [];
 }
 
 @Injectable()
@@ -81,6 +94,9 @@ export class ProgressService {
       return existing;
     }
 
+    const student = await this.studentRepository.findOne({ where: { id: studentId } });
+    const learningTrack = resolveLearningTrack(student?.level);
+
     const progress = this.progressRepository.create({
       studentId,
       surahsCount: 0,
@@ -88,25 +104,118 @@ export class ProgressService {
       weeksActive: 0,
       progressPercentage: 0,
       rank: 'Beginner',
+      learningTrack,
+      completedTopicIds: [],
     });
 
     return this.progressRepository.save(progress);
   }
 
-  private validateLogDto(dto: UpdateProgressDto): {
-    surahNumber: number;
-    surahName: string;
-    lastStudiedPage: number;
-    lastStudiedAyah: number;
-  } {
+  private buildProgressSummary(track: LearningTrack, completedIds: string[]) {
+    if (track === 'qaidah' || track === 'tajweed') {
+      const total = getTopicsForTrack(track).length;
+      const completed = completedIds.length;
+      const percentage = total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+      return { completed, total, remaining: Math.max(total - completed, 0), percentage };
+    }
+
+    if (track === 'quran_reading' || track === 'hifz') {
+      const completed = completedIds.length;
+      const percentage = Math.min(Math.round((completed / TOTAL_SURAHS) * 1000) / 10, 100);
+      return { completed, total: TOTAL_SURAHS, remaining: Math.max(TOTAL_SURAHS - completed, 0), percentage };
+    }
+
+    return { completed: 0, total: 0, remaining: 0, percentage: 0 };
+  }
+
+  async getLearningContext(studentId: string) {
+    const student = await this.studentRepository.findOne({ where: { id: studentId } });
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    const progress = await this.getOrCreateProgress(studentId);
+    const learningTrack = resolveLearningTrack(student.level);
+
+    if (progress.learningTrack !== learningTrack) {
+      progress.learningTrack = learningTrack;
+      await this.progressRepository.save(progress);
+    }
+
+    const completedTopicIds = normalizeCompletedIds(progress.completedTopicIds);
+    const curriculumTopics = getTopicsForTrack(learningTrack);
+    const suggestedTopic = getNextTopic(learningTrack, completedTopicIds);
+    const currentTopicId = progress.currentTopicId || suggestedTopic?.id || null;
+    const currentTopic =
+      (currentTopicId && getTopicById(learningTrack, currentTopicId)) || suggestedTopic;
+
+    const topicsWithStatus = curriculumTopics.map((topic) => ({
+      ...topic,
+      label: formatTopicLabel(topic),
+      isCompleted: completedTopicIds.includes(topic.id),
+      isCurrent: topic.id === currentTopicId,
+      isSuggested: topic.id === suggestedTopic?.id,
+    }));
+
+    const progressSummary = this.buildProgressSummary(learningTrack, completedTopicIds);
+
+    return {
+      learningTrack,
+      learningTrackLabel: getTrackLabel(learningTrack),
+      studentLevel: student.level,
+      topics: topicsWithStatus,
+      surahs: learningTrack === 'quran_reading' || learningTrack === 'hifz' ? QURAN_SURAHS : [],
+      completedTopicIds,
+      currentTopic: currentTopic
+        ? { ...currentTopic, label: formatTopicLabel(currentTopic) }
+        : null,
+      suggestedTopic: suggestedTopic
+        ? { ...suggestedTopic, label: formatTopicLabel(suggestedTopic) }
+        : null,
+      progressSummary,
+      lastPosition: {
+        surahNumber: progress.surahNumber,
+        lastStudiedSurah: progress.lastStudiedSurah,
+        lastStudiedPage: progress.lastStudiedPage,
+        lastStudiedAyah: progress.lastStudiedAyah,
+        currentTopicId: progress.currentTopicId,
+      },
+      progress: {
+        progressPercentage: progress.progressPercentage,
+        rank: progress.rank,
+        surahsCount: progress.surahsCount,
+        ayahsCount: progress.ayahsCount,
+      },
+    };
+  }
+
+  private validateTopicLog(
+    track: LearningTrack,
+    dto: UpdateProgressDto,
+    completedIds: string[],
+  ) {
+    if (!dto.topicId) {
+      throw new BadRequestException('Topic is required');
+    }
+
+    const topic = getTopicById(track, dto.topicId);
+    if (!topic) {
+      throw new BadRequestException('Invalid topic for this learning track');
+    }
+
+    const isCompleted = completedIds.includes(dto.topicId);
+    if (isCompleted && !dto.isReview) {
+      throw new BadRequestException(
+        'This topic is already completed. Enable review mode to log it again.',
+      );
+    }
+
+    return topic;
+  }
+
+  private validateSurahLog(dto: UpdateProgressDto, requirePage: boolean) {
     if (dto.surahNumber == null) {
       throw new BadRequestException('Surah is required');
-    }
-    if (dto.lastStudiedPage == null) {
-      throw new BadRequestException('Mushaf page is required (1-604)');
-    }
-    if (dto.lastStudiedAyah == null) {
-      throw new BadRequestException('Ayah is required');
     }
 
     const surah = getSurahByNumber(dto.surahNumber);
@@ -114,22 +223,86 @@ export class ProgressService {
       throw new BadRequestException('Invalid surah number');
     }
 
-    if (dto.lastStudiedPage < 1 || dto.lastStudiedPage > TOTAL_MUSHAF_PAGES) {
-      throw new BadRequestException(`Page must be between 1 and ${TOTAL_MUSHAF_PAGES}`);
+    const startAyah = dto.startAyah ?? dto.lastStudiedAyah;
+    const endAyah = dto.endAyah ?? dto.lastStudiedAyah ?? startAyah;
+
+    if (startAyah == null || endAyah == null) {
+      throw new BadRequestException('Starting and ending ayah are required');
     }
 
-    if (dto.lastStudiedAyah < 1 || dto.lastStudiedAyah > surah.totalAyahs) {
+    if (startAyah < 1 || endAyah < startAyah || endAyah > surah.totalAyahs) {
       throw new BadRequestException(
-        `Ayah must be between 1 and ${surah.totalAyahs} for ${surah.englishName}`,
+        `Ayah range must be between 1 and ${surah.totalAyahs} for ${surah.englishName}`,
       );
+    }
+
+    if (requirePage) {
+      if (dto.lastStudiedPage == null) {
+        throw new BadRequestException('Mushaf page is required (1-604)');
+      }
+      if (dto.lastStudiedPage < 1 || dto.lastStudiedPage > TOTAL_MUSHAF_PAGES) {
+        throw new BadRequestException(`Page must be between 1 and ${TOTAL_MUSHAF_PAGES}`);
+      }
     }
 
     return {
       surahNumber: surah.number,
       surahName: formatSurahName(surah),
-      lastStudiedPage: dto.lastStudiedPage,
-      lastStudiedAyah: dto.lastStudiedAyah,
+      startAyah,
+      endAyah,
+      lastStudiedPage: dto.lastStudiedPage ?? null,
     };
+  }
+
+  private async applyTopicCompletion(
+    progress: Progress,
+    track: LearningTrack,
+    topicId: string,
+    isReview: boolean,
+  ) {
+    const completedIds = normalizeCompletedIds(progress.completedTopicIds);
+
+    if (!isReview && !completedIds.includes(topicId)) {
+      completedIds.push(topicId);
+      progress.completedTopicIds = completedIds;
+    }
+
+    const summary = this.buildProgressSummary(track, completedIds);
+    progress.progressPercentage = summary.percentage;
+    progress.rank = calculateRank(summary.percentage);
+
+    const next = getNextTopic(track, completedIds);
+    progress.currentTopicId = next?.id || topicId;
+
+    return completedIds;
+  }
+
+  private async applySurahCompletion(
+    progress: Progress,
+    track: LearningTrack,
+    surahNumber: number,
+    endAyah: number,
+    isReview: boolean,
+  ) {
+    const surahKey = `surah-${surahNumber}`;
+    const completedIds = normalizeCompletedIds(progress.completedTopicIds);
+
+    if (!isReview && !completedIds.includes(surahKey)) {
+      completedIds.push(surahKey);
+      progress.completedTopicIds = completedIds;
+    }
+
+    progress.surahNumber = surahNumber;
+    progress.lastStudiedAyah = endAyah;
+    progress.surahsCount = Math.max(progress.surahsCount, completedIds.length);
+    progress.ayahsCount += endAyah;
+
+    const summary = this.buildProgressSummary(track, completedIds);
+    progress.progressPercentage = summary.percentage;
+    progress.rank = calculateRank(summary.percentage);
+    progress.currentTopicId = surahKey;
+
+    return completedIds;
   }
 
   async logProgress(
@@ -144,42 +317,97 @@ export class ProgressService {
       throw new NotFoundException('Student not found');
     }
 
-    const validated = this.validateLogDto(dto);
+    const learningTrack = resolveLearningTrack(student.level);
     const progress = await this.getOrCreateProgress(studentId);
+    progress.learningTrack = learningTrack;
 
-    const log = this.progressLogRepository.create({
+    const completedIds = normalizeCompletedIds(progress.completedTopicIds);
+    const completionStatus = dto.completionStatus || (dto.isReview ? 'review' : 'completed');
+
+    let logData: Partial<ProgressLog> = {
       studentId,
       teacherId: teacherId || null,
-      surahNumber: validated.surahNumber,
-      surahName: validated.surahName,
-      lastStudiedPage: validated.lastStudiedPage,
-      lastStudiedAyah: validated.lastStudiedAyah,
-    });
+      learningTrack,
+      notes: dto.notes || null,
+      completionStatus,
+      isReview: dto.isReview || false,
+    };
+
+    if (learningTrack === 'qaidah' || learningTrack === 'tajweed') {
+      const topic = this.validateTopicLog(learningTrack, dto, completedIds);
+
+      logData = {
+        ...logData,
+        topicId: topic.id,
+        topicName: topic.nameEn,
+        topicNameAr: topic.nameAr,
+      };
+
+      await this.applyTopicCompletion(progress, learningTrack, topic.id, dto.isReview || false);
+      progress.lastStudiedSurah = topic.nameEn;
+    } else if (learningTrack === 'quran_reading') {
+      const validated = this.validateSurahLog(dto, true);
+
+      logData = {
+        ...logData,
+        surahNumber: validated.surahNumber,
+        surahName: validated.surahName,
+        lastStudiedPage: validated.lastStudiedPage,
+        startAyah: validated.startAyah,
+        lastStudiedAyah: validated.endAyah,
+        endAyah: validated.endAyah,
+      };
+
+      progress.surahNumber = validated.surahNumber;
+      progress.lastStudiedSurah = validated.surahName;
+      progress.lastStudiedPage = validated.lastStudiedPage!;
+      progress.lastStudiedAyah = validated.endAyah;
+
+      if (dto.surahsCount !== undefined) {
+        progress.surahsCount = dto.surahsCount;
+      }
+      if (dto.ayahsCount !== undefined) {
+        progress.ayahsCount = dto.ayahsCount;
+      } else {
+        progress.ayahsCount += validated.endAyah;
+      }
+
+      progress.progressPercentage = Math.min(
+        Math.round((progress.surahsCount / TOTAL_SURAHS) * 100),
+        100,
+      );
+      progress.rank = calculateRank(progress.progressPercentage);
+      progress.currentTopicId = `surah-${validated.surahNumber}`;
+    } else if (learningTrack === 'hifz') {
+      const validated = this.validateSurahLog(dto, false);
+
+      if (!dto.memorizationStatus) {
+        throw new BadRequestException('Memorization status is required for Hifz students');
+      }
+
+      logData = {
+        ...logData,
+        surahNumber: validated.surahNumber,
+        surahName: validated.surahName,
+        startAyah: validated.startAyah,
+        lastStudiedAyah: validated.endAyah,
+        endAyah: validated.endAyah,
+        memorizationStatus: dto.memorizationStatus,
+        revisionStatus: dto.revisionStatus || null,
+      };
+
+      await this.applySurahCompletion(
+        progress,
+        learningTrack,
+        validated.surahNumber,
+        validated.endAyah,
+        dto.isReview || false,
+      );
+      progress.lastStudiedSurah = validated.surahName;
+    }
+
+    const log = this.progressLogRepository.create(logData);
     await this.progressLogRepository.save(log);
-
-    progress.surahNumber = validated.surahNumber;
-    progress.lastStudiedSurah = validated.surahName;
-    progress.lastStudiedPage = validated.lastStudiedPage;
-    progress.lastStudiedAyah = validated.lastStudiedAyah;
-
-    if (dto.surahsCount !== undefined) {
-      progress.surahsCount = dto.surahsCount;
-    } else {
-      progress.surahsCount = Math.max(progress.surahsCount, validated.surahNumber);
-    }
-
-    if (dto.ayahsCount !== undefined) {
-      progress.ayahsCount = dto.ayahsCount;
-    } else {
-      progress.ayahsCount += validated.lastStudiedAyah;
-    }
-
-    progress.progressPercentage = Math.min(
-      Math.round((progress.surahsCount / TOTAL_SURAHS) * 100),
-      100,
-    );
-
-    progress.rank = calculateRank(progress.progressPercentage);
 
     return this.progressRepository.save(progress);
   }

@@ -22,9 +22,22 @@ export class StudentsService {
 
   private async generateStudentCode(): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await this.studentsRepository.count();
-    const code = `NJ-${year}-${String(count + 1).padStart(3, '0')}`;
-    return code;
+    const prefix = `NJ-${year}-`;
+    const latest = await this.studentsRepository
+      .createQueryBuilder('student')
+      .where('student.studentCode LIKE :prefix', { prefix: `${prefix}%` })
+      .orderBy('student.studentCode', 'DESC')
+      .getOne();
+
+    let nextNum = 1;
+    if (latest?.studentCode) {
+      const match = latest.studentCode.match(/NJ-\d{4}-(\d+)/);
+      if (match) {
+        nextNum = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    return `${prefix}${String(nextNum).padStart(3, '0')}`;
   }
 
   async create(createStudentDto: CreateStudentDto): Promise<Student> {
@@ -60,11 +73,12 @@ export class StudentsService {
 
     const { password, ...rest } = createStudentDto;
     const studentCode = await this.generateStudentCode();
+    const resolvedUserId = userId ?? createStudentDto.userId;
 
     const student = this.studentsRepository.create({
       ...rest,
       studentCode,
-      userId,
+      userId: resolvedUserId,
     });
 
     return this.studentsRepository.save(student);

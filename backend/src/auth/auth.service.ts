@@ -43,7 +43,15 @@ export class AuthService {
       console.log('[AuthService] Checking if student email exists:', student.email);
       const existingStudentUser = await this.usersService.findByEmail(student.email);
       if (existingStudentUser) {
-        throw new ConflictException('Student email already registered');
+        const existingProfile = await this.studentsRepository.findOne({
+          where: { userId: existingStudentUser.id },
+        });
+        if (existingProfile) {
+          throw new ConflictException('Student email already registered');
+        }
+        if (existingStudentUser.role !== UserRole.STUDENT) {
+          throw new ConflictException('This email is already registered to another account type');
+        }
       }
 
       // 3. Handle Parent logic
@@ -55,41 +63,39 @@ export class AuthService {
           throw new BadRequestException('Parent information is required for students under 18.');
         }
 
-        console.log('[AuthService] Checking if parent email or phone exists:', parent.email, parent.phoneNumber);
-        const existingByEmail = await this.parentsService.findByEmail(parent.email);
-        const existingByPhone = parent.phoneNumber ? await this.parentsService['parentsRepository'].findOne({ where: { phoneNumber: parent.phoneNumber } }) : null;
-        
-        parentEntity = existingByEmail || existingByPhone;
-
-        if (!parentEntity) {
-          console.log('[AuthService] Creating new parent profile and user...');
-          parentEntity = await this.parentsService.create({
-            fullName: parent.fullName,
-            email: parent.email,
-            phoneNumber: parent.phoneNumber,
-            residency: parent.residency,
-            country: parent.country,
-            city: parent.city,
-            relationshipWithStudent: parent.relationshipWithStudent,
-            password: parent.password,
-          });
-          console.log('[AuthService] Parent profile and user created:', parentEntity.id);
-          parentMessage = 'New parent account created.';
-        } else {
-          console.log('[AuthService] Using existing parent:', parentEntity.id);
-          parentMessage = 'Existing parent found. Student will be connected to the existing parent account.';
-        }
+        console.log('[AuthService] Resolving parent for registration:', parent.email, parent.phoneNumber);
+        const parentResult = await this.parentsService.findOrCreateForRegistration({
+          fullName: parent.fullName,
+          email: parent.email,
+          phoneNumber: parent.phoneNumber,
+          residency: parent.residency || parent.country || 'Not specified',
+          country: parent.country,
+          city: parent.city,
+          relationshipWithStudent: parent.relationshipWithStudent,
+          password: parent.password,
+        });
+        parentEntity = parentResult.parent;
+        parentMessage = parentResult.message;
+        // #region agent log
+        fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:parent-resolve',message:'Parent resolved for registration',data:{parentId:parentEntity?.id,parentMessage,residency:parent.residency||parent.country||'Not specified'},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        console.log('[AuthService] Parent resolved:', parentEntity.id, parentMessage);
       }
 
       // 4. Create Student logic
-      console.log('[AuthService] Creating student user...');
-      const studentUser = await this.usersService.create({
-        email: student.email,
-        password: student.password,
-        name: student.fullName,
-        role: UserRole.STUDENT,
-      });
-      console.log('[AuthService] Student user created:', studentUser.id);
+      let studentUser = existingStudentUser;
+      if (!studentUser) {
+        console.log('[AuthService] Creating student user...');
+        studentUser = await this.usersService.create({
+          email: student.email,
+          password: student.password,
+          name: student.fullName,
+          role: UserRole.STUDENT,
+        });
+        console.log('[AuthService] Student user created:', studentUser.id);
+      } else {
+        console.log('[AuthService] Reusing existing student user from prior attempt:', studentUser.id);
+      }
 
       console.log('[AuthService] Creating student profile...');
       const createdStudent = await this.studentsService.create({
@@ -119,6 +125,9 @@ export class AuthService {
       const payload = { sub: studentUser.id, email: studentUser.email, role: studentUser.role };
       
       console.log('[AuthService] Registration completed successfully');
+      // #region agent log
+      fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:register-success',message:'Registration completed',data:{studentEmail:student.email,studentId:createdStudent.id,parentId:parentEntity?.id||null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       return {
         message: 'Registration successful!',
         parentStatus: parentMessage,
@@ -134,6 +143,9 @@ export class AuthService {
     } catch (error) {
       console.error('[AuthService] Registration error:', error.message);
       console.error('[AuthService] Error stack:', error.stack);
+      // #region agent log
+      fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:register-catch',message:'Registration failed',data:{errorMessage:error?.message,errorName:error?.name},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       throw error;
     }
   }

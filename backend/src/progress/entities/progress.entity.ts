@@ -33,6 +33,15 @@ export class Progress {
   @Column({ nullable: true })
   lastStudiedAyah: number;
 
+  @Column({ type: 'varchar', nullable: true })
+  learningTrack: string;
+
+  @Column({ nullable: true })
+  currentTopicId: string;
+
+  @Column({ type: 'simple-json', default: '[]' })
+  completedTopicIds: string[];
+
   @ManyToOne(() => Student, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'studentId' })
   student: Student;

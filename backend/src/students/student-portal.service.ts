@@ -224,10 +224,12 @@ export class StudentPortalService {
       },
       welcome: {
         studentName: student.fullName,
-        quranLevel: student.level,
-        assignedTeacher: effectiveTeacher.isTemporary
-          ? `${activeReplacement?.replacementTeacher?.fullName} (Temporary)`
-          : student.teacher?.fullName || 'Not assigned yet',
+        quranLevel: student.level || 'Quran Reading',
+        assignedTeacher: effectiveTeacherEntity?.fullName
+          ? effectiveTeacher.isTemporary
+            ? `${effectiveTeacherEntity.fullName} (Temporary)`
+            : effectiveTeacherEntity.fullName
+          : 'Not assigned yet',
         enrollmentDate: student.createdAt,
       },
       progress: {
@@ -331,10 +333,7 @@ export class StudentPortalService {
     const student = await this.resolveStudent(userId);
     const today = this.todayWeekday();
 
-    const schedules = await this.schedulesRepository.find({
-      where: { studentId: student.id },
-      order: { dayOfWeek: 'ASC', startTimeString: 'ASC' },
-    });
+    const schedules = await this.replacementsService.getEffectiveSchedulesForStudent(student.id);
 
     const history = await this.studentAttendanceRepository.find({
       where: { studentId: student.id },
@@ -516,6 +515,9 @@ export class StudentPortalService {
 
   async getProfile(userId: string) {
     const student = await this.resolveStudent(userId);
+    const effectiveTeacher = await this.replacementsService.getEffectiveTeacher(student.id);
+    const effectiveTeacherEntity =
+      effectiveTeacher.replacement?.replacementTeacher || student.teacher;
     const progressRecord = await this.progressRepository.findOne({ where: { studentId: student.id } });
     const sessionStats = await this.attendanceService.getAttendanceStats(student.id);
 
@@ -532,10 +534,14 @@ export class StudentPortalService {
         phone: student.phone,
         country: student.country,
         city: student.city,
-        level: student.level,
+        level: student.level || 'Quran Reading',
         enrollmentDate: student.createdAt,
-        assignedTeacher: student.teacher?.fullName || null,
-        assignedTeacherId: student.teacherId,
+        assignedTeacher: effectiveTeacherEntity?.fullName
+          ? effectiveTeacher.isTemporary
+            ? `${effectiveTeacherEntity.fullName} (Temporary)`
+            : effectiveTeacherEntity.fullName
+          : null,
+        assignedTeacherId: effectiveTeacher.effectiveTeacherId || student.teacherId,
         avatarUrl: this.avatarUrl(student.avatarUrl),
       },
       statistics: {

@@ -16,16 +16,89 @@ export class ParentsService {
     private usersService: UsersService,
   ) {}
 
+  private resolveResidency(dto: { residency?: string; country?: string }): string {
+    return dto.residency?.trim() || dto.country?.trim() || 'Not specified';
+  }
+
+  async findByPhone(phoneNumber: string): Promise<Parent | null> {
+    return this.parentsRepository.findOne({
+      where: { phoneNumber },
+      relations: ['user', 'students'],
+    });
+  }
+
+  async createProfileForExistingUser(user: { id: string }, dto: CreateParentDto): Promise<Parent> {
+    const linked = await this.parentsRepository.findOne({
+      where: { user: { id: user.id } },
+      relations: ['user', 'students'],
+    });
+    if (linked) {
+      return linked;
+    }
+
+    const { password, ...parentData } = dto;
+    const parent = this.parentsRepository.create({
+      ...parentData,
+      residency: this.resolveResidency(dto),
+      user: { id: user.id } as any,
+    });
+
+    return this.parentsRepository.save(parent);
+  }
+
+  async findOrCreateForRegistration(
+    dto: CreateParentDto,
+  ): Promise<{ parent: Parent; message: string }> {
+    const existingByEmail = await this.findByEmail(dto.email);
+    if (existingByEmail) {
+      return {
+        parent: existingByEmail,
+        message: 'Existing parent found. Student will be connected to the existing parent account.',
+      };
+    }
+
+    if (dto.phoneNumber) {
+      const existingByPhone = await this.findByPhone(dto.phoneNumber);
+      if (existingByPhone) {
+        return {
+          parent: existingByPhone,
+          message: 'Existing parent found. Student will be connected to the existing parent account.',
+        };
+      }
+    }
+
+    const existingUser = await this.usersService.findByEmail(dto.email);
+    if (existingUser) {
+      if (existingUser.role !== UserRole.PARENT) {
+        throw new ConflictException('This email is already registered to another account type');
+      }
+      const parent = await this.createProfileForExistingUser(existingUser, dto);
+      return {
+        parent,
+        message: 'Existing parent account linked. Student will be connected to the existing parent account.',
+      };
+    }
+
+    const parent = await this.create(dto);
+    return { parent, message: 'New parent account created.' };
+  }
+
   async create(createParentDto: CreateParentDto): Promise<Parent> {
-    // Check if parent email already exists
     const existing = await this.findByEmail(createParentDto.email);
     if (existing) {
       throw new ConflictException('A parent with this email already exists');
     }
 
+    const existingUser = await this.usersService.findByEmail(createParentDto.email);
+    if (existingUser) {
+      if (existingUser.role === UserRole.PARENT) {
+        return this.createProfileForExistingUser(existingUser, createParentDto);
+      }
+      throw new ConflictException('Email already exists');
+    }
+
     const { password, ...parentData } = createParentDto;
 
-    // Create user account for parent
     const user = await this.usersService.create({
       email: createParentDto.email,
       password: password || 'TemporaryPassword123!',
@@ -34,9 +107,9 @@ export class ParentsService {
       phone: createParentDto.phoneNumber,
     });
 
-    // Create parent profile
     const parent = this.parentsRepository.create({
       ...parentData,
+      residency: this.resolveResidency(createParentDto),
       user,
     });
 

@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Progress as ProgressBar } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +24,39 @@ import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History } from 
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { SurahSelect } from '@/components/progress/SurahSelect';
+import { TopicSelect, type TopicOption } from '@/components/progress/TopicSelect';
 import { getSurahByNumber, TOTAL_MUSHAF_PAGES } from '@/lib/quran-surahs';
+
+type LearningTrack = 'qaidah' | 'quran_reading' | 'tajweed' | 'hifz';
+
+interface LearningContext {
+  learningTrack: LearningTrack;
+  learningTrackLabel: string;
+  studentLevel: string;
+  topics: TopicOption[];
+  completedTopicIds: string[];
+  currentTopic: TopicOption | null;
+  suggestedTopic: TopicOption | null;
+  progressSummary: {
+    completed: number;
+    total: number;
+    remaining: number;
+    percentage: number;
+  };
+  lastPosition: {
+    surahNumber?: number;
+    lastStudiedSurah?: string;
+    lastStudiedPage?: number;
+    lastStudiedAyah?: number;
+    currentTopicId?: string;
+  };
+  progress: {
+    progressPercentage: number;
+    rank: string;
+    surahsCount: number;
+    ayahsCount: number;
+  };
+}
 
 interface TeacherStudentProgressPanelProps {
   studentId: string;
@@ -24,19 +64,67 @@ interface TeacherStudentProgressPanelProps {
 }
 
 interface LogFormState {
+  topicId: string;
   surahNumber: number | undefined;
   lastStudiedPage: string;
-  lastStudiedAyah: string;
+  startAyah: string;
+  endAyah: string;
+  memorizationStatus: string;
+  revisionStatus: string;
+  notes: string;
+  isReview: boolean;
 }
 
 const emptyLogForm = (): LogFormState => ({
+  topicId: '',
   surahNumber: undefined,
   lastStudiedPage: '',
-  lastStudiedAyah: '',
+  startAyah: '',
+  endAyah: '',
+  memorizationStatus: 'new',
+  revisionStatus: 'not_started',
+  notes: '',
+  isReview: false,
 });
 
+function formatLogEntry(log: any): { title: string; detail: string } {
+  if (log.topicName) {
+    const ar = log.topicNameAr ? ` (${log.topicNameAr})` : '';
+    return {
+      title: log.topicName + ar,
+      detail: [
+        log.completionStatus ? `Status: ${log.completionStatus}` : null,
+        log.isReview ? 'Review session' : null,
+        log.notes || null,
+        log.teacher?.fullName ? `Teacher: ${log.teacher.fullName}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  }
+
+  const ayahRange =
+    log.startAyah && log.endAyah && log.startAyah !== log.endAyah
+      ? `Ayah ${log.startAyah}–${log.endAyah}`
+      : `Ayah ${log.lastStudiedAyah || log.endAyah || '—'}`;
+
+  const parts = [
+    log.lastStudiedPage ? `Page ${log.lastStudiedPage}` : null,
+    ayahRange,
+    log.memorizationStatus ? `Memorization: ${log.memorizationStatus}` : null,
+    log.revisionStatus ? `Revision: ${log.revisionStatus}` : null,
+    log.notes || null,
+    log.teacher?.fullName ? log.teacher.fullName : null,
+  ].filter(Boolean);
+
+  return {
+    title: log.surahName || 'Quran lesson',
+    detail: parts.join(' · '),
+  };
+}
+
 export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherStudentProgressPanelProps) {
-  const [progress, setProgress] = useState<any>(null);
+  const [context, setContext] = useState<LearningContext | null>(null);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [dailyLogs, setDailyLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,17 +136,18 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
   const [logForm, setLogForm] = useState<LogFormState>(emptyLogForm());
   const [feedbackContent, setFeedbackContent] = useState('');
 
+  const track = context?.learningTrack || 'quran_reading';
   const selectedSurah = logForm.surahNumber ? getSurahByNumber(logForm.surahNumber) : undefined;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [prog, fb, logs] = await Promise.all([
-        api<any>(`/progress/student/${studentId}`),
+      const [ctx, fb, logs] = await Promise.all([
+        api<LearningContext>(`/progress/student/${studentId}/learning-context`),
         api<any[]>(`/progress/student/${studentId}/feedback`).catch(() => []),
-        api<any[]>(`/progress/student/${studentId}/logs?limit=20`).catch(() => []),
+        api<any[]>(`/progress/student/${studentId}/logs?limit=50`).catch(() => []),
       ]);
-      setProgress(prog);
+      setContext(ctx);
       setFeedbacks(Array.isArray(fb) ? fb : []);
       setDailyLogs(Array.isArray(logs) ? logs : []);
     } catch {
@@ -73,37 +162,90 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
   }, [fetchData]);
 
   const openLogDialog = () => {
+    const lp = context?.lastPosition;
+    const suggested = context?.suggestedTopic?.id || context?.currentTopic?.id || '';
+
     setLogForm({
-      surahNumber: progress?.surahNumber || undefined,
-      lastStudiedPage: progress?.lastStudiedPage ? String(progress.lastStudiedPage) : '',
-      lastStudiedAyah: progress?.lastStudiedAyah ? String(progress.lastStudiedAyah) : '',
+      topicId: suggested,
+      surahNumber: lp?.surahNumber || undefined,
+      lastStudiedPage: lp?.lastStudiedPage ? String(lp.lastStudiedPage) : '',
+      startAyah: lp?.lastStudiedAyah ? String(lp.lastStudiedAyah) : '',
+      endAyah: lp?.lastStudiedAyah ? String(lp.lastStudiedAyah) : '',
+      memorizationStatus: 'new',
+      revisionStatus: 'not_started',
+      notes: '',
+      isReview: false,
     });
     setShowLog(true);
   };
 
+  const buildLogPayload = () => {
+    const base = {
+      notes: logForm.notes || undefined,
+      isReview: logForm.isReview,
+      completionStatus: logForm.isReview ? 'review' : 'completed',
+    };
+
+    if (track === 'qaidah' || track === 'tajweed') {
+      return { ...base, topicId: logForm.topicId };
+    }
+
+    if (track === 'quran_reading') {
+      return {
+        ...base,
+        surahNumber: logForm.surahNumber,
+        lastStudiedPage: parseInt(logForm.lastStudiedPage, 10),
+        startAyah: parseInt(logForm.startAyah, 10),
+        lastStudiedAyah: parseInt(logForm.endAyah, 10),
+        endAyah: parseInt(logForm.endAyah, 10),
+      };
+    }
+
+    return {
+      ...base,
+      surahNumber: logForm.surahNumber,
+      startAyah: parseInt(logForm.startAyah, 10),
+      lastStudiedAyah: parseInt(logForm.endAyah, 10),
+      endAyah: parseInt(logForm.endAyah, 10),
+      memorizationStatus: logForm.memorizationStatus,
+      revisionStatus: logForm.revisionStatus,
+    };
+  };
+
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!logForm.surahNumber) {
+
+    if ((track === 'qaidah' || track === 'tajweed') && !logForm.topicId) {
+      toast.error('Please select a topic');
+      return;
+    }
+
+    if ((track === 'quran_reading' || track === 'hifz') && !logForm.surahNumber) {
       toast.error('Please select a surah');
       return;
     }
-    if (!logForm.lastStudiedPage || !logForm.lastStudiedAyah) {
-      toast.error('Please enter page and ayah');
-      return;
+
+    if (track === 'quran_reading') {
+      if (!logForm.lastStudiedPage || !logForm.startAyah || !logForm.endAyah) {
+        toast.error('Please enter page and ayah range');
+        return;
+      }
+    }
+
+    if (track === 'hifz') {
+      if (!logForm.startAyah || !logForm.endAyah) {
+        toast.error('Please enter starting and ending ayah');
+        return;
+      }
     }
 
     setLogLoading(true);
     try {
-      const surah = getSurahByNumber(logForm.surahNumber);
       await api(`/progress/student/${studentId}/log`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          surahNumber: logForm.surahNumber,
-          lastStudiedPage: parseInt(logForm.lastStudiedPage, 10),
-          lastStudiedAyah: parseInt(logForm.lastStudiedAyah, 10),
-        }),
+        body: JSON.stringify(buildLogPayload()),
       });
-      toast.success(`Daily progress logged for ${surah?.englishName || 'surah'}`);
+      toast.success('Daily progress logged');
       setShowLog(false);
       setLogForm(emptyLogForm());
       fetchData();
@@ -144,6 +286,9 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
     return map[rank] || 'bg-gray-100 text-gray-700';
   };
 
+  const progressPct = context?.progressSummary?.percentage ?? context?.progress?.progressPercentage ?? 0;
+  const rank = context?.progress?.rank || 'Beginner';
+
   if (loading) {
     return <div className="py-12 text-center text-gray-400">Loading progress...</div>;
   }
@@ -157,8 +302,15 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <BookOpen className="h-7 w-7 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-emerald-950 dark:text-gray-100">Quran Progress</h3>
-              <Badge className={getRankColor(progress?.rank || 'Beginner')}>{progress?.rank || 'Beginner'}</Badge>
+              <h3 className="text-lg font-bold text-emerald-950 dark:text-gray-100">
+                {context?.learningTrackLabel || 'Learning Progress'}
+              </h3>
+              <div className="flex gap-2 mt-1">
+                <Badge className={getRankColor(rank)}>{rank}</Badge>
+                {context?.studentLevel ? (
+                  <Badge variant="outline">{context.studentLevel}</Badge>
+                ) : null}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -179,38 +331,71 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500 flex items-center gap-1">
-              <TrendingUp className="h-4 w-4" /> Memorization Progress
+              <TrendingUp className="h-4 w-4" /> Progress
             </span>
-            <span className="font-bold text-emerald-600">{progress?.progressPercentage || 0}%</span>
+            <span className="font-bold text-emerald-600">{progressPct}%</span>
           </div>
-          <ProgressBar value={progress?.progressPercentage || 0} className="h-2" />
+          <ProgressBar value={progressPct} className="h-2" />
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-              <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-              <p className="text-xs text-gray-400 font-bold uppercase">Surahs</p>
-              <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.surahsCount || 0}/114</p>
+          {track === 'qaidah' || track === 'tajweed' ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
+                <p className="text-xs text-gray-400 font-bold uppercase">Completed</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.progressSummary.completed || 0}/{context?.progressSummary.total || 0}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <Star className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
+                <p className="text-xs text-gray-400 font-bold uppercase">Remaining</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.progressSummary.remaining || 0}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 col-span-2 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Current Topic</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100 text-sm mt-1 truncate">
+                  {context?.currentTopic?.nameEn || context?.suggestedTopic?.nameEn || '—'}
+                </p>
+              </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-              <Star className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-              <p className="text-xs text-gray-400 font-bold uppercase">Ayahs</p>
-              <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.ayahsCount || 0}</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
+                <p className="text-xs text-gray-400 font-bold uppercase">Surahs</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.progress?.surahsCount || 0}/114
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <Star className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
+                <p className="text-xs text-gray-400 font-bold uppercase">Ayahs</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.progress?.ayahsCount || 0}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Last Surah</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100 text-sm mt-1 truncate">
+                  {context?.lastPosition?.lastStudiedSurah || '—'}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Last Page</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.lastPosition?.lastStudiedPage || '—'}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Last Ayah</p>
+                <p className="font-bold text-emerald-950 dark:text-gray-100">
+                  {context?.lastPosition?.lastStudiedAyah || '—'}
+                </p>
+              </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-400 font-bold uppercase">Last Surah</p>
-              <p className="font-bold text-emerald-950 dark:text-gray-100 text-sm mt-1 truncate">
-                {progress?.lastStudiedSurah || '—'}
-              </p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-400 font-bold uppercase">Last Page</p>
-              <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.lastStudiedPage || '—'}</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-400 font-bold uppercase">Last Ayah</p>
-              <p className="font-bold text-emerald-950 dark:text-gray-100">{progress?.lastStudiedAyah || '—'}</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -218,20 +403,23 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
           <h4 className="text-sm font-bold text-emerald-950 dark:text-gray-100 mb-4">Daily Log History</h4>
           <div className="space-y-3">
-            {dailyLogs.slice(0, 5).map((log) => (
-              <div key={log.id} className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-emerald-800">{log.surahName}</span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(log.createdAt).toLocaleDateString()}
-                  </span>
+            {dailyLogs.slice(0, 5).map((log) => {
+              const entry = formatLogEntry(log);
+              return (
+                <div
+                  key={log.id}
+                  className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-emerald-800">{entry.title}</span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(log.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{entry.detail}</p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
-                  {log.teacher?.fullName ? ` · ${log.teacher.fullName}` : ''}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -241,7 +429,10 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           <h4 className="text-sm font-bold text-emerald-950 dark:text-gray-100 mb-4">Recent Feedback</h4>
           <div className="space-y-3">
             {feedbacks.slice(0, 3).map((fb) => (
-              <div key={fb.id} className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+              <div
+                key={fb.id}
+                className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-emerald-700">
                     {fb.teacher?.fullName || 'Teacher'}
@@ -258,51 +449,157 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       )}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
-        <DialogContent className="sm:max-w-[460px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Log Daily Progress{studentName ? ` — ${studentName}` : ''}</DialogTitle>
+            <DialogTitle>
+              Log Daily Progress{studentName ? ` — ${studentName}` : ''}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {context?.learningTrackLabel} · Auto-selected based on student program
+            </p>
           </DialogHeader>
           <form onSubmit={handleLogProgress}>
             <div className="grid gap-4 py-4">
+              {(track === 'qaidah' || track === 'tajweed') && (
+                <>
+                  {context?.suggestedTopic && !logForm.isReview ? (
+                    <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 px-3 py-2 text-sm text-emerald-800">
+                      Suggested next lesson: <strong>{context.suggestedTopic.nameEn}</strong>
+                    </div>
+                  ) : null}
+                  <div className="grid gap-2">
+                    <Label>Topic</Label>
+                    <TopicSelect
+                      topics={context?.topics || []}
+                      value={logForm.topicId}
+                      onChange={(topicId) => setLogForm({ ...logForm, topicId })}
+                      allowCompleted={logForm.isReview}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="isReview"
+                      checked={logForm.isReview}
+                      onCheckedChange={(checked) =>
+                        setLogForm({ ...logForm, isReview: checked === true })
+                      }
+                    />
+                    <Label htmlFor="isReview" className="font-normal cursor-pointer">
+                      Review session (allow selecting completed topics)
+                    </Label>
+                  </div>
+                </>
+              )}
+
+              {(track === 'quran_reading' || track === 'hifz') && (
+                <>
+                  <div className="grid gap-2">
+                    <Label>Surah</Label>
+                    <SurahSelect
+                      value={logForm.surahNumber}
+                      onChange={(surahNumber) => setLogForm({ ...logForm, surahNumber })}
+                    />
+                  </div>
+                  {track === 'quran_reading' && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="page">Mushaf Page (1–{TOTAL_MUSHAF_PAGES})</Label>
+                      <Input
+                        id="page"
+                        type="number"
+                        min={1}
+                        max={TOTAL_MUSHAF_PAGES}
+                        value={logForm.lastStudiedPage}
+                        onChange={(e) => setLogForm({ ...logForm, lastStudiedPage: e.target.value })}
+                        placeholder="e.g. 5"
+                        required
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="startAyah">
+                        Starting Ayah
+                        {selectedSurah ? ` (1–${selectedSurah.totalAyahs})` : ''}
+                      </Label>
+                      <Input
+                        id="startAyah"
+                        type="number"
+                        min={1}
+                        max={selectedSurah?.totalAyahs || 286}
+                        value={logForm.startAyah}
+                        onChange={(e) => setLogForm({ ...logForm, startAyah: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="endAyah">Ending Ayah</Label>
+                      <Input
+                        id="endAyah"
+                        type="number"
+                        min={1}
+                        max={selectedSurah?.totalAyahs || 286}
+                        value={logForm.endAyah}
+                        onChange={(e) => setLogForm({ ...logForm, endAyah: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {track === 'hifz' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label>Memorization Status</Label>
+                    <Select
+                      value={logForm.memorizationStatus}
+                      onValueChange={(v) => setLogForm({ ...logForm, memorizationStatus: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New memorization</SelectItem>
+                        <SelectItem value="in_progress">In progress</SelectItem>
+                        <SelectItem value="memorized">Memorized</SelectItem>
+                        <SelectItem value="needs_review">Needs review</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Revision Status</Label>
+                    <Select
+                      value={logForm.revisionStatus}
+                      onValueChange={(v) => setLogForm({ ...logForm, revisionStatus: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not_started">Not started</SelectItem>
+                        <SelectItem value="in_progress">In progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-2">
-                <Label>Surah</Label>
-                <SurahSelect
-                  value={logForm.surahNumber}
-                  onChange={(surahNumber) => setLogForm({ ...logForm, surahNumber })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="page">Mushaf Page (1–{TOTAL_MUSHAF_PAGES})</Label>
-                <Input
-                  id="page"
-                  type="number"
-                  min={1}
-                  max={TOTAL_MUSHAF_PAGES}
-                  value={logForm.lastStudiedPage}
-                  onChange={(e) => setLogForm({ ...logForm, lastStudiedPage: e.target.value })}
-                  placeholder="e.g. 5"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="ayah">
-                  Ayah
-                  {selectedSurah ? ` (max ${selectedSurah.totalAyahs} for ${selectedSurah.englishName})` : ''}
-                </Label>
-                <Input
-                  id="ayah"
-                  type="number"
-                  min={1}
-                  max={selectedSurah?.totalAyahs || 286}
-                  value={logForm.lastStudiedAyah}
-                  onChange={(e) => setLogForm({ ...logForm, lastStudiedAyah: e.target.value })}
-                  placeholder="e.g. 7"
-                  required
+                <Label htmlFor="notes">Notes (optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={logForm.notes}
+                  onChange={(e) => setLogForm({ ...logForm, notes: e.target.value })}
+                  placeholder="Lesson notes, observations..."
+                  rows={2}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowLog(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setShowLog(false)}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={logLoading} className="bg-emerald-900 hover:bg-emerald-800">
                 {logLoading ? 'Saving...' : 'Save Progress'}
               </Button>
@@ -331,7 +628,9 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowFeedback(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setShowFeedback(false)}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={feedbackLoading} className="bg-emerald-900 hover:bg-emerald-800">
                 {feedbackLoading ? 'Sending...' : 'Submit'}
               </Button>
@@ -350,23 +649,29 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <p className="text-gray-400 text-center py-8">No history yet</p>
             ) : (
               <>
-                {dailyLogs.map((log) => (
-                  <div key={log.id} className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-900">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-emerald-800 uppercase">Daily Log</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(log.createdAt).toLocaleDateString()}
-                      </span>
+                {dailyLogs.map((log) => {
+                  const entry = formatLogEntry(log);
+                  return (
+                    <div
+                      key={log.id}
+                      className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-900"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-emerald-800 uppercase">Daily Log</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(log.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-emerald-950">{entry.title}</p>
+                      <p className="text-sm text-gray-600">{entry.detail}</p>
                     </div>
-                    <p className="text-sm font-medium text-emerald-950">{log.surahName}</p>
-                    <p className="text-sm text-gray-600">
-                      Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
-                      {log.teacher?.fullName ? ` · ${log.teacher.fullName}` : ''}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
                 {feedbacks.map((fb) => (
-                  <div key={fb.id} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+                  <div
+                    key={fb.id}
+                    className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-700"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-emerald-700">
                         {fb.teacher?.fullName || 'Teacher'}
@@ -382,7 +687,9 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowHistory(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setShowHistory(false)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
