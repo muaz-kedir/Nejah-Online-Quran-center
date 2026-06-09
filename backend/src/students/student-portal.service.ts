@@ -406,14 +406,50 @@ export class StudentPortalService {
     const surahsCount = progressRecord?.surahsCount || 0;
     const percentage = progressRecord?.progressPercentage || Number(student.progressRate) || 0;
 
-    const timeline = [
-      ...progressLogs.map((log) => ({
-        type: 'daily_log',
+    const describeLog = (log: ProgressLog): { title: string; description: string } => {
+      if (log.topicName) {
+        const parts = [
+          log.topicNameAr ? `${log.topicName} (${log.topicNameAr})` : log.topicName,
+          log.isReview ? 'Review session' : null,
+          log.notes || null,
+        ].filter(Boolean);
+        return {
+          title: log.isReview ? 'Lesson reviewed' : 'Lesson completed',
+          description: parts.join(' · '),
+        };
+      }
+
+      const ayahRange =
+        log.startAyah && log.endAyah && log.startAyah !== log.endAyah
+          ? `Ayah ${log.startAyah}–${log.endAyah}`
+          : log.lastStudiedAyah
+            ? `Ayah ${log.lastStudiedAyah}`
+            : null;
+      const parts = [
+        log.surahName,
+        log.lastStudiedPage ? `Page ${log.lastStudiedPage}` : null,
+        ayahRange,
+        log.memorizationStatus ? `Memorization: ${log.memorizationStatus.replace(/_/g, ' ')}` : null,
+        log.revisionStatus ? `Revision: ${log.revisionStatus.replace(/_/g, ' ')}` : null,
+        log.notes || null,
+      ].filter(Boolean);
+      return {
         title: 'Daily progress logged',
-        description: `${log.surahName} — Page ${log.lastStudiedPage}, Ayah ${log.lastStudiedAyah}`,
-        date: log.createdAt,
-        teacherName: log.teacher?.fullName,
-      })),
+        description: parts.join(' · '),
+      };
+    };
+
+    const timeline = [
+      ...progressLogs.map((log) => {
+        const entry = describeLog(log);
+        return {
+          type: 'daily_log',
+          title: entry.title,
+          description: entry.description,
+          date: log.createdAt,
+          teacherName: log.teacher?.fullName,
+        };
+      }),
       ...feedbackRecords.map((f) => ({
         type: 'teacher_note',
         title: `Feedback from ${f.teacher?.fullName || 'Teacher'}`,
@@ -448,8 +484,17 @@ export class StudentPortalService {
         id: log.id,
         surahName: log.surahName,
         surahNumber: log.surahNumber,
+        topicName: log.topicName,
+        topicNameAr: log.topicNameAr,
         lastStudiedPage: log.lastStudiedPage,
+        startAyah: log.startAyah,
+        endAyah: log.endAyah,
         lastStudiedAyah: log.lastStudiedAyah,
+        memorizationStatus: log.memorizationStatus,
+        revisionStatus: log.revisionStatus,
+        notes: log.notes,
+        isReview: log.isReview,
+        completionStatus: log.completionStatus,
         teacherName: log.teacher?.fullName || 'Teacher',
         date: log.createdAt,
       })),

@@ -98,6 +98,7 @@ function StudentProgress() {
                   <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                   <p className="text-[10px] text-gray-400 mt-1">
                     {item.date ? new Date(item.date).toLocaleDateString() : ''}
+                    {item.teacherName ? ` · ${item.teacherName}` : ''}
                   </p>
                 </div>
               ))}

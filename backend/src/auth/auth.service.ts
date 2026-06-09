@@ -76,9 +76,6 @@ export class AuthService {
         });
         parentEntity = parentResult.parent;
         parentMessage = parentResult.message;
-        // #region agent log
-        fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:parent-resolve',message:'Parent resolved for registration',data:{parentId:parentEntity?.id,parentMessage,residency:parent.residency||parent.country||'Not specified'},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         console.log('[AuthService] Parent resolved:', parentEntity.id, parentMessage);
       }
 
@@ -125,9 +122,6 @@ export class AuthService {
       const payload = { sub: studentUser.id, email: studentUser.email, role: studentUser.role };
       
       console.log('[AuthService] Registration completed successfully');
-      // #region agent log
-      fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:register-success',message:'Registration completed',data:{studentEmail:student.email,studentId:createdStudent.id,parentId:parentEntity?.id||null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       return {
         message: 'Registration successful!',
         parentStatus: parentMessage,
@@ -143,9 +137,6 @@ export class AuthService {
     } catch (error) {
       console.error('[AuthService] Registration error:', error.message);
       console.error('[AuthService] Error stack:', error.stack);
-      // #region agent log
-      fetch('http://127.0.0.1:7741/ingest/1e4dcb76-b80a-44be-82d0-469d891baf8b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'925583'},body:JSON.stringify({sessionId:'925583',runId:'post-fix',hypothesisId:'H1-H2',location:'auth.service.ts:register-catch',message:'Registration failed',data:{errorMessage:error?.message,errorName:error?.name},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       throw error;
     }
   }
