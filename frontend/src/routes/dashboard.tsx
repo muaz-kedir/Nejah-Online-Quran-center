@@ -13,6 +13,27 @@ function DashboardContent() {
   const { t } = useApp();
   const [userName, setUserName] = useState('Administrator');
   const [userRole, setUserRole] = useState('super_admin');
+  const [activeStudents, setActiveStudents] = useState<number | null>(null);
+
+
+  // Fetch active student count
+  useEffect(() => {
+    const fetchActiveStudents = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:3000/api/students?limit=1', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        const count = data.meta?.total || 0;
+        setActiveStudents(count);
+      } catch (error) {
+        console.error('Failed to fetch active students:', error);
+      }
+    };
+    fetchActiveStudents();
+  }, []);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,12 +57,9 @@ function DashboardContent() {
         <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 font-semibold">
           {t.managementOverview}
         </p>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          {t.greeting},{' '}
-          <span className="text-emerald-700 dark:text-emerald-400">{getRoleTitle(userRole)}</span>
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Assalamu Alaikum, {userName}</h1>
         <p className="text-gray-500 dark:text-gray-400 max-w-xl">
-          {t.welcomeMessage}
+          Welcome back to the Nejah command center. Your institution currently serves {activeStudents !== null ? activeStudents.toLocaleString() : '...'} active seekers of knowledge.
         </p>
       </div>
 

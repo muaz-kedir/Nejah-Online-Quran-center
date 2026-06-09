@@ -16,6 +16,32 @@ export function requireStudentAuth() {
   }
 }
 
+/** Resolve and cache the linked student profile id for the logged-in student user. */
+export async function getLinkedStudentId(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+
+  const cached = localStorage.getItem('studentId');
+  if (cached) return cached;
+
+  try {
+    const profile = await api<{ student?: { id: string } }>('/student/profile');
+    if (profile?.student?.id) {
+      localStorage.setItem('studentId', profile.student.id);
+      return profile.student.id;
+    }
+  } catch {
+    // fall through
+  }
+
+  return null;
+}
+
+export function storeStudentId(studentId: string) {
+  if (typeof window !== 'undefined' && studentId) {
+    localStorage.setItem('studentId', studentId);
+  }
+}
+
 export const studentPaths = {
   dashboard: '/student_dashboard',
   classes: '/student/classes',

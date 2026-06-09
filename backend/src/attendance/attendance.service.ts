@@ -87,7 +87,13 @@ export class AttendanceService {
     if (!session) {
       const schedule = await this.scheduleRepository.findOne({
         where: { id: scheduleId },
-        relations: ['student', 'teacher', 'teacher.user'],
+        relations: [
+          'student',
+          'teacher',
+          'teacher.user',
+          'scheduleStudents',
+          'scheduleStudents.student',
+        ],
       });
 
       if (!schedule) {
@@ -98,24 +104,34 @@ export class AttendanceService {
         throw new ForbiddenException('You do not have access to this schedule');
       }
 
+      const assignedStudentIds = schedule.isGroupSession
+        ? (schedule.scheduleStudents || []).map((ss) => ss.studentId)
+        : schedule.studentId
+          ? [schedule.studentId]
+          : [];
+
+      const quranLevel = schedule.isGroupSession
+        ? schedule.scheduleStudents?.[0]?.student?.level || 'Beginner'
+        : schedule.student?.level || 'Beginner';
+
       session = this.classSessionRepository.create({
         classTitle: schedule.className || 'Quran Class',
         subject: 'Quran & Islamic Studies',
-        quranLevel: schedule.student?.level || 'Beginner',
+        quranLevel,
         sessionDate: todayStr as any,
         scheduledStartTime: schedule.startTimeString || '12:00',
         scheduledEndTime: schedule.endTimeString || '13:00',
         teacherId: schedule.teacherId,
         scheduleId: schedule.id,
         status: SessionStatus.SCHEDULED,
-        totalStudentsAssigned: 1,
+        totalStudentsAssigned: assignedStudentIds.length,
       });
 
       const savedSession = await this.classSessionRepository.save(session);
 
-      if (schedule.studentId) {
+      for (const sid of assignedStudentIds) {
         const attendance = this.studentAttendanceRepository.create({
-          studentId: schedule.studentId,
+          studentId: sid,
           classSessionId: savedSession.id,
           attendanceStatus: StudentAttendanceStatus.ABSENT,
         });

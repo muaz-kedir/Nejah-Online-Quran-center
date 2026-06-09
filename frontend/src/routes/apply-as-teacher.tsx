@@ -45,6 +45,12 @@ const applicationSchema = z.object({
   dateOfBirth: z.string().optional(),
   phoneNumber: z.string().min(4, 'Phone number is required'),
   email: z.string().email('Valid email is required'),
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string().min(6, 'Confirm Password must be at least 6 characters'),
   country: z.string().min(1, 'Country is required'),
   city: z.string().optional(),
   streetAddress: z.string().optional(),
@@ -60,6 +66,9 @@ const applicationSchema = z.object({
   marketingSource: z.string().optional(),
   marketingOther: z.string().optional(),
   additionalComments: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 type ApplicationFormValues = z.infer<typeof applicationSchema>;
@@ -95,10 +104,11 @@ function ApplyAsTeacherPage() {
   }, []);
 
   const form = useForm<ApplicationFormValues>({
+    mode: 'onChange',
     resolver: zodResolver(applicationSchema),
     defaultValues: {
       fullName: '', gender: '', dateOfBirth: '', phoneNumber: '',
-      email: '', country: '', city: '', streetAddress: '',
+      email: '', password: '', confirmPassword: '', country: '', city: '', streetAddress: '',
       languages: [], languageOther: '',
       internetConnectionType: '', internetOther: '',
       qiratEducationLevel: '', qiratOther: '',
@@ -146,7 +156,7 @@ function ApplyAsTeacherPage() {
   // ── Step validation ────────────────────────────────────────────
   const validateStep = async (): Promise<boolean> => {
     let fields: (keyof ApplicationFormValues)[] = [];
-    if (step === 0) fields = ['fullName', 'gender', 'phoneNumber', 'email', 'country'];
+    if (step === 0) fields = ['fullName', 'gender', 'phoneNumber', 'email', 'password', 'confirmPassword', 'country'];
     if (step === 1) fields = ['languages', 'teachingTimeAvailability'];
     const result = await form.trigger(fields);
     return result;
@@ -196,6 +206,7 @@ function ApplyAsTeacherPage() {
         dateOfBirth: values.dateOfBirth || undefined,
         phoneNumber: values.phoneNumber,
         email: values.email,
+        password: values.password,
         country: values.country,
         city: values.city || undefined,
         streetAddress: values.streetAddress || undefined,
@@ -405,6 +416,16 @@ function ApplyAsTeacherPage() {
                       <Label htmlFor="email" className="text-gray-700 font-medium">Email Address *</Label>
                       <Input id="email" type="email" {...register('email')} placeholder="teacher@example.com" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
                       {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="password" className="text-gray-700 font-medium">Password *</Label>
+                      <Input id="password" type="password" {...register('password')} placeholder="Create a password" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirm Password *</Label>
+                      <Input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="Confirm your password" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="country" className="text-gray-700 font-medium">Country *</Label>

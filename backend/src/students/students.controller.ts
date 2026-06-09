@@ -59,6 +59,12 @@ export class StudentsController {
     return this.studentsService.delegateStudentToTeacher(delegateDto);
   }
 
+  @Get('unassigned')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  getUnassigned() {
+    return this.studentsService.findAllUnassigned();
+  }
+
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
   async findOne(@Request() req, @Param('id') id: string) {

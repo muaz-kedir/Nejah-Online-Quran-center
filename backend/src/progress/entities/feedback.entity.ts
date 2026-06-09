@@ -17,11 +17,11 @@ export class Feedback {
   @Column()
   studentId: string;
 
-  @ManyToOne(() => Teacher)
+  @ManyToOne(() => Teacher, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'teacherId' })
   teacher: Teacher;
 
-  @Column()
+  @Column({ nullable: true })
   teacherId: string;
 
   @CreateDateColumn()

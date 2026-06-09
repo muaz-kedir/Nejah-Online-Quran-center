@@ -63,12 +63,18 @@ function LoginPage() {
         password: values.password.trim(),
       };
 
-      console.log("Sending Login Request:", loginData);
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(loginData),
+        });
+      } catch {
+        throw new Error(
+          "Cannot reach the API server. Start the backend with: npm run dev:backend (from project root).",
+        );
+      }
 
       const data = await response.json();
 
@@ -86,6 +92,11 @@ function LoginPage() {
       localStorage.setItem("userName", data.user.name);
       localStorage.setItem("userEmail", data.user.email);
       localStorage.setItem("userId", data.user.id);
+      if (data.user.studentId) {
+        localStorage.setItem("studentId", data.user.studentId);
+      } else {
+        localStorage.removeItem("studentId");
+      }
 
       toast.success("Welcome back, " + data.user.name + "!");
       

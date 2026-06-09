@@ -598,11 +598,18 @@ export class TeacherReplacementsService {
   }
 
   async getEffectiveSchedulesForStudent(studentId: string) {
-    const schedules = await this.schedulesRepository.find({
-      where: { studentId, status: 'active' },
-      relations: ['teacher'],
-      order: { startTimeString: 'ASC' },
-    });
+    const schedules = await this.schedulesRepository
+      .createQueryBuilder('schedule')
+      .leftJoinAndSelect('schedule.teacher', 'teacher')
+      .leftJoinAndSelect('schedule.scheduleStudents', 'scheduleStudents')
+      .leftJoinAndSelect('scheduleStudents.student', 'groupStudent')
+      .where('schedule.status = :status', { status: 'active' })
+      .andWhere(
+        '(schedule.studentId = :studentId OR scheduleStudents.studentId = :studentId)',
+        { studentId },
+      )
+      .orderBy('schedule.startTimeString', 'ASC')
+      .getMany();
 
     const replacement = await this.getActiveReplacement(studentId);
     if (!replacement) return schedules;

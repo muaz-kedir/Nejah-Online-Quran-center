@@ -15,6 +15,10 @@ export class CreateTeacherApplicationDto {
 
   @IsString()
   @IsNotEmpty()
+  password?: string;
+
+  @IsString()
+  @IsNotEmpty()
   gender: string;
 
   @IsString()

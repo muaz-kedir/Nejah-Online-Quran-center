@@ -621,8 +621,22 @@ function TeacherDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {todaySessions.map((session: any) => {
                   const dynamicStatus = getSessionStatus(session.startTime, session.endTime);
+                  const isGroup = !!session.isGroupSession;
+
                   return (
-                    <div key={session.scheduleId} className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100">
+                    <div
+                      key={session.scheduleId}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleLaunchSession(session.scheduleId)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleLaunchSession(session.scheduleId);
+                        }
+                      }}
+                      className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-emerald-100 transition-all"
+                    >
                       <div className="flex items-center gap-3 mb-8">
                         <Clock className="h-5 w-5 text-amber-500" />
                         <span className="text-sm font-bold text-emerald-950">{session.startTime} - {session.endTime}</span>
@@ -630,13 +644,27 @@ function TeacherDashboard() {
                       <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2 line-clamp-1">{session.title}</h4>
                       <p className="text-sm text-gray-400 font-semibold mb-10">{session.sessionType}</p>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white">
-                            {session.studentAvatar}
-                          </div>
-                          <span className="text-xs font-bold text-emerald-950">{session.studentName}</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          {isGroup && session.students?.length > 1 ? (
+                            <div className="flex -space-x-2 shrink-0">
+                              {session.students.slice(0, 3).map((s: any, i: number) => (
+                                <div
+                                  key={s.id}
+                                  className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white"
+                                  style={{ zIndex: 3 - i }}
+                                >
+                                  {s.fullName?.charAt(0) || 'S'}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shrink-0">
+                              {session.studentAvatar}
+                            </div>
+                          )}
+                          <span className="text-xs font-bold text-emerald-950 line-clamp-2">{session.studentName}</span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 shrink-0">
                           <Badge className={cn(
                             "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
                             dynamicStatus === 'COMPLETED' ? "bg-gray-100 text-gray-500" :
@@ -645,12 +673,9 @@ function TeacherDashboard() {
                           )}>
                             {dynamicStatus}
                           </Badge>
-                          <button
-                            onClick={() => handleLaunchSession(session.scheduleId)}
-                            className="text-sm font-extrabold text-emerald-850 hover:underline cursor-pointer"
-                          >
+                          <span className="text-sm font-extrabold text-emerald-850 group-hover:underline">
                             Open Quran View
-                          </button>
+                          </span>
                         </div>
                       </div>
                     </div>

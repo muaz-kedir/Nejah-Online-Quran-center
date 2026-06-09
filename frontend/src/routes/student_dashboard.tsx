@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
-import { api, apiHeaders, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import { api, apiHeaders, requireStudentAuth, storeStudentId, studentPaths } from '@/lib/student-portal';
 
 const dayLabels: Record<string, string> = {
   Sunday: 'S', Monday: 'M', Tuesday: 'T', Wednesday: 'W',
@@ -55,6 +55,7 @@ function StudentDashboard() {
         setData(dash);
         setProfile(prof);
         if (prof?.student) {
+          storeStudentId(prof.student.id);
           setProfileForm({ phone: prof.student.phone || '', email: prof.student.email || '' });
         }
       })

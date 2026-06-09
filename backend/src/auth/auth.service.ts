@@ -92,7 +92,7 @@ export class AuthService {
       console.log('[AuthService] Student user created:', studentUser.id);
 
       console.log('[AuthService] Creating student profile...');
-      await this.studentsService.create({
+      const createdStudent = await this.studentsService.create({
         fullName: student.fullName,
         gender: student.gender.toLowerCase() === 'male' ? Gender.MALE : Gender.FEMALE,
         ageRange: student.ageRange,
@@ -128,6 +128,7 @@ export class AuthService {
           email: studentUser.email,
           name: studentUser.name,
           role: studentUser.role,
+          studentId: createdStudent.id,
         },
       };
     } catch (error) {
@@ -185,14 +186,31 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email, role: user.role };
 
+    const userResponse: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      studentId?: string;
+    } = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
+
+    if (user.role === UserRole.STUDENT) {
+      const student = await this.studentsRepository.findOne({
+        where: { userId: user.id },
+      });
+      if (student) {
+        userResponse.studentId = student.id;
+      }
+    }
+
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      user: userResponse,
     };
   }
 

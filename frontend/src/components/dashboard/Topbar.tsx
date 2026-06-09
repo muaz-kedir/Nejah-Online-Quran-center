@@ -33,11 +33,22 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
   const [userRole, setUserRole] = useState('super_admin');
 
   useEffect(() => {
-    // Only set user data on client side to avoid hydration mismatch
-    if (typeof window !== 'undefined') {
+    const loadUserData = () => {
       setUserName(localStorage.getItem('userName') || 'Admin User');
       setUserRole(localStorage.getItem('userRole') || 'super_admin');
+    };
+    
+    // Only set user data on client side to avoid hydration mismatch
+    if (typeof window !== 'undefined') {
+      loadUserData();
+      window.addEventListener('profileUpdated', loadUserData);
     }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('profileUpdated', loadUserData);
+      }
+    };
   }, []);
 
   const handleLogout = () => {

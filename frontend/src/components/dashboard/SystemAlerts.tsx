@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { ArrowRight, Megaphone } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Alert {
   id: string;
@@ -55,6 +56,7 @@ const alertConfig = {
 
 export const SystemAlerts = memo(function SystemAlerts() {
   const { t } = useApp();
+  const navigate = useNavigate();
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -111,7 +113,10 @@ export const SystemAlerts = memo(function SystemAlerts() {
 
       {/* View All */}
       <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
-        <button className="w-full py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center justify-center gap-2 group">
+        <button
+          onClick={() => navigate({ to: '/teacher_notifications' })}
+          className="w-full py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center justify-center gap-2 group"
+        >
           {t.viewAllNotifications}
           <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
         </button>

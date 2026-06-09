@@ -1,6 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
+import { ScheduleStudent } from './schedule-student.entity';
 
 @Entity('schedules')
 export class Schedule {
@@ -25,12 +35,18 @@ export class Schedule {
   @Column({ type: 'timestamp', nullable: true })
   endTime: Date;
 
-  @ManyToOne(() => Student, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Student, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'studentId' })
   student: Student;
 
-  @Column()
+  @Column({ nullable: true })
   studentId: string;
+
+  @Column({ default: false })
+  isGroupSession: boolean;
+
+  @OneToMany(() => ScheduleStudent, (ss) => ss.schedule, { cascade: true })
+  scheduleStudents: ScheduleStudent[];
 
   @ManyToOne(() => Teacher, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'teacherId' })

@@ -19,6 +19,7 @@ import {
   normalizeDayOfWeek,
   sortSchedulesByStartTime,
 } from '@/lib/schedule-day';
+import { getScheduleSearchText, getScheduleStudentLabel } from '@/lib/schedule-display';
 
 export const Route = createFileRoute('/teachers_/$id/schedule/$day')({
   component: TeacherDailySchedulePage,
@@ -126,7 +127,7 @@ function TeacherDailySchedulePage() {
   const filteredDailySchedules = sortSchedulesByStartTime(
     daySchedules.filter((s: any) => {
       if (!searchQuery) return true;
-      const studentName = s.student?.fullName || s.studentId;
+      const studentName = getScheduleSearchText(s);
       return (
         studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.classType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -228,9 +229,8 @@ function TeacherDailySchedulePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredDailySchedules.map((schedule: any) => {
-                  const studentName = schedule.student?.fullName || 'Unknown Student';
-                  const studentAvatar = studentName.charAt(0);
-                  
+                  const { name: studentName, avatar: studentAvatar } = getScheduleStudentLabel(schedule);
+
                   return (
                     <div key={schedule.id} className="group p-5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-all hover:border-emerald-100 dark:hover:border-emerald-900/50 relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />

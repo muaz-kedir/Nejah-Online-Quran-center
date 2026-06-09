@@ -21,7 +21,7 @@ import { TeachersService } from '../teachers/teachers.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from '../students/entities/student.entity';
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 @Controller('attendance')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -81,7 +81,12 @@ export class AttendanceController {
 
   @Post('record')
   @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async recordAttendance(@Body() dto: RecordStudentAttendanceDto) {
+  async recordAttendance(@Request() req, @Body() dto: RecordStudentAttendanceDto) {
+    if (req.user.role === UserRole.STUDENT) {
+      dto.studentId = await this.resolveStudentIdForUser(req);
+    } else if (!dto.studentId) {
+      throw new BadRequestException('studentId is required');
+    }
     return this.attendanceService.recordStudentAttendance(dto);
   }
 

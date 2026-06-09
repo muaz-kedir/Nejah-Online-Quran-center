@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
+import { getLinkedStudentId } from '@/lib/student-portal';
 
 export const Route = createFileRoute('/class-session_/$id')({
   component: ClassSessionPage,
@@ -68,16 +69,10 @@ function ClassSessionContent() {
 
     setUserRole(localStorage.getItem('userRole') || 'student');
 
-    const storedStudentId = localStorage.getItem('studentId');
-    if (storedStudentId) {
-      setStudentId(storedStudentId);
-    } else if (localStorage.getItem('userRole') === 'student') {
-      api<any>('/users/profile')
-        .then((data) => {
-          if (data.student?.id) {
-            setStudentId(data.student.id);
-            localStorage.setItem('studentId', data.student.id);
-          }
+    if (localStorage.getItem('userRole') === 'student') {
+      getLinkedStudentId()
+        .then((id) => {
+          if (id) setStudentId(id);
         })
         .catch((err) => console.error('Failed to get student profile', err));
     }
@@ -114,7 +109,12 @@ function ClassSessionContent() {
           meetingLink: meetingLink.trim(),
         }),
       });
-      toast.success('Online session is now LIVE! Notifications sent to students & parents.');
+      const studentCount = session?.studentAttendances?.length || 0;
+      toast.success(
+        studentCount > 1
+          ? 'Online session is now LIVE! Notifications sent to all assigned students & parents.'
+          : 'Online session is now LIVE! Notifications sent to students & parents.',
+      );
       fetchSessionDetails();
     } catch (err: any) {
       toast.error(err.message || 'Failed to start meeting');
@@ -146,9 +146,11 @@ function ClassSessionContent() {
   };
 
   const handleJoinMeeting = async () => {
-    if (!studentId && userRole === 'student') {
-      toast.error('No linked student profile found. Attendance cannot be auto-marked.');
-      return;
+    setIsSubmitting(true);
+    let resolvedStudentId = studentId;
+    if (userRole === 'student' && !resolvedStudentId) {
+      resolvedStudentId = (await getLinkedStudentId()) || '';
+      if (resolvedStudentId) setStudentId(resolvedStudentId);
     }
 
     try {
@@ -156,21 +158,24 @@ function ClassSessionContent() {
         method: 'POST',
         body: JSON.stringify({
           classSessionId: id,
-          studentId,
+          ...(resolvedStudentId ? { studentId: resolvedStudentId } : {}),
           action: 'join',
         }),
       });
       toast.success('Your attendance has been automatically recorded as PRESENT/LATE!');
       window.open(meetingLink, '_blank');
       fetchSessionDetails(false);
-    } catch {
-      toast.error('Failed to record joining log. Connecting to class anyway...');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to record joining log. Connecting to class anyway...');
       window.open(meetingLink, '_blank');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleLeaveMeeting = async () => {
-    if (!studentId) {
+    const resolvedStudentId = studentId || (await getLinkedStudentId()) || '';
+    if (!resolvedStudentId) {
       window.location.href = '/student_dashboard';
       return;
     }
@@ -180,7 +185,6 @@ function ClassSessionContent() {
         method: 'POST',
         body: JSON.stringify({
           classSessionId: id,
-          studentId,
           action: 'leave',
         }),
       });
@@ -336,7 +340,8 @@ function ClassSessionContent() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                       To initialize this class session, paste your Google Meet or Zoom invite link below
                       and click &quot;Start Meeting&quot;. This will automatically notify the assigned
-                      student, their parent, and admins.
+                      {(session.studentAttendances?.length || 0) > 1 ? ' students' : ' student'}, their
+                      parents, and admins.
                     </p>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">

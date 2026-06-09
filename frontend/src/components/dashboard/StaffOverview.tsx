@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { memo, useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 interface StaffMember {
   id: string;
@@ -31,6 +32,7 @@ const statusConfig = {
 
 export const StaffOverview = memo(function StaffOverview() {
   const { t } = useApp();
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -136,7 +138,10 @@ export const StaffOverview = memo(function StaffOverview() {
 
       {/* Manage All Staff */}
       <div className="px-4 pb-4">
-        <button className="w-full py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center justify-center gap-2 group">
+        <button
+          onClick={() => navigate({ to: '/teachers' })}
+          className="w-full py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center justify-center gap-2 group"
+        >
           {t.manageAllStaff}
           <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
         </button>

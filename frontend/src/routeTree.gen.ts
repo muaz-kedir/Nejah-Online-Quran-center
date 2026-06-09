@@ -26,6 +26,7 @@ import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -134,6 +135,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParentsRoute = ParentsRouteImport.update({
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parents': typeof ParentsRoute
+  '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/parent_dashboard'
     | '/parents'
+    | '/profile'
     | '/progress'
     | '/register'
     | '/reports'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/parent_dashboard'
     | '/parents'
+    | '/profile'
     | '/progress'
     | '/register'
     | '/reports'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/parent_dashboard'
     | '/parents'
+    | '/profile'
     | '/progress'
     | '/register'
     | '/reports'
@@ -533,6 +545,7 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   Parent_dashboardRoute: typeof Parent_dashboardRoute
   ParentsRoute: typeof ParentsRoute
+  ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
@@ -682,6 +695,13 @@ declare module '@tanstack/react-router' {
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parents': {
@@ -880,6 +900,7 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   Parent_dashboardRoute: Parent_dashboardRoute,
   ParentsRoute: ParentsRoute,
+  ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,

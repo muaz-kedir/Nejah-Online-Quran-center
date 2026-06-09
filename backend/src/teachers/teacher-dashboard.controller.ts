@@ -162,21 +162,50 @@ export class TeacherDashboardController {
     const sessions = await this.schedulesRepository.find({
       where: { teacherId: teacher.id, dayOfWeek: currentDay, status: 'active' },
       order: { startTimeString: 'ASC' },
-      relations: ['student'],
+      relations: ['student', 'scheduleStudents', 'scheduleStudents.student'],
     });
 
-    return sessions.map((s) => ({
-      scheduleId: s.id,
-      title: s.className || 'Quran Class',
-      studentName: s.student?.fullName || 'Unknown Student',
-      studentAvatar: s.student?.fullName ? s.student.fullName.charAt(0) : 'U',
-      sessionType: s.classType || '1:1 Session',
-      startTime: s.startTimeString,
-      endTime: s.endTimeString,
-      meetingLink: s.meetingLink,
-      status: s.status,
-      level: s.student?.level || 'Beginner',
-    }));
+    return sessions.map((s) => {
+      const groupStudents = (s.scheduleStudents || [])
+        .map((ss) => ss.student)
+        .filter(Boolean)
+        .map((student) => ({
+          id: student.id,
+          fullName: student.fullName,
+          level: student.level,
+        }));
+
+      const isGroupSession = !!s.isGroupSession;
+      const studentCount = isGroupSession ? groupStudents.length : 1;
+
+      return {
+        scheduleId: s.id,
+        title: s.className || 'Quran Class',
+        isGroupSession,
+        studentCount,
+        students: isGroupSession
+          ? groupStudents
+          : s.student
+            ? [{ id: s.student.id, fullName: s.student.fullName, level: s.student.level }]
+            : [],
+        studentName: isGroupSession
+          ? `Group · ${studentCount} students`
+          : s.student?.fullName || 'Unknown Student',
+        studentAvatar: isGroupSession
+          ? 'G'
+          : s.student?.fullName
+            ? s.student.fullName.charAt(0)
+            : 'U',
+        sessionType: isGroupSession ? 'Group Session' : s.classType || '1:1 Session',
+        startTime: s.startTimeString,
+        endTime: s.endTimeString,
+        meetingLink: s.meetingLink,
+        status: s.status,
+        level: isGroupSession
+          ? groupStudents[0]?.level || 'Beginner'
+          : s.student?.level || 'Beginner',
+      };
+    });
   }
 
   @Get('notes')

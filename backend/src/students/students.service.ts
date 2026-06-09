@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOptionsWhere, ILike } from 'typeorm';
+import { Repository, Like, FindOptionsWhere, ILike, IsNull } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
@@ -155,7 +155,10 @@ export class StudentsService {
 
   async findAllUnassigned() {
     return this.studentsRepository.find({
-      where: { isAssigned: false },
+      where: [
+        { isAssigned: false },
+        { teacherId: IsNull() }
+      ],
       relations: ['parent'],
       order: { fullName: 'ASC' }
     });

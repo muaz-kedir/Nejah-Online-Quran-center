@@ -23,10 +23,11 @@ export class AssignStudentDto {
   @IsString()
   teacherId: string;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ScheduleSlotDto)
-  schedules: ScheduleSlotDto[];
+  schedules?: ScheduleSlotDto[];
 }
 
 export class UnassignStudentDto {

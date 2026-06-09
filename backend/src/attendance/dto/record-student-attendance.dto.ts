@@ -4,8 +4,9 @@ export class RecordStudentAttendanceDto {
   @IsUUID()
   classSessionId: string;
 
+  @IsOptional()
   @IsUUID()
-  studentId: string;
+  studentId?: string;
 
   @IsOptional()
   @IsString()

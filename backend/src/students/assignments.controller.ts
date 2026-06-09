@@ -38,20 +38,22 @@ export class AssignmentsController {
       isAssigned: true 
     });
 
-    // 4. Create new schedules
+    // 4. Create schedules only when explicitly provided (recurring schedules are set from Faculty profile)
     const results = [];
-    for (const slot of schedules) {
-      const schedule = await this.schedulesService.createSchedule({
-        studentId,
-        teacherId,
-        ...slot
-      });
-      results.push(schedule);
+    if (schedules?.length) {
+      for (const slot of schedules) {
+        const schedule = await this.schedulesService.createSchedule({
+          studentId,
+          teacherId,
+          ...slot,
+        });
+        results.push(schedule);
+      }
     }
 
-    return { 
-      message: 'Student assigned successfully', 
-      schedules: results 
+    return {
+      message: 'Student assigned successfully',
+      schedules: results,
     };
   }
 

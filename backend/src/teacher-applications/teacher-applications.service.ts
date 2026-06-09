@@ -224,15 +224,15 @@ export class TeacherApplicationsService {
   private async approveApplication(
     application: TeacherApplication,
   ): Promise<TeacherApplication> {
-    // Generate a temporary password
-    const tempPassword = this.generateTempPassword();
+    // Use application password or generate a temporary password
+    const userPassword = application.password || this.generateTempPassword();
 
     try {
       // Create teacher via existing service (which also creates the User)
       const teacher = await this.teachersService.create({
         fullName: application.fullName,
         email: application.email,
-        password: tempPassword,
+        password: userPassword,
         gender: application.gender as any,
         phoneNumber: application.phoneNumber,
         country: application.country,
@@ -259,7 +259,7 @@ export class TeacherApplicationsService {
         application.email,
         application.fullName,
         application.email,
-        tempPassword,
+        application.password ? '(The password you created during application)' : userPassword,
       );
 
       return saved;

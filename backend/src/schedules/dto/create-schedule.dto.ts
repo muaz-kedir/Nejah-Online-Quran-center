@@ -1,13 +1,31 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class CreateScheduleDto {
   @IsNotEmpty()
   @IsUUID()
   teacherId: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsUUID()
-  studentId: string;
+  studentId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(2)
+  @IsUUID('4', { each: true })
+  studentIds?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isGroupSession?: boolean;
 
   @IsNotEmpty()
   @IsString()

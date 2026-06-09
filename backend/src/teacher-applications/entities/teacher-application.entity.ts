@@ -26,6 +26,9 @@ export class TeacherApplication {
   @Column()
   fullName: string;
 
+  @Column({ nullable: true })
+  password?: string;
+
   @Column()
   gender: string;
 

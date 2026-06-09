@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { memo, useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Student {
   id: string;
@@ -25,6 +26,7 @@ const avatarColors = [
 
 export const RecentStudentsTable = memo(function RecentStudentsTable() {
   const { t } = useApp();
+  const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,10 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t.recentStudents}</h2>
-        <button className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors group">
+        <button
+          onClick={() => navigate({ to: '/students' })}
+          className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors group"
+        >
           {t.viewAll}
           <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
         </button>

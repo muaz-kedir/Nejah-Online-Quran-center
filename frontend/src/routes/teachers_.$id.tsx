@@ -47,6 +47,7 @@ import {
   sortSchedulesByStartTime,
   WEEK_DISPLAY_ORDER_MONDAY_FIRST,
 } from '@/lib/schedule-day';
+import { getScheduleSearchText, getScheduleStudentLabel } from '@/lib/schedule-display';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
@@ -103,13 +104,12 @@ function TeacherProfilePage() {
   const fetchUnassignedStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/students?limit=100', {
+      const response = await fetch('http://localhost:3000/api/students/unassigned', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-      if (data && Array.isArray(data.data)) {
-        const filtered = data.data.filter((s: any) => !s.teacherId || s.teacherId === null);
-        setAllStudents(filtered);
+      if (data && Array.isArray(data)) {
+        setAllStudents(data);
       }
     } catch (error) {
       console.error(error);
@@ -118,6 +118,7 @@ function TeacherProfilePage() {
 
   useEffect(() => {
     fetchTeacher();
+    fetchUnassignedStudents();
   }, [id]);
 
   const fetchDaySchedules = async (teacherId: string, day: string) => {
@@ -146,11 +147,12 @@ function TeacherProfilePage() {
     }
   };
 
+  // Fetch unassigned students when assign modal opens (already done on load, but we can refresh)
   useEffect(() => {
-    if (isAssignModalOpen) {
+    if (isAssignModalOpen || isEditScheduleOpen) {
       fetchUnassignedStudents();
     }
-  }, [isAssignModalOpen]);
+  }, [isAssignModalOpen, isEditScheduleOpen]);
 
   const handleAssignStudent = async () => {
     if (!selectedStudentId) {
@@ -178,6 +180,7 @@ function TeacherProfilePage() {
       setIsAssignModalOpen(false);
       setSelectedStudentId('');
       fetchTeacher();
+      fetchUnassignedStudents();
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
     } finally {
@@ -218,6 +221,7 @@ function TeacherProfilePage() {
       setTimeout(() => {
         fetchTeacher();
         setUnassigningId(null);
+        fetchUnassignedStudents();
       }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove student');
@@ -281,7 +285,7 @@ function TeacherProfilePage() {
   const filteredDailySchedules = sortSchedulesByStartTime(
     daySchedules.filter((s: any) => {
       if (!searchQuery) return true;
-      const studentName = s.student?.fullName || s.studentId;
+      const studentName = getScheduleSearchText(s);
       return (
         studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.classType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -471,9 +475,8 @@ function TeacherProfilePage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredDailySchedules.map((schedule: any) => {
-                    const studentName = schedule.student?.fullName || 'Unknown Student';
-                    const studentAvatar = studentName.charAt(0);
-                    
+                    const { name: studentName, avatar: studentAvatar } = getScheduleStudentLabel(schedule);
+
                     return (
                       <div key={schedule.id} className="group p-5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-all hover:border-emerald-100 dark:hover:border-emerald-900/50 relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -547,6 +550,7 @@ function TeacherProfilePage() {
         teacher={teacher}
         schedule={scheduleToEdit}
         defaultDay={selectedDay}
+        unassignedStudents={allStudents}
       />
 
       <AssignTemporaryTeacherModal

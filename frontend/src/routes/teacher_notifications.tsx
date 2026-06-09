@@ -11,7 +11,7 @@ const API_BASE = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/teacher_notifications')({
   component: TeacherNotificationsPage,
-  beforeLoad: () => requireAuth(['teacher']),
+  beforeLoad: () => requireAuth(['teacher', 'admin', 'super_admin']),
 });
 
 const NotificationIcon = ({ type, channel }: { type: string; channel: string }) => {
@@ -41,19 +41,33 @@ function TeacherNotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userRole, setUserRole] = useState('teacher');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserRole(localStorage.getItem('userRole') || 'teacher');
+    }
+  }, []);
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/notifications`, {
+      const role = localStorage.getItem('userRole') || 'teacher';
+      const isTeacher = role === 'teacher';
+      const url = isTeacher
+        ? `${API_BASE}/teachers/notifications`
+        : `${API_BASE}/notifications`;
+
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.notifications?.filter((n: any) => !n.isRead).length || 0);
+        const list = isTeacher ? (data.notifications || []) : (Array.isArray(data) ? data : []);
+        setNotifications(list);
+        setUnreadCount(list.filter((n: any) => !n.isRead).length || 0);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
