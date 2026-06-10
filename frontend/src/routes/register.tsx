@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info } from "lucide-react";
+import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Country, City } from "country-state-city";
 
@@ -71,7 +71,8 @@ function RegisterPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [currentStep, setCurrentStep] = useState<"student" | "parent">("student");
+  const [currentStep, setCurrentStep] = useState<"student" | "parent-confirm" | "parent-search" | "parent-info">("student");
+  const [isParentExisting, setIsParentExisting] = useState<boolean | null>(null);
 
   const countries = useMemo(() => Country.getAllCountries(), []);
 
@@ -116,6 +117,29 @@ function RegisterPage() {
   const watchPreviousTraining = form.watch("student.previousTraining");
   const watchReferralSource = form.watch("student.referralSource");
 
+  // Parent search state
+  const [searchingParent, setSearchingParent] = useState(false);
+  const [parentSearchQuery, setParentSearchQuery] = useState("");
+  const [parentSearchPerformed, setParentSearchPerformed] = useState(false);
+  const [parentResults, setParentResults] = useState<any[]>([]);
+  const [selectedParent, setSelectedParent] = useState<any>(null);
+  const [useExistingParent, setUseExistingParent] = useState(false);
+
+  // Duplicate detection state (for the "create new parent" path)
+  const [duplicateParent, setDuplicateParent] = useState<any>(null);
+  const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
+  const [allowDuplicateCreate, setAllowDuplicateCreate] = useState(false);
+
+  const watchParentEmail = form.watch("parent.email");
+  const watchParentPhone = form.watch("parent.phoneNumber");
+
+  // Re-run duplicate detection if the parent's email/phone is edited
+  useEffect(() => {
+    setDuplicateParent(null);
+    setShowDuplicateDetails(false);
+    setAllowDuplicateCreate(false);
+  }, [watchParentEmail, watchParentPhone]);
+
   const studentCities = useMemo(() => {
     if (!watchStudentCountry) return [];
     const cities = City.getCitiesOfCountry(watchStudentCountry) || [];
@@ -130,6 +154,73 @@ function RegisterPage() {
 
   const studentCountryData = useMemo(() => countries.find(c => c.isoCode === watchStudentCountry), [countries, watchStudentCountry]);
   const parentCountryData = useMemo(() => countries.find(c => c.isoCode === watchParentCountry), [countries, watchParentCountry]);
+
+  // Search for existing parent (partial name, exact email/phone)
+  const searchParent = async () => {
+    const query = parentSearchQuery.trim();
+    if (query.length < 3) {
+      toast.error("Please enter at least 3 characters to search.");
+      return;
+    }
+    setSearchingParent(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/parent-lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setParentResults(Array.isArray(data) ? data : []);
+      } else {
+        setParentResults([]);
+      }
+      setParentSearchPerformed(true);
+    } catch (error) {
+      console.error('Failed to search parents', error);
+      toast.error("Parent search failed. Please try again.");
+    } finally {
+      setSearchingParent(false);
+    }
+  };
+
+  const handleSelectParent = (parent: any) => {
+    setSelectedParent(parent);
+    setUseExistingParent(true);
+    setParentResults([]);
+    setDuplicateParent(null);
+  };
+
+  const clearParentSelection = () => {
+    setSelectedParent(null);
+    setUseExistingParent(false);
+    setParentResults([]);
+    setParentSearchPerformed(false);
+  };
+
+  // Verify the student email isn't already taken before leaving the student step,
+  // so the conflict shows on the right field instead of a 409 at the very end.
+  const verifyStudentEmail = async (): Promise<boolean> => {
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.getValues("student.email") }),
+      });
+      if (!response.ok) return true; // don't block; backend re-validates on submit
+      const data = await response.json();
+      if (!data.available) {
+        const message = data.message || "This email is already registered.";
+        form.setError("student.email", { message });
+        toast.error(message);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Email availability check failed", error);
+      return true;
+    }
+  };
 
   async function handleNext() {
     const studentFields = [
@@ -152,8 +243,13 @@ function RegisterPage() {
     }
     
     if (isValid && dependentFieldsValid) {
+      setIsLoading(true);
+      const emailAvailable = await verifyStudentEmail();
+      setIsLoading(false);
+      if (!emailAvailable) return;
+
       if (watchAgeRange === "Under 18") {
-        setCurrentStep("parent");
+        setCurrentStep("parent-confirm");
       } else {
         // Adult student, submit directly
         onSubmit(form.getValues());
@@ -164,32 +260,102 @@ function RegisterPage() {
   }
 
   function handleBack() {
-    setCurrentStep("student");
+    if (currentStep === "parent-search" || currentStep === "parent-info") {
+      setCurrentStep("parent-confirm");
+    } else if (currentStep === "parent-confirm") {
+      setCurrentStep("student");
+    }
   }
 
+  function handleParentChoice(choice: boolean) {
+    setIsParentExisting(choice);
+    setDuplicateParent(null);
+    setShowDuplicateDetails(false);
+    setAllowDuplicateCreate(false);
+    if (choice) {
+      setCurrentStep("parent-search");
+    } else {
+      clearParentSelection();
+      setCurrentStep("parent-info");
+    }
+  }
+
+  const normalizedParentPhone = (phone?: string) => {
+    if (!phone) return phone;
+    if (phone.startsWith("+") || !parentCountryData) return phone;
+    return `+${parentCountryData.phonecode}${phone}`;
+  };
+
   async function onSubmit(values: RegisterFormValues) {
-    if (watchAgeRange === "Under 18" && currentStep === "student") {
-      // Should not happen naturally due to UI buttons, but to be safe
-      setCurrentStep("parent");
+    if (watchAgeRange !== "Under 18") {
+      // Clear parent data for adults
+      values.parent = undefined;
+      await submitRegistration(values, null);
       return;
     }
 
-    if (watchAgeRange === "Under 18") {
-      // Validate parent fields
-      const p = values.parent;
-      if (!p?.fullName || !p?.email || !p?.phoneNumber || !p?.country || !p?.city || !p?.relationshipWithStudent || !p?.password) {
-        toast.error("Please fill in all parent information.");
-        return;
-      }
-      if (p.password !== p.confirmPassword) {
-        toast.error("Parent passwords do not match.");
-        return;
-      }
-    } else {
-      // Clear parent data for adults
-      values.parent = undefined;
+    // Existing parent selected via search: link only, skip parent form
+    if (useExistingParent && selectedParent) {
+      await submitRegistration(values, selectedParent.id);
+      return;
     }
 
+    // New parent path: validate parent fields
+    const p = values.parent;
+    if (!p?.fullName || !p?.email || !p?.phoneNumber || !p?.country || !p?.city || !p?.relationshipWithStudent || !p?.password) {
+      toast.error("Please fill in all parent information.");
+      return;
+    }
+    if (p.password !== p.confirmPassword) {
+      toast.error("Parent passwords do not match.");
+      return;
+    }
+    if (p.email.trim().toLowerCase() === values.student.email.trim().toLowerCase()) {
+      const message = "The parent email must be different from the student's email.";
+      form.setError("parent.email", { message });
+      toast.error(message);
+      return;
+    }
+
+    // Automatic duplicate detection by email/phone
+    if (!allowDuplicateCreate) {
+      setIsLoading(true);
+      try {
+        const response = await fetch("http://localhost:3000/api/auth/parent-duplicate-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: p.email,
+            phoneNumber: normalizedParentPhone(p.phoneNumber),
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.exists) {
+            setDuplicateParent(data.parent);
+            setShowDuplicateDetails(false);
+            toast.warning("A parent account with this email address or phone number already exists.");
+            return;
+          }
+          if (data.conflict) {
+            const message = data.message || "This email cannot be used for a parent account.";
+            form.setError("parent.email", { message });
+            toast.error(message);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Duplicate check failed", error);
+        // Don't block registration on a failed check; backend dedupes anyway.
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    await submitRegistration(values, null);
+  }
+
+  async function submitRegistration(values: RegisterFormValues, parentId: string | null) {
     setIsLoading(true);
     try {
       // Append country code to phone before sending if not already added
@@ -198,13 +364,22 @@ function RegisterPage() {
       if (studentCountryData && submissionValues.student.phone && !submissionValues.student.phone.startsWith("+")) {
          submissionValues.student.phone = `+${studentCountryData.phonecode}${submissionValues.student.phone}`;
       }
-      if (watchAgeRange === "Under 18" && parentCountryData && submissionValues.parent?.phoneNumber && !submissionValues.parent.phoneNumber.startsWith("+")) {
-         submissionValues.parent.phoneNumber = `+${parentCountryData.phonecode}${submissionValues.parent.phoneNumber}`;
-      }
 
       // Convert full country names back from isoCode for DB
       if (studentCountryData) submissionValues.student.country = studentCountryData.name;
-      if (submissionValues.parent && parentCountryData) submissionValues.parent.country = parentCountryData.name;
+
+      if (parentId) {
+        // Link to existing parent: no parent payload, never create a new account
+        submissionValues.parentId = parentId;
+        submissionValues.parent = undefined;
+      } else if (watchAgeRange === "Under 18" && submissionValues.parent) {
+        if (parentCountryData && submissionValues.parent.phoneNumber && !submissionValues.parent.phoneNumber.startsWith("+")) {
+          submissionValues.parent.phoneNumber = `+${parentCountryData.phonecode}${submissionValues.parent.phoneNumber}`;
+        }
+        if (parentCountryData) submissionValues.parent.country = parentCountryData.name;
+      } else {
+        submissionValues.parent = undefined;
+      }
 
       const response = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
@@ -223,7 +398,7 @@ function RegisterPage() {
         return;
       }
 
-      if (data.parentStatus && data.parentStatus.includes("Existing parent found")) {
+      if (data.parentStatus && data.parentStatus.toLowerCase().includes("existing parent")) {
         toast.success(data.parentStatus);
       }
 
@@ -257,10 +432,8 @@ function RegisterPage() {
         {!isSuccess && watchAgeRange === "Under 18" && (
           <div className="flex items-center justify-center space-x-4">
             <div className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                currentStep === "student" ? "bg-emerald-600 text-white" : "bg-emerald-600 text-white"
-              }`}>
-                {currentStep === "parent" ? <CheckCircle2 className="h-5 w-5" /> : "1"}
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white">
+                {currentStep !== "student" ? <CheckCircle2 className="h-5 w-5" /> : "1"}
               </div>
               <span className={`ml-2 text-sm font-medium ${
                 currentStep === "student" ? "text-emerald-600" : "text-gray-500"
@@ -268,15 +441,15 @@ function RegisterPage() {
                 Student Info
               </span>
             </div>
-            <div className={`h-1 w-16 ${currentStep === "parent" ? "bg-emerald-600" : "bg-gray-300"}`} />
+            <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-emerald-600" : "bg-gray-300"}`} />
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                currentStep === "parent" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
+                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
               }`}>
                 2
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep === "parent" ? "text-blue-600" : "text-gray-500"
+                currentStep !== "student" ? "text-blue-600" : "text-gray-500"
               }`}>
                 Parent Info
               </span>
@@ -300,7 +473,7 @@ function RegisterPage() {
             </motion.div>
           ) : (
             <Form {...form}>
-              <form onSubmit={(e) => { e.preventDefault(); if(watchAgeRange !== "Under 18" || currentStep === "parent") form.handleSubmit(onSubmit)(e); else handleNext(); }} className="space-y-6">
+              <form onSubmit={(e) => { e.preventDefault(); if (watchAgeRange !== "Under 18" || currentStep === "parent-info" || currentStep === "parent-search") form.handleSubmit(onSubmit)(e); else if (currentStep === "student") handleNext(); }} className="space-y-6">
                 <AnimatePresence mode="wait">
                   {currentStep === "student" ? (
                     <motion.div
@@ -322,7 +495,7 @@ function RegisterPage() {
                           {/* Name & Gender */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="student.fullName"
                               render={({ field }) => (
                                 <FormItem>
@@ -335,7 +508,7 @@ function RegisterPage() {
                               )}
                             />
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="student.gender"
                               render={({ field }) => (
                                 <FormItem>
@@ -359,7 +532,7 @@ function RegisterPage() {
 
                           {/* Age Range */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.ageRange"
                             render={({ field }) => (
                               <FormItem>
@@ -387,7 +560,7 @@ function RegisterPage() {
                           {/* Location */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="student.country"
                               render={({ field }) => (
                                 <FormItem>
@@ -414,7 +587,7 @@ function RegisterPage() {
                               )}
                             />
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="student.city"
                               render={({ field }) => (
                                 <FormItem>
@@ -444,7 +617,7 @@ function RegisterPage() {
 
                           {/* Phone */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.phone"
                             render={({ field }) => (
                               <FormItem>
@@ -470,7 +643,7 @@ function RegisterPage() {
 
                           {/* Quran Program */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.levelOfQuran"
                             render={({ field }) => (
                               <FormItem>
@@ -499,7 +672,7 @@ function RegisterPage() {
 
                           {/* Kitab */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.kitabRequested"
                             render={({ field }) => (
                               <FormItem className="flex flex-col space-y-3 border p-4 rounded-md">
@@ -521,7 +694,7 @@ function RegisterPage() {
                           {watchKitabRequested && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="student.kitabName"
                                 render={({ field }) => (
                                   <FormItem>
@@ -538,7 +711,7 @@ function RegisterPage() {
 
                           {/* Previous Training */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.previousTraining"
                             render={({ field }) => (
                               <FormItem className="flex flex-col space-y-3 border p-4 rounded-md">
@@ -560,7 +733,7 @@ function RegisterPage() {
                           {watchPreviousTraining && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="student.trainingDetails"
                                 render={({ field }) => (
                                   <FormItem>
@@ -577,7 +750,7 @@ function RegisterPage() {
 
                           {/* Referral Source */}
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="student.referralSource"
                             render={({ field }) => (
                               <FormItem>
@@ -608,7 +781,7 @@ function RegisterPage() {
                           {(!["YouTube","TikTok","Facebook","Instagram","Friend Referral","Google Search",""].includes(watchReferralSource) || form.getValues("student.referralSource") === "Other") && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="student.referralSource"
                                 render={({ field }) => (
                                   <FormItem>
@@ -627,7 +800,7 @@ function RegisterPage() {
                           <div className="border-t pt-6 mt-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Account Credentials</h3>
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="student.email"
                               render={({ field }) => (
                                 <FormItem className="mb-4">
@@ -644,7 +817,7 @@ function RegisterPage() {
                             />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="student.password"
                                 render={({ field }) => (
                                   <FormItem>
@@ -661,7 +834,7 @@ function RegisterPage() {
                                 )}
                               />
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="student.confirmPassword"
                                 render={({ field }) => (
                                   <FormItem>
@@ -713,9 +886,237 @@ function RegisterPage() {
                         )}
                       </div>
                     </motion.div>
+                  ) : currentStep === "parent-confirm" ? (
+                    <motion.div
+                      key="parent-confirm"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card className="border-t-4 border-t-blue-600 shadow-lg">
+                        <CardHeader>
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-5 w-5 text-blue-600" />
+                            <CardTitle>Parent Information</CardTitle>
+                          </div>
+                          <CardDescription>
+                            Students under 18 must be linked to a parent or guardian account.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6 py-8">
+                          <p className="text-lg font-medium text-gray-900 text-center">
+                            Has this student's parent already been registered in the system?
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+                            <button
+                              type="button"
+                              onClick={() => handleParentChoice(true)}
+                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-emerald-500 hover:bg-emerald-50 ${
+                                isParentExisting === true ? "border-emerald-600 bg-emerald-50" : "border-gray-200 bg-white"
+                              }`}
+                            >
+                              <Search className="h-8 w-8 text-emerald-600" />
+                              <span className="font-semibold text-gray-900">Yes</span>
+                              <span className="text-sm text-gray-500">
+                                Search for the existing parent account and link this student to it.
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleParentChoice(false)}
+                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50 ${
+                                isParentExisting === false ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white"
+                              }`}
+                            >
+                              <Users className="h-8 w-8 text-blue-600" />
+                              <span className="font-semibold text-gray-900">No</span>
+                              <span className="text-sm text-gray-500">
+                                Register the parent's information and create a new parent account.
+                              </span>
+                            </button>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex justify-start pt-6">
+                        <Button
+                          type="button"
+                          onClick={handleBack}
+                          variant="outline"
+                          className="min-w-[150px] h-12 text-base"
+                        >
+                          <ArrowLeft className="mr-2 h-5 w-5" />
+                          Back
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : currentStep === "parent-search" ? (
+                    <motion.div
+                      key="parent-search"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card className="border-t-4 border-t-emerald-600 shadow-lg">
+                        <CardHeader>
+                          <div className="flex items-center space-x-2">
+                            <Search className="h-5 w-5 text-emerald-600" />
+                            <CardTitle>Find Existing Parent</CardTitle>
+                          </div>
+                          <CardDescription>
+                            Search by parent name (partial), exact email address, or exact phone number. The student will be linked to the selected parent account.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Search by parent name, email, or phone..."
+                              value={parentSearchQuery}
+                              onChange={(e) => setParentSearchQuery(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  searchParent();
+                                }
+                              }}
+                              className="flex-1"
+                              disabled={searchingParent}
+                            />
+                            <Button
+                              type="button"
+                              onClick={searchParent}
+                              disabled={searchingParent}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {searchingParent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                              <span className="ml-2">Search</span>
+                            </Button>
+                          </div>
+
+                          {parentResults.length > 0 && (
+                            <div className="border border-gray-200 rounded-lg max-h-72 overflow-y-auto bg-white shadow-sm">
+                              <table className="w-full text-sm">
+                                <thead className="bg-gray-50 sticky top-0">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Parent Name</th>
+                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Email</th>
+                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Phone</th>
+                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Children</th>
+                                    <th className="px-3 py-2 text-right font-medium text-gray-500">Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {parentResults.map((parent) => (
+                                    <tr key={parent.id} className="hover:bg-gray-50">
+                                      <td className="px-3 py-2 font-medium text-gray-900">{parent.fullName}</td>
+                                      <td className="px-3 py-2 text-gray-500">{parent.email}</td>
+                                      <td className="px-3 py-2 text-gray-500">{parent.phoneNumber || '—'}</td>
+                                      <td className="px-3 py-2 text-gray-500">
+                                        {parent.childrenCount > 0 ? (
+                                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">
+                                            <Users className="w-3 h-3" />
+                                            {parent.childrenCount} Registered
+                                          </span>
+                                        ) : (
+                                          'No children'
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-right">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleSelectParent(parent)}
+                                          className="text-emerald-600 border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50"
+                                        >
+                                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                                          Select Parent
+                                        </Button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+
+                          {parentSearchPerformed && !searchingParent && parentResults.length === 0 && !selectedParent && (
+                            <div className="text-center border border-dashed border-gray-300 rounded-lg p-6 space-y-2">
+                              <p className="text-sm text-gray-600">No matching parent account found.</p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleParentChoice(false)}
+                              >
+                                Register Parent Information Instead
+                              </Button>
+                            </div>
+                          )}
+
+                          {selectedParent && (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                              <div className="flex items-center gap-3">
+                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                                <div>
+                                  <p className="text-sm font-semibold text-emerald-900">
+                                    Selected: {selectedParent.fullName}
+                                  </p>
+                                  <p className="text-xs text-emerald-700">
+                                    {selectedParent.email}{selectedParent.phoneNumber ? ` • ${selectedParent.phoneNumber}` : ''} • {selectedParent.childrenCount || 0} child(ren) registered
+                                  </p>
+                                  <p className="text-xs text-emerald-600 mt-1">
+                                    The student will be linked to this parent account. No new parent account will be created.
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearParentSelection}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <div className="flex justify-between pt-6">
+                        <Button
+                          type="button"
+                          onClick={handleBack}
+                          variant="outline"
+                          className="min-w-[150px] h-12 text-base"
+                        >
+                          <ArrowLeft className="mr-2 h-5 w-5" />
+                          Back
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          disabled={isLoading || !selectedParent}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Create Account
+                              <ArrowRight className="ml-2 h-5 w-5" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
                   ) : (
                     <motion.div
-                      key="parent"
+                      key="parent-info"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
@@ -731,7 +1132,7 @@ function RegisterPage() {
                         </CardHeader>
                         <CardContent className="space-y-6">
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="parent.fullName"
                             render={({ field }) => (
                               <FormItem>
@@ -744,7 +1145,7 @@ function RegisterPage() {
                             )}
                           />
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="parent.relationshipWithStudent"
                             render={({ field }) => (
                               <FormItem>
@@ -771,7 +1172,7 @@ function RegisterPage() {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="parent.country"
                               render={({ field }) => (
                                 <FormItem>
@@ -798,7 +1199,7 @@ function RegisterPage() {
                               )}
                             />
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="parent.city"
                               render={({ field }) => (
                                 <FormItem>
@@ -827,7 +1228,7 @@ function RegisterPage() {
                           </div>
 
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="parent.phoneNumber"
                             render={({ field }) => (
                               <FormItem>
@@ -854,7 +1255,7 @@ function RegisterPage() {
                           <div className="border-t pt-6 mt-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Parent Account Credentials</h3>
                             <FormField
-                              control={form.control}
+                              control={form.control as any}
                               name="parent.email"
                               render={({ field }) => (
                                 <FormItem className="mb-4">
@@ -872,7 +1273,7 @@ function RegisterPage() {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="parent.password"
                                 render={({ field }) => (
                                   <FormItem>
@@ -888,7 +1289,7 @@ function RegisterPage() {
                                 )}
                               />
                               <FormField
-                                control={form.control}
+                                control={form.control as any}
                                 name="parent.confirmPassword"
                                 render={({ field }) => (
                                   <FormItem>
@@ -906,6 +1307,72 @@ function RegisterPage() {
                             </div>
                           </div>
                         </CardContent>
+
+                        {/* Duplicate Detection Warning */}
+                        {duplicateParent && (
+                          <div className="border-t border-gray-100 px-6 py-6">
+                            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 space-y-3">
+                              <div className="flex items-start gap-2">
+                                <Info className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                                <div>
+                                  <p className="text-sm font-semibold text-amber-900">
+                                    A parent account with this email address or phone number already exists.
+                                  </p>
+                                  <p className="text-xs text-amber-700 mt-1">
+                                    To avoid duplicate records, we recommend linking this student to the existing parent account.
+                                  </p>
+                                </div>
+                              </div>
+
+                              {showDuplicateDetails && (
+                                <div className="bg-white border border-amber-200 rounded-md p-3 text-sm space-y-1">
+                                  <p><span className="font-medium text-gray-700">Name:</span> {duplicateParent.fullName}</p>
+                                  <p><span className="font-medium text-gray-700">Email:</span> {duplicateParent.email}</p>
+                                  <p><span className="font-medium text-gray-700">Phone:</span> {duplicateParent.phoneNumber || '—'}</p>
+                                  <p><span className="font-medium text-gray-700">Children Registered:</span> {duplicateParent.childrenCount || 0}</p>
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowDuplicateDetails((v) => !v)}
+                                  className="border-amber-300 text-amber-800 hover:bg-amber-100"
+                                >
+                                  {showDuplicateDetails ? 'Hide Existing Parent' : 'View Existing Parent'}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isLoading}
+                                  onClick={() => {
+                                    handleSelectParent(duplicateParent);
+                                    submitRegistration(form.getValues(), duplicateParent.id);
+                                  }}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                                  Link to Existing Parent
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isLoading}
+                                  onClick={() => {
+                                    setAllowDuplicateCreate(true);
+                                    toast.info("Proceeding with new parent details. Matching accounts may still be linked automatically by the administration.");
+                                  }}
+                                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                >
+                                  Create New Parent (Admin Permission Required)
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </Card>
 
                       <div className="flex justify-between pt-6">

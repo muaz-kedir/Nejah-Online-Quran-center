@@ -25,6 +25,12 @@ export class ParentsController {
     return this.parentsService.findAll(queryDto);
   }
 
+  @Get('search')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  search(@Query('search') search: string) {
+    return this.parentsService.search(search);
+  }
+
   @Get('stats')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   getStats() {

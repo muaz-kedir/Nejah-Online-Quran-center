@@ -175,11 +175,11 @@ function StudentsPage() {
       });
       const data = await response.json();
       if (Array.isArray(data)) {
-        setTeachers(data);
+        setParents(data);
       } else if (data && Array.isArray(data.data)) {
-        setTeachers(data.data);
+        setParents(data.data);
       } else {
-        setTeachers([]);
+        setParents([]);
       }
     } catch (error) {
       console.error('Failed to fetch parents', error);
@@ -619,7 +619,6 @@ function StudentsPage() {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={fetchStudents}
         teachers={teachers}
-        parents={parents}
       />
 
       <ManageLevelModal
@@ -635,7 +634,6 @@ function StudentsPage() {
         onSuccess={fetchStudents}
         student={editingStudent}
         teachers={teachers}
-        parents={parents}
       />
 
       <AssignStudentModal

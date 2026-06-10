@@ -6,6 +6,7 @@ import { StudentDashboardController } from './student-dashboard.controller';
 import { StudentPortalService } from './student-portal.service';
 import { AssignmentsController } from './assignments.controller';
 import { Student } from './entities/student.entity';
+import { Parent } from '../parents/entities/parent.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Homework } from '../homework/entities/homework.entity';
@@ -21,6 +22,7 @@ import { TeachersModule } from '../teachers/teachers.module';
 import { ResourcesModule } from '../resources/resources.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
+import { ParentsModule } from '../parents/parents.module';
 
 @Module({
   imports: [
@@ -30,8 +32,10 @@ import { TeacherReplacementsModule } from '../teacher-replacements/teacher-repla
     ResourcesModule,
     AttendanceModule,
     TeacherReplacementsModule,
+    ParentsModule,
     TypeOrmModule.forFeature([
       Student,
+      Parent,
       Progress,
       ProgressLog,
       Homework,

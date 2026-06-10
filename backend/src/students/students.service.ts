@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere, ILike, IsNull } from 'typeorm';
 import { Student } from './entities/student.entity';
+import { Parent } from '../parents/entities/parent.entity';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
@@ -15,6 +16,8 @@ export class StudentsService {
   constructor(
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
+    @InjectRepository(Parent)
+    private parentsRepository: Repository<Parent>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
     private usersService: UsersService,
@@ -71,7 +74,7 @@ export class StudentsService {
       userId = user.id;
     }
 
-    const { password, ...rest } = createStudentDto;
+    const { password, parentId, ...rest } = createStudentDto;
     const studentCode = await this.generateStudentCode();
     const resolvedUserId = userId ?? createStudentDto.userId;
 
@@ -79,9 +82,28 @@ export class StudentsService {
       ...rest,
       studentCode,
       userId: resolvedUserId,
+      parentId: parentId || null,
     });
 
-    return this.studentsRepository.save(student);
+    const savedStudent = await this.studentsRepository.save(student);
+
+    // If a parent was specified, add this student to the parent's children list
+    if (parentId) {
+      const parent = await this.parentsRepository.findOne({ where: { id: parentId } });
+      if (parent) {
+        // If parent's students array is not loaded, fetch and update
+        const parentWithStudents = await this.parentsRepository.findOne({
+          where: { id: parentId },
+          relations: ['students']
+        });
+        if (parentWithStudents && !parentWithStudents.students.some(s => s.id === savedStudent.id)) {
+          parentWithStudents.students = [...(parentWithStudents.students || []), savedStudent];
+          await this.parentsRepository.save(parentWithStudents);
+        }
+      }
+    }
+
+    return savedStudent;
   }
 
   async findAll(queryDto: QueryStudentDto & { isAssigned?: boolean }) {

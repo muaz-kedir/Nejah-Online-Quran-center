@@ -27,7 +27,7 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     try {
       console.log('[AuthService] Starting registration process...');
-      const { student, parent } = registerDto;
+      const { student, parent, parentId } = registerDto;
 
       // 1. Validate password confirmations
       if (student.password !== student.confirmPassword) {
@@ -47,10 +47,12 @@ export class AuthService {
           where: { userId: existingStudentUser.id },
         });
         if (existingProfile) {
-          throw new ConflictException('Student email already registered');
+          throw new ConflictException('A student with this email is already registered. Please log in instead.');
         }
         if (existingStudentUser.role !== UserRole.STUDENT) {
-          throw new ConflictException('This email is already registered to another account type');
+          throw new ConflictException(
+            `The student email "${student.email}" is already used by a ${this.roleLabel(existingStudentUser.role)} account. Please use a different email for the student.`,
+          );
         }
       }
 
@@ -59,23 +61,30 @@ export class AuthService {
       let parentMessage = 'Adult student, no parent linked.';
 
       if (student.ageRange === AgeRange.UNDER_18) {
-        if (!parent) {
-          throw new BadRequestException('Parent information is required for students under 18.');
-        }
+        if (parentId) {
+          // Existing parent selected via search: link only, never create.
+          console.log('[AuthService] Linking to existing parent:', parentId);
+          parentEntity = await this.parentsService.findOne(parentId);
+          parentMessage = 'Student linked to the existing parent account.';
+        } else {
+          if (!parent) {
+            throw new BadRequestException('Parent information is required for students under 18.');
+          }
 
-        console.log('[AuthService] Resolving parent for registration:', parent.email, parent.phoneNumber);
-        const parentResult = await this.parentsService.findOrCreateForRegistration({
-          fullName: parent.fullName,
-          email: parent.email,
-          phoneNumber: parent.phoneNumber,
-          residency: parent.residency || parent.country || 'Not specified',
-          country: parent.country,
-          city: parent.city,
-          relationshipWithStudent: parent.relationshipWithStudent,
-          password: parent.password,
-        });
-        parentEntity = parentResult.parent;
-        parentMessage = parentResult.message;
+          console.log('[AuthService] Resolving parent for registration:', parent.email, parent.phoneNumber);
+          const parentResult = await this.parentsService.findOrCreateForRegistration({
+            fullName: parent.fullName,
+            email: parent.email,
+            phoneNumber: parent.phoneNumber,
+            residency: parent.residency || parent.country || 'Not specified',
+            country: parent.country,
+            city: parent.city,
+            relationshipWithStudent: parent.relationshipWithStudent,
+            password: parent.password,
+          });
+          parentEntity = parentResult.parent;
+          parentMessage = parentResult.message;
+        }
         console.log('[AuthService] Parent resolved:', parentEntity.id, parentMessage);
       }
 
@@ -215,6 +224,132 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       user: userResponse,
     };
+  }
+
+  private roleLabel(role: UserRole): string {
+    const labels: Record<UserRole, string> = {
+      [UserRole.ADMIN]: 'Admin',
+      [UserRole.SUPER_ADMIN]: 'Admin',
+      [UserRole.TEACHER]: 'Teacher',
+      [UserRole.STUDENT]: 'Student',
+      [UserRole.PARENT]: 'Parent',
+    };
+    return labels[role] || role;
+  }
+
+  /**
+   * Pre-registration availability check for the student email, so the form
+   * can warn before submission instead of failing with a 409 at the end.
+   */
+  async checkStudentEmail(email: string) {
+    const normalized = (email || '').trim();
+    if (!normalized) {
+      return { available: false, message: 'Email is required.' };
+    }
+
+    const existingUser = await this.usersService.findByEmail(normalized);
+    if (!existingUser) {
+      return { available: true, message: null };
+    }
+
+    if (existingUser.role !== UserRole.STUDENT) {
+      return {
+        available: false,
+        message: `This email is already used by a ${this.roleLabel(existingUser.role)} account. Please use a different email for the student.`,
+      };
+    }
+
+    const existingProfile = await this.studentsRepository.findOne({
+      where: { userId: existingUser.id },
+    });
+    if (existingProfile) {
+      return {
+        available: false,
+        message: 'A student with this email is already registered. Please log in instead.',
+      };
+    }
+
+    // Student user without a profile (incomplete prior attempt): register() reuses it.
+    return { available: true, message: null };
+  }
+
+  /** Strip a parent record down to what the public registration flow may see. */
+  private toParentSearchResult(parent: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    students?: unknown[];
+  }) {
+    return {
+      id: parent.id,
+      fullName: parent.fullName,
+      email: parent.email,
+      phoneNumber: parent.phoneNumber || null,
+      childrenCount: parent.students?.length || 0,
+    };
+  }
+
+  /**
+   * Registration-time parent search: partial name match, exact email/phone match.
+   * Returns a limited projection (no addresses, no user data).
+   */
+  async lookupParentsForRegistration(query: string) {
+    const trimmed = (query || '').trim();
+    if (trimmed.length < 3) {
+      return [];
+    }
+
+    const results = new Map<string, any>();
+
+    const byEmail = await this.parentsService.findByEmail(trimmed.toLowerCase());
+    if (byEmail) results.set(byEmail.id, byEmail);
+
+    const byPhone = await this.parentsService.findByPhone(trimmed);
+    if (byPhone) results.set(byPhone.id, byPhone);
+
+    // Partial name (and partial email/phone) search.
+    const matches = await this.parentsService.search(trimmed);
+    for (const match of matches) {
+      results.set(match.id, match);
+    }
+
+    return Array.from(results.values()).map((p) => this.toParentSearchResult(p));
+  }
+
+  /**
+   * Duplicate detection for the "create new parent" path: exact email or
+   * phone match against existing parent records.
+   */
+  async checkParentDuplicate(email?: string, phoneNumber?: string) {
+    let match = null;
+
+    if (email?.trim()) {
+      match = await this.parentsService.findByEmail(email.trim().toLowerCase());
+    }
+    if (!match && phoneNumber?.trim()) {
+      match = await this.parentsService.findByPhone(phoneNumber.trim());
+    }
+
+    if (match) {
+      return { exists: true, parent: this.toParentSearchResult(match), conflict: false, message: null };
+    }
+
+    // No parent record, but the email may already belong to a non-parent user,
+    // which would make registration fail with a 409 later. Flag it now.
+    if (email?.trim()) {
+      const existingUser = await this.usersService.findByEmail(email.trim());
+      if (existingUser && existingUser.role !== UserRole.PARENT) {
+        return {
+          exists: false,
+          parent: null,
+          conflict: true,
+          message: `This email is already used by a ${this.roleLabel(existingUser.role)} account. Please use a different email for the parent.`,
+        };
+      }
+    }
+
+    return { exists: false, parent: null, conflict: false, message: null };
   }
 
   async forgotPassword(email: string) {

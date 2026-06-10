@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber, IsOptional, IsBoolean, ValidateIf, IsEnum } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber, IsOptional, IsBoolean, ValidateIf, IsEnum, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AgeRange } from '../../students/entities/student.entity';
 
@@ -114,7 +114,13 @@ export class RegisterDto {
   @Type(() => StudentRegisterDto)
   student: StudentRegisterDto;
 
-  @ValidateIf((o) => o.student?.ageRange === AgeRange.UNDER_18)
+  // When set, the student is linked to this existing parent and no new
+  // parent account is created (parent info form was skipped).
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
+
+  @ValidateIf((o) => o.student?.ageRange === AgeRange.UNDER_18 && !o.parentId)
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => ParentRegisterDto)

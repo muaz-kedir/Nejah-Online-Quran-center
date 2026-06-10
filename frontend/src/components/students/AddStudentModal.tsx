@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,13 +17,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Search, Plus, User, Phone, Mail, Users, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 interface Teacher {
   id: string;
   fullName?: string;
   user?: { name: string };
   specialization?: string;
+}
+
+interface Parent {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  students: { id: string; fullName: string }[];
 }
 
 interface AddStudentModalProps {
@@ -35,6 +45,11 @@ interface AddStudentModalProps {
 
 export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStudentModalProps) {
   const [loading, setLoading] = useState(false);
+  const [searchingParent, setSearchingParent] = useState(false);
+  const [parentResults, setParentResults] = useState<Parent[]>([]);
+  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
+  const [useExistingParent, setUseExistingParent] = useState(false);
+  
   const [formData, setFormData] = useState({
     fullName: '',
     gender: 'Male',
@@ -50,7 +65,41 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
     learningGoals: '',
     password: '',
     confirmPassword: '',
+    parentId: '',
   });
+
+  // Search for existing parent
+  const searchParent = async () => {
+    setSearchingParent(true);
+    try {
+      const token = localStorage.getItem('token');
+      const searchQuery = formData.familyName || formData.familyPhone || '';
+      const url = `http://localhost:3000/api/parents/search?search=${encodeURIComponent(searchQuery)}`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setParentResults(data || []);
+      }
+    } catch (error) {
+      console.error('Failed to search parents', error);
+    } finally {
+      setSearchingParent(false);
+    }
+  };
+
+  const handleSelectParent = (parent: Parent) => {
+    setSelectedParent(parent);
+    setUseExistingParent(true);
+    setParentResults([]);
+  };
+
+  const clearParentSelection = () => {
+    setSelectedParent(null);
+    setUseExistingParent(false);
+    setParentResults([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,15 +113,32 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
       return;
     }
 
+    // Check if using existing parent
+    if (useExistingParent && !selectedParent) {
+      toast.error('Please select an existing parent');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const token = localStorage.getItem('token');
+      const age = parseInt(formData.age, 10);
+      
+      // Calculate ageRange based on age
+      let ageRange: 'Under 18' | '18 - 25' | 'Above 25' = 'Under 18';
+      if (age >= 18 && age <= 25) {
+        ageRange = '18 - 25';
+      } else if (age > 25) {
+        ageRange = 'Above 25';
+      }
+
       const body: any = {
         ...formData,
-        age: parseInt(formData.age, 10),
+        ageRange,
       };
       delete body.confirmPassword;
+      delete body.age;
       if (!body.password) delete body.password;
       if (!body.teacherId) delete body.teacherId;
       if (!body.familyName) delete body.familyName;
@@ -80,6 +146,11 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
       if (!body.familyAddress) delete body.familyAddress;
       if (!body.familyCountry) delete body.familyCountry;
       if (!body.learningGoals) delete body.learningGoals;
+      
+      // If using existing parent, use parentId instead of family info
+      if (useExistingParent && selectedParent) {
+        body.parentId = selectedParent.id;
+      }
 
       const response = await fetch('http://localhost:3000/api/students', {
         method: 'POST',
@@ -113,6 +184,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
         learningGoals: '',
         password: '',
         confirmPassword: '',
+        parentId: '',
       });
     } catch (error: any) {
       toast.error(error.message);
@@ -305,6 +377,135 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  id="useExistingParent"
+                  type="checkbox"
+                  checked={useExistingParent}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      searchParent();
+                    } else {
+                      clearParentSelection();
+                    }
+                  }}
+                  className="rounded text-emerald-600 focus:ring-emerald-500 dark:bg-gray-900 dark:border-gray-600"
+                />
+                <Label htmlFor="useExistingParent" className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Link to Existing Parent Account
+                  </div>
+                </Label>
+              </div>
+              
+              {useExistingParent && (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      id="parentSearchName"
+                      placeholder="Search by parent name or phone..."
+                      value={formData.familyName || formData.familyPhone || ''}
+                      onChange={(e) => setFormData({ ...formData, familyName: e.target.value, familyPhone: '' })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          searchParent();
+                        }
+                      }}
+                      className="flex-1 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                      disabled={searchingParent}
+                    />
+                    <Button
+                      type="button"
+                      onClick={searchParent}
+                      disabled={searchingParent}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                    >
+                      {searchingParent ? 'Searching...' : <Search className="w-4 h-4" />}
+                    </Button>
+                  </div>
+
+                  {parentResults.length > 0 && (
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Parent Name</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Email</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Phone</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Children</th>
+                            <th className="px-3 py-2 text-right font-medium text-gray-500 dark:text-gray-300">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                          {parentResults.map((parent) => (
+                            <tr key={parent.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                              <td className="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{parent.fullName}</td>
+                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{parent.email}</td>
+                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{parent.phoneNumber}</td>
+                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                                {parent.students.length > 0 ? (
+                                  <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full text-xs">
+                                    <Users className="w-3 h-3" />
+                                    {parent.students.length}
+                                  </span>
+                                ) : (
+                                  'No children'
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSelectParent(parent)}
+                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {selectedParent && (
+                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <div>
+                          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                            Selected: {selectedParent.fullName}
+                          </p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                            {selectedParent.email} • {selectedParent.students.length} child(ren)
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearParentSelection}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!useExistingParent && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Uncheck to create a new parent account for this student.
+                </p>
+              )}
             </div>
           </div>
 

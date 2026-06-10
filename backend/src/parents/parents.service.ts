@@ -70,7 +70,9 @@ export class ParentsService {
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser) {
       if (existingUser.role !== UserRole.PARENT) {
-        throw new ConflictException('This email is already registered to another account type');
+        throw new ConflictException(
+          `The parent email "${dto.email}" is already used by a ${existingUser.role} account. Please use a different email for the parent.`,
+        );
       }
       const parent = await this.createProfileForExistingUser(existingUser, dto);
       return {
@@ -81,6 +83,25 @@ export class ParentsService {
 
     const parent = await this.create(dto);
     return { parent, message: 'New parent account created.' };
+  }
+
+  async search(searchQuery: string): Promise<Parent[]> {
+    if (!searchQuery || searchQuery.trim() === '') {
+      return [];
+    }
+
+    const query = this.parentsRepository
+      .createQueryBuilder('parent')
+      .leftJoinAndSelect('parent.user', 'user')
+      .leftJoinAndSelect('parent.students', 'students')
+      .where(
+        '(LOWER(parent.fullName) LIKE LOWER(:search) OR LOWER(parent.email) LIKE LOWER(:search) OR LOWER(parent.phoneNumber) LIKE LOWER(:search))',
+        { search: `%${searchQuery}%` },
+      )
+      .orderBy('parent.fullName', 'ASC')
+      .take(10);
+
+    return query.getMany();
   }
 
   async create(createParentDto: CreateParentDto): Promise<Parent> {
