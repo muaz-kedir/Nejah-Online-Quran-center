@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Search, BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History,
+  Search, BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History, Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
@@ -41,18 +41,50 @@ function ProgressPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState('');
   const [viewFeedbackTarget, setViewFeedbackTarget] = useState<any>(null);
+  const [viewProgressTarget, setViewProgressTarget] = useState<any>(null);
+  const [progressLogs, setProgressLogs] = useState<any[]>([]);
+  const [viewProgressLoading, setViewProgressLoading] = useState(false);
   const [logForm, setLogForm] = useState({
     surahNumber: undefined as number | undefined,
     lastStudiedPage: '',
     lastStudiedAyah: '',
   });
 
+  // Helper functions
   const token = () => localStorage.getItem('token');
   const userRole = () => localStorage.getItem('userRole');
   const isTeacherOrAdmin = () => {
     const role = userRole();
     return role === 'teacher' || role === 'admin' || role === 'super_admin';
   };
+  const isSuperAdminOrAdmin = () => {
+    const role = userRole();
+    return role === 'admin' || role === 'super_admin';
+  };
+
+  const fetchProgressLogs = async (studentId: string) => {
+    setViewProgressLoading(true);
+    try {
+      const res = await fetch(`${API}/progress/student/${studentId}/logs`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProgressLogs(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch progress logs', error);
+    } finally {
+      setViewProgressLoading(false);
+    }
+  };
+
+  // Fetch progress logs when modal opens
+  useEffect(() => {
+    if (viewProgressTarget) {
+      fetchProgressLogs(viewProgressTarget.id);
+    }
+  }, [viewProgressTarget]);
 
   useEffect(() => {
     fetchAll();
@@ -258,23 +290,34 @@ function ProgressPage() {
                   )}
                 </div>
 
-                {isTeacherOrAdmin() && (
+                {(isTeacherOrAdmin() || isSuperAdminOrAdmin()) && (
                   <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => {
-                        setLogForm({
-                          surahNumber: p?.surahNumber || undefined,
-                          lastStudiedPage: p?.lastStudiedPage ? String(p.lastStudiedPage) : '',
-                          lastStudiedAyah: p?.lastStudiedAyah ? String(p.lastStudiedAyah) : '',
-                        });
-                        setLogTarget(s);
-                      }}
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Log
-                    </Button>
+                    {isSuperAdminOrAdmin() ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setViewProgressTarget(s)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" /> View Details
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setLogForm({
+                            surahNumber: p?.surahNumber || undefined,
+                            lastStudiedPage: p?.lastStudiedPage ? String(p.lastStudiedPage) : '',
+                            lastStudiedAyah: p?.lastStudiedAyah ? String(p.lastStudiedAyah) : '',
+                          });
+                          setLogTarget(s);
+                        }}
+                      >
+                        <Plus className="h-3 w-3 mr-1" /> Log
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -414,6 +457,166 @@ function ProgressPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewFeedbackTarget(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Progress Details Modal */}
+      <Dialog open={!!viewProgressTarget} onOpenChange={() => setViewProgressTarget(null)}>
+        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900">
+              Progress Details - {viewProgressTarget?.fullName}
+            </DialogTitle>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl text-center border border-emerald-100 dark:border-emerald-900/30">
+                <div className="text-2xl font-bold text-emerald-600">{progressMap[viewProgressTarget?.id]?.surahsCount || 0}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mt-1">Surahs</div>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl text-center border border-amber-100 dark:border-amber-900/30">
+                <div className="text-2xl font-bold text-amber-600">{progressMap[viewProgressTarget?.id]?.ayahsCount || 0}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mt-1">Ayahs</div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-center border border-blue-100 dark:border-blue-900/30">
+                <div className="text-2xl font-bold text-blue-600">{progressMap[viewProgressTarget?.id]?.progressPercentage || 0}%</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold mt-1">Progress</div>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="py-4 space-y-6">
+            {/* Progress Timeline */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                <History className="h-4 w-4 text-emerald-600" /> Progress Timeline
+              </h4>
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                {viewProgressLoading ? (
+                  <div className="text-center py-8 text-gray-500">Loading progress logs...</div>
+                ) : progressLogs.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">No progress logs found</div>
+                ) : (
+                  progressLogs.map((log: any, idx: number) => (
+                    <div key={log.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="font-bold text-gray-900 dark:text-gray-100">
+                            {log.surahName || log.topicName || 'Progress Log'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                            <span>{log.learningTrack === 'hifz' ? 'Memorization' : 'Reading'}</span>
+                            {log.completionStatus && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-700">
+                                {log.completionStatus}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          {new Date(log.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                        {log.surahNumber && (
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-3 w-3 text-emerald-600" />
+                            <span>Surah {log.surahNumber}: {log.surahName}</span>
+                          </div>
+                        )}
+                        {log.lastStudiedPage && (
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-3 w-3 text-amber-600" />
+                            <span>Page: {log.lastStudiedPage}</span>
+                          </div>
+                        )}
+                        {log.lastStudiedAyah && (
+                          <div className="flex items-center gap-2">
+                            <Star className="h-3 w-3 text-blue-600" />
+                            <span>Ayah: {log.lastStudiedAyah}</span>
+                          </div>
+                        )}
+                        {log.notes && (
+                          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
+                            <span className="font-semibold text-gray-500">Notes: </span>
+                            {log.notes}
+                          </div>
+                        )}
+                      </div>
+                      {log.teacher && (
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2 text-xs text-gray-500">
+                          <span className="font-semibold">Logged by:</span>
+                          <span>{log.teacher?.fullName || 'Unknown'}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Progress Graph (Visual representation of surah/aya changes) */}
+            {progressLogs.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" /> Progress Chart
+                </h4>
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <div className="space-y-2">
+                    {progressLogs.slice().reverse().map((log: any, idx: number) => {
+                      // Calculate cumulative progress
+                      const progressPercentage = (progressMap[viewProgressTarget?.id]?.progressPercentage || 0) * (idx / progressLogs.length);
+                      return (
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="w-8 text-xs font-medium text-gray-500">
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 h-8 flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-700 flex items-center justify-center text-[9px] text-white font-medium whitespace-nowrap px-2"
+                              style={{ width: `${progressPercentage}%` }}
+                            >
+                              {log.surahName || 'Log'}
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300">
+                            {log.surahName || log.topicName || 'Log'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900/30">
+              <h5 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 mb-2">Summary</h5>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Current Rank:</span>{' '}
+                  <span className="text-gray-800 dark:text-gray-200">{progressMap[viewProgressTarget?.id]?.rank || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Total Logs:</span>{' '}
+                  <span className="text-gray-800 dark:text-gray-200">{progressLogs.length}</span>
+                </div>
+                <div>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Last Studied:</span>{' '}
+                  <span className="text-gray-800 dark:text-gray-200">{progressMap[viewProgressTarget?.id]?.lastStudiedSurah || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Last Page:</span>{' '}
+                  <span className="text-gray-800 dark:text-gray-200">{progressMap[viewProgressTarget?.id]?.lastStudiedPage || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
+            <Button variant="outline" onClick={() => setViewProgressTarget(null)}>
               Close
             </Button>
           </DialogFooter>
