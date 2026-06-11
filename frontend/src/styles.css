@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -34,8 +35,17 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Nejah brand palette (CSS vars switch in .dark) */
+  --color-brand-void: var(--brand-void);
+  --color-brand-abyss: var(--brand-abyss);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-electric: var(--brand-electric);
+  --color-brand-silver: var(--brand-silver);
+  --color-brand-platinum: var(--brand-platinum);
 
   --shadow-soft: 0 4px 24px -8px oklch(0.35 0.08 160 / 0.12);
   --shadow-elevated: 0 20px 50px -20px oklch(0.35 0.08 160 / 0.25);
@@ -45,41 +55,59 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.99 0.005 160);
+  /* Light theme brand */
+  --brand-void: #F8FAFC;
+  --brand-abyss: #F1F5F9;
+  --brand-primary: #0A3663;
+  --brand-electric: #0066CC;
+  --brand-silver: #334155;
+  --brand-platinum: #64748B;
+
+  --background: var(--brand-void);
   --foreground: oklch(0.18 0.03 160);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 160);
+  --card-foreground: var(--brand-silver);
 
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 160);
 
-  --primary: oklch(0.42 0.11 155);
-  --primary-foreground: oklch(0.99 0.005 160);
-  --primary-soft: oklch(0.93 0.04 155);
+  --primary: #0066CC;
+  --primary-foreground: #ffffff;
+  --primary-soft: rgba(0, 102, 204, 0.1);
 
-  --secondary: oklch(0.96 0.01 160);
-  --secondary-foreground: oklch(0.25 0.05 160);
+  --secondary: var(--brand-abyss);
+  --secondary-foreground: var(--brand-silver);
 
-  --muted: oklch(0.96 0.008 160);
-  --muted-foreground: oklch(0.5 0.02 160);
+  --muted: var(--brand-abyss);
+  --muted-foreground: var(--brand-platinum);
 
-  --accent: oklch(0.55 0.13 155);
-  --accent-foreground: oklch(0.99 0.005 160);
+  --accent: #0A3663;
+  --accent-foreground: #ffffff;
 
   --gold: oklch(0.78 0.13 80);
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.92 0.01 160);
-  --input: oklch(0.92 0.01 160);
-  --ring: oklch(0.42 0.11 155);
+  --border: rgba(148, 163, 184, 0.35);
+  --input: rgba(148, 163, 184, 0.35);
+  --ring: #0066CC;
+
+  --card: rgba(255, 255, 255, 0.7);
+  --foreground: var(--brand-silver);
 }
 
 .dark {
-  --background: oklch(0.16 0.02 160);
-  --foreground: oklch(0.97 0.01 160);
+  /* Dark theme brand */
+  --brand-void: #030B18;
+  --brand-abyss: #07162C;
+  --brand-primary: #0A3663;
+  --brand-electric: #0066CC;
+  --brand-silver: #E2E8F0;
+  --brand-platinum: #94A3B8;
+
+  --background: var(--brand-void);
+  --foreground: var(--brand-silver);
 
   --card: oklch(0.22 0.025 160);
   --card-foreground: oklch(0.97 0.01 160);
@@ -97,8 +125,8 @@
   --muted: oklch(0.26 0.025 160);
   --muted-foreground: oklch(0.7 0.02 160);
 
-  --accent: oklch(0.55 0.14 155);
-  --accent-foreground: oklch(0.97 0.01 160);
+  --accent: #0A3663;
+  --accent-foreground: #E2E8F0;
 
   --gold: oklch(0.8 0.14 80);
 
@@ -107,7 +135,9 @@
 
   --border: oklch(0.3 0.02 160 / 60%);
   --input: oklch(0.3 0.02 160 / 60%);
-  --ring: oklch(0.62 0.14 155);
+  --ring: #0066CC;
+
+  --card: rgba(7, 22, 44, 0.6);
 }
 
 @layer base {
@@ -127,8 +157,9 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
 }
 
@@ -144,7 +175,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(120deg, var(--color-primary), var(--color-accent));
+    background: linear-gradient(120deg, #0066CC, #0A3663);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -152,11 +183,72 @@
 
   .bg-pattern {
     background-image:
-      radial-gradient(circle at 20% 10%, oklch(0.55 0.13 155 / 0.08), transparent 40%),
-      radial-gradient(circle at 80% 60%, oklch(0.78 0.13 80 / 0.06), transparent 40%);
+      radial-gradient(circle at 20% 10%, rgba(0, 102, 204, 0.1), transparent 45%),
+      radial-gradient(circle at 80% 60%, rgba(10, 54, 99, 0.08), transparent 45%);
   }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-elevated { box-shadow: var(--shadow-elevated); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
+
+  /* ── Nejah Admin Design System ── */
+
+  .glass-panel {
+    @apply backdrop-blur-xl;
+    @apply bg-white/70 border border-slate-200/80 shadow-xl;
+    @apply dark:bg-brand-abyss/60 dark:border-white/5 dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  }
+
+  .silver-gradient-border {
+    @apply border border-transparent bg-gradient-to-b from-white/20 via-white/5 to-transparent;
+  }
+
+  .badge-live-pulse {
+    @apply relative overflow-hidden bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-mono text-xs tracking-wider uppercase;
+  }
+
+  .badge-live-pulse::before {
+    content: "";
+    @apply absolute inset-0 animate-pulse bg-red-500/5;
+  }
+
+  .ambient-glow {
+    background: radial-gradient(circle at top right, rgba(0, 102, 204, 0.08), transparent 50%);
+  }
+
+  .ambient-glow-dark {
+    background: radial-gradient(circle at top right, rgba(10, 54, 99, 0.15), transparent 50%);
+  }
+
+  .admin-shell-bg {
+    @apply bg-brand-void transition-colors duration-300;
+  }
+
+  .data-mono {
+    font-family: var(--font-mono);
+  }
+
+  .nav-item-active {
+    @apply bg-gradient-to-r from-brand-electric/15 to-transparent text-brand-silver;
+  }
+
+  .nav-item-hover {
+    @apply hover:bg-gradient-to-r hover:from-white/10 hover:to-transparent transition-all duration-200;
+  }
+
+  .electric-ring {
+    box-shadow: 0 0 12px rgba(0, 102, 204, 0.5);
+  }
+
+  .admin-filter-bar {
+    @apply glass-panel flex flex-wrap items-center gap-4 rounded-2xl p-4;
+  }
+
+  .admin-field-label {
+    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-brand-platinum;
+  }
+
+  .admin-page {
+    @apply space-y-6 pb-12;
+  }
 }

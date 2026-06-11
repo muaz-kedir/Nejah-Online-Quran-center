@@ -20,7 +20,7 @@ const OG_IMAGE = `${SITE_URL}/og-image.svg`;
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="admin-shell-bg flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
@@ -45,7 +45,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="admin-shell-bg flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           This page didn't load
@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: DEFAULT_DESCRIPTION },
       { name: "keywords", content: "Quran, online learning, tajweed, hifz, islamic studies, Arabic, Nejah" },
       { name: "author", content: "Nejah Online Quran Center" },
-      { name: "theme-color", content: "#059669" },
+      { name: "theme-color", content: "#0066CC" },
 
       { property: "og:site_name", content: SITE_NAME },
       { property: "og:title", content: DEFAULT_TITLE },

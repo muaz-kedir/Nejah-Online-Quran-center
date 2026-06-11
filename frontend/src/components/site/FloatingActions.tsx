@@ -21,7 +21,7 @@ export function FloatingActions() {
             exit={{ opacity: 0, scale: 0.6 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             aria-label="Back to top"
-            className="size-12 rounded-full bg-card border border-border shadow-elevated grid place-items-center hover:bg-primary hover:text-primary-foreground transition"
+            className="glass-panel grid size-12 place-items-center rounded-full transition hover:border-brand-electric/40 hover:text-brand-electric"
           >
             <ArrowUp className="size-5" />
           </motion.button>

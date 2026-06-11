@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { Textarea } from "@/components/ui/textarea";
 
 const registerSchema = z.object({
@@ -416,40 +417,36 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div className="text-center">
-          <img src="/logo.png" alt="Nejah" className="mx-auto h-20 w-auto mb-4" />
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Join Nejah Online Quran & Islamic Center
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 max-w-lg mx-auto">
-            Embark on your journey of Quranic learning. Fill in your information to get started.
-          </p>
-        </div>
+    <AuthPageLayout
+      title="Join Nejah Online Quran & Islamic Center"
+      subtitle="Embark on your journey of Quranic learning. Fill in your information to get started."
+      maxWidth="xl"
+      showBack={!isSuccess}
+    >
+      <div className="space-y-8">
 
         {/* Progress Indicator */}
         {!isSuccess && watchAgeRange === "Under 18" && (
           <div className="flex items-center justify-center space-x-4">
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-electric text-white">
                 {currentStep !== "student" ? <CheckCircle2 className="h-5 w-5" /> : "1"}
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep === "student" ? "text-emerald-600" : "text-gray-500"
+                currentStep === "student" ? "text-brand-electric" : "text-brand-platinum"
               }`}>
                 Student Info
               </span>
             </div>
-            <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-emerald-600" : "bg-gray-300"}`} />
+            <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-brand-electric" : "bg-brand-abyss/50"}`} />
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
+                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-brand-abyss/50 text-brand-platinum"
               }`}>
                 2
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep !== "student" ? "text-blue-600" : "text-gray-500"
+                currentStep !== "student" ? "text-blue-600" : "text-brand-platinum"
               }`}>
                 Parent Info
               </span>
@@ -467,8 +464,8 @@ function RegisterPage() {
               <div className="bg-green-100 p-4 rounded-full">
                 <CheckCircle2 className="h-16 w-16 text-green-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Registration Successful!</h3>
-              <p className="text-gray-600">You are being redirected to the login page...</p>
+              <h3 className="text-2xl font-bold text-brand-silver">Registration Successful!</h3>
+              <p className="text-brand-platinum">You are being redirected to the login page...</p>
               <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
             </motion.div>
           ) : (
@@ -483,10 +480,10 @@ function RegisterPage() {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="border-t-4 border-t-emerald-600 shadow-lg">
+                      <Card className="border-t-4 border-t-brand-electric shadow-lg">
                         <CardHeader>
                           <div className="flex items-center space-x-2">
-                            <User className="h-5 w-5 text-emerald-600" />
+                            <User className="h-5 w-5 text-brand-electric" />
                             <CardTitle>Student Information</CardTitle>
                           </div>
                           <CardDescription>Details of the student enrolling in our programs.</CardDescription>
@@ -624,7 +621,7 @@ function RegisterPage() {
                                 <FormLabel>Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-brand-platinum text-sm">
                                       <Phone className="h-4 w-4" />
                                       {studentCountryData ? `+${studentCountryData.phonecode}` : ""}
                                     </div>
@@ -798,7 +795,7 @@ function RegisterPage() {
 
                           {/* Account Settings */}
                           <div className="border-t pt-6 mt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Credentials</h3>
+                            <h3 className="text-lg font-medium text-brand-silver mb-4">Account Credentials</h3>
                             <FormField
                               control={form.control as any}
                               name="student.email"
@@ -828,7 +825,7 @@ function RegisterPage() {
                                         <Input className="pl-9" type="password" {...field} />
                                       </div>
                                     </FormControl>
-                                    <p className="text-xs text-gray-500 mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
+                                    <p className="text-xs text-brand-platinum mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -860,7 +857,7 @@ function RegisterPage() {
                           <Button
                             type="button"
                             onClick={handleNext}
-                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                            className="min-w-[200px] h-12 text-base bg-brand-electric hover:bg-brand-electric/90 shadow-lg transition-all hover:scale-[1.02]"
                           >
                             Next: Parent Information
                             <ArrowRight className="ml-2 h-5 w-5" />
@@ -868,7 +865,7 @@ function RegisterPage() {
                         ) : (
                           <Button
                             type="submit"
-                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                            className="min-w-[200px] h-12 text-base bg-brand-electric hover:bg-brand-electric/90 shadow-lg transition-all hover:scale-[1.02]"
                             disabled={isLoading}
                           >
                             {isLoading ? (
@@ -905,20 +902,20 @@ function RegisterPage() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 py-8">
-                          <p className="text-lg font-medium text-gray-900 text-center">
+                          <p className="text-lg font-medium text-brand-silver text-center">
                             Has this student's parent already been registered in the system?
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
                             <button
                               type="button"
                               onClick={() => handleParentChoice(true)}
-                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-emerald-500 hover:bg-emerald-50 ${
-                                isParentExisting === true ? "border-emerald-600 bg-emerald-50" : "border-gray-200 bg-white"
+                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-brand-electric hover:bg-brand-electric/10 ${
+                                isParentExisting === true ? "border-brand-electric bg-brand-electric/10" : "border-white/10 bg-brand-void/30"
                               }`}
                             >
-                              <Search className="h-8 w-8 text-emerald-600" />
-                              <span className="font-semibold text-gray-900">Yes</span>
-                              <span className="text-sm text-gray-500">
+                              <Search className="h-8 w-8 text-brand-electric" />
+                              <span className="font-semibold text-brand-silver">Yes</span>
+                              <span className="text-sm text-brand-platinum">
                                 Search for the existing parent account and link this student to it.
                               </span>
                             </button>
@@ -926,12 +923,12 @@ function RegisterPage() {
                               type="button"
                               onClick={() => handleParentChoice(false)}
                               className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50 ${
-                                isParentExisting === false ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white"
+                                isParentExisting === false ? "border-brand-electric bg-brand-electric/10" : "border-white/10 bg-brand-void/30"
                               }`}
                             >
                               <Users className="h-8 w-8 text-blue-600" />
-                              <span className="font-semibold text-gray-900">No</span>
-                              <span className="text-sm text-gray-500">
+                              <span className="font-semibold text-brand-silver">No</span>
+                              <span className="text-sm text-brand-platinum">
                                 Register the parent's information and create a new parent account.
                               </span>
                             </button>
@@ -959,10 +956,10 @@ function RegisterPage() {
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="border-t-4 border-t-emerald-600 shadow-lg">
+                      <Card className="border-t-4 border-t-brand-electric shadow-lg">
                         <CardHeader>
                           <div className="flex items-center space-x-2">
-                            <Search className="h-5 w-5 text-emerald-600" />
+                            <Search className="h-5 w-5 text-brand-electric" />
                             <CardTitle>Find Existing Parent</CardTitle>
                           </div>
                           <CardDescription>
@@ -988,7 +985,7 @@ function RegisterPage() {
                               type="button"
                               onClick={searchParent}
                               disabled={searchingParent}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              className="bg-brand-electric hover:bg-brand-electric/90 text-white"
                             >
                               {searchingParent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                               <span className="ml-2">Search</span>
@@ -1000,22 +997,22 @@ function RegisterPage() {
                               <table className="w-full text-sm">
                                 <thead className="bg-gray-50 sticky top-0">
                                   <tr>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Parent Name</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Email</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Phone</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Children</th>
-                                    <th className="px-3 py-2 text-right font-medium text-gray-500">Action</th>
+                                    <th className="px-3 py-2 text-left font-medium text-brand-platinum">Parent Name</th>
+                                    <th className="px-3 py-2 text-left font-medium text-brand-platinum">Email</th>
+                                    <th className="px-3 py-2 text-left font-medium text-brand-platinum">Phone</th>
+                                    <th className="px-3 py-2 text-left font-medium text-brand-platinum">Children</th>
+                                    <th className="px-3 py-2 text-right font-medium text-brand-platinum">Action</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                   {parentResults.map((parent) => (
                                     <tr key={parent.id} className="hover:bg-gray-50">
-                                      <td className="px-3 py-2 font-medium text-gray-900">{parent.fullName}</td>
-                                      <td className="px-3 py-2 text-gray-500">{parent.email}</td>
-                                      <td className="px-3 py-2 text-gray-500">{parent.phoneNumber || '—'}</td>
-                                      <td className="px-3 py-2 text-gray-500">
+                                      <td className="px-3 py-2 font-medium text-brand-silver">{parent.fullName}</td>
+                                      <td className="px-3 py-2 text-brand-platinum">{parent.email}</td>
+                                      <td className="px-3 py-2 text-brand-platinum">{parent.phoneNumber || '—'}</td>
+                                      <td className="px-3 py-2 text-brand-platinum">
                                         {parent.childrenCount > 0 ? (
-                                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">
+                                          <span className="inline-flex items-center gap-1 bg-brand-electric/10 text-brand-electric px-2 py-0.5 rounded-full text-xs">
                                             <Users className="w-3 h-3" />
                                             {parent.childrenCount} Registered
                                           </span>
@@ -1029,7 +1026,7 @@ function RegisterPage() {
                                           variant="outline"
                                           size="sm"
                                           onClick={() => handleSelectParent(parent)}
-                                          className="text-emerald-600 border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50"
+                                          className="text-brand-electric border-brand-electric/30 hover:bg-brand-electric/10"
                                         >
                                           <CheckCircle2 className="w-4 h-4 mr-1" />
                                           Select Parent
@@ -1044,7 +1041,7 @@ function RegisterPage() {
 
                           {parentSearchPerformed && !searchingParent && parentResults.length === 0 && !selectedParent && (
                             <div className="text-center border border-dashed border-gray-300 rounded-lg p-6 space-y-2">
-                              <p className="text-sm text-gray-600">No matching parent account found.</p>
+                              <p className="text-sm text-brand-platinum">No matching parent account found.</p>
                               <Button
                                 type="button"
                                 variant="outline"
@@ -1056,17 +1053,17 @@ function RegisterPage() {
                           )}
 
                           {selectedParent && (
-                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between bg-brand-electric/10 border border-brand-electric/20 rounded-lg p-4">
                               <div className="flex items-center gap-3">
-                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                                <CheckCircle2 className="w-6 h-6 text-brand-electric" />
                                 <div>
-                                  <p className="text-sm font-semibold text-emerald-900">
+                                  <p className="text-sm font-semibold text-brand-silver">
                                     Selected: {selectedParent.fullName}
                                   </p>
-                                  <p className="text-xs text-emerald-700">
+                                  <p className="text-xs text-brand-electric">
                                     {selectedParent.email}{selectedParent.phoneNumber ? ` • ${selectedParent.phoneNumber}` : ''} • {selectedParent.childrenCount || 0} child(ren) registered
                                   </p>
-                                  <p className="text-xs text-emerald-600 mt-1">
+                                  <p className="text-xs text-brand-electric mt-1">
                                     The student will be linked to this parent account. No new parent account will be created.
                                   </p>
                                 </div>
@@ -1097,7 +1094,7 @@ function RegisterPage() {
                         </Button>
                         <Button
                           type="submit"
-                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          className="min-w-[200px] h-12 text-base bg-brand-electric hover:bg-brand-electric/90 shadow-lg transition-all hover:scale-[1.02]"
                           disabled={isLoading || !selectedParent}
                         >
                           {isLoading ? (
@@ -1235,7 +1232,7 @@ function RegisterPage() {
                                 <FormLabel>Contact Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-brand-platinum text-sm">
                                       <Phone className="h-4 w-4" />
                                       {parentCountryData ? `+${parentCountryData.phonecode}` : ""}
                                     </div>
@@ -1253,7 +1250,7 @@ function RegisterPage() {
                           />
 
                           <div className="border-t pt-6 mt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Parent Account Credentials</h3>
+                            <h3 className="text-lg font-medium text-brand-silver mb-4">Parent Account Credentials</h3>
                             <FormField
                               control={form.control as any}
                               name="parent.email"
@@ -1351,7 +1348,7 @@ function RegisterPage() {
                                     handleSelectParent(duplicateParent);
                                     submitRegistration(form.getValues(), duplicateParent.id);
                                   }}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  className="bg-brand-electric hover:bg-brand-electric/90 text-white"
                                 >
                                   <CheckCircle2 className="w-4 h-4 mr-1" />
                                   Link to Existing Parent
@@ -1387,7 +1384,7 @@ function RegisterPage() {
                         </Button>
                         <Button
                           type="submit"
-                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          className="min-w-[200px] h-12 text-base bg-brand-electric hover:bg-brand-electric/90 shadow-lg transition-all hover:scale-[1.02]"
                           disabled={isLoading}
                         >
                           {isLoading ? (
@@ -1407,12 +1404,12 @@ function RegisterPage() {
                   )}
                 </AnimatePresence>
                 
-                <p className="text-center text-sm text-gray-600 pt-4">
+                <p className="text-center text-sm text-brand-platinum pt-4">
                   Already have an account?{" "}
                   <button
                     type="button"
                     onClick={() => navigate({ to: "/login" })}
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-brand-electric hover:text-brand-electric/80"
                   >
                     Log in here
                   </button>
@@ -1422,6 +1419,6 @@ function RegisterPage() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }

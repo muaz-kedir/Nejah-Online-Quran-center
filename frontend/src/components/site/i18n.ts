@@ -7,7 +7,7 @@ type TDict = {
   features: Record<"eyebrow"|"title1"|"title2"|"f1Title"|"f1Desc"|"f2Title"|"f2Desc"|"f3Title"|"f3Desc"|"f4Title"|"f4Desc"|"f5Title"|"f5Desc"|"f6Title"|"f6Desc", string>;
   teachers: Record<"title"|"bookTrial"|"t1Name"|"t1Spec"|"t1Exp"|"t2Name"|"t2Spec"|"t2Exp"|"t3Name"|"t3Spec"|"t3Exp", string>;
   testimonials: Record<"r1Name"|"r1Role"|"r1Text"|"r2Name"|"r2Role"|"r2Text"|"r3Name"|"r3Role"|"r3Text", string>;
-  cta: Record<"title"|"desc"|"register"|"contact", string>;
+  cta: Record<"title"|"desc"|"register"|"contact"|"eyebrow"|"footnote"|"stat1"|"stat2"|"stat3", string>;
   footer: Record<"tagline"|"quickLinks"|"aboutUs"|"ourTeachers"|"coursesLink"|"pricing"|"support"|"privacy"|"terms"|"sitemap"|"help"|"contactInfo"|"rights"|"privacyShort"|"termsShort", string>;
 };
 
@@ -88,6 +88,9 @@ export const translations: Record<Lang, TDict> = {
       title: "Start Learning Quran Today",
       desc: "Join hundreds of students in a journey of spiritual growth and excellence. Your first lesson is on us.",
       register: "Register Now", contact: "Contact Us",
+      eyebrow: "Begin Your Journey",
+      footnote: "No commitment · First lesson complimentary",
+      stat1: "Active Students", stat2: "Live Lessons", stat3: "Flexible Schedule",
     },
     footer: {
       tagline: "Empowering the next generation through authentic Quran and Islamic education in a modern digital learning sanctuary.",
@@ -170,6 +173,9 @@ export const translations: Record<Lang, TDict> = {
       title: "ابدأ تعلم القرآن اليوم",
       desc: "انضم إلى مئات الطلاب في رحلة نمو روحاني وتميز. درسك الأول مجاني.",
       register: "سجّل الآن", contact: "تواصل معنا",
+      eyebrow: "ابدأ رحلتك",
+      footnote: "بدون التزام · الدرس الأول مجاني",
+      stat1: "طلاب نشطون", stat2: "دروس مباشرة", stat3: "جدول مرن",
     },
     footer: {
       tagline: "تمكين الجيل القادم من خلال تعليم قرآني وإسلامي أصيل في صرح تعليمي رقمي حديث.",
@@ -252,6 +258,9 @@ export const translations: Record<Lang, TDict> = {
       title: "ዛሬ ቁርዓንን መማር ይጀምሩ",
       desc: "በመንፈሳዊ እድገት ጉዞ ላይ ከመቶዎች ተማሪዎች ጋር ይቀላቀሉ። የመጀመሪያ ትምህርትዎ በእኛ ይከፈላል።",
       register: "አሁን ይመዝገቡ", contact: "አግኙን",
+      eyebrow: "ጉዞዎን ይጀምሩ",
+      footnote: "ምንም ቁርጠኝነት የለም · የመጀመሪያ ትምህርት ነፃ",
+      stat1: "ንቁ ተማሪዎች", stat2: "ቀጥታ ትምህርቶች", stat3: "ተለዋዋጭ መርሐግብር",
     },
     footer: {
       tagline: "በዘመናዊ ዲጂታል ትምህርት መቅደስ ውስጥ በእውነተኛ ቁርዓንና እስላማዊ ትምህርት የሚቀጥለውን ትውልድ ማብቃት።",

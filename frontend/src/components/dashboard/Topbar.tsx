@@ -8,9 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -37,13 +35,12 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
       setUserName(localStorage.getItem('userName') || 'Admin User');
       setUserRole(localStorage.getItem('userRole') || 'super_admin');
     };
-    
-    // Only set user data on client side to avoid hydration mismatch
+
     if (typeof window !== 'undefined') {
       loadUserData();
       window.addEventListener('profileUpdated', loadUserData);
     }
-    
+
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('profileUpdated', loadUserData);
@@ -67,73 +64,62 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
     return labels[role] || role;
   };
 
+  const iconBtn = cn(
+    'flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200',
+    'text-brand-platinum hover:bg-brand-electric/10 hover:text-brand-electric',
+  );
+
   return (
-    <header className={cn(
-      'h-16 border-b flex items-center gap-4 px-6 flex-shrink-0 transition-colors duration-200',
-      'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'
-    )}>
-      {/* Hamburger (mobile) */}
-      <button
-        onClick={onMenuClick}
-        className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-      >
+    <header
+      className={cn(
+        'flex h-16 flex-shrink-0 items-center gap-4 border-b px-6',
+        'border-slate-200/80 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-brand-abyss/60',
+      )}
+    >
+      <button onClick={onMenuClick} className={cn(iconBtn, 'p-1 lg:hidden')}>
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Search */}
-      <div className="flex-1 max-w-lg">
+      <div className="max-w-lg flex-1">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-platinum" />
           <Input
             placeholder={t.searchPlaceholder}
             className={cn(
-              'pl-9 h-9 text-sm border-gray-200 dark:border-gray-700 focus:border-emerald-400 dark:focus:border-emerald-500',
-              'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500'
+              'h-9 border-slate-200/80 bg-brand-abyss/30 pl-9 text-sm text-brand-silver',
+              'placeholder:text-brand-platinum focus:border-brand-electric/50 dark:border-white/10 dark:bg-brand-void/50',
             )}
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-1 ml-auto">
-        {/* Theme Toggle */}
+      <div className="ml-auto flex items-center gap-1">
         <button
           onClick={toggleTheme}
           title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          className={cn(
-            'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200',
-            'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
-            'hover:text-emerald-600 dark:hover:text-emerald-400'
-          )}
+          className={iconBtn}
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
 
-        {/* Language Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200',
-                'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
-                'hover:text-emerald-600 dark:hover:text-emerald-400'
-              )}
-              title="Change Language"
-            >
+            <button className={iconBtn} title="Change Language">
               <Globe className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44 dark:bg-gray-800 dark:border-gray-700">
-            <DropdownMenuLabel className="dark:text-gray-300 text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <DropdownMenuContent align="end" className="glass-panel w-44 border-slate-200/80 dark:border-white/5">
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-brand-platinum">
               Language
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="dark:border-gray-700" />
+            <DropdownMenuSeparator className="bg-brand-silver/20" />
             {LANGUAGES.map((lang) => (
               <DropdownMenuItem
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
                 className={cn(
-                  'flex items-center justify-between cursor-pointer dark:text-gray-200 dark:hover:bg-gray-700',
-                  language === lang.code && 'text-emerald-600 dark:text-emerald-400 font-medium'
+                  'cursor-pointer text-brand-silver focus:bg-brand-electric/10',
+                  language === lang.code && 'font-medium text-brand-electric',
                 )}
               >
                 <span className="flex items-center gap-2">
@@ -146,55 +132,58 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Notifications */}
         <div className="relative">
-          <button className={cn(
-            'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200',
-            'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
-            'hover:text-emerald-600 dark:hover:text-emerald-400'
-          )}>
+          <button className={iconBtn}>
             <Bell className="h-4 w-4" />
           </button>
           {notifications > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-red-500 text-white text-[10px] border-2 border-white dark:border-gray-900">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-brand-void bg-red-500 font-mono text-[10px] text-white">
               {notifications}
-            </Badge>
+            </span>
           )}
         </div>
 
-        {/* User Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(
-              'flex items-center gap-2.5 ml-1 rounded-xl px-2 py-1.5 transition-all duration-200',
-              'hover:bg-gray-100 dark:hover:bg-gray-800'
-            )}>
+            <button
+              className={cn(
+                'ml-1 flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-all duration-200',
+                'hover:bg-brand-electric/10',
+              )}
+            >
               <div className="flex flex-col items-end">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 leading-tight">
-                  {userName}
-                </span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                <span className="text-sm font-medium leading-tight text-brand-silver">{userName}</span>
+                <span className="text-[10px] uppercase tracking-wide text-brand-platinum">
                   {getRoleLabel(userRole)}
                 </span>
               </div>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-electric/30 bg-gradient-to-br from-brand-primary to-brand-electric text-sm font-semibold text-white shadow-[0_0_12px_rgba(0,102,204,0.4)]">
                 {userName.charAt(0)}
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 dark:bg-gray-800 dark:border-gray-700">
-            <DropdownMenuLabel className="dark:text-gray-300">My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator className="dark:border-gray-700" />
-            <DropdownMenuItem onClick={() => navigate({ to: '/profile' })} className="dark:text-gray-200 dark:hover:bg-gray-700">
+          <DropdownMenuContent align="end" className="glass-panel w-56 border-slate-200/80 dark:border-white/5">
+            <DropdownMenuLabel className="text-brand-platinum">My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-brand-silver/20" />
+            <DropdownMenuItem
+              onClick={() => navigate({ to: '/profile' })}
+              className="text-brand-silver focus:bg-brand-electric/10"
+            >
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate({ to: '/settings' })} className="dark:text-gray-200 dark:hover:bg-gray-700">
+            <DropdownMenuItem
+              onClick={() => navigate({ to: '/settings' })}
+              className="text-brand-silver focus:bg-brand-electric/10"
+            >
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="dark:border-gray-700" />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400 dark:hover:bg-gray-700">
+            <DropdownMenuSeparator className="bg-brand-silver/20" />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-500 focus:bg-red-500/10 dark:text-red-400"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

@@ -19,7 +19,7 @@ export function Testimonials() {
   return (
     <section id="testimonials" className="py-20 md:py-28">
       <div className="container-x max-w-3xl">
-        <div className="relative bg-muted/60 rounded-3xl p-8 md:p-12 border border-border overflow-hidden">
+        <div className="glass-panel relative overflow-hidden rounded-3xl p-8 md:p-12">
           <Quote className="absolute top-6 end-6 size-16 text-primary/10" />
           <div className="flex gap-1 mb-6">
             {[1, 2, 3, 4, 5].map((s) => (

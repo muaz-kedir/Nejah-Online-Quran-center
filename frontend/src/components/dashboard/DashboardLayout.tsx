@@ -14,19 +14,14 @@ const DashboardLayoutInner = memo(function DashboardLayoutInner({ children }: Da
   const toggleSidebar = useCallback(() => setMobileSidebarOpen(prev => !prev), []);
 
   return (
-    <div className={cn(
-      'flex h-screen overflow-hidden',
-      'bg-gray-50 dark:bg-gray-950 transition-colors duration-200'
-    )}>
-      <Sidebar
-        isOpen={mobileSidebarOpen}
-        onToggle={toggleSidebar}
-      />
+    <div className="flex h-screen overflow-hidden admin-shell-bg">
+      <Sidebar isOpen={mobileSidebarOpen} onToggle={toggleSidebar} />
 
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar onMenuClick={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
-          {children}
+        <main className="relative flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 admin-shell-bg">
+          <div className="pointer-events-none absolute inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
+          <div className="relative z-10">{children}</div>
         </main>
       </div>
     </div>
@@ -41,4 +36,4 @@ export const DashboardLayout = memo(function DashboardLayout({ children }: Dashb
   );
 });
 
-export { DashboardLayout as default }
+export { DashboardLayout as default };

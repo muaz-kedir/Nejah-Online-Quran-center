@@ -57,7 +57,7 @@ export function Features() {
             src={dashImg}
             alt="Nejah dashboard preview"
             loading="lazy"
-            className="relative rounded-3xl shadow-elevated border border-border w-full"
+            className="glass-panel relative w-full rounded-3xl"
           />
         </motion.div>
       </div>
