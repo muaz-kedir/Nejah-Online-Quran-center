@@ -1,37 +1,100 @@
 import { motion } from "framer-motion";
+import { ArrowRight, BookOpen, Clock, Sparkles, Users } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "./ThemeProvider";
 
+const highlightValues = ["2,000+", "1-on-1", "24 / 7"] as const;
+const highlightIcons = [Users, BookOpen, Clock] as const;
+
 export function CTA() {
   const { t } = useTheme();
+
   return (
-    <section className="py-12 md:py-20">
+    <section className="py-16 md:py-24">
       <div className="container-x">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative bg-primary text-primary-foreground rounded-3xl p-10 md:p-16 text-center overflow-hidden shadow-glow"
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-brand-primary via-[#0A3663] to-[#030B18] p-8 shadow-[0_24px_80px_-20px_rgba(0,102,204,0.55)] md:p-12 lg:p-14"
         >
-          <div className="absolute inset-0 bg-pattern opacity-40" />
-          <div className="absolute -top-20 -right-20 size-72 bg-[oklch(0.78_0.13_80/0.18)] rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 size-72 bg-accent/30 rounded-full blur-3xl" />
-          <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">{t.cta.title}</h2>
-            <p className="text-primary-foreground/85 max-w-xl mx-auto mb-8">
-              {t.cta.desc}
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Button size="lg" className="rounded-full h-12 px-7 bg-background text-primary hover:bg-background/90">
-                {t.cta.register}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full h-12 px-7 bg-transparent border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                {t.cta.contact}
-              </Button>
+          {/* Ambient layers */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,102,204,0.35),transparent_55%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(10,54,99,0.5),transparent_50%)]" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rotate-45 border border-white/10" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rotate-12 rounded-full border border-brand-electric/20" />
+
+          <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-14">
+            {/* Left — copy & actions */}
+            <div className="text-center lg:text-left">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-electric/30 bg-brand-electric/15 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-electric">
+                <Sparkles className="size-3.5" />
+                {t.cta.eyebrow}
+              </div>
+
+              <h2 className="mb-4 text-3xl font-medium leading-tight tracking-tight md:text-4xl lg:text-5xl">
+                <span className="bg-gradient-to-r from-white via-[#C8E4FF] to-brand-electric bg-clip-text text-transparent">
+                  {t.cta.title}
+                </span>
+              </h2>
+
+              <div className="mx-auto mb-6 h-px max-w-xs bg-gradient-to-r from-transparent via-white/30 to-transparent lg:mx-0" />
+
+              <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-white/75 lg:mx-0 md:text-lg">
+                {t.cta.desc}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Link to="/register">
+                  <Button
+                    size="lg"
+                    className="h-12 rounded-full px-8 text-base font-semibold shadow-[0_0_24px_rgba(0,102,204,0.6)]"
+                  >
+                    {t.cta.register}
+                    <ArrowRight className="ms-2 size-4 rtl:rotate-180" />
+                  </Button>
+                </Link>
+                <a href="#contact">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 rounded-full border-white/25 bg-white/5 px-8 text-base text-white hover:border-white/40 hover:bg-white/10"
+                  >
+                    {t.cta.contact}
+                  </Button>
+                </a>
+              </div>
+
+              <p className="mt-5 font-mono text-[11px] uppercase tracking-widest text-white/45">
+                No commitment · First lesson complimentary
+              </p>
+            </div>
+
+            {/* Right — highlight cards */}
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              {[t.cta.stat1, t.cta.stat2, t.cta.stat3].map((label, i) => {
+                const Icon = highlightIcons[i];
+                return (
+                  <motion.div
+                    key={label}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.45 }}
+                    className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:border-brand-electric/40 hover:bg-white/10 sm:flex-col sm:text-center lg:flex-row lg:text-left"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-brand-electric/30 bg-brand-electric/15 text-brand-electric shadow-[0_0_16px_rgba(0,102,204,0.25)] transition-transform duration-300 group-hover:scale-105">
+                      <Icon className="size-5" />
+                    </div>
+                    <div>
+                      <p className="font-mono text-xl font-bold tracking-tight text-white">{highlightValues[i]}</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-white/55">{label}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </motion.div>

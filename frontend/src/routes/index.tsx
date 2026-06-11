@@ -36,9 +36,10 @@ function Index() {
   return (
     <ThemeProvider>
       <Loader />
-      <div className="min-h-screen flex flex-col">
+      <div className="relative flex min-h-screen flex-col admin-shell-bg">
+        <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
         <Navbar />
-        <main className="flex-1">
+        <main className="relative z-10 flex-1">
           <Hero />
           <About />
           <Courses />

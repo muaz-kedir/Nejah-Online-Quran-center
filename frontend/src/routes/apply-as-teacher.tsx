@@ -253,15 +253,15 @@ function ApplyAsTeacherPage() {
 
   if (isApplicationsOpen === false) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
-        <div className="max-w-lg w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-emerald-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-teal-500" />
-          <h1 className="text-2xl font-bold text-emerald-900 mb-3 font-serif">Applications Closed</h1>
+      <div className="relative flex min-h-screen items-center justify-center admin-shell-bg p-4">
+        <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
+        <div className="glass-panel relative max-w-lg w-full overflow-hidden rounded-3xl p-10 text-center">
+          <h1 className="text-2xl font-bold text-brand-silver mb-3 font-serif">Applications Closed</h1>
           <p className="text-gray-600 mb-6 leading-relaxed">
             We are not currently accepting new teacher applications. Please check back later.
           </p>
           <Button
-            className="w-full bg-emerald-700 hover:bg-emerald-800"
+            className="w-full bg-brand-electric hover:bg-brand-electric/90"
             onClick={() => navigate({ to: '/login' })}
           >
             Go back to Login
@@ -273,32 +273,32 @@ function ApplyAsTeacherPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
-        <div className="max-w-lg w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-emerald-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-600 to-teal-500" />
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+      <div className="relative flex min-h-screen items-center justify-center admin-shell-bg p-4">
+        <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
+        <div className="glass-panel relative max-w-lg w-full overflow-hidden rounded-3xl p-10 text-center">
+          <div className="w-20 h-20 bg-brand-electric/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="h-10 w-10 text-brand-electric" />
           </div>
-          <h1 className="text-2xl font-bold text-emerald-900 mb-3 font-serif">Application Submitted!</h1>
+          <h1 className="text-2xl font-bold text-brand-silver mb-3 font-serif">Application Submitted!</h1>
           <p className="text-gray-600 mb-6 leading-relaxed">
             Your application has been submitted successfully. Our team will review
             your application and contact you after the review process.
           </p>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
-            <p className="text-sm text-emerald-700 font-medium mb-1">Your Application Number</p>
-            <p className="text-2xl font-bold text-emerald-900 font-mono tracking-wider">{applicationNumber}</p>
-            <p className="text-xs text-emerald-600 mt-2">Please save this number to track your application status.</p>
+          <div className="bg-brand-electric/10 border border-brand-electric/20 rounded-xl p-4 mb-6">
+            <p className="text-sm text-brand-electric font-medium mb-1">Your Application Number</p>
+            <p className="text-2xl font-bold text-brand-silver font-mono tracking-wider">{applicationNumber}</p>
+            <p className="text-xs text-brand-electric mt-2">Please save this number to track your application status.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
-              className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              className="flex-1 border-brand-electric/30 text-brand-electric hover:bg-brand-electric/10"
               onClick={() => navigate({ to: '/track-application' })}
             >
               Track Application
             </Button>
             <Button
-              className="flex-1 bg-emerald-700 hover:bg-emerald-800"
+              className="flex-1 bg-brand-electric hover:bg-brand-electric/90"
               onClick={() => navigate({ to: '/login' })}
             >
               Go to Login
@@ -310,21 +310,21 @@ function ApplyAsTeacherPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-emerald-100 sticky top-0 z-30">
+    <div className="relative min-h-screen admin-shell-bg">
+      <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
+      <header className="glass-panel sticky top-0 z-30 border-b border-slate-200/80 !rounded-none dark:border-white/5">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Nejah" className="h-10 w-auto" />
             <div>
-              <h1 className="text-lg font-bold text-emerald-900 font-serif leading-none">Nejah</h1>
-              <p className="text-[10px] text-emerald-600 uppercase tracking-widest">Online Quran & Islamic Center</p>
+              <h1 className="text-lg font-bold text-brand-silver font-serif leading-none">Nejah</h1>
+              <p className="text-[10px] text-brand-electric uppercase tracking-widest">Online Quran & Islamic Center</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50"
+            className="text-brand-electric hover:bg-brand-electric/10 hover:text-brand-silver"
             onClick={() => navigate({ to: '/login' })}
           >
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Login
@@ -332,14 +332,14 @@ function ApplyAsTeacherPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 pb-20">
+      <main className="relative z-10 mx-auto max-w-4xl px-4 py-8 pb-20">
         {/* Title */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 bg-brand-electric/10 text-brand-electric text-xs font-semibold px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
             <GraduationCap className="h-3.5 w-3.5" />
             Teacher Application
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-emerald-950 mb-3 font-serif">Apply as a Teacher</h1>
+          <h1 className="mb-3 text-3xl font-medium tracking-tight text-brand-silver md:text-4xl">Apply as a Teacher</h1>
           <p className="text-gray-500 max-w-xl mx-auto">
             Join our team of qualified Quran and Islamic studies teachers. Fill out the form below and our team will review your application.
           </p>
@@ -355,19 +355,19 @@ function ApplyAsTeacherPage() {
               <div key={s.label} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    isDone ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' :
-                    isActive ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-200 ring-4 ring-emerald-100' :
+                    isDone ? 'bg-brand-electric text-white shadow-lg shadow-brand-electric/30' :
+                    isActive ? 'bg-brand-electric text-white shadow-lg ring-4 ring-brand-electric/20' :
                     'bg-gray-100 text-gray-400'
                   }`}>
                     {isDone ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                   </div>
                   <span className={`text-xs mt-2 font-medium transition-colors ${
-                    isActive || isDone ? 'text-emerald-700' : 'text-gray-400'
+                    isActive || isDone ? 'text-brand-electric' : 'text-gray-400'
                   }`}>{s.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div className={`w-12 sm:w-20 h-0.5 mx-1 mb-5 transition-colors duration-300 ${
-                    i < step ? 'bg-emerald-500' : 'bg-gray-200'
+                    i < step ? 'bg-brand-electric' : 'bg-brand-abyss/50'
                   }`} />
                 )}
               </div>
@@ -376,15 +376,14 @@ function ApplyAsTeacherPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-600 to-teal-500" />
+        <div className="glass-panel relative overflow-hidden rounded-2xl">
           <div className="p-6 md:p-8">
             <form onSubmit={form.handleSubmit(onSubmit)}>
               {/* ─── STEP 0: Personal Details ─── */}
               {step === 0 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2 font-serif">
-                    <User className="h-5 w-5 text-emerald-600" /> Personal Details
+                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
+                    <User className="h-5 w-5 text-brand-electric" /> Personal Details
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
@@ -447,8 +446,8 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 1: Qualifications ─── */}
               {step === 1 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2 font-serif">
-                    <BookOpen className="h-5 w-5 text-emerald-600" /> Qualifications & Availability
+                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
+                    <BookOpen className="h-5 w-5 text-brand-electric" /> Qualifications & Availability
                   </h2>
 
                   {/* Languages */}
@@ -560,8 +559,8 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 2: Documents ─── */}
               {step === 2 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2 font-serif">
-                    <FileText className="h-5 w-5 text-emerald-600" /> Document Uploads
+                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
+                    <FileText className="h-5 w-5 text-brand-electric" /> Document Uploads
                   </h2>
                   <p className="text-sm text-gray-500">
                     Upload your documents in PDF, JPG, or PNG format (max 10MB each).
@@ -585,13 +584,13 @@ function ApplyAsTeacherPage() {
                       </div>
                       {documents[doc.key] ? (
                         <div className="flex items-center gap-2 p-2.5 bg-emerald-50 rounded-lg">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-brand-electric flex-shrink-0" />
                           <span className="text-sm text-emerald-800 truncate">{documents[doc.key].fileName}</span>
                         </div>
                       ) : (
                         <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
                           {uploadingKey === doc.key ? (
-                            <Loader2 className="h-5 w-5 text-emerald-600 animate-spin" />
+                            <Loader2 className="h-5 w-5 text-brand-electric animate-spin" />
                           ) : (
                             <Upload className="h-5 w-5 text-gray-400" />
                           )}
@@ -630,8 +629,8 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 3: Review ─── */}
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2 font-serif">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" /> Review Your Application
+                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
+                    <CheckCircle2 className="h-5 w-5 text-brand-electric" /> Review Your Application
                   </h2>
                   <p className="text-sm text-gray-500">Please review your information before submitting.</p>
 
@@ -687,18 +686,18 @@ function ApplyAsTeacherPage() {
               {/* ─── Navigation Buttons ─── */}
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
                 {step > 0 ? (
-                  <Button type="button" variant="outline" onClick={prevStep} className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+                  <Button type="button" variant="outline" onClick={prevStep} className="border-emerald-200 text-brand-electric hover:bg-emerald-50">
                     <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
                   </Button>
                 ) : (
                   <div />
                 )}
                 {step < 3 ? (
-                  <Button type="button" onClick={nextStep} className="bg-emerald-700 hover:bg-emerald-800 shadow-md">
+                  <Button type="button" onClick={nextStep} className="bg-brand-electric hover:bg-brand-electric/90 shadow-md">
                     Next <ArrowRight className="h-4 w-4 ml-1.5" />
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={isSubmitting} className="bg-emerald-700 hover:bg-emerald-800 shadow-lg min-w-[160px]">
+                  <Button type="submit" disabled={isSubmitting} className="bg-brand-electric hover:bg-brand-electric/90 shadow-lg min-w-[160px]">
                     {isSubmitting ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
                     ) : (

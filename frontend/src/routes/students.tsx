@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/components/dashboard/design-system';
 import { AddStudentModal } from '@/components/students/AddStudentModal';
 import { EditStudentModal } from '@/components/students/EditStudentModal';
 import { DeleteStudentModal } from '@/components/students/DeleteStudentModal';
@@ -215,80 +216,65 @@ function StudentsPage() {
 
   const getLevelColor = (lvl: string) => {
     switch (lvl?.toLowerCase()) {
-      case 'beginner': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-      case 'intermediate': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'advanced': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-      case 'hifz': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      case 'beginner': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      case 'intermediate': return 'bg-brand-electric/10 text-brand-electric border-brand-electric/20';
+      case 'advanced': return 'bg-brand-primary/20 text-brand-silver border-brand-electric/20';
+      case 'hifz': return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
+      default: return 'bg-brand-abyss/50 text-brand-platinum border-white/10';
     }
   };
 
   const getStatusColor = (s: string) => {
     switch (s?.toLowerCase()) {
-      case 'active': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-      case 'inactive': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
-      case 'pending': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'active': return 'bg-brand-electric/10 text-brand-electric border-brand-electric/20';
+      case 'inactive': return 'bg-brand-abyss/50 text-brand-platinum border-white/10';
+      case 'pending': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      default: return 'bg-brand-abyss/50 text-brand-platinum';
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-500 tracking-widest uppercase mb-1">
-              Student Directory
-            </p>
-            <h1 className="text-3xl font-bold text-emerald-900 dark:text-gray-100">Students</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setIsTempReplacementOpen(true)}
-              variant="outline"
-              className="border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-400 gap-2 h-11 px-6 rounded-xl"
-            >
-              <UserCog className="h-5 w-5" />
-              Assign Temporary Teacher
-            </Button>
-            <Button
-              onClick={() => setIsAssignModalOpen(true)}
-              variant="outline"
-              className="border-emerald-200 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 gap-2 h-11 px-6 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-            >
-              <UserCheck className="h-5 w-5" />
-              Assign Student
-            </Button>
-            <Button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
-            >
-              <Plus className="h-5 w-5" />
-              Add Student
-            </Button>
-          </div>
-        </div>
+      <AmbientSection className="admin-page">
+        <PageHeader
+          eyebrow="Student Directory"
+          title="Students"
+          actions={
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={() => setIsTempReplacementOpen(true)} variant="outline" className="h-11 gap-2 rounded-xl px-6">
+                <UserCog className="h-5 w-5" />
+                Assign Temporary Teacher
+              </Button>
+              <Button onClick={() => setIsAssignModalOpen(true)} variant="outline" className="h-11 gap-2 rounded-xl px-6">
+                <UserCheck className="h-5 w-5" />
+                Assign Student
+              </Button>
+              <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
+                <Plus className="h-5 w-5" />
+                Add Student
+              </Button>
+            </div>
+          }
+        />
 
-        {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-4">
+        <div className="admin-filter-bar">
           <div className="flex-1 min-w-[240px]">
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-platinum" />
               <Input
                 placeholder="Search by student name or ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                className="h-11 rounded-xl border-none pl-9"
               />
             </form>
           </div>
           
           <div className="flex items-center gap-3">
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Level</span>
+                <span className="admin-field-label">Level</span>
                 <Select value={level} onValueChange={setLevel}>
-                  <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
                     <SelectValue placeholder="All Levels" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -303,9 +289,9 @@ function StudentsPage() {
              </div>
 
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Teacher</span>
+                <span className="admin-field-label">Teacher</span>
                 <Select value={teacherId} onValueChange={setTeacherId}>
-                  <SelectTrigger className="w-[160px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                  <SelectTrigger className="h-11 w-[160px] rounded-xl border-white/10 bg-brand-void/50">
                     <SelectValue placeholder="All Faculty" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -318,9 +304,9 @@ function StudentsPage() {
              </div>
 
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Status</span>
+                <span className="admin-field-label">Status</span>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="w-[120px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                  <SelectTrigger className="h-11 w-[120px] rounded-xl border-white/10 bg-brand-void/50">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -333,9 +319,9 @@ function StudentsPage() {
              </div>
 
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Country</span>
+                <span className="admin-field-label">Country</span>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
                     <SelectValue placeholder="All Countries" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -351,19 +337,19 @@ function StudentsPage() {
              </div>
 
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">City</span>
+                <span className="admin-field-label">City</span>
                 <Input
                   placeholder="Enter city..."
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-[120px] h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                  className="h-11 w-[120px] rounded-xl border-none"
                 />
              </div>
 
              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Date Joined</span>
+                <span className="admin-field-label">Date Joined</span>
                 <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
                     <SelectValue placeholder="All Time" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -376,38 +362,30 @@ function StudentsPage() {
                 </Select>
              </div>
 
-             <Button 
-                onClick={fetchStudents}
-                className="mt-5 h-11 px-6 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl border-none"
-             >
+             <Button onClick={fetchStudents} className="mt-5 h-11 rounded-xl px-6 font-bold">
                 Apply Filters
              </Button>
              
-             <Button 
-                variant="ghost" 
-                onClick={resetFilters}
-                className="mt-5 h-11 w-11 rounded-xl p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
-             >
-                <RotateCcw className="h-5 w-5 text-gray-400" />
+             <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
+                <RotateCcw className="h-5 w-5 text-brand-platinum" />
              </Button>
           </div>
         </div>
 
-        {/* Students Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <GlassPanel className="overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Name</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assigned Teacher</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="text-right py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+                <tr className="border-b border-white/5 bg-brand-void/50 dark:bg-brand-void/50">
+                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Student Name</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Location</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Level</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Assigned Teacher</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Status</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-white/5">
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
@@ -422,7 +400,7 @@ function StudentsPage() {
                   </tr>
                 ) : (
                   students.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors group">
+                    <tr key={student.id} className="group transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.03]">
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex-shrink-0">
@@ -559,7 +537,7 @@ function StudentsPage() {
               </Button>
               <Button
                 variant="default"
-                className="h-9 w-9 rounded-xl font-bold border-none bg-emerald-900 hover:bg-emerald-800 pointer-events-none"
+                className="pointer-events-none h-9 w-9 rounded-xl border-none font-bold"
               >
                 {meta.page}
               </Button>
@@ -574,45 +552,36 @@ function StudentsPage() {
               </Button>
             </div>
           </div>
+        </GlassPanel>
+
+        <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-4">
+          <BentoStatCard
+            label="Total Students"
+            value={stats.total}
+            sub="All registered students"
+            icon={<Users className="h-5 w-5" />}
+            highlight
+          />
+          <BentoStatCard
+            label="Active Students"
+            value={stats.active}
+            icon={<Activity className="h-5 w-5" />}
+            progress={(stats.active / (stats.total || 1)) * 100}
+          />
+          <BentoStatCard
+            label="Inactive Students"
+            value={stats.inactive}
+            icon={<TrendingUp className="h-5 w-5" />}
+            progress={(stats.inactive / (stats.total || 1)) * 100}
+          />
+          <BentoStatCard
+            label="New This Month"
+            value={`+${stats.newStudentsThisMonth}`}
+            sub="Recently enrolled"
+            icon={<Calendar className="h-5 w-5" />}
+          />
         </div>
-
-        {/* Stats Section (Bottom as per design) */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4">
-           <div className="bg-emerald-900 dark:bg-emerald-950 p-6 rounded-3xl text-white relative overflow-hidden shadow-xl">
-              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-              <p className="text-[10px] font-bold tracking-widest uppercase opacity-60 mb-2">Total Students</p>
-              <h2 className="text-4xl font-bold mb-3">{stats.total}</h2>
-              <div className="flex items-center gap-2 text-xs text-emerald-100/70">
-                <Users className="h-4 w-4" /> All registered students
-              </div>
-           </div>
-           
-           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-600 dark:text-emerald-500 mb-2">Active Students</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">{stats.active}</h2>
-              <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full mb-3 overflow-hidden">
-                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${(stats.active / (stats.total || 1)) * 100}%` }} />
-              </div>
-           </div>
-
-           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-red-500 dark:text-red-400 mb-2">Inactive Students</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">{stats.inactive}</h2>
-              <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full mb-3 overflow-hidden">
-                 <div className="bg-red-400 h-full rounded-full" style={{ width: `${(stats.inactive / (stats.total || 1)) * 100}%` }} />
-              </div>
-           </div>
-
-           <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-3xl shadow-sm border border-amber-100/50 dark:border-amber-900/30">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-amber-600/60 dark:text-amber-500/60 mb-2">New This Month</p>
-              <h2 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">+{stats.newStudentsThisMonth}</h2>
-              <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 p-2 rounded-xl border border-amber-100 dark:border-amber-900/30">
-                 <Calendar className="h-4 w-4 text-amber-600" />
-                 <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Recently Enrolled</p>
-              </div>
-           </div>
-        </div>
-      </div>
+      </AmbientSection>
 
       <AddStudentModal
         open={isAddModalOpen}

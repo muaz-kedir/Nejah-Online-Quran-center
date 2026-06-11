@@ -4,6 +4,7 @@ import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { BarChart3, Download, FileText, Users, GraduationCap, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { requireAuth } from '@/lib/auth';
+import { AmbientSection, GlassPanel, PageHeader } from '@/components/dashboard/design-system';
 
 export const Route = createFileRoute('/reports')({
   component: ReportsPage,
@@ -12,49 +13,55 @@ export const Route = createFileRoute('/reports')({
 
 function ReportsPage() {
   const reports = [
-    { title: 'Student Performance Summary', icon: Users, desc: 'Overall student progress and attendance rates', color: 'bg-blue-50 text-blue-600' },
-    { title: 'Teacher Activity Report', icon: GraduationCap, desc: 'Teacher class conduct, punctuality and feedback', color: 'bg-emerald-50 text-emerald-600' },
-    { title: 'Attendance Analytics', icon: BarChart3, desc: 'Daily and monthly attendance patterns', color: 'bg-amber-50 text-amber-600' },
-    { title: 'Academic Progress Report', icon: TrendingUp, desc: 'Quran memorization and level advancement', color: 'bg-purple-50 text-purple-600' },
+    { title: 'Student Performance Summary', icon: Users, desc: 'Overall student progress and attendance rates' },
+    { title: 'Teacher Activity Report', icon: GraduationCap, desc: 'Teacher class conduct, punctuality and feedback' },
+    { title: 'Attendance Analytics', icon: BarChart3, desc: 'Daily and monthly attendance patterns' },
+    { title: 'Academic Progress Report', icon: TrendingUp, desc: 'Quran memorization and level advancement' },
   ];
 
   return (
     <DashboardLayout>
-      <Breadcrumbs />
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-          <p className="text-gray-600 mt-1">Generate and view system reports</p>
-        </div>
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" /> Export All
-        </Button>
-      </div>
+      <AmbientSection>
+        <Breadcrumbs />
+        <PageHeader
+          eyebrow="Analytics Center"
+          title="Reports"
+          description="Generate and view system reports"
+          actions={
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" /> Export All
+            </Button>
+          }
+        />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {reports.map((report) => (
-          <div key={report.title} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${report.color}`}>
-                <report.icon className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                  <FileText className="h-5 w-5 text-gray-400" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {reports.map((report) => (
+            <GlassPanel
+              key={report.title}
+              className="cursor-pointer p-6 transition-all duration-300 hover:border-brand-electric/30"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-electric/20 bg-brand-electric/10 text-brand-electric">
+                  <report.icon className="h-6 w-6" />
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{report.desc}</p>
-                <div className="flex gap-2 mt-4">
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">View Report</Button>
-                  <Button size="sm" variant="outline">
-                    <Download className="h-4 w-4 mr-1" /> PDF
-                  </Button>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-brand-silver">{report.title}</h3>
+                    <FileText className="h-5 w-5 text-brand-platinum" />
+                  </div>
+                  <p className="mt-1 text-sm text-brand-platinum">{report.desc}</p>
+                  <div className="mt-4 flex gap-2">
+                    <Button size="sm">View Report</Button>
+                    <Button size="sm" variant="outline">
+                      <Download className="mr-1 h-4 w-4" /> PDF
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            </GlassPanel>
+          ))}
+        </div>
+      </AmbientSection>
     </DashboardLayout>
   );
 }

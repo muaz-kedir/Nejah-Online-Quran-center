@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/components/dashboard/design-system';
 import { AddTeacherModal } from '@/components/teachers/AddTeacherModal';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
@@ -225,75 +226,43 @@ function TeachersPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-500 tracking-widest uppercase mb-1">
-              Academic Faculty
-            </p>
-            <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">Teachers</h1>
-          </div>
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-emerald-900 hover:bg-emerald-800 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-emerald-900/20"
-          >
-            <Plus className="h-5 w-5" />
-            Add Teacher
-          </Button>
+      <AmbientSection className="admin-page">
+        <PageHeader
+          eyebrow="Academic Faculty"
+          title="Teachers"
+          actions={
+            <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
+              <Plus className="h-5 w-5" />
+              Add Teacher
+            </Button>
+          }
+        />
+
+        <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+          <BentoStatCard label="Total Faculty" value={stats.total} icon={<Calendar className="h-5 w-5" />} />
+          <BentoStatCard label="Active Now" value={stats.active} icon={<Sparkles className="h-5 w-5" />} highlight />
+          <BentoStatCard label="On Leave" value={String(stats.onLeave).padStart(2, '0')} icon={<RotateCcw className="h-5 w-5" />} />
+          <BentoStatCard label="Pending" value={stats.pending} icon={<BookOpen className="h-5 w-5" />} />
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500">Total Faculty</p>
-            <h2 className="text-3xl font-extrabold text-gray-850 dark:text-gray-100 mt-2 font-serif">{stats.total}</h2>
-            <div className="absolute top-4 right-4 text-gray-100 dark:text-gray-900">
-              <Calendar className="h-10 w-10 text-emerald-100 dark:text-gray-800" />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500">Active Now</p>
-            <h2 className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-2 font-serif">{stats.active}</h2>
-            <div className="absolute top-4 right-4">
-              <Sparkles className="h-10 w-10 text-emerald-100 dark:text-emerald-950/30" />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-gray-500">On Leave</p>
-            <h2 className="text-3xl font-extrabold text-amber-600 dark:text-amber-500 mt-2 font-serif">{String(stats.onLeave).padStart(2, '0')}</h2>
-            <div className="absolute top-4 right-4">
-              <RotateCcw className="h-10 w-10 text-amber-100 dark:text-amber-950/30" />
-            </div>
-          </div>
-          <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-5 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-800 dark:text-emerald-400">Pending</p>
-            <h2 className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-100 mt-2 font-serif">{stats.pending}</h2>
-            <div className="absolute top-4 right-4">
-              <BookOpen className="h-10 w-10 text-emerald-100/60 dark:text-emerald-900/40" />
-            </div>
-          </div>
-        </div>
-
-        {/* Filter panel */}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-4">
+        <div className="admin-filter-bar">
           <div className="flex-1 min-w-[240px]">
             <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-platinum" />
               <Input
                 placeholder="Search faculty by name, email, or specialty..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                className="h-11 rounded-xl border-none pl-9"
               />
             </form>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">Status</span>
+              <span className="admin-field-label">Status</span>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-[140px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
@@ -306,37 +275,29 @@ function TeachersPage() {
               </Select>
             </div>
 
-            <Button
-              onClick={fetchTeachers}
-              className="mt-5 h-11 px-6 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl border-none"
-            >
+            <Button onClick={fetchTeachers} className="mt-5 h-11 rounded-xl px-6 font-bold">
               Apply Filter
             </Button>
 
-            <Button
-              variant="ghost"
-              onClick={resetFilters}
-              className="mt-5 h-11 w-11 rounded-xl p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <RotateCcw className="h-5 w-5 text-gray-400" />
+            <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
+              <RotateCcw className="h-5 w-5 text-brand-platinum" />
             </Button>
           </div>
         </div>
 
-        {/* Teachers Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <GlassPanel className="overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Teacher Name</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Students Count</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Experience</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="text-right py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+                <tr className="border-b border-white/5 bg-brand-void/50">
+                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Teacher Name</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Students Count</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Experience</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Status</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-white/5">
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
@@ -397,44 +358,45 @@ function TeachersPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </GlassPanel>
 
-        {/* Bottom announcements block (Vibrant Aesthetics) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-          <div className="lg:col-span-2 bg-gradient-to-r from-emerald-900 to-emerald-950 p-7 rounded-3xl text-white relative overflow-hidden shadow-xl min-h-[160px] flex flex-col justify-between">
-            <div className="absolute right-0 bottom-0 opacity-15 text-white pointer-events-none transform translate-y-6 translate-x-6">
-              <Calendar className="h-48 w-48" />
-            </div>
+        <div className="grid grid-cols-1 gap-6 pt-4 lg:grid-cols-3">
+          <GlassPanel
+            glow
+            className="flex min-h-[160px] flex-col justify-between p-7 lg:col-span-2"
+          >
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-emerald-300 mb-2">INTERNAL ANNOUNCEMENT</p>
-              <h2 className="text-2xl font-bold font-serif leading-tight max-w-[450px]">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-widest text-brand-electric">
+                Internal Announcement
+              </p>
+              <h2 className="max-w-[450px] text-2xl font-medium leading-tight tracking-tight text-brand-silver">
                 New Faculty Training Program Begins Next Monday.
               </h2>
             </div>
-            <p className="text-xs text-emerald-100/70 mt-4 leading-relaxed max-w-[500px]">
+            <p className="mt-4 max-w-[500px] text-xs leading-relaxed text-brand-platinum">
               Join our monthly pedagogy workshop to enhance student engagement and master virtual whiteboard curriculum delivery.
             </p>
-          </div>
+          </GlassPanel>
 
-          <div className="bg-amber-50/50 dark:bg-amber-950/20 p-6 rounded-3xl shadow-sm border border-amber-100 dark:border-amber-900/30 flex flex-col justify-between">
+          <GlassPanel className="flex flex-col justify-between p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-500">
                 <Award className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-emerald-950 dark:text-gray-100 font-serif">Scholarly Excellence</h3>
-                <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Faculty Accreditation</p>
+                <h3 className="text-base font-medium text-brand-silver">Scholarly Excellence</h3>
+                <p className="text-xs font-medium text-brand-platinum">Faculty Accreditation</p>
               </div>
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-4 leading-relaxed">
+            <p className="mt-4 text-xs leading-relaxed text-brand-platinum">
               View teachers who have successfully completed the advanced virtual ijazah syllabus and curriculum accreditation this quarter.
             </p>
-            <button className="text-xs font-bold text-amber-700 dark:text-amber-500 mt-4 flex items-center gap-1.5 group hover:text-amber-600">
+            <button className="mt-4 flex items-center gap-1.5 text-xs font-bold text-brand-electric group hover:text-brand-electric/80">
               View Rankings <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
-          </div>
+          </GlassPanel>
         </div>
-      </div>
+      </AmbientSection>
 
       <AddTeacherModal
         open={isAddModalOpen}

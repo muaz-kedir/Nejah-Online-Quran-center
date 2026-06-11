@@ -7,14 +7,14 @@ import { useTheme } from "./ThemeProvider";
 export function Hero() {
   const { t } = useTheme();
   return (
-    <section id="home" className="relative pt-28 md:pt-36 pb-20 overflow-hidden bg-pattern">
+    <section id="home" className="relative overflow-hidden bg-pattern pb-20 pt-28 md:pt-36">
       <div className="container-x grid lg:grid-cols-2 gap-12 items-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-soft text-primary text-xs font-semibold mb-6">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-electric/20 bg-brand-electric/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-brand-electric">
             <Sparkles className="size-3.5" />
             {t.hero.badge}
           </div>
@@ -23,11 +23,11 @@ export function Hero() {
             {t.hero.title2}{" "}
             <span className="text-gradient">{t.hero.title3}</span>
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mb-8 leading-relaxed">
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-brand-platinum md:text-lg">
             {t.hero.desc}
           </p>
           <div className="flex flex-wrap gap-3 mb-10">
-            <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 shadow-elevated h-12 px-6">
+            <Button size="lg" className="h-12 rounded-full px-6 shadow-[0_0_20px_rgba(0,102,204,0.35)]">
               {t.hero.getStarted} <ArrowRight className="ms-1 size-4 rtl:rotate-180" />
             </Button>
             <Button size="lg" variant="outline" className="rounded-full h-12 px-6">
@@ -72,7 +72,7 @@ export function Hero() {
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="absolute -left-4 top-10 bg-card border border-border rounded-2xl p-3 shadow-elevated flex items-center gap-3 max-w-[200px]"
+            className="glass-panel absolute -left-4 top-10 flex max-w-[200px] items-center gap-3 rounded-2xl p-3"
           >
             <div className="size-10 rounded-xl bg-primary/10 text-primary grid place-items-center">
               <Users className="size-5" />
@@ -86,7 +86,7 @@ export function Hero() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 0.5 }}
-            className="absolute -right-2 top-1/3 bg-card border border-border rounded-2xl p-3 shadow-elevated flex items-center gap-3 max-w-[210px]"
+            className="glass-panel absolute -right-2 top-1/3 flex max-w-[210px] items-center gap-3 rounded-2xl p-3"
           >
             <div className="size-10 rounded-xl bg-[oklch(0.78_0.13_80/0.15)] text-[oklch(0.6_0.13_80)] grid place-items-center">
               <GraduationCap className="size-5" />
@@ -100,7 +100,7 @@ export function Hero() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 1 }}
-            className="absolute -bottom-4 right-8 bg-card border border-border rounded-2xl p-3 shadow-elevated flex items-center gap-3"
+            className="glass-panel absolute -bottom-4 right-8 flex items-center gap-3 rounded-2xl p-3"
           >
             <div className="size-10 rounded-xl bg-accent/15 text-accent grid place-items-center">
               <Video className="size-5" />
