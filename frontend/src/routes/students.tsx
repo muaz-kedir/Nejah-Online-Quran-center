@@ -22,6 +22,7 @@ import {
   Activity,
   UserCog,
   GraduationCap,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,7 @@ import { StudentDetailsModal } from '@/components/students/StudentDetailsModal';
 import { ChangeStudentStatusModal } from '@/components/students/ChangeStudentStatusModal';
 import { ManageLevelModal } from '@/components/students/ManageLevelModal';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
+import { ProgressDetailsModal } from '@/components/progress/ProgressDetailsModal';
 import { toast } from 'sonner';
 
 // Helper for date ranges
@@ -98,6 +100,7 @@ function StudentsPage() {
   const [isTempReplacementOpen, setIsTempReplacementOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [viewingStudent, setViewingStudent] = useState<any | null>(null);
+  const [viewingProgress, setViewingProgress] = useState<any | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
   const [changingStatusStudent, setChangingStatusStudent] = useState<any | null>(null);
   const [managingLevelStudent, setManagingLevelStudent] = useState<any | null>(null);
@@ -486,6 +489,13 @@ function StudentsPage() {
                             <Eye className="h-4 w-4" />
                           </button>
                           <button 
+                            onClick={() => setViewingProgress(student)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                            title="View Progress"
+                          >
+                            <BookOpen className="h-4 w-4" />
+                          </button>
+                          <button 
                             onClick={() => setChangingStatusStudent(student)}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-amber-600 transition-colors"
                             title="Change Status"
@@ -642,6 +652,16 @@ function StudentsPage() {
             fetchStudents();
             fetchStats();
           }}
+        />
+      )}
+
+      {/* Progress Details Modal */}
+      {viewingProgress && (
+        <ProgressDetailsModal
+          open={!!viewingProgress}
+          onClose={() => setViewingProgress(null)}
+          studentId={viewingProgress.id}
+          studentName={viewingProgress.fullName}
         />
       )}
     </DashboardLayout>
