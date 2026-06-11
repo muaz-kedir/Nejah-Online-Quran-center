@@ -3,10 +3,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DataSource } from 'typeorm';
 import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: ['error', 'warn'],
+  });
   const configService = app.get(ConfigService);
 
   // Global validation pipe
@@ -53,6 +56,10 @@ async function bootstrap() {
 
   const port = configService.get('PORT') || 3000;
   try {
+    const dataSource = app.get(DataSource);
+    if (dataSource.isInitialized) {
+      console.log('✅ Database connected');
+    }
     await app.listen(port);
     console.log(`🚀 Nejah Backend API is running on: http://localhost:${port}/api`);
   } catch (err: any) {

@@ -41,7 +41,7 @@ import { ScheduleModule } from '@nestjs/schedule';
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize: configService.get('NODE_ENV') === 'development',
-            logging: configService.get('NODE_ENV') === 'development',
+            logging: ['error'],
             ssl: {
               rejectUnauthorized: false,
             },
@@ -58,7 +58,7 @@ import { ScheduleModule } from '@nestjs/schedule';
           database: configService.get('DB_NAME') || configService.get('DB_DATABASE'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: configService.get('NODE_ENV') === 'development',
-          logging: configService.get('NODE_ENV') === 'development',
+          logging: ['error'],
           ssl: false,
         };
       },
