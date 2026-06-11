@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Create Reports Page",
+  "description": "Create Reports page hook",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "reports.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": ""
+  }
+}

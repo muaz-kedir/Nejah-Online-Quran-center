@@ -18,6 +18,7 @@ import { MessagesModule } from './messages/messages.module';
 import { EmailModule } from './email/email.module';
 import { TeacherApplicationsModule } from './teacher-applications/teacher-applications.module';
 import { TeacherReplacementsModule } from './teacher-replacements/teacher-replacements.module';
+import { ReportsModule } from './reports/reports.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -83,6 +84,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EmailModule,
     TeacherApplicationsModule,
     TeacherReplacementsModule,
+    ReportsModule,
     ScheduleModule.forRoot(),
   ],
 })
