@@ -120,6 +120,7 @@ interface FilterState {
   customStartDate: string;
   customEndDate: string;
 }
+...
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
