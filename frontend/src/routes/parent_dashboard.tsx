@@ -70,14 +70,14 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
   };
 
   return (
-    <div className="w-72 bg-[#084133] text-white flex flex-col h-screen fixed inset-y-0 left-0 shadow-2xl z-30">
+    <div className="w-72 dark:bg-nejah-surface bg-card/80 backdrop-blur-xl dark:border-white/5 border-r border-slate-200 text-foreground flex flex-col h-screen fixed inset-y-0 left-0 shadow-2xl z-30">
       {/* Brand Logo */}
       <div className="p-8 pb-10">
         <div className="flex items-center gap-4">
           <img src="/logo.png" alt="Nejah" className="h-12 w-auto rounded-2xl" />
           <div>
             <h1 className="font-extrabold text-xl leading-none tracking-tight">Nejah Online</h1>
-            <p className="text-[10px] text-emerald-300 font-bold tracking-[0.2em] mt-1.5 uppercase">Islamic Center</p>
+            <p className="text-[10px] text-nejah-electric font-bold tracking-[0.2em] mt-1.5 uppercase">Islamic Center</p>
           </div>
         </div>
       </div>
@@ -93,20 +93,20 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
               className={cn(
                 "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 group relative",
                 isActive 
-                  ? "bg-white/10 text-white shadow-inner" 
-                  : "text-emerald-100/50 hover:bg-white/5 hover:text-white"
+                  ? "bg-primary/15 text-foreground shadow-inner" 
+                  : "text-foreground/50 hover:bg-white/5 hover:text-foreground"
               )}
             >
-              <item.icon className={cn("h-5 w-5", isActive ? "text-emerald-300" : "text-emerald-100/30 group-hover:text-emerald-300")} />
+              <item.icon className={cn("h-5 w-5", isActive ? "text-nejah-electric" : "text-foreground/30 group-hover:text-nejah-electric")} />
               <span className="font-bold text-[13px] tracking-wide">{item.label}</span>
-              {isActive && <div className="absolute left-0 w-1.5 h-6 bg-emerald-400 rounded-r-full" />}
+              {isActive && <div className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full" />}
             </button>
           );
         })}
       </nav>
 
       {/* Bottom Nav */}
-      <div className="p-4 mt-auto space-y-1 bg-[#063025]">
+      <div className="p-4 mt-auto space-y-1 bg-background/80">
         {bottomItems.map((item) => {
           const isActive = activeTab === item.tab;
           return (
@@ -115,7 +115,7 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
               onClick={() => handleItemClick(item.tab)}
               className={cn(
                 "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300",
-                item.className || (isActive ? "bg-white/10 text-white" : "text-emerald-100/50 hover:bg-white/5 hover:text-white")
+                item.className || (isActive ? "bg-white/10 text-foreground" : "text-foreground/50 hover:bg-white/5 hover:text-foreground")
               )}
             >
               <item.icon className="h-5 w-5 opacity-50 shrink-0" />
@@ -133,13 +133,13 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
   const [lang, setLang] = useState('English');
   
   return (
-    <div className="h-24 flex items-center justify-between px-12 bg-white/80 backdrop-blur-md sticky top-0 z-20 w-full ml-72 max-w-[calc(100%-288px)] border-b border-gray-100 shadow-sm">
+    <div className="h-24 flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full ml-72 max-w-[calc(100%-288px)] border-b border-border shadow-sm">
       <div className="flex items-center gap-6">
-          <h2 className="text-2xl font-black text-[#084133] font-serif">Parent Portal</h2>
+          <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
           
-          <div className="hidden lg:flex items-center bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border">
             <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search curriculum, teachers..." 
                   className="pl-12 bg-transparent border-none w-80 h-10 text-xs focus-visible:ring-0"
@@ -150,14 +150,14 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
 
       <div className="flex items-center gap-8">
         {/* Language Switcher */}
-        <div className="flex items-center gap-3 bg-gray-50/50 px-4 py-2 rounded-2xl border border-gray-100">
+        <div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-2xl border border-border">
             {['English', 'Amharic', 'Oromo'].map((l) => (
                 <button 
                     key={l}
                     onClick={() => setLang(l)}
                     className={cn(
                         "text-[10px] font-bold uppercase tracking-widest transition-all px-2 py-0.5",
-                        lang === l ? "text-[#084133] underline underline-offset-4 decoration-2" : "text-gray-400 hover:text-gray-600"
+                        lang === l ? "text-nejah-sapphire underline underline-offset-4 decoration-2" : "text-muted-foreground hover:text-muted-foreground"
                     )}
                 >
                     {l}
@@ -166,29 +166,29 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
         </div>
 
         <div className="flex items-center gap-3">
-            <button className="relative p-2.5 bg-gray-50 rounded-2xl text-gray-400 hover:text-[#084133] transition-all hover:shadow-sm">
+            <button className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
             </button>
             <button 
               onClick={() => onTabChange('messages')}
-              className="relative p-2.5 bg-gray-50 rounded-2xl text-gray-400 hover:text-[#084133] transition-all hover:shadow-sm"
+              className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm"
             >
                 <MessageSquare className="h-5 w-5" />
             </button>
         </div>
 
-        <div className="w-px h-10 bg-gray-100" />
+        <div className="w-px h-10 bg-muted" />
 
         <div 
           onClick={() => onTabChange('settings')}
           className="flex items-center gap-4 group cursor-pointer"
         >
           <div className="text-right">
-             <p className="text-sm font-black text-[#084133] leading-none group-hover:text-emerald-600 transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
-             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Primary Guardian</p>
+             <p className="text-sm font-black text-nejah-sapphire leading-none group-hover:text-nejah-electric transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
+             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Primary Guardian</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-emerald-50 shadow-md transform group-hover:scale-105 transition-transform bg-emerald-50 flex items-center justify-center font-bold text-[#084133]">
+          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire">
             {parent?.name?.charAt(0) || 'P'}
           </div>
         </div>
@@ -202,38 +202,38 @@ const StatCard = ({ icon: Icon, value, label, subValue, trend, color, onClick }:
   <div 
     onClick={onClick}
     className={cn(
-      "bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative",
-      onClick ? "cursor-pointer hover:border-emerald-200" : ""
+      "glass-panel bg-white p-6 rounded-[32px] border border-border shadow-sm hover:shadow-md transition-all group overflow-hidden relative",
+      onClick ? "cursor-pointer hover:border-nejah-electric/20" : ""
     )}
   >
-    <div className={cn("absolute top-0 right-0 w-20 h-20 opacity-[0.03] transform translate-x-6 -translate-y-6 rounded-full bg-[#084133]")} />
+    <div className={cn("absolute top-0 right-0 w-20 h-20 opacity-[0.03] transform translate-x-6 -translate-y-6 rounded-full bg-nejah-surface")} />
     
     <div className="flex items-start justify-between mb-6">
       <div className={cn("p-3 rounded-2xl", 
-        color === 'emerald' ? "bg-emerald-50 text-emerald-700" :
+        color === 'emerald' ? "bg-primary/10 text-nejah-electric" :
         color === 'blue' ? "bg-blue-50 text-blue-700" :
         color === 'amber' ? "bg-amber-50 text-amber-700" :
-        color === 'red' ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
+        color === 'red' ? "bg-red-50 text-red-700" : "bg-primary/10 text-nejah-electric"
       )}>
         <Icon className="h-5 w-5" />
       </div>
       {trend && (
-        <Badge variant="outline" className="rounded-full border-none px-2.5 py-0.5 bg-emerald-50 text-emerald-600 font-black text-[9px] uppercase tracking-wider">
+        <Badge variant="outline" className="rounded-full border-none px-2.5 py-0.5 bg-primary/10 text-nejah-electric font-black text-[9px] uppercase tracking-wider">
           {trend}
         </Badge>
       )}
     </div>
     
     <div className="space-y-1">
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">{label}</p>
-      <h3 className="text-3xl font-black text-emerald-950 font-serif leading-none pt-2">{value}</h3>
-      {subValue && <p className="text-[10px] text-gray-450 mt-2 font-bold">{subValue}</p>}
-      <div className="w-16 h-1 bg-gray-100 rounded-full mt-3 overflow-hidden">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{label}</p>
+      <h3 className="text-3xl font-black text-foreground font-serif leading-none pt-2">{value}</h3>
+      {subValue && <p className="text-[10px] text-muted-foreground mt-2 font-bold">{subValue}</p>}
+      <div className="w-16 h-1 bg-muted rounded-full mt-3 overflow-hidden">
         <div className={cn("h-full rounded-full transition-all duration-1000", 
-          color === 'emerald' ? "bg-emerald-600" :
+          color === 'emerald' ? "bg-primary" :
           color === 'blue' ? "bg-blue-600" :
           color === 'amber' ? "bg-amber-600" :
-          color === 'red' ? "bg-red-650" : "bg-[#084133]"
+          color === 'red' ? "bg-red-650" : "bg-nejah-sapphire"
         )} style={{ width: '70%' }} />
       </div>
     </div>
@@ -242,52 +242,52 @@ const StatCard = ({ icon: Icon, value, label, subValue, trend, color, onClick }:
 
 // --- Child Card Component ---
 const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
-  <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative flex flex-col h-full">
+  <div className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm hover:shadow-xl transition-all group overflow-hidden relative flex flex-col h-full">
     <div className={cn(
         "absolute top-0 left-0 w-full h-2.5",
-        child.name.includes('Lina') ? "bg-amber-400" : "bg-emerald-700"
+        child.name.includes('Lina') ? "bg-amber-400" : "bg-nejah-sapphire"
     )} />
     
     <div className="flex items-center justify-between mb-8">
         <Badge className={cn(
             "rounded-full px-4 py-1 text-[9px] font-black uppercase tracking-widest border-none",
-            child.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"
+            child.status === 'ACTIVE' ? "bg-primary/10 text-nejah-electric" : "bg-muted text-muted-foreground"
         )}>
             {child.status}
         </Badge>
-        <span className="text-xs text-gray-400 font-bold">Student ID: {child.id.substring(0, 8)}</span>
+        <span className="text-xs text-muted-foreground font-bold">Student ID: {child.id.substring(0, 8)}</span>
     </div>
 
     <div className="flex flex-col items-center text-center space-y-4 mb-8">
-        <div className="w-24 h-24 rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-lg group-hover:scale-105 transition-transform duration-500 bg-emerald-50 flex items-center justify-center font-bold text-3xl text-emerald-800">
+        <div className="w-24 h-24 rounded-[32px] overflow-hidden border-4 border-border shadow-lg group-hover:scale-105 transition-transform duration-500 bg-primary/10 flex items-center justify-center font-bold text-3xl text-foreground">
             {child.name.charAt(0)}
         </div>
         <div>
-            <h4 className="text-2xl font-black text-emerald-950 font-serif">{child.name}</h4>
-            <p className="text-xs font-bold text-gray-400 mt-1 flex items-center justify-center gap-2">
-                <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+            <h4 className="text-2xl font-black text-foreground font-serif">{child.name}</h4>
+            <p className="text-xs font-bold text-muted-foreground mt-1 flex items-center justify-center gap-2">
+                <BookOpen className="h-3.5 w-3.5 text-nejah-electric" />
                 Level: {child.level}
             </p>
         </div>
     </div>
 
     <div className="grid grid-cols-2 gap-4 mt-auto mb-6">
-        <div className="bg-gray-50 p-4 rounded-[24px] text-center border border-gray-100 shadow-inner group-hover:bg-emerald-50 transition-colors">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Teacher</p>
-            <p className="text-xs font-black text-[#084133] leading-tight truncate">{child.teacher}</p>
+        <div className="bg-background/50 p-4 rounded-[24px] text-center border border-border shadow-inner group-hover:bg-primary/10 transition-colors">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Teacher</p>
+            <p className="text-xs font-black text-nejah-sapphire leading-tight truncate">{child.teacher}</p>
         </div>
-        <div className="bg-gray-50 p-4 rounded-[24px] text-center border border-gray-100 shadow-inner group-hover:bg-blue-50 transition-colors">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Memorization</p>
-            <p className="text-xs font-black text-[#084133]">{child.memorization}%</p>
+        <div className="bg-background/50 p-4 rounded-[24px] text-center border border-border shadow-inner group-hover:bg-blue-50 transition-colors">
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Memorization</p>
+            <p className="text-xs font-black text-nejah-sapphire">{child.memorization}%</p>
         </div>
     </div>
 
-    <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
+    <div className="pt-6 border-t border-border flex items-center justify-between">
         <div className="space-y-0.5">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current Surah</p>
-            <p className="text-xs font-bold text-[#084133] truncate max-w-[120px]">{child.currentSurah}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Current Surah</p>
+            <p className="text-xs font-bold text-nejah-sapphire truncate max-w-[120px]">{child.currentSurah}</p>
             {(child.currentPage > 0 || child.currentAyah > 0) && (
-              <p className="text-[9px] text-gray-500">
+              <p className="text-[9px] text-muted-foreground">
                 {child.currentPage > 0 ? `Page ${child.currentPage}` : ''}
                 {child.currentPage > 0 && child.currentAyah > 0 ? ' · ' : ''}
                 {child.currentAyah > 0 ? `Ayah ${child.currentAyah}` : ''}
@@ -295,22 +295,22 @@ const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
             )}
         </div>
         <div className="text-right">
-             <p className="text-[20px] font-black text-[#084133] leading-none mb-1">{child.attendance}%</p>
-             <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Attendance</p>
+             <p className="text-[20px] font-black text-nejah-sapphire leading-none mb-1">{child.attendance}%</p>
+             <p className="text-[9px] font-bold text-nejah-electric uppercase tracking-widest">Attendance</p>
         </div>
     </div>
 
-    <div className="mt-6 pt-4 border-t border-gray-50 flex gap-2">
+    <div className="mt-6 pt-4 border-t border-border flex gap-2">
       <Button 
         onClick={() => onInspectAttendance(child.id)}
         variant="outline" 
-        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider border-emerald-100 hover:bg-emerald-50 text-emerald-950"
+        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider border-nejah-electric/15 hover:bg-primary/10 text-foreground"
       >
         Attendance Log
       </Button>
       <Button 
         onClick={() => onInspectProgress(child.id)}
-        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider bg-emerald-900 hover:bg-emerald-800 text-white"
+        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider bg-nejah-sapphire hover:bg-background text-white"
       >
         Progress Details
       </Button>
@@ -468,14 +468,14 @@ function ParentDashboard() {
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-white">
-        <div className="animate-spin rounded-2xl h-16 w-16 border-t-4 border-b-4 border-[#084133]"></div>
+        <div className="animate-spin rounded-2xl h-16 w-16 border-t-4 border-b-4 border-nejah-sapphire"></div>
     </div>
   );
 
   const selectedChild = data?.children?.find((c: any) => c.id === selectedChildId) || data?.children?.[0];
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fb] text-gray-900 font-sans selection:bg-emerald-100">
+    <div className="flex min-h-screen bg-[#f8f9fb] text-foreground font-sans selection:bg-primary/15">
       {/* Sidebar navigation */}
       <ParentSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -504,11 +504,11 @@ function ParentDashboard() {
                 {/* Left Column: Children list */}
                 <div className="xl:col-span-8 space-y-8">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Children Overview</h3>
+                    <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Children Overview</h3>
                     <Button 
                       onClick={() => setActiveTab('children')}
                       variant="ghost" 
-                      className="text-sm font-black text-[#084133] flex items-center gap-2 hover:underline underline-offset-4"
+                      className="text-sm font-black text-nejah-sapphire flex items-center gap-2 hover:underline underline-offset-4"
                     >
                       View All Profiles <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -529,7 +529,7 @@ function ParentDashboard() {
                 {/* Right Column: Activities and Schedule */}
                 <div className="xl:col-span-4 space-y-10">
                   {/* Today's Schedule Card */}
-                  <section className="bg-[#084133] rounded-[48px] p-8 text-white shadow-2xl relative overflow-hidden group border border-[#0d5947]">
+                  <section className="bg-nejah-surface rounded-[48px] p-8 text-white shadow-2xl relative overflow-hidden group border border-white/10">
                      <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none transform translate-x-10 -translate-y-10 group-hover:translate-x-8 transition-transform duration-1000">
                         <Clock className="w-48 h-48" />
                      </div>
@@ -539,14 +539,14 @@ function ParentDashboard() {
                      <div className="space-y-4 relative z-10">
                         {data?.schedules?.slice(0, 3).map((session: any) => (
                            <div key={session.id} className="bg-white/10 p-5 rounded-[28px] border border-white/5 backdrop-blur-sm group/item flex flex-col gap-2">
-                              <div className="flex items-center justify-between">
-                                 <div className="space-y-0.5">
-                                    <p className="text-[10px] font-black text-emerald-300 uppercase tracking-widest leading-none">{session.childName}</p>
-                                    <h4 className="text-sm font-black text-white group-hover/item:text-emerald-300 transition-colors mt-1">{session.className}</h4>
-                                 </div>
-                                 <Badge className="bg-emerald-950/70 text-emerald-100 rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">{session.time}</Badge>
-                              </div>
-                              <div className="flex items-center justify-between text-[10px] text-emerald-200/80 mt-1">
+                               <div className="flex items-center justify-between">
+                                  <div className="space-y-0.5">
+                                     <p className="text-[10px] font-black text-nejah-electric uppercase tracking-widest leading-none">{session.childName}</p>
+                                     <h4 className="text-sm font-black text-white group-hover/item:text-nejah-electric transition-colors mt-1">{session.className}</h4>
+                                  </div>
+                                  <Badge className="bg-background/70 text-foreground rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">{session.time}</Badge>
+                               </div>
+                               <div className="flex items-center justify-between text-[10px] text-nejah-electric/80 mt-1">
                                 <span>Teacher: {session.teacher}</span>
                                 {session.meetingLink && (
                                   <a href={session.meetingLink} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-amber-300 hover:text-white font-bold">
@@ -559,7 +559,7 @@ function ParentDashboard() {
                         
                         <Button 
                           onClick={() => setActiveTab('schedule')}
-                          className="w-full mt-4 py-6 rounded-[28px] bg-amber-500 hover:bg-amber-600 text-[#084133] font-black text-xs transition-all shadow-xl hover:scale-[1.02] border-none"
+                           className="w-full mt-4 py-6 rounded-[28px] bg-amber-500 hover:bg-amber-600 text-nejah-sapphire font-black text-xs transition-all shadow-xl hover:scale-[1.02] border-none"
                         >
                             Open Class Schedule
                         </Button>
@@ -567,21 +567,21 @@ function ParentDashboard() {
                   </section>
 
                   {/* Recent Activities */}
-                  <section className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm">
-                    <h3 className="text-xl font-black text-[#084133] font-serif mb-6 flex items-center justify-between">
+                  <section className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm">
+                    <h3 className="text-xl font-black text-nejah-sapphire font-serif mb-6 flex items-center justify-between">
                         Recent Feedbacks
                     </h3>
                     
                     <div className="space-y-6">
                         {data?.activities?.slice(0, 3).map((a: any) => (
                             <div key={a.id} className="flex gap-4 group cursor-pointer" onClick={() => setActiveTab('quran')}>
-                               <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-all border border-gray-100">
+                               <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
                                     {a.type === 'Message' ? <MessageSquare className="h-5 w-5" /> : (a.type === 'Result' ? <Award className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />)}
                                </div>
                                <div className="space-y-0.5">
-                                    <h4 className="text-xs font-black text-emerald-950 leading-tight group-hover:text-emerald-600 transition-colors">{a.title}</h4>
-                                    <p className="text-[11px] text-gray-500 font-medium leading-tight">{a.content}</p>
-                                    <p className="text-[9px] font-bold text-[#084133] uppercase tracking-widest pt-1">{new Date(a.date).toLocaleDateString()}</p>
+                                    <h4 className="text-xs font-black text-foreground leading-tight group-hover:text-nejah-electric transition-colors">{a.title}</h4>
+                                    <p className="text-[11px] text-muted-foreground font-medium leading-tight">{a.content}</p>
+                                    <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">{new Date(a.date).toLocaleDateString()}</p>
                                </div>
                             </div>
                         ))}
@@ -590,7 +590,7 @@ function ParentDashboard() {
                     <Button 
                       onClick={() => setActiveTab('quran')}
                       variant="ghost" 
-                      className="w-full mt-8 rounded-2xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-[#084133] font-black text-xs h-12"
+                      className="w-full mt-8 rounded-2xl bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-nejah-sapphire font-black text-xs h-12"
                     >
                         View Remarks History
                     </Button>
@@ -606,8 +606,8 @@ function ParentDashboard() {
           {activeTab === 'children' && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Children Profiles</h3>
-                <p className="text-sm text-gray-500 font-medium mt-1">Detailed cards and active program paths for registered siblings.</p>
+                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Children Profiles</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1">Detailed cards and active program paths for registered siblings.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -628,19 +628,19 @@ function ParentDashboard() {
           {/* ================================================================ */}
           {activeTab === 'quran' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Quran Memorization Progress</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Track child's milestones, Tajweed reviews, and revision comments.</p>
+                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Quran Memorization Progress</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Track child's milestones, Tajweed reviews, and revision comments.</p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Child:</span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Child:</span>
                   <select 
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   >
                     {data?.children?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -653,46 +653,46 @@ function ParentDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   {/* Progress detail card */}
                   <div className="lg:col-span-8 space-y-8">
-                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div className="glass-panel bg-card rounded-[40px] p-10 border border-border shadow-sm relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-                         <BookOpen className="w-48 h-48 text-[#084133]" />
+                         <BookOpen className="w-48 h-48 text-nejah-sapphire" />
                       </div>
 
                       <div className="flex flex-col md:flex-row items-center justify-between gap-10">
                          <div className="space-y-4 flex-1">
-                             <h3 className="text-3xl font-black text-[#084133] font-serif leading-tight">{selectedChild.name}</h3>
-                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Program: Hifz & Tajweed</p>
+                             <h3 className="text-3xl font-black text-nejah-sapphire font-serif leading-tight">{selectedChild.name}</h3>
+                             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Active Program: Hifz & Tajweed</p>
                              <div className="space-y-2">
-                               <p className="text-xs font-bold text-emerald-900">Current Milestone Surah: <strong>{selectedChild.currentSurah}</strong></p>
+                               <p className="text-xs font-bold text-foreground">Current Milestone Surah: <strong>{selectedChild.currentSurah}</strong></p>
                                {(selectedChild.currentPage > 0 || selectedChild.currentAyah > 0) && (
-                                 <p className="text-xs text-gray-500">
+                                 <p className="text-xs text-muted-foreground">
                                    Last studied:{' '}
                                    {selectedChild.currentPage > 0 ? `Page ${selectedChild.currentPage}` : ''}
                                    {selectedChild.currentPage > 0 && selectedChild.currentAyah > 0 ? ', ' : ''}
                                    {selectedChild.currentAyah > 0 ? `Ayah ${selectedChild.currentAyah}` : ''}
                                  </p>
                                )}
-                               <p className="text-xs text-gray-500">Instructor: <strong>{selectedChild.teacher}</strong></p>
+                               <p className="text-xs text-muted-foreground">Instructor: <strong>{selectedChild.teacher}</strong></p>
                              </div>
                              
                              <div className="flex flex-wrap gap-2 pt-2">
-                               <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">Tajweed: Level 2</Badge>
+                               <Badge className="bg-primary/10 text-nejah-electric border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">Tajweed: Level 2</Badge>
                                <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">Revision: Daily</Badge>
                              </div>
                          </div>
 
                          <div className="relative flex items-center justify-center w-48 h-48 shrink-0">
                              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                 <span className="text-4xl font-black text-[#084133] font-serif leading-none">{selectedChild.memorization}%</span>
-                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1.5">Juz 30 Progress</span>
+                                 <span className="text-4xl font-black text-nejah-sapphire font-serif leading-none">{selectedChild.memorization}%</span>
+                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">Juz 30 Progress</span>
                              </div>
                              <svg className="w-full h-full transform -rotate-90">
-                                 <circle cx="96" cy="96" r="80" className="stroke-gray-100 stroke-[14] fill-none" />
+                                 <circle cx="96" cy="96" r="80" className="stroke-border stroke-[14] fill-none" />
                                  <circle 
                                    cx="96" 
                                    cy="96" 
                                    r="80" 
-                                   className="stroke-[#084133] stroke-[14] fill-none" 
+                                   className="stroke-nejah-sapphire stroke-[14] fill-none" 
                                    strokeDasharray="502" 
                                    strokeDashoffset={502 - (502 * (selectedChild.memorization / 100))} 
                                    strokeLinecap="round" 
@@ -704,22 +704,23 @@ function ParentDashboard() {
 
                     {/* Progress Remarks history */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-black text-emerald-950 font-serif">Remarks & Lessons Log</h4>
+                      <h4 className="text-lg font-black text-foreground font-serif">Remarks & Lessons Log</h4>
                       
                       <div className="space-y-4">
                         {data?.feedbacks?.filter((f: any) => f.studentId === selectedChildId).length === 0 ? (
-                          <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center text-xs text-gray-400 italic">No feedback entries recorded yet for {selectedChild.name}.</div>
+                          <div className="bg-card rounded-3xl p-8 border border-border text-center text-xs text-muted-foreground italic">No feedback entries recorded yet for {selectedChild.name}.</div>
                         ) : (
                           data?.feedbacks?.filter((f: any) => f.studentId === selectedChildId).map((feed: any) => (
-                            <div key={feed.id} className="bg-white rounded-3xl p-6 border border-gray-150 shadow-sm flex flex-col gap-3">
-                              <div className="flex items-center justify-between border-b border-gray-50 pb-3">
+                            <div key={feed.id} className="glass-panel bg-card rounded-3xl p-6 border border-border shadow-sm flex flex-col gap-3">
+                              <div className="flex items-center justify-between border-b border-border pb-3">
                                 <div className="flex items-center gap-2">
-                                  <Award className="h-4 w-4 text-emerald-700" />
-                                  <span className="text-xs font-black text-emerald-950">Remarks by {feed.teacherName}</span>
+                                  <Award className="h-4 w-4 
+text-nejah-electric" />
+                                  <span className="text-xs font-black text-foreground">Remarks by {feed.teacherName}</span>
                                 </div>
-                                <span className="text-[10px] text-gray-400 font-bold">{new Date(feed.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold">{new Date(feed.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</span>
                               </div>
-                              <p className="text-xs font-semibold leading-relaxed text-gray-650 italic">
+                              <p className="text-xs font-semibold leading-relaxed text-muted-foreground italic">
                                 "{feed.content}"
                               </p>
                             </div>
@@ -731,21 +732,21 @@ function ParentDashboard() {
 
                   {/* Right side widgets */}
                   <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm space-y-6">
-                      <h4 className="text-sm font-black text-emerald-950 uppercase tracking-widest border-b border-gray-50 pb-3">Recent Daily Logs</h4>
+                    <div className="glass-panel bg-card rounded-[32px] p-6 border border-border shadow-sm space-y-6">
+                      <h4 className="text-sm font-black text-foreground uppercase tracking-widest border-b border-border pb-3">Recent Daily Logs</h4>
                       
                       <div className="space-y-3.5">
                         {(selectedChild.recentLogs?.length ?? 0) === 0 ? (
-                          <p className="text-xs text-gray-400 italic text-center py-4">No daily progress logged yet.</p>
+                          <p className="text-xs text-muted-foreground italic text-center py-4">No daily progress logged yet.</p>
                         ) : (
                           selectedChild.recentLogs.map((log: any) => (
-                            <div key={log.id} className="flex flex-col gap-1 bg-emerald-50/30 px-4 py-3 rounded-2xl border border-emerald-100/50">
-                              <span className="text-xs font-bold text-emerald-950">{log.surahName}</span>
-                              <span className="text-[10px] text-gray-500">
+                            <div key={log.id} className="flex flex-col gap-1 bg-primary/10 px-4 py-3 rounded-2xl border border-nejah-electric/15">
+                              <span className="text-xs font-bold text-foreground">{log.surahName}</span>
+                              <span className="text-[10px] text-muted-foreground">
                                 Page {log.lastStudiedPage}, Ayah {log.lastStudiedAyah}
                                 {log.teacherName ? ` · ${log.teacherName}` : ''}
                               </span>
-                              <span className="text-[9px] text-gray-400">
+                              <span className="text-[9px] text-muted-foreground">
                                 {log.date ? new Date(log.date).toLocaleDateString() : ''}
                               </span>
                             </div>
@@ -774,19 +775,19 @@ function ParentDashboard() {
           {/* ================================================================ */}
           {activeTab === 'attendance' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Automated Attendance Log</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Synchronized automatically in real-time when student joins/leaves online meeting links.</p>
+                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Automated Attendance Log</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Synchronized automatically in real-time when student joins/leaves online meeting links.</p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Child:</span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Child:</span>
                   <select 
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   >
                     {data?.children?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -799,39 +800,39 @@ function ParentDashboard() {
                 <>
                   {/* Attendance Stats Cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-3xl border border-gray-100 text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Average Attendance</p>
-                      <h4 className="text-3xl font-black text-[#084133] font-serif">{attendanceStats?.attendanceRate || selectedChild.attendance}%</h4>
+                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Average Attendance</p>
+                      <h4 className="text-3xl font-black text-nejah-sapphire font-serif">{attendanceStats?.attendanceRate || selectedChild.attendance}%</h4>
                     </div>
-                    <div className="bg-white p-6 rounded-3xl border border-gray-100 text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Late Arrivals</p>
+                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Late Arrivals</p>
                       <h4 className="text-3xl font-black text-amber-600 font-serif">{attendanceStats?.lateCount || 0} Sessions</h4>
                     </div>
-                    <div className="bg-white p-6 rounded-3xl border border-gray-100 text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Absent Sessions</p>
+                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Absent Sessions</p>
                       <h4 className="text-3xl font-black text-red-600 font-serif">{attendanceStats?.absentCount || 0} Sessions</h4>
                     </div>
-                    <div className="bg-white p-6 rounded-3xl border border-gray-100 text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Left Early</p>
+                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Left Early</p>
                       <h4 className="text-3xl font-black text-orange-600 font-serif">{attendanceStats?.leftEarlyCount || 0} Sessions</h4>
                     </div>
                   </div>
 
                   {/* Attendance logs table */}
-                  <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden p-8">
-                    <h4 className="text-xl font-black text-emerald-950 font-serif mb-6">Attendance History</h4>
+                  <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm overflow-hidden p-8">
+                    <h4 className="text-xl font-black text-foreground font-serif mb-6">Attendance History</h4>
                     
                     {loadingAttendance ? (
                       <div className="py-12 flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nejah-electric"></div>
                       </div>
                     ) : attendanceHistory.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-gray-400 font-medium italic">No attendance logs found in the database.</div>
+                      <div className="py-12 text-center text-xs text-muted-foreground font-medium italic">No attendance logs found in the database.</div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="border-b border-gray-100 text-gray-400 font-black uppercase tracking-wider">
+                            <tr className="border-b border-border text-muted-foreground font-black uppercase tracking-wider">
                               <th className="pb-4 pr-4">Date</th>
                               <th className="pb-4 px-4">Class Session</th>
                               <th className="pb-4 px-4">Instructor</th>
@@ -843,7 +844,7 @@ function ParentDashboard() {
                               <th className="pb-4 pl-4 text-center">Late Alert</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-50 font-medium text-gray-700">
+                          <tbody className="divide-y divide-border font-medium text-foreground">
                             {attendanceHistory.map((log: any) => {
                               const status = log.attendanceStatus;
                               const sess = log.classSession || {};
@@ -856,21 +857,21 @@ function ParentDashboard() {
                                 : '-';
                                 
                               return (
-                                <tr key={log.id} className="hover:bg-gray-50/50 transition-colors">
-                                  <td className="py-4 pr-4 text-emerald-950 font-black">
+                                <tr key={log.id} className="hover:bg-muted/50 transition-colors">
+                                  <td className="py-4 pr-4 text-foreground font-black">
                                     {new Date(sess.sessionDate || log.createdAt).toLocaleDateString()}
                                   </td>
-                                  <td className="py-4 px-4 font-bold text-gray-800">
+                                  <td className="py-4 px-4 font-bold text-foreground">
                                     {sess.classTitle || 'Quran Lesson'}
-                                    <span className="block text-[10px] text-gray-400 font-medium">{sess.subject || 'Quranic Studies'}</span>
+                                    <span className="block text-[10px] text-muted-foreground font-medium">{sess.subject || 'Quranic Studies'}</span>
                                   </td>
-                                  <td className="py-4 px-4 font-semibold text-gray-600">
+                                  <td className="py-4 px-4 font-semibold text-muted-foreground">
                                     {sess.teacher?.fullName || 'Teacher'}
                                   </td>
                                   <td className="py-4 px-4 text-center">
                                     <Badge className={cn(
                                       "text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-none",
-                                      status === 'PRESENT' ? "bg-emerald-50 text-emerald-700" :
+                                      status === 'PRESENT' ? "bg-primary/10 text-nejah-electric" :
                                       status === 'LATE' ? "bg-amber-50 text-amber-700" :
                                       status === 'LEFT_EARLY' ? "bg-orange-50 text-orange-700" :
                                       "bg-red-50 text-red-700"
@@ -878,12 +879,12 @@ function ParentDashboard() {
                                       {status}
                                     </Badge>
                                   </td>
-                                  <td className="py-4 px-4 tabular-nums text-gray-500">{displayJoin}</td>
-                                  <td className="py-4 px-4 tabular-nums text-gray-500">{displayLeave}</td>
-                                  <td className="py-4 px-4 text-center font-bold text-emerald-950 tabular-nums">
+                                  <td className="py-4 px-4 tabular-nums text-muted-foreground">{displayJoin}</td>
+                                  <td className="py-4 px-4 tabular-nums text-muted-foreground">{displayLeave}</td>
+                                  <td className="py-4 px-4 text-center font-bold text-foreground tabular-nums">
                                     {log.durationMinutes ? `${log.durationMinutes} min` : '-'}
                                   </td>
-                                  <td className="py-4 px-4 text-center font-semibold text-gray-500 tabular-nums">
+                                  <td className="py-4 px-4 text-center font-semibold text-muted-foreground tabular-nums">
                                     {sess.teacherDuration ? `${sess.teacherDuration} min` : '-'}
                                   </td>
                                   <td className="py-4 pl-4 text-center">
@@ -896,7 +897,7 @@ function ParentDashboard() {
                                         <AlertCircle className="h-3 w-3" /> Left Call Early
                                       </span>
                                     ) : status === 'PRESENT' ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-bold bg-emerald-50/50 px-2 py-0.5 rounded-md">
+                                      <span className="inline-flex items-center gap-1 text-[10px] text-nejah-electric font-bold bg-primary/10 px-2 py-0.5 rounded-md">
                                         <CheckCircle2 className="h-3 w-3" /> Punctual
                                       </span>
                                     ) : (
@@ -921,19 +922,19 @@ function ParentDashboard() {
           {/* ================================================================ */}
           {activeTab === 'homework' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Homework Assignments</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Review pending homework tasks and child submission statuses.</p>
+                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Homework Assignments</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Review pending homework tasks and child submission statuses.</p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Child:</span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Child:</span>
                   <select 
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   >
                     {data?.children?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -946,33 +947,33 @@ function ParentDashboard() {
                 <div className="space-y-8">
                   {/* Stats Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                      <div className="p-3 bg-emerald-50 rounded-xl text-emerald-700">
+                    <div className="glass-panel bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
+                      <div className="p-3 bg-primary/10 rounded-xl text-nejah-electric">
                         <ClipboardList className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-450 uppercase font-bold tracking-wider">Total Homework</p>
-                        <h4 className="text-xl font-black text-emerald-950 font-serif">{data?.homework?.filter((h: any) => h.studentId === selectedChildId).length || 0} Assigned</h4>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Homework</p>
+                        <h4 className="text-xl font-black text-foreground font-serif">{data?.homework?.filter((h: any) => h.studentId === selectedChildId).length || 0} Assigned</h4>
                       </div>
                     </div>
                     
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                    <div className="glass-panel bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
                       <div className="p-3 bg-red-50 rounded-xl text-red-650">
                         <AlertCircle className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-450 uppercase font-bold tracking-wider">Pending</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pending</p>
                         <h4 className="text-xl font-black text-red-600 font-serif">{data?.homework?.filter((h: any) => h.studentId === selectedChildId && h.status === 'Pending').length || 0} Pending</h4>
                       </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                      <div className="p-3 bg-emerald-100 rounded-xl text-emerald-900">
+                    <div className="glass-panel bg-white p-6 rounded-2xl border border-border shadow-sm flex items-center gap-4">
+                      <div className="p-3 bg-primary/15 rounded-xl text-foreground">
                         <CheckCircle2 className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-450 uppercase font-bold tracking-wider">Completed</p>
-                        <h4 className="text-xl font-black text-emerald-800 font-serif">{data?.homework?.filter((h: any) => h.studentId === selectedChildId && h.status === 'Completed').length || 0} Submitted</h4>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Completed</p>
+                        <h4 className="text-xl font-black text-foreground font-serif">{data?.homework?.filter((h: any) => h.studentId === selectedChildId && h.status === 'Completed').length || 0} Submitted</h4>
                       </div>
                     </div>
                   </div>
@@ -980,32 +981,32 @@ function ParentDashboard() {
                   {/* List */}
                   <div className="space-y-4">
                     {data?.homework?.filter((h: any) => h.studentId === selectedChildId).length === 0 ? (
-                      <div className="bg-white rounded-3xl p-12 text-center text-xs text-gray-400 font-medium italic border border-gray-100">No homework tasks recorded.</div>
+                      <div className="bg-card rounded-3xl p-12 text-center text-xs text-muted-foreground font-medium italic border border-border">No homework tasks recorded.</div>
                     ) : (
                       data?.homework?.filter((h: any) => h.studentId === selectedChildId).map((hw: any) => (
-                        <div key={hw.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+                        <div key={hw.id} className="bg-white p-6 rounded-3xl border border-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-3">
-                              <h4 className="text-lg font-black text-emerald-950 font-serif">{hw.title}</h4>
+                              <h4 className="text-lg font-black text-foreground font-serif">{hw.title}</h4>
                               <Badge className={cn(
                                 "text-[8px] font-bold uppercase tracking-wider px-2 border-none",
                                 hw.difficulty === 'High' ? "bg-red-50 text-red-650" :
-                                hw.difficulty === 'Medium' ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                                hw.difficulty === 'Medium' ? "bg-amber-50 text-amber-700" : "bg-primary/10 text-nejah-electric"
                               )}>{hw.difficulty} Difficulty</Badge>
                             </div>
-                            <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-2xl">{hw.description}</p>
+                            <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-2xl">{hw.description}</p>
                           </div>
                           
-                          <div className="flex items-center gap-6 shrink-0 justify-between md:justify-end border-t md:border-none pt-4 md:pt-0 border-gray-50">
+                          <div className="flex items-center gap-6 shrink-0 justify-between md:justify-end border-t md:border-none pt-4 md:pt-0 border-border">
                             <div className="text-left md:text-right space-y-1">
-                              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Due Date</p>
-                              <p className="text-xs font-bold text-gray-700 tabular-nums">{new Date(hw.dueDate).toLocaleDateString()}</p>
+                              <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">Due Date</p>
+                              <p className="text-xs font-bold text-foreground tabular-nums">{new Date(hw.dueDate).toLocaleDateString()}</p>
                             </div>
 
                             <div>
                               <Badge className={cn(
                                 "text-[9px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full border-none",
-                                hw.status === 'Completed' ? "bg-emerald-800 text-white" : "bg-red-50 text-red-600 animate-pulse"
+                                hw.status === 'Completed' ? "bg-nejah-sapphire text-white" : "bg-red-50 text-red-600 animate-pulse"
                               )}>{hw.status}</Badge>
                             </div>
                           </div>
@@ -1023,19 +1024,19 @@ function ParentDashboard() {
           {/* ================================================================ */}
           {activeTab === 'exams' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Exams & Test Results</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Review official grades, evaluations, and comments from teachers.</p>
+                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Exams & Test Results</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Review official grades, evaluations, and comments from teachers.</p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Child:</span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Child:</span>
                   <select 
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   >
                     {data?.children?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -1047,31 +1048,31 @@ function ParentDashboard() {
               {selectedChild && (
                 <div className="space-y-8">
                   {/* Results list */}
-                  <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 overflow-hidden">
-                    <h4 className="text-xl font-black text-emerald-950 font-serif mb-6">Evaluation Logs</h4>
+                  <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm p-8 overflow-hidden">
+                    <h4 className="text-xl font-black text-foreground font-serif mb-6">Evaluation Logs</h4>
                     
                     <div className="space-y-6">
                       {mockExams.filter(e => e.studentId === selectedChildId).map(exam => (
-                        <div key={exam.id} className="border-b border-gray-50 pb-6 last:border-none last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div key={exam.id} className="border-b border-border pb-6 last:border-none last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-6">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-3">
-                              <h4 className="text-base font-extrabold text-emerald-950">{exam.name}</h4>
-                              <span className="text-[10px] text-gray-400 font-bold">{new Date(exam.date).toLocaleDateString()}</span>
+                              <h4 className="text-base font-extrabold text-foreground">{exam.name}</h4>
+                              <span className="text-[10px] text-muted-foreground font-bold">{new Date(exam.date).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-gray-550 leading-relaxed font-semibold">Remarks: "{exam.feedback}"</p>
-                            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wider">Subject: {exam.subject}</span>
+                            <p className="text-xs text-muted-foreground leading-relaxed font-semibold">Remarks: "{exam.feedback}"</p>
+                            <span className="text-[10px] text-foreground font-bold bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">Subject: {exam.subject}</span>
                           </div>
 
                           <div className="flex items-center gap-6 shrink-0">
-                            <div className="text-center bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 w-20">
-                              <p className="text-xs font-bold text-gray-400 leading-none">Score</p>
-                              <p className="text-xl font-black text-[#084133] font-serif mt-1">{exam.score}</p>
+                            <div className="text-center bg-primary/10 border border-nejah-electric/15 rounded-2xl p-4 w-20">
+                              <p className="text-xs font-bold text-muted-foreground leading-none">Score</p>
+                              <p className="text-xl font-black text-nejah-sapphire font-serif mt-1">{exam.score}</p>
                             </div>
                             <div className="text-center bg-amber-500/10 border border-amber-400/20 rounded-2xl p-4 w-20">
-                              <p className="text-xs font-bold text-gray-400 leading-none">Grade</p>
+                              <p className="text-xs font-bold text-muted-foreground leading-none">Grade</p>
                               <p className="text-xl font-black text-amber-700 font-serif mt-1">{exam.grade}</p>
                             </div>
-                            <Badge className="bg-emerald-900 text-white font-bold uppercase tracking-wider text-[9px] px-3.5 py-1 border-none shrink-0">{exam.status}</Badge>
+                            <Badge className="bg-nejah-sapphire text-white font-bold uppercase tracking-wider text-[9px] px-3.5 py-1 border-none shrink-0">{exam.status}</Badge>
                           </div>
                         </div>
                       ))}
@@ -1088,15 +1089,15 @@ function ParentDashboard() {
           {activeTab === 'schedule' && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Class Schedules</h3>
-                <p className="text-sm text-gray-500 font-medium mt-1">Full class slots mapping for all children registered under your guardianship.</p>
+                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Class Schedules</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1">Full class slots mapping for all children registered under your guardianship.</p>
               </div>
 
-              <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden p-8">
+              <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm overflow-hidden p-8">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-100 text-gray-400 font-black uppercase tracking-wider">
+                      <tr className="border-b border-border text-muted-foreground font-black uppercase tracking-wider">
                         <th className="pb-4 pr-4">Student</th>
                         <th className="pb-4 px-4">Class Title</th>
                         <th className="pb-4 px-4">Teacher</th>
@@ -1106,21 +1107,21 @@ function ParentDashboard() {
                         <th className="pb-4 pl-4 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50 font-medium text-gray-700">
+                    <tbody className="divide-y divide-border font-medium text-foreground">
                       {data?.schedules?.map((sc: any) => (
-                        <tr key={sc.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="py-4 pr-4 text-emerald-950 font-black flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center font-black text-emerald-800 text-[10px]">
+                        <tr key={sc.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="py-4 pr-4 text-foreground font-black flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-foreground text-[10px]">
                               {sc.childName?.charAt(0) || 'S'}
                             </div>
                             {sc.childName}
                           </td>
-                          <td className="py-4 px-4 font-bold text-gray-800">{sc.className}</td>
-                          <td className="py-4 px-4 font-semibold text-gray-600">{sc.teacher}</td>
-                          <td className="py-4 px-4 font-bold text-emerald-900">{sc.dayOfWeek || 'Monday'}</td>
-                          <td className="py-4 px-4 text-center tabular-nums text-gray-500 font-semibold">{sc.time}</td>
+                          <td className="py-4 px-4 font-bold text-foreground">{sc.className}</td>
+                          <td className="py-4 px-4 font-semibold text-muted-foreground">{sc.teacher}</td>
+                          <td className="py-4 px-4 font-bold text-foreground">{sc.dayOfWeek || 'Monday'}</td>
+                          <td className="py-4 px-4 text-center tabular-nums text-muted-foreground font-semibold">{sc.time}</td>
                           <td className="py-4 px-4 text-center">
-                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
+                            <Badge className="bg-primary/10 text-nejah-electric border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
                               {sc.status || 'Active'}
                             </Badge>
                           </td>
@@ -1129,12 +1130,12 @@ function ParentDashboard() {
                               <Button 
                                 onClick={() => window.open(sc.meetingLink, '_blank')}
                                 size="sm" 
-                                className="bg-amber-500 hover:bg-amber-600 text-[#084133] rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
+                                className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
                               >
                                 Join Room
                               </Button>
                             ) : (
-                              <span className="text-gray-400 italic text-[10px]">No link yet</span>
+                              <span className="text-muted-foreground italic text-[10px]">No link yet</span>
                             )}
                           </td>
                         </tr>
@@ -1151,19 +1152,19 @@ function ParentDashboard() {
           {/* ================================================================ */}
           {activeTab === 'recitations' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Student Recitations Audio</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Listen to submitted Quran recitation audio recordings and check teacher scores.</p>
+                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Student Recitations Audio</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Listen to submitted Quran recitation audio recordings and check teacher scores.</p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Child:</span>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Child:</span>
                   <select 
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   >
                     {data?.children?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -1179,31 +1180,31 @@ function ParentDashboard() {
                     {mockRecitations.filter(r => r.studentId === selectedChildId).map(audio => {
                       const isPlaying = playingAudioId === audio.id;
                       return (
-                        <div key={audio.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-6">
+                        <div key={audio.id} className="glass-panel bg-card rounded-3xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-6">
                           <div className="flex items-center gap-4">
                             <Button
                               onClick={() => setPlayingAudioId(isPlaying ? null : audio.id)}
                               className={cn(
                                 "w-12 h-12 rounded-full shrink-0 flex items-center justify-center border-none",
-                                isPlaying ? "bg-[#084133] hover:bg-emerald-900 text-white" : "bg-emerald-50 hover:bg-emerald-100 text-[#084133]"
+                                isPlaying ? "bg-nejah-surface hover:bg-background text-white" : "bg-primary/10 hover:bg-primary/15 text-nejah-sapphire"
                               )}
                             >
-                              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-[#084133]" />}
+                              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-nejah-sapphire" />}
                             </Button>
 
                             <div className="space-y-1">
-                              <h4 className="text-sm font-extrabold text-emerald-950">{audio.surah}</h4>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{audio.verses} | Length: {audio.duration}</p>
-                              <p className="text-[9px] text-[#084133] font-bold">Uploaded on: {new Date(audio.date).toLocaleDateString()}</p>
+                              <h4 className="text-sm font-extrabold text-foreground">{audio.surah}</h4>
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{audio.verses} | Length: {audio.duration}</p>
+                              <p className="text-[9px] text-nejah-sapphire font-bold">Uploaded on: {new Date(audio.date).toLocaleDateString()}</p>
                             </div>
                           </div>
 
                           <div className="text-right space-y-1 shrink-0">
                             <div className="flex items-center gap-1.5 justify-end">
-                              <Volume2 className="h-3.5 w-3.5 text-gray-400" />
-                              <span className="text-xs font-black text-emerald-950 font-serif">Score: {audio.teacherScore}</span>
+                              <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs font-black text-foreground font-serif">Score: {audio.teacherScore}</span>
                             </div>
-                            <Badge className="bg-emerald-50 text-emerald-700 border-none text-[8px] font-bold uppercase tracking-wider px-2 py-0.5">Reviewed</Badge>
+                            <Badge className="bg-primary/10 text-nejah-electric border-none text-[8px] font-bold uppercase tracking-wider px-2 py-0.5">Reviewed</Badge>
                           </div>
                         </div>
                       );
@@ -1211,8 +1212,8 @@ function ParentDashboard() {
                   </div>
 
                   {/* Player detail / teacher remarks */}
-                  <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 space-y-6">
-                    <h4 className="text-sm font-black text-emerald-950 uppercase tracking-widest border-b border-gray-50 pb-3">Evaluation Remarks</h4>
+                  <div className="glass-panel bg-card rounded-[32px] border border-border shadow-sm p-6 space-y-6">
+                    <h4 className="text-sm font-black text-foreground uppercase tracking-widest border-b border-border pb-3">Evaluation Remarks</h4>
                     
                     {playingAudioId ? (
                       (() => {
@@ -1221,23 +1222,23 @@ function ParentDashboard() {
                         return (
                           <div className="space-y-6">
                             <div className="space-y-1.5">
-                              <h5 className="text-base font-black text-[#084133] font-serif">{activeRec.surah}</h5>
-                              <p className="text-[10px] text-gray-450 uppercase font-semibold">{activeRec.verses}</p>
+                              <h5 className="text-base font-black text-nejah-sapphire font-serif">{activeRec.surah}</h5>
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">{activeRec.verses}</p>
                             </div>
 
-                            <div className="bg-[#f0f9f1] p-5 rounded-2xl border border-emerald-100/50 space-y-3">
+                            <div className="bg-primary/5 p-5 rounded-2xl border border-nejah-electric/15 space-y-3">
                               <div className="flex items-center gap-2">
-                                <Award className="h-4 w-4 text-emerald-700 animate-bounce" />
-                                <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider">Teacher Comments</span>
+                                <Award className="h-4 w-4 text-nejah-electric animate-bounce" />
+                                <span className="text-[10px] font-black text-foreground uppercase tracking-wider">Teacher Comments</span>
                               </div>
-                              <p className="text-xs italic font-medium leading-relaxed text-emerald-900/80">
+                              <p className="text-xs italic font-medium leading-relaxed text-foreground/80">
                                 "{activeRec.remarks}"
                               </p>
                             </div>
 
                             {/* Simulated waveform */}
                             <div className="space-y-1.5">
-                              <div className="flex justify-between text-[9px] font-bold text-gray-400">
+                              <div className="flex justify-between text-[9px] font-bold text-muted-foreground">
                                 <span>Playing Recitation</span>
                                 <span>{activeRec.duration}</span>
                               </div>
@@ -1245,7 +1246,7 @@ function ParentDashboard() {
                                 {[...Array(30)].map((_, idx) => (
                                   <span 
                                     key={idx} 
-                                    className="w-1 bg-emerald-700 rounded-full animate-pulse" 
+                                    className="w-1 bg-primary rounded-full animate-pulse" 
                                     style={{ 
                                       height: `${Math.max(10, Math.sin(idx * 0.5) * 20 + 10)}%`,
                                       animationDelay: `${idx * 0.05}s`
@@ -1258,7 +1259,7 @@ function ParentDashboard() {
                         );
                       })()
                     ) : (
-                      <div className="py-12 text-center text-xs text-gray-400 font-medium italic">Click the play icon on any audio file to inspect teacher evaluations and notes.</div>
+                      <div className="py-12 text-center text-xs text-muted-foreground font-medium italic">Click the play icon on any audio file to inspect teacher evaluations and notes.</div>
                     )}
                   </div>
                 </div>
@@ -1272,33 +1273,33 @@ function ParentDashboard() {
           {activeTab === 'messages' && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Direct Teacher Messages</h3>
-                <p className="text-sm text-gray-500 font-medium mt-1">Communicate directly with Sheikhs, Ustadhas, and administrative staff.</p>
+                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Direct Teacher Messages</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1">Communicate directly with Sheikhs, Ustadhas, and administrative staff.</p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white border border-gray-150 rounded-[40px] shadow-sm overflow-hidden h-[600px]">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 glass-panel bg-white border border-white/10 rounded-[40px] shadow-sm overflow-hidden h-[600px]">
                 {/* Contacts pane */}
-                <div className="lg:col-span-4 border-r border-gray-100 flex flex-col h-full bg-gray-50/50">
-                  <div className="p-6 border-b border-gray-100">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Active Chats</h4>
+                <div className="lg:col-span-4 border-r border-border flex flex-col h-full bg-background/50">
+                  <div className="p-6 border-b border-border">
+                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Active Chats</h4>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                    <button className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-emerald-100 shadow-sm text-left">
+                    <button className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-nejah-electric/15 shadow-sm text-left">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">SA</div>
+                        <div className="w-9 h-9 rounded-xl bg-nejah-sapphire text-white flex items-center justify-center font-bold text-xs shrink-0">SA</div>
                         <div>
-                          <p className="text-xs font-bold text-emerald-950">Sheikh Abdullah</p>
-                          <p className="text-[9px] text-gray-450 font-bold truncate max-w-[150px]">Assalamu Alaikum. Zaid did...</p>
+                          <p className="text-xs font-bold text-foreground">Sheikh Abdullah</p>
+                          <p className="text-[9px] text-muted-foreground font-bold truncate max-w-[150px]">Assalamu Alaikum. Zaid did...</p>
                         </div>
                       </div>
-                      <span className="text-[8px] text-emerald-605 font-bold uppercase shrink-0">Active</span>
+                      <span className="text-[8px] text-nejah-electric font-bold uppercase shrink-0">Active</span>
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 hover:bg-white rounded-2xl transition-colors text-left text-gray-500">
+                    <button className="w-full flex items-center justify-between p-4 hover:bg-card rounded-2xl transition-colors text-left text-muted-foreground">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">UM</div>
+                        <div className="w-9 h-9 rounded-xl bg-primary/15 text-foreground flex items-center justify-center font-bold text-xs shrink-0">UM</div>
                         <div>
-                          <p className="text-xs font-bold text-gray-800">Ustadha Maryam</p>
-                          <p className="text-[9px] text-gray-400">Assalamu Alaikum. Lina is...</p>
+                          <p className="text-xs font-bold text-foreground">Ustadha Maryam</p>
+                          <p className="text-[9px] text-muted-foreground">Assalamu Alaikum. Lina is...</p>
                         </div>
                       </div>
                     </button>
@@ -1313,30 +1314,30 @@ function ParentDashboard() {
                       const isMe = msg.role === 'Guardian';
                       return (
                         <div key={msg.id} className={cn("flex flex-col max-w-[70%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-                          <span className="text-[9px] font-bold text-gray-400 mb-1">{msg.sender} ({msg.role})</span>
+                          <span className="text-[9px] font-bold text-muted-foreground mb-1">{msg.sender} ({msg.role})</span>
                           <div className={cn(
                             "p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm",
-                            isMe ? "bg-emerald-900 text-white rounded-tr-none" : "bg-gray-50 text-gray-850 rounded-tl-none border border-gray-100"
+                            isMe ? "bg-nejah-sapphire text-white rounded-tr-none" : "bg-background/50 text-foreground rounded-tl-none border border-border"
                           )}>
                             {msg.content}
                           </div>
-                          <span className="text-[8px] text-gray-450 font-bold mt-1 tabular-nums">{msg.time}</span>
+                          <span className="text-[8px] text-muted-foreground font-bold mt-1 tabular-nums">{msg.time}</span>
                         </div>
                       );
                     })}
                   </div>
 
                   {/* Message Input box */}
-                  <form onSubmit={handleSendMessage} className="p-6 border-t border-gray-100 flex gap-3">
+                  <form onSubmit={handleSendMessage} className="p-6 border-t border-border flex gap-3">
                     <Input 
                       placeholder="Type your message to instructor..."
                       value={newMessageText}
                       onChange={(e) => setNewMessageText(e.target.value)}
-                      className="flex-1 bg-gray-50 border-none rounded-2xl h-12 text-xs focus-visible:ring-emerald-700"
+                      className="flex-1 bg-background/50 border-none rounded-2xl h-12 text-xs focus-visible:ring-nejah-electric"
                     />
                     <Button 
                       type="submit"
-                      className="bg-emerald-900 hover:bg-emerald-800 text-white h-12 px-6 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
+                      className="bg-nejah-sapphire hover:bg-background text-white h-12 px-6 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
                     >
                       Send Message
                     </Button>
@@ -1352,68 +1353,68 @@ function ParentDashboard() {
           {activeTab === 'settings' && (
             <div className="space-y-8 max-w-2xl">
               <div>
-                <h3 className="text-3xl font-black text-[#084133] font-serif tracking-tight">Profile Settings</h3>
-                <p className="text-sm text-gray-500 font-medium mt-1">Review and manage your primary guardian details and configurations.</p>
+                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">Profile Settings</h3>
+                <p className="text-sm text-muted-foreground font-medium mt-1">Review and manage your primary guardian details and configurations.</p>
               </div>
 
-              <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
+              <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm p-10">
                 <form onSubmit={handleSaveProfile} className="space-y-6">
                   
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Guardian Full Name</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Guardian Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         value={profileForm.name}
                         onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                        className="pl-12 bg-gray-50 border-none rounded-2xl h-12 text-xs"
+                        className="pl-12 bg-background/50 border-none rounded-2xl h-12 text-xs"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Email Address</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         type="email"
                         value={profileForm.email}
                         onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                        className="pl-12 bg-gray-50 border-none rounded-2xl h-12 text-xs"
+                        className="pl-12 bg-background/50 border-none rounded-2xl h-12 text-xs"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Phone Number</label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        className="pl-12 bg-gray-50 border-none rounded-2xl h-12 text-xs"
+                        className="pl-12 bg-background/50 border-none rounded-2xl h-12 text-xs"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Home Address</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Home Address</label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         value={profileForm.address}
                         onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                        className="pl-12 bg-gray-50 border-none rounded-2xl h-12 text-xs"
+                        className="pl-12 bg-background/50 border-none rounded-2xl h-12 text-xs"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Preferred Language</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">Preferred Language</label>
                     <select 
                       value={profileForm.language}
                       onChange={(e) => setProfileForm({ ...profileForm, language: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl h-12 px-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                      className="w-full bg-background/50 border-none rounded-2xl h-12 px-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                     >
                       <option value="English">English</option>
                       <option value="Amharic">Amharic</option>
@@ -1423,7 +1424,7 @@ function ParentDashboard() {
 
                   <Button 
                     type="submit"
-                    className="w-full h-12 bg-emerald-900 hover:bg-emerald-800 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider"
+                    className="w-full h-12 bg-nejah-sapphire hover:bg-background text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider"
                   >
                     Save Changes
                   </Button>

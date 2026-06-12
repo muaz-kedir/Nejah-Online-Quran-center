@@ -49,14 +49,14 @@ interface ApplicationDetail {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   PENDING_REVIEW: { label: 'Pending Review', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
-  APPROVED: { label: 'Approved', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+  APPROVED: { label: 'Approved', color: 'text-primary', bg: 'bg-primary/10 border-primary/200', icon: CheckCircle2 },
   REJECTED: { label: 'Rejected', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
   MORE_INFO_REQUIRED: { label: 'More Info Required', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: AlertCircle },
 };
 
 export const Route = createFileRoute('/teacher-applications_/$id')({
   component: ApplicationDetailPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function ApplicationDetailContent() {
@@ -119,7 +119,7 @@ function ApplicationDetailContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -127,7 +127,7 @@ function ApplicationDetailContent() {
   if (!app) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Application not found</p>
+        <p className="text-muted-foreground">Application not found</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate({ to: '/teacher-applications' })}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Applications
         </Button>
@@ -145,12 +145,12 @@ function ApplicationDetailContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 mb-2 -ml-2"
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground mb-2 -ml-2"
             onClick={() => navigate({ to: '/teacher-applications' })}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Applications
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 font-serif">{app.fullName}</h1>
-          <p className="text-sm text-gray-400 font-mono mt-0.5">{app.applicationNumber}</p>
+          <h1 className="text-2xl font-bold text-foreground text-foreground font-serif">{app.fullName}</h1>
+          <p className="text-sm text-muted-foreground font-mono mt-0.5">{app.applicationNumber}</p>
         </div>
         <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${sc.bg} ${sc.color}`}>
           <StatusIcon className="h-4 w-4" />
@@ -179,10 +179,10 @@ function ApplicationDetailContent() {
           <Section title="Education & Qualifications" icon={BookOpen}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <Label className="text-xs text-gray-500 uppercase tracking-wider">Languages Spoken</Label>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Languages Spoken</Label>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {app.languages?.map(lang => (
-                    <span key={lang} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200">{lang}</span>
+                    <span key={lang} className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/200">{lang}</span>
                   ))}
                 </div>
               </div>
@@ -191,7 +191,7 @@ function ApplicationDetailContent() {
               <InfoField label="Islamic Education" value={app.islamicEducationLevel} />
               <InfoField label="Marketing Source" value={app.marketingSource} />
               <div className="sm:col-span-2">
-                <Label className="text-xs text-gray-500 uppercase tracking-wider">Teaching Availability</Label>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teaching Availability</Label>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {app.teachingTimeAvailability?.map(time => (
                     <span key={time} className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">{time}</span>
@@ -212,19 +212,19 @@ function ApplicationDetailContent() {
                 { label: 'CV / Resume', url: app.cvResumeUrl },
               ].map(doc => (
                 <div key={doc.label} className={`flex items-center justify-between p-3 rounded-xl border ${
-                  doc.url ? 'border-emerald-200 bg-emerald-50/50' : 'border-gray-200 bg-gray-50'
+                  doc.url ? 'border-primary/200 bg-primary/10/50' : 'border-border bg-muted'
                 }`}>
                   <div className="flex items-center gap-2">
-                    <FileText className={`h-4 w-4 ${doc.url ? 'text-emerald-600' : 'text-gray-300'}`} />
-                    <span className={`text-sm font-medium ${doc.url ? 'text-gray-700' : 'text-gray-400'}`}>{doc.label}</span>
+                    <FileText className={`h-4 w-4 ${doc.url ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <span className={`text-sm font-medium ${doc.url ? 'text-foreground' : 'text-muted-foreground'}`}>{doc.label}</span>
                   </div>
                   {doc.url ? (
                     <a href={`${backendUrl}${doc.url}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-emerald-700 hover:text-emerald-900 text-xs font-medium transition-colors">
+                      className="flex items-center gap-1 text-primary hover:text-nejah-sapphire text-xs font-medium transition-colors">
                       <Download className="h-3.5 w-3.5" /> Download
                     </a>
                   ) : (
-                    <span className="text-xs text-gray-400 italic">Not uploaded</span>
+                    <span className="text-xs text-muted-foreground italic">Not uploaded</span>
                   )}
                 </div>
               ))}
@@ -234,7 +234,7 @@ function ApplicationDetailContent() {
           {/* Comments */}
           {app.additionalComments && (
             <Section title="Additional Comments" icon={MessageSquare}>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{app.additionalComments}</p>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{app.additionalComments}</p>
             </Section>
           )}
         </div>
@@ -242,40 +242,40 @@ function ApplicationDetailContent() {
         {/* Sidebar — Actions */}
         <div className="space-y-6">
           {/* Application Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-4">Application Info</h3>
+          <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue p-5">
+            <h3 className="font-semibold text-foreground dark:text-foreground text-sm mb-4">Application Info</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Submitted</span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-muted-foreground">Submitted</span>
+                <span className="font-medium text-foreground dark:text-muted-foreground">
                   {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
               {app.reviewedAt && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Reviewed</span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-muted-foreground">Reviewed</span>
+                  <span className="font-medium text-foreground dark:text-muted-foreground">
                     {new Date(app.reviewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
               )}
               {app.createdTeacherId && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Teacher Created</span>
-                  <span className="text-emerald-600 font-medium">✓ Yes</span>
+                  <span className="text-muted-foreground">Teacher Created</span>
+                  <span className="text-primary font-medium">✓ Yes</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Admin Notes */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-3">Admin Notes</h3>
+          <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue p-5">
+            <h3 className="font-semibold text-foreground dark:text-foreground text-sm mb-3">Admin Notes</h3>
             <Textarea
               value={adminNotes}
               onChange={e => setAdminNotes(e.target.value)}
               placeholder="Add internal notes about this application..."
-              className="bg-gray-50 border-gray-200 min-h-[80px] text-sm"
+              className="bg-muted border-border min-h-[80px] text-sm"
             />
           </div>
 
@@ -295,11 +295,11 @@ function ApplicationDetailContent() {
 
           {/* Action Buttons */}
           {isReviewable && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-3">
-              <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" /> Review Actions
+            <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue p-5 space-y-3">
+              <h3 className="font-semibold text-foreground dark:text-foreground text-sm mb-2 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary" /> Review Actions
               </h3>
-              <Button className="w-full bg-emerald-700 hover:bg-emerald-800 shadow-md" disabled={actionLoading}
+              <Button className="w-full bg-primary hover:bg-nejah-azure shadow-md" disabled={actionLoading}
                 onClick={() => handleReview('approve')}>
                 {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                 Approve Application
@@ -320,8 +320,8 @@ function ApplicationDetailContent() {
       {/* Reject Modal */}
       {showRejectModal && (
         <ModalOverlay onClose={() => setShowRejectModal(false)}>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Reject Application</h3>
-          <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejection. This will be sent to the applicant via email.</p>
+          <h3 className="text-lg font-bold text-foreground mb-3">Reject Application</h3>
+          <p className="text-sm text-muted-foreground mb-4">Please provide a reason for rejection. This will be sent to the applicant via email.</p>
           <Textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
             placeholder="Enter rejection reason..." className="min-h-[100px] mb-4" />
           <div className="flex gap-3 justify-end">
@@ -338,8 +338,8 @@ function ApplicationDetailContent() {
       {/* Info Request Modal */}
       {showInfoModal && (
         <ModalOverlay onClose={() => setShowInfoModal(false)}>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Request Additional Information</h3>
-          <p className="text-sm text-gray-500 mb-4">Send a message to the applicant requesting additional documents or information.</p>
+          <h3 className="text-lg font-bold text-foreground mb-3">Request Additional Information</h3>
+          <p className="text-sm text-muted-foreground mb-4">Send a message to the applicant requesting additional documents or information.</p>
           <Textarea value={infoMessage} onChange={e => setInfoMessage(e.target.value)}
             placeholder="Enter your message to the applicant..." className="min-h-[100px] mb-4" />
           <div className="flex gap-3 justify-end">
@@ -360,9 +360,9 @@ function ApplicationDetailContent() {
 
 function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-emerald-600" /> {title}
+    <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue p-5">
+      <h3 className="font-semibold text-foreground dark:text-foreground text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+        <Icon className="h-4 w-4 text-primary" /> {title}
       </h3>
       {children}
     </div>
@@ -372,10 +372,10 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
 function InfoField({ icon: Icon, label, value }: { icon?: any; label: string; value?: string | null }) {
   return (
     <div>
-      <Label className="text-xs text-gray-500 uppercase tracking-wider">{label}</Label>
-      <p className="text-sm text-gray-800 dark:text-gray-200 font-medium mt-0.5 flex items-center gap-1.5">
-        {Icon && <Icon className="h-3.5 w-3.5 text-gray-400" />}
-        {value || <span className="text-gray-300 italic">—</span>}
+      <Label className="text-xs text-muted-foreground uppercase tracking-wider">{label}</Label>
+      <p className="text-sm text-foreground dark:text-foreground font-medium mt-0.5 flex items-center gap-1.5">
+        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+        {value || <span className="text-muted-foreground italic">—</span>}
       </p>
     </div>
   );
@@ -385,7 +385,7 @@ function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClos
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-card rounded-2xl shadow-2xl p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
         {children}
       </div>
     </div>

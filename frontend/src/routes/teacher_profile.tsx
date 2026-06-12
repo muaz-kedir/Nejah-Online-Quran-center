@@ -55,7 +55,7 @@ function TeacherProfilePage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-900"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nejah-border-blue"></div>
         </div>
       </DashboardLayout>
     );
@@ -65,7 +65,7 @@ function TeacherProfilePage() {
     return (
       <DashboardLayout>
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">Teacher profile not found</p>
+          <p className="text-muted-foreground dark:text-muted-foreground">Teacher profile not found</p>
         </div>
       </DashboardLayout>
     );
@@ -77,15 +77,15 @@ function TeacherProfilePage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 tracking-widest uppercase mb-1">
+            <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               My Profile
             </p>
-            <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">
+            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
               Teacher Profile
             </h1>
           </div>
           <Button 
-            className="h-11 px-6 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl"
+            className="h-11 px-6 bg-primary hover:bg-nejah-azure text-white rounded-xl"
             onClick={() => setIsEditModalOpen(true)}
           >
             <Pencil className="h-4 w-4 mr-2" />
@@ -94,16 +94,16 @@ function TeacherProfilePage() {
         </div>
 
         {/* Profile Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-900 to-emerald-950 p-8 text-white">
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl shadow-sm border border-border dark:border-nejah-border-blue overflow-hidden">
+          <div className="bg-gradient-to-r from-nejah-sapphire to-nejah-midnight p-8 text-white">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-emerald-800 flex items-center justify-center text-4xl font-bold border-4 border-emerald-700">
+              <div className="w-24 h-24 rounded-full bg-nejah-azure flex items-center justify-center text-4xl font-bold border-4 border-primary/700">
                 {teacher.fullName?.charAt(0) || 'T'}
               </div>
               <div className="text-center md:text-left">
                 <h2 className="text-2xl font-bold">{teacher.fullName}</h2>
-                <p className="text-emerald-200 mt-1">{teacher.specialization || 'Quran Teacher'}</p>
-                <p className="text-xs text-emerald-300/70 mt-1">{teacher.email}</p>
+                <p className="text-nejah-electric mt-1">{teacher.specialization || 'Quran Teacher'}</p>
+                <p className="text-xs text-nejah-electric/70 mt-1">{teacher.email}</p>
               </div>
             </div>
           </div>
@@ -111,24 +111,24 @@ function TeacherProfilePage() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+              <h3 className="text-sm font-bold text-foreground text-foreground uppercase tracking-wider border-b border-border dark:border-nejah-border-blue pb-2 mb-4">
                 Basic Information
               </h3>
               
               <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
+                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</p>
-                  <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">{teacher.email}</p>
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Email</p>
+                  <p className="text-sm text-foreground text-foreground font-medium">{teacher.email}</p>
                 </div>
               </div>
               
               {teacher.phoneNumber && (
                 <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Phone</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">{teacher.phoneNumber}</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Phone</p>
+                    <p className="text-sm text-foreground text-foreground font-medium">{teacher.phoneNumber}</p>
                   </div>
                 </div>
               )}
@@ -136,26 +136,26 @@ function TeacherProfilePage() {
 
             {/* Professional Details */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+              <h3 className="text-sm font-bold text-foreground text-foreground uppercase tracking-wider border-b border-border dark:border-nejah-border-blue pb-2 mb-4">
                 Professional Details
               </h3>
               
               {teacher.qualification && (
                 <div className="flex items-start gap-3">
-                  <GraduationCap className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <GraduationCap className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Qualification</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">{teacher.qualification}</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Qualification</p>
+                    <p className="text-sm text-foreground text-foreground font-medium">{teacher.qualification}</p>
                   </div>
                 </div>
               )}
               
               {teacher.experience > 0 && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Experience</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">{teacher.experience} years</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Experience</p>
+                    <p className="text-sm text-foreground text-foreground font-medium">{teacher.experience} years</p>
                   </div>
                 </div>
               )}
@@ -163,15 +163,15 @@ function TeacherProfilePage() {
 
             {/* Availability */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+              <h3 className="text-sm font-bold text-foreground text-foreground uppercase tracking-wider border-b border-border dark:border-nejah-border-blue pb-2 mb-4">
                 Availability
               </h3>
               
               <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
+                <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Preferred Times</p>
-                  <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-1">Preferred Times</p>
+                  <p className="text-sm text-foreground text-foreground font-medium">
                     {formatTimeAvailabilities(teacher.availability)}
                   </p>
                 </div>
@@ -199,19 +199,19 @@ function TeacherProfilePage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-900/50">
-            <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider mb-4">
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface/30 dark:to-nejah-surface/20 border-primary/200 dark:border-nejah-border-blue/50">
+            <h3 className="text-sm font-bold text-nejah-sapphire dark:text-nejah-electric uppercase tracking-wider mb-4">
               Average Attendance
             </h3>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-emerald-900/40 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-primary/10/40 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-primary text-nejah-electric" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100">
+                <p className="text-4xl font-bold text-nejah-sapphire dark:text-nejah-electric">
                   {teacher.stats?.averageAttendanceRate || '-'}%
                 </p>
-                <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">Attendance Rate</p>
+                <p className="text-sm text-primary text-nejah-electric mt-1">Attendance Rate</p>
               </div>
             </div>
           </Card>

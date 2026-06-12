@@ -23,7 +23,7 @@ import { getScheduleSearchText, getScheduleStudentLabel } from '@/lib/schedule-d
 
 export const Route = createFileRoute('/teachers_/$id/schedule/$day')({
   component: TeacherDailySchedulePage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function TeacherDailySchedulePage() {
@@ -105,7 +105,7 @@ function TeacherDailySchedulePage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="py-20 text-center text-gray-500 animate-pulse font-serif">
+        <div className="py-20 text-center text-muted-foreground animate-pulse font-serif">
           Loading daily schedule...
         </div>
       </DashboardLayout>
@@ -143,26 +143,26 @@ function TeacherDailySchedulePage() {
         <div>
           <button
             onClick={() => navigate({ to: `/teachers/${id}` })}
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-emerald-800 uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Teacher Profile
           </button>
         </div>
 
         {/* Page Header */}
-        <div className="bg-emerald-900 rounded-3xl p-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-800 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
+        <div className="bg-primary rounded-3xl p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-nejah-azure rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
           
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
-              <Badge className="bg-emerald-800 text-emerald-100 hover:bg-emerald-700 border-none font-bold uppercase tracking-wider mb-3">
+              <Badge className="bg-nejah-azure text-nejah-electric hover:bg-primary border-none font-bold uppercase tracking-wider mb-3">
                 {teacher.fullName}
               </Badge>
               <h1 className="text-3xl md:text-4xl font-extrabold text-white font-serif flex items-center justify-center md:justify-start gap-3">
-                <Calendar className="h-8 w-8 text-emerald-300" />
+                <Calendar className="h-8 w-8 text-nejah-electric" />
                 {displayDay}'s Schedule
               </h1>
-              <p className="text-emerald-100 mt-2 font-medium">
+              <p className="text-nejah-electric mt-2 font-medium">
                 Managing {filteredDailySchedules.length} assigned classes for this day
               </p>
             </div>
@@ -172,7 +172,7 @@ function TeacherDailySchedulePage() {
                 setScheduleToEdit(null);
                 setIsEditScheduleOpen(true);
               }}
-              className="bg-white text-emerald-900 hover:bg-emerald-50 rounded-xl h-11 px-6 shadow-lg shadow-emerald-950/20 gap-2 font-bold"
+              className="bg-white text-nejah-sapphire hover:bg-primary/10 rounded-xl h-11 px-6 shadow-lg shadow-nejah-glow gap-2 font-bold"
             >
               <Plus className="h-4 w-4" /> Schedule a Class
             </Button>
@@ -180,24 +180,24 @@ function TeacherDailySchedulePage() {
         </div>
 
         {/* Daily Schedule List */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 dark:border-gray-750 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-900/20">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 font-serif">
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-border dark:border-nejah-border-blue flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/50 dark:bg-nejah-surface/20">
+            <h3 className="text-lg font-bold text-foreground text-foreground font-serif">
               Class Roster
             </h3>
 
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search student..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-64 pl-9 pr-4 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow"
+                  className="w-full sm:w-64 pl-9 pr-4 h-10 bg-card dark:bg-nejah-surface border border-border dark:border-nejah-border-blue rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/500/20 transition-shadow"
                 />
               </div>
-              <Button variant="outline" className="h-10 px-3 rounded-xl border-gray-200 dark:border-gray-700 text-gray-500">
+              <Button variant="outline" className="h-10 px-3 rounded-xl border-border dark:border-nejah-border-blue text-muted-foreground">
                 <Filter className="h-4 w-4" />
               </Button>
             </div>
@@ -206,11 +206,11 @@ function TeacherDailySchedulePage() {
           <div className="p-6">
             {filteredDailySchedules.length === 0 ? (
               <div className="py-16 text-center">
-                <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-6 w-6 text-gray-400" />
+                <div className="w-16 h-16 rounded-full bg-muted dark:bg-nejah-surface border border-dashed border-border dark:border-nejah-border-blue flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h4 className="text-gray-900 dark:text-gray-100 font-bold font-serif">No classes found</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <h4 className="text-foreground text-foreground font-bold font-serif">No classes found</h4>
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   {searchQuery ? "Try adjusting your search query." : `There are no scheduled classes for ${displayDay}.`}
                 </p>
                 {!searchQuery && (
@@ -220,7 +220,7 @@ function TeacherDailySchedulePage() {
                       setIsEditScheduleOpen(true);
                     }}
                     variant="outline"
-                    className="mt-6 rounded-xl text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                    className="mt-6 rounded-xl text-primary border-primary/200 hover:bg-primary/10"
                   >
                     <Plus className="h-4 w-4 mr-2" /> Schedule a Class
                   </Button>
@@ -232,17 +232,17 @@ function TeacherDailySchedulePage() {
                   const { name: studentName, avatar: studentAvatar } = getScheduleStudentLabel(schedule);
 
                   return (
-                    <div key={schedule.id} className="group p-5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md transition-all hover:border-emerald-100 dark:hover:border-emerald-900/50 relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div key={schedule.id} className="group p-5 rounded-2xl border border-border dark:border-nejah-border-blue bg-card dark:bg-nejah-surface hover:shadow-md transition-all hover:border-primary/100 dark:hover:border-nejah-border-blue/50 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary/100 opacity-0 group-hover:opacity-100 transition-opacity" />
                       
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm border border-emerald-100/50">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-nejah-sapphire text-nejah-electric flex items-center justify-center font-bold text-lg shadow-sm border border-primary/50">
                             {studentAvatar}
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-gray-900 dark:text-gray-100 line-clamp-1">{studentName}</h4>
-                            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-500">{schedule.classType || schedule.className || 'Quran Class'}</p>
+                            <h4 className="font-extrabold text-foreground text-foreground line-clamp-1">{studentName}</h4>
+                            <p className="text-xs font-medium text-primary dark:text-primary">{schedule.classType || schedule.className || 'Quran Class'}</p>
                           </div>
                         </div>
                         
@@ -252,33 +252,33 @@ function TeacherDailySchedulePage() {
                               setScheduleToEdit(schedule);
                               setIsEditScheduleOpen(true);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmDeleteScheduleId(schedule.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-400">
+                      <div className="bg-muted dark:bg-nejah-surface/50 rounded-xl p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-nejah-sapphire text-nejah-electric">
                           <Clock className="h-4 w-4 opacity-70" />
                           <span className="text-sm font-bold tracking-tight">
                             {schedule.startTimeString} - {schedule.endTimeString}
                           </span>
                         </div>
-                        <Badge className="bg-emerald-100/80 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-none text-[10px] font-bold uppercase tracking-wider px-2">
+                        <Badge className="bg-primary/10/80 text-nejah-sapphire dark:bg-primary/10 text-nejah-electric border-none text-[10px] font-bold uppercase tracking-wider px-2">
                           {schedule.status || 'Active'}
                         </Badge>
                       </div>
                       
                       {schedule.notes && (
-                        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2 italic border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+                        <p className="mt-3 text-xs text-muted-foreground dark:text-muted-foreground line-clamp-2 italic border-l-2 border-border dark:border-nejah-border-blue pl-2">
                           "{schedule.notes}"
                         </p>
                       )}
@@ -310,14 +310,14 @@ function TeacherDailySchedulePage() {
       {/* Delete Schedule Confirmation */}
       <Dialog open={!!confirmDeleteScheduleId} onOpenChange={(open) => !open && setConfirmDeleteScheduleId(null)}>
         <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none rounded-[32px] shadow-2xl">
-          <div className="bg-white dark:bg-gray-900 p-8 space-y-6">
+          <div className="bg-card dark:bg-nejah-surface p-8 space-y-6">
             <div className="w-16 h-16 rounded-3xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto">
               <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
             </div>
             
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 font-serif">Delete Schedule?</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              <h3 className="text-xl font-bold text-foreground text-foreground font-serif">Delete Schedule?</h3>
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed">
                 Are you sure you want to delete this schedule slot? This action cannot be undone.
               </p>
             </div>
@@ -332,7 +332,7 @@ function TeacherDailySchedulePage() {
               </Button>
               <Button 
                 variant="ghost" 
-                className="rounded-2xl h-11 font-bold text-sm text-gray-400 hover:text-gray-600"
+                className="rounded-2xl h-11 font-bold text-sm text-muted-foreground hover:text-muted-foreground"
                 onClick={() => setConfirmDeleteScheduleId(null)}
               >
                 Cancel

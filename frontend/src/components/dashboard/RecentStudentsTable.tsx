@@ -24,12 +24,12 @@ interface Student {
 }
 
 const avatarColors = [
-  'from-brand-primary to-brand-electric',
+  'from-nejah-sapphire to-nejah-electric',
   'from-blue-500 to-indigo-600',
   'from-amber-500 to-orange-600',
   'from-cyan-500 to-blue-600',
   'from-violet-500 to-purple-600',
-  'from-teal-500 to-emerald-600',
+  'from-teal-500 to-nejah-azure',
 ];
 
 export const RecentStudentsTable = memo(function RecentStudentsTable() {
@@ -80,7 +80,7 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
         action={
           <button
             onClick={() => navigate({ to: '/students' })}
-            className="flex items-center gap-1 text-sm font-medium text-brand-electric transition-colors hover:text-brand-electric/80 group"
+            className="flex items-center gap-1 text-sm font-medium text-nejah-electric transition-colors hover:text-nejah-electric/80 group"
           >
             {t.viewAll}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -100,13 +100,13 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-brand-platinum">
+              <TableCell colSpan={4} className="py-8 text-center text-nejah-slate-blue">
                 Loading students...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-brand-platinum">
+              <TableCell colSpan={4} className="py-8 text-center text-nejah-slate-blue">
                 No students registered yet
               </TableCell>
             </TableRow>
@@ -124,17 +124,17 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
                       {student.initials}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-brand-silver transition-colors group-hover:text-brand-electric">
+                      <p className="text-sm font-medium text-foreground transition-colors group-hover:text-nejah-electric">
                         {student.fullName}
                       </p>
-                      <p className="font-mono text-xs text-brand-platinum">ID: {student.id.slice(0, 8)}</p>
+                      <p className="font-mono text-xs text-nejah-slate-blue">ID: {student.id.slice(0, 8)}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-brand-platinum">{student.createdAt}</TableCell>
-                <TableCell className="text-brand-platinum">{student.level}</TableCell>
+                <TableCell className="text-nejah-slate-blue">{student.createdAt}</TableCell>
+                <TableCell className="text-nejah-slate-blue">{student.level}</TableCell>
                 <TableCell>
-                  <span className="rounded-full border border-brand-electric/20 bg-brand-electric/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-brand-electric">
+                  <span className="rounded-full border border-nejah-electric/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-nejah-electric">
                     {student.status}
                   </span>
                 </TableCell>

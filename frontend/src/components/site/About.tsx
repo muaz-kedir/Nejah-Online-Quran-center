@@ -28,7 +28,7 @@ export function About() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
               whileHover={{ y: -6 }}
-              className="glass-panel rounded-3xl p-7 transition-all hover:border-brand-electric/30"
+              className="glass-panel rounded-3xl p-7 transition-all hover:border-nejah-electric/30"
             >
               <div
                 className={`size-12 rounded-2xl grid place-items-center mb-5 ${

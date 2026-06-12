@@ -17,6 +17,10 @@ import {
   UserCircle,
   FileCheck,
   UserCog,
+  DollarSign,
+  LineChart,
+  Receipt,
+  CheckCircle,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -29,7 +33,7 @@ export interface MenuItem {
 export const menuByRole: Record<string, MenuItem[]> = {
   super_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Admins', icon: Shield, path: '/admins' },
+    { label: 'Staff Management', icon: Shield, path: '/admins' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Students', icon: Users, path: '/students' },
@@ -39,6 +43,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
+    { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
@@ -74,5 +79,31 @@ export const menuByRole: Record<string, MenuItem[]> = {
   ],
   parent: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/parent_dashboard' },
+  ],
+  qirat_manager: [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/qirat_dashboard' },
+    { label: 'Students', icon: Users, path: '/students' },
+    { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
+    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
+    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
+    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
+    { label: 'Schedules', icon: Calendar, path: '/schedules' },
+    { label: 'Homework', icon: ClipboardList, path: '/homework' },
+    { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
+    { label: 'Exams & Evaluations', icon: CheckCircle, path: '/qirat_exams' },
+    { label: 'Academic Reports', icon: BarChart3, path: '/reports' },
+    { label: 'Notifications', icon: Bell, path: '/qirat_notifications' },
+    { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    { label: 'Profile Settings', icon: UserCircle, path: '/qirat_settings' },
+  ],
+  finance_manager: [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/finance_dashboard' },
+    { label: 'Student Payments', icon: Receipt, path: '/finance_student-payments' },
+    { label: 'Family Payments', icon: UsersRound, path: '/finance_family-payments' },
+    { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
+    { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
+    { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+    { label: 'Notifications', icon: Bell, path: '/finance_notifications' },
+    { label: 'Profile Settings', icon: UserCircle, path: '/finance_settings' },
   ],
 };

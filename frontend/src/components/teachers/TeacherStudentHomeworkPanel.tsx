@@ -136,57 +136,57 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
       Medium: 'bg-amber-100 text-amber-700',
       High: 'bg-red-100 text-red-700',
     };
-    return map[d] || 'bg-gray-100 text-gray-700';
+    return map[d] || 'bg-muted text-foreground';
   };
 
   const getStatusColor = (s: string) => {
     const map: Record<string, string> = {
       Pending: 'bg-yellow-100 text-yellow-700',
-      Completed: 'bg-emerald-100 text-emerald-700',
+      Completed: 'bg-primary/10 text-primary',
       Late: 'bg-red-100 text-red-600',
     };
-    return map[s] || 'bg-gray-100 text-gray-700';
+    return map[s] || 'bg-muted text-foreground';
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search homework..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 rounded-xl border-none bg-gray-50 dark:bg-gray-900"
+            className="pl-10 rounded-xl border-none bg-muted dark:bg-nejah-surface"
           />
         </div>
         <Button
-          className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl"
+          className="bg-primary hover:bg-nejah-azure text-white rounded-xl"
           onClick={() => setShowCreate(true)}
         >
           <Plus className="mr-2 h-4 w-4" /> Assign Homework
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-gray-50/50 dark:bg-gray-900/50">
-              <th className="text-left p-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Title</th>
-              <th className="text-left p-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Difficulty</th>
-              <th className="text-left p-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-              <th className="text-left p-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Due Date</th>
-              <th className="text-right p-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+            <tr className="border-b bg-muted/50 dark:bg-nejah-surface/50">
+              <th className="text-left p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Title</th>
+              <th className="text-left p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Difficulty</th>
+              <th className="text-left p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+              <th className="text-left p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Due Date</th>
+              <th className="text-right p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="text-center py-12 text-gray-400">Loading...</td>
+                <td colSpan={5} className="text-center py-12 text-muted-foreground">Loading...</td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-12 text-gray-400">
+                <td colSpan={5} className="text-center py-12 text-muted-foreground">
                   No homework assigned yet. Click &quot;Assign Homework&quot; to add one.
                 </td>
               </tr>
@@ -194,14 +194,14 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
               filtered.map((hw) => {
                 const status = displayStatus(hw);
                 return (
-                  <tr key={hw.id} className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50/50">
+                  <tr key={hw.id} className="border-b border-border dark:border-nejah-border-blue hover:bg-muted/50">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <ClipboardList className="h-5 w-5 text-emerald-600 shrink-0" />
+                        <ClipboardList className="h-5 w-5 text-primary shrink-0" />
                         <div>
-                          <span className="font-medium text-emerald-950 dark:text-gray-100">{hw.title}</span>
+                          <span className="font-medium text-nejah-sapphire text-foreground">{hw.title}</span>
                           {hw.description && (
-                            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{hw.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{hw.description}</p>
                           )}
                         </div>
                       </div>
@@ -216,7 +216,7 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
                           <select
                             value={hw.status}
                             onChange={(e) => handleStatusUpdate(hw.id, e.target.value)}
-                            className="text-xs border rounded px-2 py-1 bg-white dark:bg-gray-900"
+                            className="text-xs border rounded px-2 py-1 bg-card dark:bg-nejah-surface"
                           >
                             <option value="Pending">Pending</option>
                             <option value="Completed">Completed</option>
@@ -225,7 +225,7 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
                         <Clock className="h-4 w-4" />
                         {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : 'N/A'}
                       </div>
@@ -303,7 +303,7 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button type="submit" disabled={createLoading} className="bg-emerald-900 hover:bg-emerald-800">
+              <Button type="submit" disabled={createLoading} className="bg-primary hover:bg-nejah-azure">
                 {createLoading ? 'Assigning...' : 'Assign'}
               </Button>
             </DialogFooter>

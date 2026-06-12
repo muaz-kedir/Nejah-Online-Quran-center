@@ -36,12 +36,12 @@ const NOTE_TYPES = ['Class Reminder', 'Observation', 'General Reminder'] as cons
 type NoteType = typeof NOTE_TYPES[number];
 
 const noteTypeColor: Record<NoteType, string> = {
-  'Class Reminder': 'bg-emerald-600',
+  'Class Reminder': 'bg-primary',
   'Observation': 'bg-amber-500',
   'General Reminder': 'bg-blue-500',
 };
 const noteTypeLabelColor: Record<NoteType, string> = {
-  'Class Reminder': 'text-emerald-700',
+  'Class Reminder': 'text-nejah-electric',
   'Observation': 'text-amber-600',
   'General Reminder': 'text-blue-600',
 };
@@ -61,13 +61,13 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
   ];
 
   return (
-    <div className="w-64 bg-[#052c22] text-white flex flex-col h-screen fixed inset-y-0 left-0">
+    <div className="w-64 dark:bg-nejah-surface bg-card/80 backdrop-blur-xl dark:border-white/5 border-r border-slate-200 text-white flex flex-col h-screen fixed inset-y-0 left-0">
       <div className="p-8 pb-12">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Nejah" className="h-10 w-auto rounded-xl" />
           <div>
             <h1 className="font-bold text-base leading-none">Teacher Suite</h1>
-            <p className="text-[10px] text-emerald-400 font-medium tracking-widest mt-1 uppercase">Modern Maqam</p>
+            <p className="text-[10px] text-nejah-electric font-medium tracking-widest mt-1 uppercase">Modern Maqam</p>
           </div>
         </div>
       </div>
@@ -78,16 +78,16 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
           return (
             <button key={item.path} onClick={() => navigate(item.path)} className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-              isActive ? "bg-emerald-900/50 text-white" : "text-emerald-100/50 hover:bg-emerald-900/30 hover:text-white"
+              isActive ? "bg-nejah-sapphire/50 text-white" : "text-foreground/50 hover:bg-nejah-sapphire/30 hover:text-white"
             )}>
-              <item.icon className={cn("h-5 w-5", isActive ? "text-emerald-400" : "text-emerald-100/40 group-hover:text-emerald-300")} />
+              <item.icon className={cn("h-5 w-5", isActive ? "text-nejah-electric" : "text-foreground/40 group-hover:text-nejah-electric")} />
               <span className="font-semibold text-sm">{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="px-4 py-3 border-t border-emerald-800">
+      <div className="px-4 py-3 border-t border-white/10">
         <button 
           onClick={() => {
             if (typeof window !== 'undefined') {
@@ -96,7 +96,7 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
               window.location.href = '/login';
             }
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100/50 hover:bg-red-500/20 hover:text-red-300 transition-all"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/50 hover:bg-red-500/20 hover:text-red-300 transition-all"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -110,28 +110,28 @@ const TeacherSidebar = ({ activePath }: { activePath: string }) => {
 
 // ─── Topbar ────────────────────────────────────────────────────────────────────
 const Topbar = ({ teacher }: any) => (
-  <div className="h-20 flex items-center justify-between px-10 bg-white border-b border-gray-100 sticky top-0 z-10 w-full ml-64 max-w-[calc(100%-256px)]">
+  <div className="h-20 flex items-center justify-between px-10 bg-card dark:bg-nejah-surface border-b border-border dark:border-white/5 sticky top-0 z-10 w-full ml-64 max-w-[calc(100%-256px)]">
     <div className="flex items-center gap-4">
-      <div className="p-2 bg-emerald-50 rounded-lg lg:hidden">
-        <LayoutDashboard className="h-5 w-5 text-emerald-700" />
+      <div className="p-2 bg-primary/10 rounded-lg lg:hidden">
+        <LayoutDashboard className="h-5 w-5 text-nejah-electric" />
       </div>
-      <h2 className="text-xl font-bold text-emerald-950 font-serif hidden md:block">Teacher Suite</h2>
+      <h2 className="text-xl font-bold text-foreground font-serif hidden md:block">Teacher Suite</h2>
     </div>
 
     <div className="flex-1 max-w-xl mx-8">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input placeholder="Search students, resources, or notes..." className="pl-12 bg-gray-50 border-none rounded-2xl h-12 w-full focus-visible:ring-emerald-500 text-sm" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-nejah-slate-blue" />
+        <Input placeholder="Search students, resources, or notes..." className="pl-12 bg-muted dark:bg-background border-none rounded-2xl h-12 w-full focus-visible:ring-nejah-electric text-sm" />
       </div>
     </div>
 
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-3 text-right">
         <div>
-          <p className="text-sm font-bold text-emerald-950 leading-tight">{teacher?.name || 'Teacher'}</p>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{teacher?.title || 'Instructor'}</p>
+          <p className="text-sm font-bold text-foreground leading-tight">{teacher?.name || 'Teacher'}</p>
+          <p className="text-[10px] text-muted-foreground dark:text-nejah-slate-blue font-bold uppercase tracking-wider">{teacher?.title || 'Instructor'}</p>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-emerald-100 p-0.5 bg-emerald-50 flex items-center justify-center text-emerald-800 font-bold">
+        <div className="w-10 h-10 rounded-full border-2 border-nejah-electric/15 p-0.5 bg-primary/10 flex items-center justify-center text-nejah-sapphire font-bold">
           {teacher?.avatar ? (
             <img src={teacher.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
           ) : (
@@ -139,13 +139,13 @@ const Topbar = ({ teacher }: any) => (
           )}
         </div>
       </div>
-      <div className="w-px h-8 bg-gray-100" />
+      <div className="w-px h-8 bg-muted dark:bg-white/5" />
       <div className="flex items-center gap-4">
-        <button className="relative p-2 text-gray-400 hover:text-emerald-700 transition-colors">
+        <button className="relative p-2 text-muted-foreground dark:text-nejah-slate-blue hover:text-nejah-electric transition-colors">
           <Bell className="h-6 w-6" />
           <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
         </button>
-        <button className="p-2 text-gray-400 hover:text-emerald-700 transition-colors">
+        <button className="p-2 text-muted-foreground dark:text-nejah-slate-blue hover:text-nejah-electric transition-colors">
           <HelpCircle className="h-6 w-6" />
         </button>
       </div>
@@ -155,20 +155,20 @@ const Topbar = ({ teacher }: any) => (
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, title, value, subValue, label, color, bgColor }: any) => (
-  <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex flex-col justify-between">
+  <div className="glass-panel bg-card dark:bg-nejah-surface p-6 rounded-[24px] border border-border dark:border-white/5 shadow-sm flex flex-col justify-between">
     <div className="flex items-start justify-between">
       <div className={cn("p-4 rounded-2xl", bgColor)}>
         <Icon className={cn("h-6 w-6", color)} />
       </div>
       {subValue && (
-        <Badge className={cn("rounded-full border-none px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", subValue.includes('+') ? "bg-emerald-50 text-emerald-600" : (subValue.includes('Next') ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"))}>
+        <Badge className={cn("rounded-full border-none px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider", subValue.includes('+') ? "bg-primary/10 text-nejah-electric" : (subValue.includes('Next') ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"))}>
           {subValue}
         </Badge>
       )}
     </div>
     <div className="mt-6">
-      <h3 className="text-3xl font-extrabold text-emerald-950 font-serif leading-none">{value}</h3>
-      <p className="text-sm font-semibold text-gray-400 mt-2">{label}</p>
+      <h3 className="text-3xl font-extrabold text-foreground font-serif leading-none">{value}</h3>
+      <p className="text-sm font-semibold text-muted-foreground dark:text-nejah-slate-blue mt-2">{label}</p>
     </div>
   </div>
 );
@@ -199,14 +199,14 @@ const NoteModal = ({ note, onClose, onSave }: NoteModalProps) => {
 
   return (
     <div ref={backdropRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={e => e.target === backdropRef.current && onClose()}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-gray-100">
+        <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
           <div>
-            <h3 className="text-xl font-extrabold text-emerald-950 font-serif">{note ? 'Edit Note' : 'Add Personal Reflection'}</h3>
-            <p className="text-xs text-gray-400 font-medium mt-0.5">Your notes are private and visible only to you</p>
+            <h3 className="text-xl font-extrabold text-foreground font-serif">{note ? 'Edit Note' : 'Add Personal Reflection'}</h3>
+            <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium mt-0.5">Your notes are private and visible only to you</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">
+          <button onClick={onClose} className="p-2 rounded-xl text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background hover:text-muted-foreground dark:hover:text-foreground transition-all">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -215,14 +215,14 @@ const NoteModal = ({ note, onClose, onSave }: NoteModalProps) => {
         <div className="px-8 py-6 space-y-5">
           {/* Type selector */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Note Type</label>
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">Note Type</label>
             <div className="flex gap-2 flex-wrap">
               {NOTE_TYPES.map(t => (
                 <button key={t} onClick={() => setType(t)} className={cn(
                   "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
                   type === t
-                    ? t === 'Class Reminder' ? 'bg-emerald-600 border-emerald-600 text-white' : t === 'Observation' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-blue-500 border-blue-500 text-white'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    ? t === 'Class Reminder' ? 'bg-primary border-nejah-electric text-white' : t === 'Observation' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-blue-500 border-blue-500 text-white'
+                    : 'border-border dark:border-white/10 text-muted-foreground dark:text-nejah-slate-blue hover:border-border dark:hover:border-white/20'
                 )}>
                   {t}
                 </button>
@@ -232,34 +232,34 @@ const NoteModal = ({ note, onClose, onSave }: NoteModalProps) => {
 
           {/* Title */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Title</label>
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">Title</label>
             <input
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Focus on Makharij with Sarah"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-emerald-950 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-semibold text-foreground placeholder:text-muted-foreground dark:placeholder:text-nejah-slate-blue/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all"
             />
           </div>
 
           {/* Content */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Content</label>
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">Content</label>
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Write your note or observation here..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none leading-relaxed"
+              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-medium text-muted-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-nejah-slate-blue/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all resize-none leading-relaxed"
             />
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-8 pb-8">
-          <button onClick={onClose} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">
+          <button onClick={onClose} className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background transition-all">
             Cancel
           </button>
-          <button onClick={handleSave} disabled={saving} className="px-6 py-3 rounded-xl text-sm font-bold bg-[#052c22] text-white hover:bg-emerald-900 transition-all flex items-center gap-2 disabled:opacity-60">
+          <button onClick={handleSave} disabled={saving} className="px-6 py-3 rounded-xl text-sm font-bold bg-nejah-surface text-white hover:bg-nejah-sapphire transition-all flex items-center gap-2 disabled:opacity-60">
             <Save className="h-4 w-4" />
             {saving ? 'Saving...' : (note ? 'Save Changes' : 'Add Note')}
           </button>
@@ -397,13 +397,13 @@ function TeacherDashboard() {
   };
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-white">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#052c22]"></div>
+    <div className="flex h-screen items-center justify-center bg-card dark:bg-nejah-surface">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-nejah-surface"></div>
     </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fc] text-gray-900 font-sans">
+    <div className="flex min-h-screen bg-background text-foreground dark:text-foreground font-sans">
       <TeacherSidebar activePath="/teacher_dashboard" />
 
       <div className="flex-1 flex flex-col ml-64">
@@ -413,12 +413,12 @@ function TeacherDashboard() {
           {/* Header */}
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Assalamu Alaikum, Teacher</p>
-              <h2 className="text-4xl font-extrabold text-emerald-950 font-serif">Dashboard Overview</h2>
+              <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-[0.2em] mb-2">Assalamu Alaikum, Teacher</p>
+              <h2 className="text-4xl font-extrabold text-foreground font-serif">Dashboard Overview</h2>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" className="h-12 rounded-xl px-6 border-gray-200 font-bold text-gray-600 gap-2">View Schedule</Button>
-              <Button onClick={openCreate} className="h-12 rounded-xl px-6 bg-[#052c22] hover:bg-[#084133] font-bold gap-2 text-white shadow-xl">
+              <Button variant="outline" className="h-12 rounded-xl px-6 border-border dark:border-white/10 font-bold text-muted-foreground dark:text-foreground gap-2">View Schedule</Button>
+              <Button onClick={openCreate} className="h-12 rounded-xl px-6 bg-nejah-surface hover:bg-nejah-sapphire font-bold gap-2 text-white shadow-xl">
                 <Plus className="h-5 w-5" /> New Lesson Note
               </Button>
             </div>
@@ -426,9 +426,9 @@ function TeacherDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard icon={Users} value={data?.stats?.totalStudents || 0} label="My Students" color="text-emerald-700" bgColor="bg-emerald-50/50" />
+            <StatCard icon={Users} value={data?.stats?.totalStudents || 0} label="My Students" color="text-nejah-electric" bgColor="bg-primary/10" />
             <StatCard icon={Calendar} value={data?.stats?.todayClasses || 0} label="Today's Classes" color="text-amber-700" bgColor="bg-amber-50/50" />
-            <StatCard icon={Filter} value={`${data?.stats?.overallAttendance || 0}%`} label="Overall Attendance" color="text-emerald-600" bgColor="bg-emerald-50/50" />
+            <StatCard icon={Filter} value={`${data?.stats?.overallAttendance || 0}%`} label="Overall Attendance" color="text-nejah-electric" bgColor="bg-primary/10" />
             <StatCard icon={ClipboardList} value={data?.stats?.homeworkPending || 0} label="Homework Pending" color="text-red-700" bgColor="bg-red-50/50" />
           </div>
 
@@ -479,49 +479,49 @@ function TeacherDashboard() {
             {/* Left: Progress Table */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-emerald-950 font-serif">Active Student Progress</h3>
+                <h3 className="text-xl font-bold text-foreground font-serif">Active Student Progress</h3>
                 <button
                   type="button"
                   onClick={() => { window.location.href = '/teacher_students'; }}
-                  className="text-xs font-bold text-[#052c22] flex items-center gap-1 hover:underline"
+                  className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
                 >
                   View All Students <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
-              <div className="bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm">
+              <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[32px] overflow-hidden border border-border dark:border-white/5 shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50/30 text-[9px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                    <tr className="bg-muted/30 dark:bg-background/30 text-[9px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest border-b border-border dark:border-white/5">
                       <th className="px-8 py-5">Student Name</th>
                       <th className="px-8 py-5">Current Surah/Juz</th>
                       <th className="px-8 py-5">Status</th>
                       <th className="px-8 py-5">Progress</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border dark:divide-white/5">
                     {data?.studentProgress?.map((student: any) => (
                       <tr
                         key={student.id}
-                        className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        className="group hover:bg-muted/50 dark:hover:bg-background/50 transition-colors cursor-pointer"
                         onClick={() => {
                           window.location.href = `/teacher_students/${student.id}?tab=progress`;
                         }}
                       >
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-xs text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                            <div className="w-10 h-10 rounded-full bg-muted dark:bg-background flex items-center justify-center font-bold text-xs text-muted-foreground dark:text-nejah-slate-blue group-hover:bg-primary/10 group-hover:text-nejah-electric transition-colors">
                               {student.initials}
                             </div>
-                            <span className="font-bold text-emerald-950">{student.name}</span>
+                            <span className="font-bold text-foreground">{student.name}</span>
                           </div>
                         </td>
-                        <td className="px-8 py-6"><span className="text-sm font-semibold text-gray-600">{student.currentSurah}</span></td>
+                        <td className="px-8 py-6"><span className="text-sm font-semibold text-muted-foreground dark:text-foreground">{student.currentSurah}</span></td>
                         <td className="px-8 py-6">
                           <Badge className={cn(
                             "rounded-full border-none px-3 py-1 text-[8px] font-extrabold uppercase tracking-widest leading-none",
-                            student.status === 'EXCEEDING' ? "bg-emerald-50 text-emerald-600" :
-                            student.status === 'ON TRACK' ? "bg-emerald-50 text-emerald-700/70" :
-                            student.status === 'NEEDS REVIEW' ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500"
+                            student.status === 'EXCEEDING' ? "bg-primary/10 text-nejah-electric" :
+                            student.status === 'ON TRACK' ? "bg-primary/10 text-nejah-electric/70" :
+                            student.status === 'NEEDS REVIEW' ? "bg-amber-50 text-amber-600" : "bg-muted dark:bg-background text-muted-foreground dark:text-nejah-slate-blue"
                           )}>
                             {student.status.replace('_', ' ')}
                           </Badge>
@@ -529,8 +529,8 @@ function TeacherDashboard() {
                         <td className="px-8 py-6">
                           <div className="w-20">
                             <ProgressBar value={student.progress} className={cn("h-1.5",
-                              student.status === 'EXCEEDING' ? "bg-emerald-100 [&>div]:bg-emerald-600" :
-                              student.status === 'NEEDS REVIEW' ? "bg-amber-100 [&>div]:bg-amber-600" : "bg-gray-100 [&>div]:bg-gray-400"
+                              student.status === 'EXCEEDING' ? "bg-primary/15 [&>div]:bg-primary" :
+                              student.status === 'NEEDS REVIEW' ? "bg-amber-100 [&>div]:bg-amber-600" : "bg-muted dark:bg-background [&>div]:bg-nejah-slate-blue dark:[&>div]:bg-nejah-slate-blue"
                             )} />
                           </div>
                         </td>
@@ -544,39 +544,39 @@ function TeacherDashboard() {
             {/* Right: Teacher Notes */}
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-emerald-950 font-serif">Teacher's Notes</h3>
-                <button className="p-2 bg-gray-100 rounded-lg text-gray-400 hover:bg-gray-200 transition-all">
+                <h3 className="text-xl font-bold text-foreground font-serif">Teacher's Notes</h3>
+                <button className="p-2 bg-muted dark:bg-background rounded-lg text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-nejah-surface transition-all">
                   <Filter className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="space-y-5">
                 {notes.length === 0 && (
-                  <div className="bg-white rounded-[24px] p-8 border border-dashed border-gray-200 text-center">
-                    <p className="text-sm text-gray-400 font-medium">No notes yet. Add your first reflection!</p>
+                  <div className="bg-card dark:bg-nejah-surface rounded-[24px] p-8 border border-dashed border-border dark:border-white/10 text-center">
+                    <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-medium">No notes yet. Add your first reflection!</p>
                   </div>
                 )}
 
                 {notes.map((note: any) => (
-                  <div key={note.id} className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm relative group overflow-hidden">
+                  <div key={note.id} className="glass-panel bg-card dark:bg-nejah-surface rounded-[24px] p-6 border border-border dark:border-white/5 shadow-sm relative group overflow-hidden">
                     {/* Colored accent bar */}
                     <div className={cn(
                       "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2/3 rounded-r-full",
-                      noteTypeColor[note.type as NoteType] || 'bg-gray-400'
+                      noteTypeColor[note.type as NoteType] || 'bg-nejah-slate-blue dark:bg-nejah-slate-blue'
                     )} />
 
                     {/* Hover action buttons */}
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
                         onClick={() => openEdit(note)}
-                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-emerald-100 hover:text-emerald-700 text-gray-500 transition-all"
+                        className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-primary/15 hover:text-nejah-electric text-muted-foreground dark:text-nejah-slate-blue transition-all"
                         title="Edit note"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteNote(note.id)}
-                        className="p-1.5 rounded-lg bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-500 transition-all"
+                        className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 text-muted-foreground dark:text-nejah-slate-blue transition-all"
                         title="Delete note"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -586,18 +586,18 @@ function TeacherDashboard() {
                     <div className="flex items-center justify-between mb-3 pr-16">
                       <span className={cn(
                         "text-[9px] font-extrabold uppercase tracking-widest",
-                        noteTypeLabelColor[note.type as NoteType] || 'text-gray-500'
+                        noteTypeLabelColor[note.type as NoteType] || 'text-muted-foreground dark:text-nejah-slate-blue'
                       )}>{note.type}</span>
-                      <span className="text-[10px] font-bold text-gray-400">{formatDate(note.createdAt)}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue">{formatDate(note.createdAt)}</span>
                     </div>
-                    <h4 className="text-base font-bold text-emerald-950 font-serif leading-tight mb-2">{note.title}</h4>
-                    <p className="text-xs text-gray-400 font-medium leading-relaxed">{note.content}</p>
+                    <h4 className="text-base font-bold text-foreground font-serif leading-tight mb-2">{note.title}</h4>
+                    <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium leading-relaxed">{note.content}</p>
                   </div>
                 ))}
 
                 <button
                   onClick={openCreate}
-                  className="w-full h-16 rounded-[24px] border-2 border-dashed border-gray-200 text-gray-400 text-xs font-bold uppercase tracking-widest hover:border-emerald-200 hover:text-emerald-700 transition-all"
+                  className="w-full h-16 rounded-[24px] border-2 border-dashed border-border dark:border-white/10 text-muted-foreground dark:text-nejah-slate-blue text-xs font-bold uppercase tracking-widest hover:border-nejah-electric/20 hover:text-nejah-electric transition-all"
                 >
                   + Add Personal Reflection
                 </button>
@@ -607,15 +607,15 @@ function TeacherDashboard() {
 
           {/* Today's Remaining Sessions */}
           <div className="space-y-8 pt-8">
-            <h3 className="text-2xl font-bold text-emerald-950 font-serif">Today's Remaining Sessions</h3>
+            <h3 className="text-2xl font-bold text-foreground font-serif">Today's Remaining Sessions</h3>
 
             {todaySessions.length === 0 ? (
-              <div className="bg-white rounded-[32px] p-12 border border-gray-100 flex flex-col items-center justify-center text-center">
-                <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                  <Calendar className="h-10 w-10 text-emerald-600" />
+              <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[32px] p-12 border border-border dark:border-white/5 flex flex-col items-center justify-center text-center">
+                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                  <Calendar className="h-10 w-10 text-nejah-electric" />
                 </div>
-                <h4 className="text-2xl font-bold text-emerald-950 font-serif mb-2">No remaining sessions for today.</h4>
-                <p className="text-gray-400 font-medium">You have completed all your scheduled classes or have a day off.</p>
+                <h4 className="text-2xl font-bold text-foreground font-serif mb-2">No remaining sessions for today.</h4>
+                <p className="text-muted-foreground dark:text-nejah-slate-blue font-medium">You have completed all your scheduled classes or have a day off.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -635,14 +635,14 @@ function TeacherDashboard() {
                           handleLaunchSession(session.scheduleId);
                         }
                       }}
-                      className="bg-white rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-emerald-100 transition-all"
+                      className="glass-panel bg-card dark:bg-nejah-surface rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-border dark:border-white/5 cursor-pointer hover:shadow-md hover:border-nejah-electric/15 transition-all"
                     >
                       <div className="flex items-center gap-3 mb-8">
                         <Clock className="h-5 w-5 text-amber-500" />
-                        <span className="text-sm font-bold text-emerald-950">{session.startTime} - {session.endTime}</span>
+                        <span className="text-sm font-bold text-foreground">{session.startTime} - {session.endTime}</span>
                       </div>
-                      <h4 className="text-4xl font-extrabold text-emerald-950 font-serif mb-2 line-clamp-1">{session.title}</h4>
-                      <p className="text-sm text-gray-400 font-semibold mb-10">{session.sessionType}</p>
+                      <h4 className="text-4xl font-extrabold text-foreground font-serif mb-2 line-clamp-1">{session.title}</h4>
+                      <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-semibold mb-10">{session.sessionType}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0">
                           {isGroup && session.students?.length > 1 ? (
@@ -650,7 +650,7 @@ function TeacherDashboard() {
                               {session.students.slice(0, 3).map((s: any, i: number) => (
                                 <div
                                   key={s.id}
-                                  className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white"
+                                  className="w-9 h-9 rounded-full bg-nejah-sapphire flex items-center justify-center text-[10px] font-bold text-white border-2 border-white"
                                   style={{ zIndex: 3 - i }}
                                 >
                                   {s.fullName?.charAt(0) || 'S'}
@@ -658,22 +658,22 @@ function TeacherDashboard() {
                               ))}
                             </div>
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-emerald-900 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-nejah-sapphire flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shrink-0">
                               {session.studentAvatar}
                             </div>
                           )}
-                          <span className="text-xs font-bold text-emerald-950 line-clamp-2">{session.studentName}</span>
+                          <span className="text-xs font-bold text-foreground line-clamp-2">{session.studentName}</span>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
                           <Badge className={cn(
                             "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
-                            dynamicStatus === 'COMPLETED' ? "bg-gray-100 text-gray-500" :
+                            dynamicStatus === 'COMPLETED' ? "bg-muted dark:bg-background text-muted-foreground dark:text-nejah-slate-blue" :
                             dynamicStatus === 'LIVE NOW' ? "bg-red-50 text-red-600 animate-pulse" :
-                            "bg-emerald-50 text-emerald-600"
+                            "bg-primary/10 text-nejah-electric"
                           )}>
                             {dynamicStatus}
                           </Badge>
-                          <span className="text-sm font-extrabold text-emerald-850 group-hover:underline">
+                          <span className="text-sm font-extrabold text-nejah-electric group-hover:underline">
                             Open Quran View
                           </span>
                         </div>
@@ -691,7 +691,7 @@ function TeacherDashboard() {
       <div className="fixed bottom-10 right-10">
         <button
           onClick={openCreate}
-          className="w-14 h-14 bg-[#052c22] rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform"
+          className="w-14 h-14 bg-nejah-surface rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform"
         >
           <Plus className="h-6 w-6" />
         </button>

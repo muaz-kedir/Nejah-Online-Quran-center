@@ -43,14 +43,14 @@ interface Stats {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any; dot: string }> = {
   PENDING_REVIEW: { label: 'Pending Review', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock, dot: 'bg-amber-500' },
-  APPROVED: { label: 'Approved', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2, dot: 'bg-emerald-500' },
+  APPROVED: { label: 'Approved', color: 'text-primary', bg: 'bg-primary/10 border-primary/200', icon: CheckCircle2, dot: 'bg-primary/100' },
   REJECTED: { label: 'Rejected', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle, dot: 'bg-red-500' },
   MORE_INFO_REQUIRED: { label: 'More Info', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: AlertCircle, dot: 'bg-blue-500' },
 };
 
 export const Route = createFileRoute('/teacher-applications')({
   component: TeacherApplicationsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function TeacherApplicationsContent() {
@@ -138,17 +138,17 @@ function TeacherApplicationsContent() {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-semibold">Recruitment</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 font-serif">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1 font-semibold">Recruitment</p>
+          <h1 className="text-2xl font-bold text-foreground text-foreground font-serif">
             Teacher Applications
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Review and manage teacher applications</p>
+          <p className="text-muted-foreground text-sm mt-1">Review and manage teacher applications</p>
         </div>
         
         {/* Toggle Button */}
         <Button 
           variant={isApplicationsOpen ? "destructive" : "default"} 
-          className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}
+          className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary"}
           onClick={toggleApplicationsOpen}
           disabled={isToggling}
         >
@@ -161,16 +161,16 @@ function TeacherApplicationsContent() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {[
-          { label: 'Total', value: stats.total, icon: Users, color: 'text-gray-600', bg: 'bg-gray-50' },
+          { label: 'Total', value: stats.total, icon: Users, color: 'text-muted-foreground', bg: 'bg-muted' },
           { label: 'Pending', value: stats.pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Approved', value: stats.approved, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Approved', value: stats.approved, icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/10' },
           { label: 'Rejected', value: stats.rejected, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
           { label: 'More Info', value: stats.moreInfo, icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-xl p-4 border border-transparent`}>
             <div className="flex items-center gap-2 mb-1">
               <s.icon className={`h-4 w-4 ${s.color}`} />
-              <span className="text-xs text-gray-500 font-medium">{s.label}</span>
+              <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
             </div>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
           </div>
@@ -178,26 +178,26 @@ function TeacherApplicationsContent() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+      <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue shadow-sm mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-3 items-center">
           <form onSubmit={handleSearch} className="flex-1 flex gap-2 w-full">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name, email, or application #..."
-                className="pl-9 h-10 bg-gray-50 border-gray-200"
+                className="pl-9 h-10 bg-muted border-border"
               />
             </div>
-            <Button type="submit" size="sm" className="h-10 bg-emerald-700 hover:bg-emerald-800">
+            <Button type="submit" size="sm" className="h-10 bg-primary hover:bg-nejah-azure">
               <Search className="h-4 w-4" />
             </Button>
           </form>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="h-4 w-4 text-gray-400" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); }}>
-              <SelectTrigger className="w-[180px] h-10 bg-gray-50 border-gray-200">
+              <SelectTrigger className="w-[180px] h-10 bg-muted border-border">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,7 @@ function TeacherApplicationsContent() {
                 <SelectItem value="MORE_INFO_REQUIRED">More Info Required</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10 border-gray-200" onClick={() => { fetchApplications(meta.page); fetchStats(); }}>
+            <Button variant="outline" size="icon" className="h-10 w-10 border-border" onClick={() => { fetchApplications(meta.page); fetchStats(); }}>
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
@@ -218,27 +218,27 @@ function TeacherApplicationsContent() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Applicant</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden md:table-cell">Contact</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden lg:table-cell">Country</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden lg:table-cell">Date</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Status</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Action</th>
+              <tr className="border-t border-border dark:border-nejah-border-blue bg-muted/50 dark:bg-nejah-surface/50">
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground">Applicant</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground hidden md:table-cell">Contact</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground hidden lg:table-cell">Country</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground hidden lg:table-cell">Date</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground">Status</th>
+                <th className="text-right px-4 py-3 font-semibold text-muted-foreground dark:text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
                     Loading applications...
                   </td>
                 </tr>
               ) : applications.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
-                    <FileCheck className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                    <FileCheck className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     No applications found
                   </td>
                 </tr>
@@ -246,21 +246,21 @@ function TeacherApplicationsContent() {
                 applications.map(app => {
                   const sc = STATUS_CONFIG[app.status] || STATUS_CONFIG.PENDING_REVIEW;
                   return (
-                    <tr key={app.id} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    <tr key={app.id} className="border-t border-border dark:border-nejah-border-blue hover:bg-muted/50 dark:hover:bg-nejah-surface/50 transition-colors cursor-pointer"
                       onClick={() => navigate({ to: '/teacher-applications/$id', params: { id: app.id } })}
                     >
                       <td className="px-4 py-3">
                         <div>
-                          <p className="font-semibold text-gray-800 dark:text-gray-200">{app.fullName}</p>
-                          <p className="text-xs text-gray-400 font-mono">{app.applicationNumber}</p>
+                          <p className="font-semibold text-foreground dark:text-foreground">{app.fullName}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{app.applicationNumber}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <p className="text-gray-600 dark:text-gray-300">{app.email}</p>
-                        <p className="text-xs text-gray-400">{app.phoneNumber}</p>
+                        <p className="text-muted-foreground dark:text-muted-foreground">{app.email}</p>
+                        <p className="text-xs text-muted-foreground">{app.phoneNumber}</p>
                       </td>
-                      <td className="px-4 py-3 hidden lg:table-cell text-gray-600 dark:text-gray-300">{app.country}</td>
-                      <td className="px-4 py-3 hidden lg:table-cell text-gray-500 text-xs">
+                      <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground dark:text-muted-foreground">{app.country}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs">
                         {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3">
@@ -270,7 +270,7 @@ function TeacherApplicationsContent() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button variant="ghost" size="sm" className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50"
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-nejah-sapphire hover:bg-primary/10"
                           onClick={(e) => { e.stopPropagation(); navigate({ to: '/teacher-applications/$id', params: { id: app.id } }); }}
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
@@ -286,25 +286,25 @@ function TeacherApplicationsContent() {
 
         {/* Pagination */}
         {meta.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border dark:border-nejah-border-blue">
+            <p className="text-xs text-muted-foreground">
               Showing {((meta.page - 1) * meta.limit) + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
             </p>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={meta.page <= 1} onClick={() => fetchApplications(meta.page - 1)}
-                className="h-8 px-2 border-gray-200">
+                className="h-8 px-2 border-border">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <Button key={p} variant={p === meta.page ? 'default' : 'outline'} size="sm"
                   onClick={() => fetchApplications(p)}
-                  className={`h-8 w-8 px-0 ${p === meta.page ? 'bg-emerald-700 hover:bg-emerald-800' : 'border-gray-200'}`}
+                  className={`h-8 w-8 px-0 ${p === meta.page ? 'bg-primary hover:bg-nejah-azure' : 'border-border'}`}
                 >
                   {p}
                 </Button>
               ))}
               <Button variant="outline" size="sm" disabled={meta.page >= meta.totalPages} onClick={() => fetchApplications(meta.page + 1)}
-                className="h-8 px-2 border-gray-200">
+                className="h-8 px-2 border-border">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

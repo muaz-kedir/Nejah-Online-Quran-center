@@ -18,24 +18,24 @@ export function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-brand-primary via-[#0A3663] to-[#030B18] p-8 shadow-[0_24px_80px_-20px_rgba(0,102,204,0.55)] md:p-12 lg:p-14"
+          className="relative overflow-hidden rounded-[2rem] border border-nejah-border-blue bg-gradient-to-br from-nejah-sapphire via-nejah-azure to-nejah-midnight p-8 shadow-nejah-glow md:p-12 lg:p-14"
         >
           {/* Ambient layers */}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,102,204,0.35),transparent_55%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(10,54,99,0.5),transparent_50%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,98,172,0.35),transparent_55%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(11,53,91,0.5),transparent_50%)]" />
           <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rotate-45 border border-white/10" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rotate-12 rounded-full border border-brand-electric/20" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rotate-12 rounded-full border border-nejah-electric/20" />
 
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-14">
             {/* Left — copy & actions */}
             <div className="text-center lg:text-left">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-electric/30 bg-brand-electric/15 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-electric">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-nejah-electric/30 bg-primary/15 px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-nejah-electric">
                 <Sparkles className="size-3.5" />
                 {t.cta.eyebrow}
               </div>
 
               <h2 className="mb-4 text-3xl font-medium leading-tight tracking-tight md:text-4xl lg:text-5xl">
-                <span className="bg-gradient-to-r from-white via-[#C8E4FF] to-brand-electric bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-[#C8E4FF] to-nejah-electric bg-clip-text text-transparent">
                   {t.cta.title}
                 </span>
               </h2>
@@ -50,7 +50,7 @@ export function CTA() {
                 <Link to="/register">
                   <Button
                     size="lg"
-                    className="h-12 rounded-full px-8 text-base font-semibold shadow-[0_0_24px_rgba(0,102,204,0.6)]"
+                    className="h-12 rounded-full px-8 text-base font-semibold shadow-nejah-glow"
                   >
                     {t.cta.register}
                     <ArrowRight className="ms-2 size-4 rtl:rotate-180" />
@@ -83,9 +83,9 @@ export function CTA() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1, duration: 0.45 }}
-                    className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:border-brand-electric/40 hover:bg-white/10 sm:flex-col sm:text-center lg:flex-row lg:text-left"
+                    className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:border-nejah-electric/40 hover:bg-white/10 sm:flex-col sm:text-center lg:flex-row lg:text-left"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-brand-electric/30 bg-brand-electric/15 text-brand-electric shadow-[0_0_16px_rgba(0,102,204,0.25)] transition-transform duration-300 group-hover:scale-105">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-nejah-lg border border-nejah-electric/30 bg-primary/15 text-nejah-electric shadow-nejah-glow transition-transform duration-300 group-hover:scale-105">
                       <Icon className="size-5" />
                     </div>
                     <div>

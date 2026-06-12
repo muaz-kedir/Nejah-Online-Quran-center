@@ -58,7 +58,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
               : schedule.notes || 'Classroom';
 
             const category = (schedule.classType || 'tajweed').toUpperCase();
-            let categoryColor = 'bg-brand-electric/10 text-brand-electric border-brand-electric/20';
+            let categoryColor = 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
             if (category.includes('KIDS') || category.includes('FOUNDATION')) {
               categoryColor = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
             } else if (category.includes('TAFSIR')) {
@@ -102,7 +102,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
         title={t.todaysClasses}
         action={
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-brand-platinum">
+            <span className="font-mono text-xs text-nejah-slate-blue">
               {classes.length > 0
                 ? `${page * ITEMS_PER_PAGE + 1}–${Math.min((page + 1) * ITEMS_PER_PAGE, classes.length)} of ${classes.length}`
                 : '0 of 0'}
@@ -131,11 +131,11 @@ export const TodaysClasses = memo(function TodaysClasses() {
 
       <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
         {loading ? (
-          <div className="col-span-1 py-8 text-center font-medium text-brand-platinum md:col-span-2">
+          <div className="col-span-1 py-8 text-center font-medium text-nejah-slate-blue md:col-span-2">
             Loading today's classes...
           </div>
         ) : classes.length === 0 ? (
-          <div className="col-span-1 py-8 text-center font-medium text-brand-platinum md:col-span-2">
+          <div className="col-span-1 py-8 text-center font-medium text-nejah-slate-blue md:col-span-2">
             No classes scheduled for today
           </div>
         ) : (
@@ -144,8 +144,8 @@ export const TodaysClasses = memo(function TodaysClasses() {
               key={cls.id}
               className={cn(
                 'group relative cursor-pointer rounded-xl border border-white/5 p-4 transition-all duration-200',
-                'bg-brand-void/30 hover:border-brand-electric/30 hover:shadow-[0_0_20px_rgba(0,102,204,0.12)]',
-                'dark:bg-brand-void/50',
+                'bg-background/30 hover:border-nejah-electric/30 hover:shadow-[0_0_20px_rgba(0,102,204,0.12)]',
+                'dark:bg-background/50',
               )}
             >
               <div className="mb-3 flex items-start justify-between">
@@ -157,30 +157,30 @@ export const TodaysClasses = memo(function TodaysClasses() {
                 >
                   {cls.category}
                 </span>
-                <div className="flex items-center gap-1 text-xs text-brand-platinum">
+                <div className="flex items-center gap-1 text-xs text-nejah-slate-blue">
                   <Clock className="h-3.5 w-3.5" />
                   <span className="font-mono font-medium">{cls.time}</span>
                 </div>
               </div>
 
-              <h4 className="mb-3 text-sm font-medium leading-snug text-brand-silver transition-colors group-hover:text-brand-electric">
+              <h4 className="mb-3 text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-nejah-electric">
                 {cls.title}
               </h4>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-electric text-xs font-bold text-white shadow-sm">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nejah-sapphire to-nejah-electric text-xs font-bold text-white shadow-sm">
                     {cls.teacherInitials}
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-brand-silver">{cls.teacher}</p>
+                    <p className="text-xs font-medium text-foreground">{cls.teacher}</p>
                     <div className="mt-0.5 flex items-center gap-1">
                       {cls.isOnline ? (
-                        <Wifi className="h-3 w-3 text-brand-electric" />
+                        <Wifi className="h-3 w-3 text-nejah-electric" />
                       ) : (
-                        <MapPin className="h-3 w-3 text-brand-platinum" />
+                        <MapPin className="h-3 w-3 text-nejah-slate-blue" />
                       )}
-                      <p className="text-[10px] text-brand-platinum">{cls.location}</p>
+                      <p className="text-[10px] text-nejah-slate-blue">{cls.location}</p>
                     </div>
                   </div>
                 </div>

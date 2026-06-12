@@ -70,20 +70,20 @@ function TeacherSchedulePage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 tracking-widest uppercase mb-1">
+            <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               Class Schedule
             </p>
-            <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">
+            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
               My Schedule
             </h1>
           </div>
-          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 bg-card dark:bg-nejah-surface p-1 rounded-xl border border-border dark:border-nejah-border-blue">
             <Button
               variant={currentView === 'day' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('day')}
               className={cn(
                 'px-4 py-2 rounded-lg text-sm font-medium',
-                currentView === 'day' ? 'bg-emerald-900 text-white' : 'text-gray-600 dark:text-gray-300'
+                currentView === 'day' ? 'bg-primary text-white' : 'text-muted-foreground dark:text-muted-foreground'
               )}
             >
               Day View
@@ -93,7 +93,7 @@ function TeacherSchedulePage() {
               onClick={() => setCurrentView('week')}
               className={cn(
                 'px-4 py-2 rounded-lg text-sm font-medium',
-                currentView === 'week' ? 'bg-emerald-900 text-white' : 'text-gray-600 dark:text-gray-300'
+                currentView === 'week' ? 'bg-primary text-white' : 'text-muted-foreground dark:text-muted-foreground'
               )}
             >
               Week View
@@ -112,8 +112,8 @@ function TeacherSchedulePage() {
                 className={cn(
                   'px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap',
                   selectedDay === day 
-                    ? 'bg-emerald-900 text-white hover:bg-emerald-800' 
-                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700'
+                    ? 'bg-primary text-white hover:bg-nejah-azure' 
+                    : 'bg-card dark:bg-nejah-surface text-muted-foreground dark:text-muted-foreground hover:bg-primary/10 dark:hover:bg-nejah-surface border-border dark:border-nejah-border-blue'
                 )}
               >
                 {day}
@@ -123,62 +123,62 @@ function TeacherSchedulePage() {
         )}
 
         {/* Schedule Container */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl shadow-sm border border-border dark:border-nejah-border-blue overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-900 mx-auto mb-4"></div>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">Loading schedule...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nejah-border-blue mx-auto mb-4"></div>
+              <p className="text-muted-foreground dark:text-muted-foreground font-medium">Loading schedule...</p>
             </div>
           ) : (
             <>
               {currentView === 'day' ? (
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-emerald-950 dark:text-gray-100 mb-6 flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-nejah-sapphire text-foreground mb-6 flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h2>
                   {schedulesForToday.length === 0 ? (
                     <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Calendar className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-16 h-16 bg-primary/10 dark:bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="h-8 w-8 text-primary text-nejah-electric" />
                       </div>
-                      <p className="text-gray-500 dark:text-gray-400 font-medium">No classes scheduled for today</p>
+                      <p className="text-muted-foreground dark:text-muted-foreground font-medium">No classes scheduled for today</p>
                     </div>
                   ) : (
                     schedulesForToday.map(schedule => (
                       <div key={schedule.id} className="mb-4 last:mb-0">
-                        <div className="flex items-start gap-4 p-6 rounded-2xl bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all">
+                        <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/50 dark:bg-nejah-surface/30 border border-border dark:border-nejah-border-blue hover:border-primary/50 dark:hover:border-primary/700 transition-all">
                           <div className="flex-shrink-0">
-                            <div className="w-14 h-14 bg-emerald-900 dark:bg-emerald-800 rounded-xl flex flex-col items-center justify-center text-white">
+                            <div className="w-14 h-14 bg-primary dark:bg-primary/10 rounded-xl flex flex-col items-center justify-center text-white">
                               <span className="text-xs font-medium uppercase">{schedule.dayOfWeek?.substring(0, 3)}</span>
                               <span className="text-xl font-bold">{schedule.startTimeString?.split(':')[0]}</span>
                             </div>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-lg font-bold text-emerald-950 dark:text-gray-100">{schedule.studentName}</h3>
+                              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">{schedule.studentName}</h3>
                               <Badge className={cn(
                                 "text-xs px-3 py-1 rounded-lg",
-                                schedule.status === 'active' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" :
-                                "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                                schedule.status === 'active' ? "bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric" :
+                                "bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground"
                               )}>
                                 {schedule.status === 'active' ? 'Active' : 'Inactive'}
                               </Badge>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground dark:text-muted-foreground mb-3">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
                                 <span>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
                               </div>
                               {schedule.meetingLink && (
-                                <div className="flex items-center gap-1 text-emerald-600">
+                                <div className="flex items-center gap-1 text-primary">
                                   <Wifi className="h-4 w-4" />
                                   <span>Online Class</span>
                                 </div>
                               )}
                             </div>
                             {schedule.notes && (
-                              <p className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
+                              <p className="text-xs text-muted-foreground dark:text-muted-foreground bg-muted dark:bg-nejah-surface p-3 rounded-lg">
                                 <span className="font-semibold">Notes: </span>
                                 {schedule.notes}
                               </p>
@@ -191,12 +191,12 @@ function TeacherSchedulePage() {
                 </div>
               ) : (
                 <>
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20">
-                  <h2 className="text-xl font-bold text-emerald-950 dark:text-gray-100 flex items-center gap-2">
+                <div className="p-6 border-b border-border dark:border-nejah-border-blue bg-muted/50 dark:bg-nejah-surface/20">
+                  <h2 className="text-xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
                     {selectedDay} Schedule
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                     {schedulesForSelectedDay.length}{' '}
                     {schedulesForSelectedDay.length === 1 ? 'class' : 'classes'} scheduled
                   </p>
@@ -204,46 +204,46 @@ function TeacherSchedulePage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                        <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Time</th>
-                        <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student</th>
-                        <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        <th className="py-4 px-6 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
+                      <tr className="bg-muted/50 dark:bg-nejah-surface/50 border-b border-border dark:border-nejah-border-blue">
+                        <th className="py-4 px-6 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Time</th>
+                        <th className="py-4 px-6 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Student</th>
+                        <th className="py-4 px-6 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                        <th className="py-4 px-6 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Type</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
                       {schedulesForSelectedDay.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-12 text-center text-gray-400">
+                          <td colSpan={4} className="py-12 text-center text-muted-foreground">
                             No classes scheduled for {selectedDay}
                           </td>
                         </tr>
                       ) : (
                         schedulesForSelectedDay.map((schedule) => (
-                          <tr key={schedule.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition-colors">
+                          <tr key={schedule.id} className="hover:bg-muted/50 dark:hover:bg-nejah-surface/30 transition-colors">
                             <td className="py-4 px-6">
-                              <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                              <div className="text-sm text-foreground dark:text-muted-foreground font-medium">
                                 {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
                               </div>
                             </td>
                             <td className="py-4 px-6">
-                              <p className="text-sm font-bold text-emerald-900 dark:text-gray-100">{schedule.studentName}</p>
+                              <p className="text-sm font-bold text-nejah-sapphire text-foreground">{schedule.studentName}</p>
                             </td>
                             <td className="py-4 px-6">
                               <Badge className={cn(
                                 "text-xs px-3 py-1 rounded-lg",
-                                schedule.status === 'active' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" :
-                                "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                                schedule.status === 'active' ? "bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric" :
+                                "bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground"
                               )}>
                                 {schedule.status === 'active' ? 'Active' : 'Inactive'}
                               </Badge>
                             </td>
                             <td className="py-4 px-6">
-                              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground dark:text-muted-foreground">
                                 {schedule.meetingLink ? (
-                                  <Wifi className="h-3 w-3 text-emerald-600" />
+                                  <Wifi className="h-3 w-3 text-primary" />
                                 ) : (
-                                  <MapPin className="h-3 w-3 text-gray-400" />
+                                  <MapPin className="h-3 w-3 text-muted-foreground" />
                                 )}
                                 <span>{schedule.meetingLink ? 'Online' : 'In-Person'}</span>
                               </div>

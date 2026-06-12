@@ -46,6 +46,7 @@ import { ManageLevelModal } from '@/components/students/ManageLevelModal';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
 import { ProgressDetailsModal } from '@/components/progress/ProgressDetailsModal';
 import { toast } from 'sonner';
+import { requireAuth } from '@/lib/auth';
 
 // Helper for date ranges
 function getDateRange(range: string) {
@@ -76,6 +77,7 @@ function getDateRange(range: string) {
 
 export const Route = createFileRoute('/students')({
   component: StudentsPage,
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function StudentsPage() {
@@ -220,19 +222,19 @@ function StudentsPage() {
   const getLevelColor = (lvl: string) => {
     switch (lvl?.toLowerCase()) {
       case 'beginner': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'intermediate': return 'bg-brand-electric/10 text-brand-electric border-brand-electric/20';
-      case 'advanced': return 'bg-brand-primary/20 text-brand-silver border-brand-electric/20';
+      case 'intermediate': return 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
+      case 'advanced': return 'bg-nejah-sapphire/20 text-foreground border-nejah-electric/20';
       case 'hifz': return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
-      default: return 'bg-brand-abyss/50 text-brand-platinum border-white/10';
+      default: return 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
     }
   };
 
   const getStatusColor = (s: string) => {
     switch (s?.toLowerCase()) {
-      case 'active': return 'bg-brand-electric/10 text-brand-electric border-brand-electric/20';
-      case 'inactive': return 'bg-brand-abyss/50 text-brand-platinum border-white/10';
+      case 'active': return 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
+      case 'inactive': return 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
       case 'pending': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      default: return 'bg-brand-abyss/50 text-brand-platinum';
+      default: return 'bg-nejah-surface/50 text-nejah-slate-blue';
     }
   };
 
@@ -263,7 +265,7 @@ function StudentsPage() {
         <div className="admin-filter-bar">
           <div className="flex-1 min-w-[240px]">
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-platinum" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
               <Input
                 placeholder="Search by student name or ID..."
                 value={search}
@@ -277,10 +279,10 @@ function StudentsPage() {
              <div className="flex flex-col">
                 <span className="admin-field-label">Level</span>
                 <Select value={level} onValueChange={setLevel}>
-                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-background/50">
                     <SelectValue placeholder="All Levels" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="all">All Levels</SelectItem>
                     <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
                     <SelectItem value="Quran Reading">Quran Reading</SelectItem>
@@ -294,10 +296,10 @@ function StudentsPage() {
              <div className="flex flex-col">
                 <span className="admin-field-label">Teacher</span>
                 <Select value={teacherId} onValueChange={setTeacherId}>
-                  <SelectTrigger className="h-11 w-[160px] rounded-xl border-white/10 bg-brand-void/50">
+                  <SelectTrigger className="h-11 w-[160px] rounded-xl border-white/10 bg-background/50">
                     <SelectValue placeholder="All Faculty" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="all">All Faculty</SelectItem>
                     {teachers.map(t => (
                       <SelectItem key={t.id} value={t.id}>{t.user?.name}</SelectItem>
@@ -309,10 +311,10 @@ function StudentsPage() {
              <div className="flex flex-col">
                 <span className="admin-field-label">Status</span>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="h-11 w-[120px] rounded-xl border-white/10 bg-brand-void/50">
+                  <SelectTrigger className="h-11 w-[120px] rounded-xl border-white/10 bg-background/50">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
@@ -324,10 +326,10 @@ function StudentsPage() {
              <div className="flex flex-col">
                 <span className="admin-field-label">Country</span>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-background/50">
                     <SelectValue placeholder="All Countries" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="all">All Countries</SelectItem>
                     <SelectItem value="Ethiopia">Ethiopia</SelectItem>
                     <SelectItem value="Kenya">Kenya</SelectItem>
@@ -352,10 +354,10 @@ function StudentsPage() {
              <div className="flex flex-col">
                 <span className="admin-field-label">Date Joined</span>
                 <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-brand-void/50">
+                  <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-background/50">
                     <SelectValue placeholder="All Time" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="all">All Time</SelectItem>
                     <SelectItem value="today">Today</SelectItem>
                     <SelectItem value="week">This Week</SelectItem>
@@ -370,7 +372,7 @@ function StudentsPage() {
              </Button>
              
              <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
-                <RotateCcw className="h-5 w-5 text-brand-platinum" />
+                <RotateCcw className="h-5 w-5 text-nejah-slate-blue" />
              </Button>
           </div>
         </div>
@@ -379,13 +381,13 @@ function StudentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/5 bg-brand-void/50 dark:bg-brand-void/50">
-                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Student Name</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Location</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Level</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Assigned Teacher</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Status</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-brand-platinum">Actions</th>
+                <tr className="border-b border-white/5 bg-background/50 dark:bg-background/50">
+                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Student Name</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Location</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Level</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Assigned Teacher</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Status</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -397,7 +399,7 @@ function StudentsPage() {
                   ))
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-gray-400 font-medium">
+                    <td colSpan={6} className="py-20 text-center text-muted-foreground font-medium">
                       No students found matching your criteria.
                     </td>
                   </tr>
@@ -406,20 +408,20 @@ function StudentsPage() {
                     <tr key={student.id} className="group transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.03]">
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex-shrink-0">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-muted to-muted dark:from-nejah-surface dark:to-nejah-surface flex-shrink-0">
                             {student.avatarUrl ? (
                               <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-bold">
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-lg font-bold">
                                 {student.fullName.charAt(0)}
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
+                            <p className="font-bold text-foreground text-foreground group-hover:text-nejah-sapphire dark:group-hover:text-nejah-electric transition-colors">
                               {student.fullName}
                             </p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
                               ID: {student.studentCode || 'N/A'}
                             </p>
                           </div>
@@ -431,7 +433,7 @@ function StudentsPage() {
                               {student.level}
                            </Badge>
                            {student.level === 'Advanced' && (
-                             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-bold rounded-md border-none px-2 py-0.5">
+                             <Badge className="bg-primary/10 text-primary dark:bg-primary/10 text-nejah-electric text-[10px] font-bold rounded-md border-none px-2 py-0.5">
                                HIFZ
                              </Badge>
                            )}
@@ -439,23 +441,23 @@ function StudentsPage() {
                       </td>
                       <td className="py-5 px-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{student.country || 'N/A'}</span>
-                          <span className="text-[10px] text-gray-500 uppercase tracking-wider">{student.city || 'N/A'}</span>
+                          <span className="text-sm font-medium text-foreground dark:text-muted-foreground">{student.country || 'N/A'}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{student.city || 'N/A'}</span>
                         </div>
                       </td>
                       <td className="py-5 px-4">
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <p className="text-sm font-semibold text-foreground dark:text-muted-foreground">
                           {student.teacher?.user?.name || 'Unassigned'}
                         </p>
                       </td>
                       <td className="py-5 px-4">
                         <div className="w-24">
                           <div className="flex items-center justify-between mb-1.5">
-                             <span className="text-[10px] font-bold text-gray-400">{student.attendanceRate || 0}%</span>
+                             <span className="text-[10px] font-bold text-muted-foreground">{student.attendanceRate || 0}%</span>
                           </div>
-                          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-muted dark:bg-nejah-surface h-1.5 rounded-full overflow-hidden">
                              <div 
-                                className={cn('h-full rounded-full', parseFloat(student.attendanceRate) < 50 ? 'bg-red-500' : 'bg-emerald-600')} 
+                                className={cn('h-full rounded-full', parseFloat(student.attendanceRate) < 50 ? 'bg-red-500' : 'bg-primary')} 
                                 style={{ width: `${student.attendanceRate || 0}%` }} 
                              />
                           </div>
@@ -464,9 +466,9 @@ function StudentsPage() {
                       <td className="py-5 px-4">
                         <div className="w-24">
                           <div className="flex items-center justify-between mb-1.5">
-                             <span className="text-[10px] font-bold text-gray-400">{student.progressRate || 0}%</span>
+                             <span className="text-[10px] font-bold text-muted-foreground">{student.progressRate || 0}%</span>
                           </div>
-                          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-muted dark:bg-nejah-surface h-1.5 rounded-full overflow-hidden">
                              <div 
                                 className="bg-amber-600 h-full rounded-full" 
                                 style={{ width: `${student.progressRate || 0}%` }} 
@@ -476,7 +478,7 @@ function StudentsPage() {
                       </td>
                       <td className="py-5 px-4">
                         <Badge className={cn('text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none', getStatusColor(student.status))}>
-                          <span className={cn('w-1.5 h-1.5 rounded-full mr-2', student.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400')} />
+                          <span className={cn('w-1.5 h-1.5 rounded-full mr-2', student.status === 'active' ? 'bg-primary/100' : 'bg-nejah-slate-blue')} />
                           {student.status}
                         </Badge>
                       </td>
@@ -484,40 +486,40 @@ function StudentsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setViewingStudent(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setViewingProgress(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
                             title="View Progress"
                           >
                             <BookOpen className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setChangingStatusStudent(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-amber-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-amber-600 transition-colors"
                             title="Change Status"
                           >
                             <RefreshCw className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => setManagingLevelStudent(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-emerald-700 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
                             title="Manage Level"
                           >
                             <GraduationCap className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setEditingStudent(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setDeletingStudent(student)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-red-600 transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -531,9 +533,9 @@ function StudentsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Showing <span className="text-gray-900 dark:text-gray-200">{(meta.page - 1) * meta.limit + 1}-{Math.min(meta.page * meta.limit, meta.total)}</span> of <span className="text-gray-900 dark:text-gray-200">{meta.total}</span> registered students
+          <div className="px-6 py-4 border-t border-border dark:border-nejah-border-blue bg-muted/50 dark:bg-nejah-surface/50 flex items-center justify-between">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              Showing <span className="text-foreground dark:text-foreground">{(meta.page - 1) * meta.limit + 1}-{Math.min(meta.page * meta.limit, meta.total)}</span> of <span className="text-foreground dark:text-foreground">{meta.total}</span> registered students
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -541,7 +543,7 @@ function StudentsPage() {
                 size="icon"
                 disabled={meta.page === 1}
                 onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
-                className="h-9 w-9 rounded-xl dark:border-gray-700"
+                className="h-9 w-9 rounded-xl dark:border-nejah-border-blue"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -556,7 +558,7 @@ function StudentsPage() {
                 size="icon"
                 disabled={meta.page === meta.totalPages}
                 onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
-                className="h-9 w-9 rounded-xl dark:border-gray-700"
+                className="h-9 w-9 rounded-xl dark:border-nejah-border-blue"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

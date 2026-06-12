@@ -44,12 +44,12 @@ export function SurahSelect({
           disabled={disabled}
           className={cn(
             "w-full justify-between font-normal",
-            highlightSelected && selected && "ring-2 ring-emerald-500 ring-offset-2 border-emerald-300 dark:border-emerald-700"
+            highlightSelected && selected && "ring-2 ring-primary/500 ring-offset-2 border-primary/300 dark:border-primary/700"
           )}
         >
           <div className="flex items-center gap-2 overflow-hidden">
             {selected && completedSurahs.includes(selected.number) && (
-              <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <Check className="h-4 w-4 text-primary flex-shrink-0" />
             )}
             <span className={cn("truncate", selected && "font-medium")}>
               {selected ? formatSurahLabel(selected) : placeholder}
@@ -77,26 +77,26 @@ export function SurahSelect({
                     }}
                     className={cn(
                       "flex items-center gap-2",
-                      isSelected && highlightSelected && "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900"
+                      isSelected && highlightSelected && "bg-primary/10 dark:bg-nejah-sapphire/30 border-primary/200 dark:border-nejah-border-blue"
                     )}
                   >
                     {isCompleted && (
                       <Check
                         className={cn(
                           'h-4 w-4 flex-shrink-0',
-                          isSelected ? 'text-emerald-600' : 'text-emerald-400'
+                          isSelected ? 'text-primary' : 'text-nejah-electric'
                         )}
                       />
                     )}
                     <div className={cn(
                       "flex-1 overflow-hidden",
-                      isSelected && highlightSelected && "font-bold text-emerald-900 dark:text-emerald-300",
-                      isCompleted && !isSelected && "text-emerald-700 dark:text-emerald-400"
+                      isSelected && highlightSelected && "font-bold text-nejah-sapphire text-nejah-electric",
+                      isCompleted && !isSelected && "text-primary text-nejah-electric"
                     )}>
                       {formatSurahLabel(surah)}
                     </div>
                     {isSelected && !isCompleted && highlightSelected && (
-                      <Check className="h-4 w-4 text-emerald-600" />
+                      <Check className="h-4 w-4 text-primary" />
                     )}
                   </CommandItem>
                 );

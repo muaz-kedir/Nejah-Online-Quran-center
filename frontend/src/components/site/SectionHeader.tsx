@@ -17,13 +17,13 @@ export function SectionHeader({ eyebrow, title, description, align = "center" }:
       className={`max-w-2xl mb-12 ${align === "center" ? "mx-auto text-center" : ""}`}
     >
       {eyebrow && (
-        <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-electric">
+        <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-nejah-electric">
           {eyebrow}
         </div>
       )}
-      <h2 className="mb-4 text-3xl font-medium tracking-tight text-brand-silver md:text-4xl lg:text-5xl">{title}</h2>
+      <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">{title}</h2>
       {description && (
-        <p className="text-base leading-relaxed text-brand-platinum md:text-lg">{description}</p>
+        <p className="text-base leading-relaxed text-nejah-slate-blue md:text-lg">{description}</p>
       )}
     </motion.div>
   );

@@ -136,6 +136,8 @@ export function EditUserModal({ open, onClose, user, onSuccess }: EditUserModalP
                   <SelectItem value="teacher">Teacher</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
                   <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="finance_manager">Finance Manager</SelectItem>
+                  <SelectItem value="qirat_manager">Qirat Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>

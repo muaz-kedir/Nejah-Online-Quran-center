@@ -256,12 +256,12 @@ function ApplyAsTeacherPage() {
       <div className="relative flex min-h-screen items-center justify-center admin-shell-bg p-4">
         <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
         <div className="glass-panel relative max-w-lg w-full overflow-hidden rounded-3xl p-10 text-center">
-          <h1 className="text-2xl font-bold text-brand-silver mb-3 font-serif">Applications Closed</h1>
-          <p className="text-gray-600 mb-6 leading-relaxed">
+          <h1 className="text-2xl font-bold text-foreground mb-3 font-serif">Applications Closed</h1>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
             We are not currently accepting new teacher applications. Please check back later.
           </p>
           <Button
-            className="w-full bg-brand-electric hover:bg-brand-electric/90"
+            className="w-full bg-primary hover:bg-primary/90"
             onClick={() => navigate({ to: '/login' })}
           >
             Go back to Login
@@ -276,29 +276,29 @@ function ApplyAsTeacherPage() {
       <div className="relative flex min-h-screen items-center justify-center admin-shell-bg p-4">
         <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
         <div className="glass-panel relative max-w-lg w-full overflow-hidden rounded-3xl p-10 text-center">
-          <div className="w-20 h-20 bg-brand-electric/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="h-10 w-10 text-brand-electric" />
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="h-10 w-10 text-nejah-electric" />
           </div>
-          <h1 className="text-2xl font-bold text-brand-silver mb-3 font-serif">Application Submitted!</h1>
-          <p className="text-gray-600 mb-6 leading-relaxed">
+          <h1 className="text-2xl font-bold text-foreground mb-3 font-serif">Application Submitted!</h1>
+          <p className="text-muted-foreground mb-6 leading-relaxed">
             Your application has been submitted successfully. Our team will review
             your application and contact you after the review process.
           </p>
-          <div className="bg-brand-electric/10 border border-brand-electric/20 rounded-xl p-4 mb-6">
-            <p className="text-sm text-brand-electric font-medium mb-1">Your Application Number</p>
-            <p className="text-2xl font-bold text-brand-silver font-mono tracking-wider">{applicationNumber}</p>
-            <p className="text-xs text-brand-electric mt-2">Please save this number to track your application status.</p>
+          <div className="bg-primary/10 border border-nejah-electric/20 rounded-xl p-4 mb-6">
+            <p className="text-sm text-nejah-electric font-medium mb-1">Your Application Number</p>
+            <p className="text-2xl font-bold text-foreground font-mono tracking-wider">{applicationNumber}</p>
+            <p className="text-xs text-nejah-electric mt-2">Please save this number to track your application status.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
-              className="flex-1 border-brand-electric/30 text-brand-electric hover:bg-brand-electric/10"
+              className="flex-1 border-nejah-electric/30 text-nejah-electric hover:bg-primary/10"
               onClick={() => navigate({ to: '/track-application' })}
             >
               Track Application
             </Button>
             <Button
-              className="flex-1 bg-brand-electric hover:bg-brand-electric/90"
+              className="flex-1 bg-primary hover:bg-primary/90"
               onClick={() => navigate({ to: '/login' })}
             >
               Go to Login
@@ -312,19 +312,19 @@ function ApplyAsTeacherPage() {
   return (
     <div className="relative min-h-screen admin-shell-bg">
       <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-70" />
-      <header className="glass-panel sticky top-0 z-30 border-b border-slate-200/80 !rounded-none dark:border-white/5">
+      <header className="glass-panel sticky top-0 z-30 border-b border-border !rounded-none dark:border-white/5">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Nejah" className="h-10 w-auto" />
             <div>
-              <h1 className="text-lg font-bold text-brand-silver font-serif leading-none">Nejah</h1>
-              <p className="text-[10px] text-brand-electric uppercase tracking-widest">Online Quran & Islamic Center</p>
+              <h1 className="text-lg font-bold text-foreground font-serif leading-none">Nejah</h1>
+              <p className="text-[10px] text-nejah-electric uppercase tracking-widest">Online Quran & Islamic Center</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-brand-electric hover:bg-brand-electric/10 hover:text-brand-silver"
+            className="text-nejah-electric hover:bg-primary/10 hover:text-foreground"
             onClick={() => navigate({ to: '/login' })}
           >
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Login
@@ -335,12 +335,12 @@ function ApplyAsTeacherPage() {
       <main className="relative z-10 mx-auto max-w-4xl px-4 py-8 pb-20">
         {/* Title */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-brand-electric/10 text-brand-electric text-xs font-semibold px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-nejah-electric text-xs font-semibold px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
             <GraduationCap className="h-3.5 w-3.5" />
             Teacher Application
           </div>
-          <h1 className="mb-3 text-3xl font-medium tracking-tight text-brand-silver md:text-4xl">Apply as a Teacher</h1>
-          <p className="text-gray-500 max-w-xl mx-auto">
+          <h1 className="mb-3 text-3xl font-medium tracking-tight text-foreground md:text-4xl">Apply as a Teacher</h1>
+          <p className="text-muted-foreground max-w-xl mx-auto">
             Join our team of qualified Quran and Islamic studies teachers. Fill out the form below and our team will review your application.
           </p>
         </div>
@@ -355,19 +355,19 @@ function ApplyAsTeacherPage() {
               <div key={s.label} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    isDone ? 'bg-brand-electric text-white shadow-lg shadow-brand-electric/30' :
-                    isActive ? 'bg-brand-electric text-white shadow-lg ring-4 ring-brand-electric/20' :
-                    'bg-gray-100 text-gray-400'
+                    isDone ? 'bg-primary text-white shadow-lg shadow-nejah-electric/30' :
+                    isActive ? 'bg-primary text-white shadow-lg ring-4 ring-nejah-electric/20' :
+                    'bg-muted text-muted-foreground'
                   }`}>
                     {isDone ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                   </div>
                   <span className={`text-xs mt-2 font-medium transition-colors ${
-                    isActive || isDone ? 'text-brand-electric' : 'text-gray-400'
+                    isActive || isDone ? 'text-nejah-electric' : 'text-muted-foreground'
                   }`}>{s.label}</span>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div className={`w-12 sm:w-20 h-0.5 mx-1 mb-5 transition-colors duration-300 ${
-                    i < step ? 'bg-brand-electric' : 'bg-brand-abyss/50'
+                    i < step ? 'bg-primary' : 'bg-nejah-surface/50'
                   }`} />
                 )}
               </div>
@@ -382,19 +382,19 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 0: Personal Details ─── */}
               {step === 0 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
-                    <User className="h-5 w-5 text-brand-electric" /> Personal Details
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2 font-serif">
+                    <User className="h-5 w-5 text-nejah-electric" /> Personal Details
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
-                      <Label htmlFor="fullName" className="text-gray-700 font-medium">Full Name *</Label>
-                      <Input id="fullName" {...register('fullName')} placeholder="Enter your full name" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="fullName" className="text-foreground font-medium">Full Name *</Label>
+                      <Input id="fullName" {...register('fullName')} placeholder="Enter your full name" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
                     </div>
                     <div>
-                      <Label className="text-gray-700 font-medium">Gender *</Label>
+                      <Label className="text-foreground font-medium">Gender *</Label>
                       <Select value={watchAll.gender} onValueChange={v => setValue('gender', v)}>
-                        <SelectTrigger className="mt-1.5 h-11 bg-gray-50 border-gray-200"><SelectValue placeholder="Select gender" /></SelectTrigger>
+                        <SelectTrigger className="mt-1.5 h-11 bg-muted border-border"><SelectValue placeholder="Select gender" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Male">Male</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
@@ -403,41 +403,41 @@ function ApplyAsTeacherPage() {
                       {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="dateOfBirth" className="text-gray-700 font-medium">Date of Birth</Label>
-                      <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="dateOfBirth" className="text-foreground font-medium">Date of Birth</Label>
+                      <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNumber" className="text-gray-700 font-medium">Phone Number *</Label>
-                      <Input id="phoneNumber" {...register('phoneNumber')} placeholder="+251 9XX XXX XXXX" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="phoneNumber" className="text-foreground font-medium">Phone Number *</Label>
+                      <Input id="phoneNumber" {...register('phoneNumber')} placeholder="+251 9XX XXX XXXX" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-gray-700 font-medium">Email Address *</Label>
-                      <Input id="email" type="email" {...register('email')} placeholder="teacher@example.com" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="email" className="text-foreground font-medium">Email Address *</Label>
+                      <Input id="email" type="email" {...register('email')} placeholder="teacher@example.com" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="password" className="text-gray-700 font-medium">Password *</Label>
-                      <Input id="password" type="password" {...register('password')} placeholder="Create a password" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="password" className="text-foreground font-medium">Password *</Label>
+                      <Input id="password" type="password" {...register('password')} placeholder="Create a password" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirm Password *</Label>
-                      <Input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="Confirm your password" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirm Password *</Label>
+                      <Input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="Confirm your password" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="country" className="text-gray-700 font-medium">Country *</Label>
-                      <Input id="country" {...register('country')} placeholder="e.g. Ethiopia" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="country" className="text-foreground font-medium">Country *</Label>
+                      <Input id="country" {...register('country')} placeholder="e.g. Ethiopia" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                       {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="city" className="text-gray-700 font-medium">City</Label>
-                      <Input id="city" {...register('city')} placeholder="e.g. Addis Ababa" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="city" className="text-foreground font-medium">City</Label>
+                      <Input id="city" {...register('city')} placeholder="e.g. Addis Ababa" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="streetAddress" className="text-gray-700 font-medium">Street Address</Label>
-                      <Input id="streetAddress" {...register('streetAddress')} placeholder="Your street address" className="mt-1.5 h-11 bg-gray-50 border-gray-200 focus:bg-white" />
+                      <Label htmlFor="streetAddress" className="text-foreground font-medium">Street Address</Label>
+                      <Input id="streetAddress" {...register('streetAddress')} placeholder="Your street address" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
                     </div>
                   </div>
                 </div>
@@ -446,17 +446,17 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 1: Qualifications ─── */}
               {step === 1 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
-                    <BookOpen className="h-5 w-5 text-brand-electric" /> Qualifications & Availability
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2 font-serif">
+                    <BookOpen className="h-5 w-5 text-nejah-electric" /> Qualifications & Availability
                   </h2>
 
                   {/* Languages */}
                   <div>
-                    <Label className="text-gray-700 font-medium mb-3 block">Languages Spoken *</Label>
+                    <Label className="text-foreground font-medium mb-3 block">Languages Spoken *</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[...LANGUAGES, 'Other'].map(lang => (
                         <label key={lang} className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
-                          watchAll.languages?.includes(lang) ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                          watchAll.languages?.includes(lang) ? 'border-primary/500 bg-primary/10 shadow-sm' : 'border-border hover:border-primary/300 hover:bg-muted'
                         }`}>
                           <Checkbox
                             checked={watchAll.languages?.includes(lang)}
@@ -465,65 +465,65 @@ function ApplyAsTeacherPage() {
                               setValue('languages', checked ? [...current, lang] : current.filter(l => l !== lang), { shouldValidate: true });
                             }}
                           />
-                          <span className="text-sm font-medium text-gray-700">{lang}</span>
+                          <span className="text-sm font-medium text-foreground">{lang}</span>
                         </label>
                       ))}
                     </div>
                     {watchAll.languages?.includes('Other') && (
-                      <Input {...register('languageOther')} placeholder="Specify other language" className="mt-3 h-11 bg-gray-50 border-gray-200" />
+                      <Input {...register('languageOther')} placeholder="Specify other language" className="mt-3 h-11 bg-muted border-border" />
                     )}
                     {errors.languages && <p className="text-red-500 text-xs mt-1">{errors.languages.message}</p>}
                   </div>
 
                   {/* Internet Connection */}
                   <div>
-                    <Label className="text-gray-700 font-medium">Internet Connection Type</Label>
+                    <Label className="text-foreground font-medium">Internet Connection Type</Label>
                     <Select value={watchAll.internetConnectionType} onValueChange={v => setValue('internetConnectionType', v)}>
-                      <SelectTrigger className="mt-1.5 h-11 bg-gray-50 border-gray-200"><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectTrigger className="mt-1.5 h-11 bg-muted border-border"><SelectValue placeholder="Select type" /></SelectTrigger>
                       <SelectContent>
                         {[...INTERNET_TYPES, 'Other'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {watchAll.internetConnectionType === 'Other' && (
-                      <Input {...register('internetOther')} placeholder="Specify other" className="mt-3 h-11 bg-gray-50 border-gray-200" />
+                      <Input {...register('internetOther')} placeholder="Specify other" className="mt-3 h-11 bg-muted border-border" />
                     )}
                   </div>
 
                   {/* Qirat Level */}
                   <div>
-                    <Label className="text-gray-700 font-medium">Qirat / Quran Education Level</Label>
+                    <Label className="text-foreground font-medium">Qirat / Quran Education Level</Label>
                     <Select value={watchAll.qiratEducationLevel} onValueChange={v => setValue('qiratEducationLevel', v)}>
-                      <SelectTrigger className="mt-1.5 h-11 bg-gray-50 border-gray-200"><SelectValue placeholder="Select level" /></SelectTrigger>
+                      <SelectTrigger className="mt-1.5 h-11 bg-muted border-border"><SelectValue placeholder="Select level" /></SelectTrigger>
                       <SelectContent>
                         {[...QIRAT_LEVELS, 'Other'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {watchAll.qiratEducationLevel === 'Other' && (
-                      <Input {...register('qiratOther')} placeholder="Specify other" className="mt-3 h-11 bg-gray-50 border-gray-200" />
+                      <Input {...register('qiratOther')} placeholder="Specify other" className="mt-3 h-11 bg-muted border-border" />
                     )}
                   </div>
 
                   {/* Islamic Education */}
                   <div>
-                    <Label className="text-gray-700 font-medium">Additional Islamic Education</Label>
+                    <Label className="text-foreground font-medium">Additional Islamic Education</Label>
                     <Select value={watchAll.islamicEducationLevel} onValueChange={v => setValue('islamicEducationLevel', v)}>
-                      <SelectTrigger className="mt-1.5 h-11 bg-gray-50 border-gray-200"><SelectValue placeholder="Select level" /></SelectTrigger>
+                      <SelectTrigger className="mt-1.5 h-11 bg-muted border-border"><SelectValue placeholder="Select level" /></SelectTrigger>
                       <SelectContent>
                         {[...ISLAMIC_LEVELS, 'Other'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {watchAll.islamicEducationLevel === 'Other' && (
-                      <Input {...register('islamicOther')} placeholder="Specify other" className="mt-3 h-11 bg-gray-50 border-gray-200" />
+                      <Input {...register('islamicOther')} placeholder="Specify other" className="mt-3 h-11 bg-muted border-border" />
                     )}
                   </div>
 
                   {/* Teaching Availability */}
                   <div>
-                    <Label className="text-gray-700 font-medium mb-3 block">Teaching Availability *</Label>
+                    <Label className="text-foreground font-medium mb-3 block">Teaching Availability *</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {AVAILABILITY.map(time => (
                         <label key={time} className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
-                          watchAll.teachingTimeAvailability?.includes(time) ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                          watchAll.teachingTimeAvailability?.includes(time) ? 'border-primary/500 bg-primary/10 shadow-sm' : 'border-border hover:border-primary/300 hover:bg-muted'
                         }`}>
                           <Checkbox
                             checked={watchAll.teachingTimeAvailability?.includes(time)}
@@ -532,8 +532,8 @@ function ApplyAsTeacherPage() {
                               setValue('teachingTimeAvailability', checked ? [...current, time] : current.filter(t => t !== time), { shouldValidate: true });
                             }}
                           />
-                          <Clock className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                          <span className="text-sm font-medium text-gray-700">{time}</span>
+                          <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="text-sm font-medium text-foreground">{time}</span>
                         </label>
                       ))}
                     </div>
@@ -542,15 +542,15 @@ function ApplyAsTeacherPage() {
 
                   {/* Marketing Source */}
                   <div>
-                    <Label className="text-gray-700 font-medium">Where did you hear about us?</Label>
+                    <Label className="text-foreground font-medium">Where did you hear about us?</Label>
                     <Select value={watchAll.marketingSource} onValueChange={v => setValue('marketingSource', v)}>
-                      <SelectTrigger className="mt-1.5 h-11 bg-gray-50 border-gray-200"><SelectValue placeholder="Select source" /></SelectTrigger>
+                      <SelectTrigger className="mt-1.5 h-11 bg-muted border-border"><SelectValue placeholder="Select source" /></SelectTrigger>
                       <SelectContent>
                         {[...MARKETING_SOURCES, 'Other'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {watchAll.marketingSource === 'Other' && (
-                      <Input {...register('marketingOther')} placeholder="Specify other" className="mt-3 h-11 bg-gray-50 border-gray-200" />
+                      <Input {...register('marketingOther')} placeholder="Specify other" className="mt-3 h-11 bg-muted border-border" />
                     )}
                   </div>
                 </div>
@@ -559,10 +559,10 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 2: Documents ─── */}
               {step === 2 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
-                    <FileText className="h-5 w-5 text-brand-electric" /> Document Uploads
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2 font-serif">
+                    <FileText className="h-5 w-5 text-nejah-electric" /> Document Uploads
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Upload your documents in PDF, JPG, or PNG format (max 10MB each).
                   </p>
 
@@ -573,9 +573,9 @@ function ApplyAsTeacherPage() {
                     { key: 'teachingExp', label: 'Teaching Experience Documents (Optional)', required: false },
                     { key: 'cvResume', label: 'CV / Resume (Optional)', required: false },
                   ].map(doc => (
-                    <div key={doc.key} className="border border-gray-200 rounded-xl p-4 hover:border-emerald-300 transition-colors">
+                    <div key={doc.key} className="border border-border rounded-xl p-4 hover:border-primary/300 transition-colors">
                       <div className="flex items-center justify-between mb-2">
-                        <Label className="text-gray-700 font-medium text-sm">{doc.label}</Label>
+                        <Label className="text-foreground font-medium text-sm">{doc.label}</Label>
                         {documents[doc.key] && (
                           <button type="button" onClick={() => removeDoc(doc.key)} className="text-red-400 hover:text-red-600 transition-colors">
                             <X className="h-4 w-4" />
@@ -583,18 +583,18 @@ function ApplyAsTeacherPage() {
                         )}
                       </div>
                       {documents[doc.key] ? (
-                        <div className="flex items-center gap-2 p-2.5 bg-emerald-50 rounded-lg">
-                          <CheckCircle2 className="h-4 w-4 text-brand-electric flex-shrink-0" />
-                          <span className="text-sm text-emerald-800 truncate">{documents[doc.key].fileName}</span>
+                        <div className="flex items-center gap-2 p-2.5 bg-primary/10 rounded-lg">
+                          <CheckCircle2 className="h-4 w-4 text-nejah-electric flex-shrink-0" />
+                          <span className="text-sm text-nejah-sapphire truncate">{documents[doc.key].fileName}</span>
                         </div>
                       ) : (
-                        <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+                        <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/400 hover:bg-primary/10 transition-all">
                           {uploadingKey === doc.key ? (
-                            <Loader2 className="h-5 w-5 text-brand-electric animate-spin" />
+                            <Loader2 className="h-5 w-5 text-nejah-electric animate-spin" />
                           ) : (
-                            <Upload className="h-5 w-5 text-gray-400" />
+                            <Upload className="h-5 w-5 text-muted-foreground" />
                           )}
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-muted-foreground">
                             {uploadingKey === doc.key ? 'Uploading...' : 'Click to upload'}
                           </span>
                           <input
@@ -615,12 +615,12 @@ function ApplyAsTeacherPage() {
 
                   {/* Additional Comments */}
                   <div>
-                    <Label htmlFor="additionalComments" className="text-gray-700 font-medium">Additional Comments (Optional)</Label>
+                    <Label htmlFor="additionalComments" className="text-foreground font-medium">Additional Comments (Optional)</Label>
                     <Textarea
                       id="additionalComments"
                       {...register('additionalComments')}
                       placeholder="Any additional information you'd like to share..."
-                      className="mt-1.5 bg-gray-50 border-gray-200 focus:bg-white min-h-[100px]"
+                      className="mt-1.5 bg-muted border-border focus:bg-white min-h-[100px]"
                     />
                   </div>
                 </div>
@@ -629,14 +629,14 @@ function ApplyAsTeacherPage() {
               {/* ─── STEP 3: Review ─── */}
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <h2 className="text-xl font-bold text-brand-silver flex items-center gap-2 font-serif">
-                    <CheckCircle2 className="h-5 w-5 text-brand-electric" /> Review Your Application
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2 font-serif">
+                    <CheckCircle2 className="h-5 w-5 text-nejah-electric" /> Review Your Application
                   </h2>
-                  <p className="text-sm text-gray-500">Please review your information before submitting.</p>
+                  <p className="text-sm text-muted-foreground">Please review your information before submitting.</p>
 
                   {/* Personal */}
-                  <div className="bg-gray-50 rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wider mb-3">Personal Details</h3>
+                  <div className="bg-muted rounded-xl p-5 space-y-2">
+                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Personal Details</h3>
                     <ReviewRow label="Full Name" value={watchAll.fullName} />
                     <ReviewRow label="Gender" value={watchAll.gender} />
                     <ReviewRow label="Date of Birth" value={watchAll.dateOfBirth} />
@@ -648,8 +648,8 @@ function ApplyAsTeacherPage() {
                   </div>
 
                   {/* Qualifications */}
-                  <div className="bg-gray-50 rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wider mb-3">Qualifications</h3>
+                  <div className="bg-muted rounded-xl p-5 space-y-2">
+                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Qualifications</h3>
                     <ReviewRow label="Languages" value={watchAll.languages?.join(', ')} />
                     <ReviewRow label="Internet" value={watchAll.internetConnectionType === 'Other' ? watchAll.internetOther : watchAll.internetConnectionType} />
                     <ReviewRow label="Qirat Level" value={watchAll.qiratEducationLevel === 'Other' ? watchAll.qiratOther : watchAll.qiratEducationLevel} />
@@ -659,45 +659,45 @@ function ApplyAsTeacherPage() {
                   </div>
 
                   {/* Documents */}
-                  <div className="bg-gray-50 rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
+                  <div className="bg-muted rounded-xl p-5 space-y-2">
+                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
                     {Object.values(documents).length > 0 ? (
                       Object.values(documents).map(d => (
                         <div key={d.key} className="flex items-center gap-2 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          <span className="text-gray-600">{d.label}:</span>
-                          <span className="text-gray-800 font-medium">{d.fileName}</span>
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                          <span className="text-muted-foreground">{d.label}:</span>
+                          <span className="text-foreground font-medium">{d.fileName}</span>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-400 italic">No documents uploaded</p>
+                      <p className="text-sm text-muted-foreground italic">No documents uploaded</p>
                     )}
                   </div>
 
                   {watchAll.additionalComments && (
-                    <div className="bg-gray-50 rounded-xl p-5">
-                      <h3 className="font-semibold text-emerald-800 text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
-                      <p className="text-sm text-gray-700">{watchAll.additionalComments}</p>
+                    <div className="bg-muted rounded-xl p-5">
+                      <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
+                      <p className="text-sm text-foreground">{watchAll.additionalComments}</p>
                     </div>
                   )}
                 </div>
               )}
 
               {/* ─── Navigation Buttons ─── */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
                 {step > 0 ? (
-                  <Button type="button" variant="outline" onClick={prevStep} className="border-emerald-200 text-brand-electric hover:bg-emerald-50">
+                  <Button type="button" variant="outline" onClick={prevStep} className="border-primary/200 text-nejah-electric hover:bg-primary/10">
                     <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
                   </Button>
                 ) : (
                   <div />
                 )}
                 {step < 3 ? (
-                  <Button type="button" onClick={nextStep} className="bg-brand-electric hover:bg-brand-electric/90 shadow-md">
+                  <Button type="button" onClick={nextStep} className="bg-primary hover:bg-primary/90 shadow-md">
                     Next <ArrowRight className="h-4 w-4 ml-1.5" />
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={isSubmitting} className="bg-brand-electric hover:bg-brand-electric/90 shadow-lg min-w-[160px]">
+                  <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 shadow-lg min-w-[160px]">
                     {isSubmitting ? (
                       <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
                     ) : (
@@ -712,8 +712,8 @@ function ApplyAsTeacherPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-emerald-100 bg-white/60 py-6 mt-10">
-        <p className="text-center text-xs text-gray-400">© {new Date().getFullYear()} Nejah Online Quran & Islamic Center. All rights reserved.</p>
+      <footer className="border-t border-primary/100 bg-white/60 py-6 mt-10">
+        <p className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Nejah Online Quran & Islamic Center. All rights reserved.</p>
       </footer>
     </div>
   );
@@ -724,8 +724,8 @@ function ReviewRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
     <div className="flex items-start gap-2 text-sm">
-      <span className="text-gray-500 min-w-[120px]">{label}:</span>
-      <span className="text-gray-800 font-medium">{value}</span>
+      <span className="text-muted-foreground min-w-[120px]">{label}:</span>
+      <span className="text-foreground font-medium">{value}</span>
     </div>
   );
 }

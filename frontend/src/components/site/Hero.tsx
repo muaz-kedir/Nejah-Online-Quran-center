@@ -14,7 +14,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-electric/20 bg-brand-electric/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-brand-electric">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-nejah-electric/20 bg-primary/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric">
             <Sparkles className="size-3.5" />
             {t.hero.badge}
           </div>
@@ -23,11 +23,11 @@ export function Hero() {
             {t.hero.title2}{" "}
             <span className="text-gradient">{t.hero.title3}</span>
           </h1>
-          <p className="mb-8 max-w-xl text-base leading-relaxed text-brand-platinum md:text-lg">
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-nejah-slate-blue md:text-lg">
             {t.hero.desc}
           </p>
           <div className="flex flex-wrap gap-3 mb-10">
-            <Button size="lg" className="h-12 rounded-full px-6 shadow-[0_0_20px_rgba(0,102,204,0.35)]">
+            <Button size="lg" className="h-12 rounded-full px-6 shadow-nejah-glow">
               {t.hero.getStarted} <ArrowRight className="ms-1 size-4 rtl:rotate-180" />
             </Button>
             <Button size="lg" variant="outline" className="rounded-full h-12 px-6">

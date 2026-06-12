@@ -4,20 +4,20 @@ import { useTheme } from "./ThemeProvider";
 export function Footer() {
   const { t } = useTheme();
   return (
-    <footer id="contact" className="relative border-t border-white/5 bg-brand-primary pb-6 pt-16 text-brand-silver">
+    <footer id="contact" className="relative border-t border-white/5 bg-nejah-sapphire pb-6 pt-16 text-foreground">
       <div className="container-x grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
         <div>
           <div className="flex items-center gap-2 mb-4">
             <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
           </div>
-          <p className="text-sm leading-relaxed text-brand-platinum">
+          <p className="text-sm leading-relaxed text-nejah-slate-blue">
             {t.footer.tagline}
           </p>
         </div>
 
         <div>
           <h4 className="font-display font-bold mb-4">{t.footer.quickLinks}</h4>
-          <ul className="space-y-2.5 text-sm text-brand-platinum">
+          <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li><a href="#about" className="hover:text-primary">{t.footer.aboutUs}</a></li>
             <li><a href="#teachers" className="hover:text-primary">{t.footer.ourTeachers}</a></li>
             <li><a href="#courses" className="hover:text-primary">{t.footer.coursesLink}</a></li>
@@ -27,7 +27,7 @@ export function Footer() {
 
         <div>
           <h4 className="font-display font-bold mb-4">{t.footer.support}</h4>
-          <ul className="space-y-2.5 text-sm text-brand-platinum">
+          <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li><a href="#" className="hover:text-primary">{t.footer.privacy}</a></li>
             <li><a href="#" className="hover:text-primary">{t.footer.terms}</a></li>
             <li><a href="#" className="hover:text-primary">{t.footer.sitemap}</a></li>
@@ -37,7 +37,7 @@ export function Footer() {
 
         <div>
           <h4 className="font-display font-bold mb-4">{t.footer.contactInfo}</h4>
-          <ul className="space-y-2.5 text-sm text-brand-platinum">
+          <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li className="flex items-center gap-2">
               <Mail className="size-4" /> hello@nejah.com
             </li>
@@ -60,7 +60,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="container-x flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-xs text-brand-platinum md:flex-row">
+      <div className="container-x flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-xs text-nejah-slate-blue md:flex-row">
         <span>{t.footer.rights}</span>
         <div className="flex gap-5">
           <a href="#" className="hover:text-primary">{t.footer.privacyShort}</a>

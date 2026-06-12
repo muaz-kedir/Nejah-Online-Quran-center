@@ -66,14 +66,14 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
 
   const iconBtn = cn(
     'flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200',
-    'text-brand-platinum hover:bg-brand-electric/10 hover:text-brand-electric',
+    'text-nejah-slate-blue hover:bg-primary/10 hover:text-nejah-electric',
   );
 
   return (
     <header
       className={cn(
         'flex h-16 flex-shrink-0 items-center gap-4 border-b px-6',
-        'border-slate-200/80 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-brand-abyss/60',
+        'border-border bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-nejah-surface/60',
       )}
     >
       <button onClick={onMenuClick} className={cn(iconBtn, 'p-1 lg:hidden')}>
@@ -82,12 +82,12 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
 
       <div className="max-w-lg flex-1">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-platinum" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
           <Input
             placeholder={t.searchPlaceholder}
             className={cn(
-              'h-9 border-slate-200/80 bg-brand-abyss/30 pl-9 text-sm text-brand-silver',
-              'placeholder:text-brand-platinum focus:border-brand-electric/50 dark:border-white/10 dark:bg-brand-void/50',
+              'h-9 border-border bg-nejah-surface/30 pl-9 text-sm text-foreground',
+              'placeholder:text-nejah-slate-blue focus:border-nejah-electric/50 dark:border-white/10 dark:bg-background/50',
             )}
           />
         </div>
@@ -108,18 +108,18 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
               <Globe className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass-panel w-44 border-slate-200/80 dark:border-white/5">
-            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-brand-platinum">
+          <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-nejah-slate-blue">
               Language
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-brand-silver/20" />
+            <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
             {LANGUAGES.map((lang) => (
               <DropdownMenuItem
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
                 className={cn(
-                  'cursor-pointer text-brand-silver focus:bg-brand-electric/10',
-                  language === lang.code && 'font-medium text-brand-electric',
+                  'cursor-pointer text-foreground focus:bg-primary/10',
+                  language === lang.code && 'font-medium text-nejah-electric',
                 )}
               >
                 <span className="flex items-center gap-2">
@@ -137,7 +137,7 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
             <Bell className="h-4 w-4" />
           </button>
           {notifications > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-brand-void bg-red-500 font-mono text-[10px] text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-background bg-red-500 font-mono text-[10px] text-white">
               {notifications}
             </span>
           )}
@@ -148,38 +148,38 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
             <button
               className={cn(
                 'ml-1 flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-all duration-200',
-                'hover:bg-brand-electric/10',
+                'hover:bg-primary/10',
               )}
             >
               <div className="flex flex-col items-end">
-                <span className="text-sm font-medium leading-tight text-brand-silver">{userName}</span>
-                <span className="text-[10px] uppercase tracking-wide text-brand-platinum">
+                <span className="text-sm font-medium leading-tight text-foreground">{userName}</span>
+                <span className="text-[10px] uppercase tracking-wide text-nejah-slate-blue">
                   {getRoleLabel(userRole)}
                 </span>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-electric/30 bg-gradient-to-br from-brand-primary to-brand-electric text-sm font-semibold text-white shadow-[0_0_12px_rgba(0,102,204,0.4)]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-nejah-electric/30 bg-gradient-to-br from-nejah-sapphire to-nejah-electric text-sm font-semibold text-white shadow-[0_0_12px_rgba(0,102,204,0.4)]">
                 {userName.charAt(0)}
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass-panel w-56 border-slate-200/80 dark:border-white/5">
-            <DropdownMenuLabel className="text-brand-platinum">My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-brand-silver/20" />
+          <DropdownMenuContent align="end" className="glass-panel w-56 border-border dark:border-white/5">
+            <DropdownMenuLabel className="text-nejah-slate-blue">My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
             <DropdownMenuItem
               onClick={() => navigate({ to: '/profile' })}
-              className="text-brand-silver focus:bg-brand-electric/10"
+              className="text-foreground focus:bg-primary/10"
             >
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate({ to: '/settings' })}
-              className="text-brand-silver focus:bg-brand-electric/10"
+              className="text-foreground focus:bg-primary/10"
             >
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-brand-silver/20" />
+            <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
             <DropdownMenuItem
               onClick={handleLogout}
               className="text-red-500 focus:bg-red-500/10 dark:text-red-400"

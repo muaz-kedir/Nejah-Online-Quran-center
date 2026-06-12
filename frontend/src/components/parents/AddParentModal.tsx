@@ -75,9 +75,9 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby="add-parent-desc" className="sm:max-w-[520px] rounded-3xl p-0 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby="add-parent-desc" className="sm:max-w-[520px] rounded-3xl p-0 overflow-hidden dark:bg-nejah-surface dark:border-nejah-border-blue">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-900 to-emerald-800 px-7 pt-7 pb-6">
+        <div className="bg-gradient-to-r from-nejah-azure to-nejah-sapphire px-7 pt-7 pb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white">
               <UserPlus className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
             <div>
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold text-white">Add New Parent</DialogTitle>
-                <DialogDescription id="add-parent-desc" className="text-emerald-200 text-xs mt-0.5">
+                <DialogDescription id="add-parent-desc" className="text-nejah-electric text-xs mt-0.5">
                   Register a guardian profile in the Nejah ecosystem
                 </DialogDescription>
               </DialogHeader>
@@ -96,20 +96,20 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
         <form onSubmit={handleSubmit} className="px-7 py-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Full Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.fullName}
                 onChange={(e) => handleChange('fullName', e.target.value)}
                 placeholder="e.g. Ahmed Al-Farsi"
-                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Email <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -117,44 +117,44 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
                 value={form.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 placeholder="parent@example.com"
-                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Phone Number
               </Label>
               <Input
                 value={form.phoneNumber}
                 onChange={(e) => handleChange('phoneNumber', e.target.value)}
                 placeholder="+971 50 123 4567"
-                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Residency
               </Label>
               <Input
                 value={form.residency}
                 onChange={(e) => handleChange('residency', e.target.value)}
                 placeholder="e.g. United Arab Emirates"
-                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Relationship
               </Label>
               <Select value={form.relationshipWithStudent} onValueChange={(v) => handleChange('relationshipWithStudent', v)}>
-                <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <SelectTrigger className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                   <SelectItem value="Father">Father</SelectItem>
                   <SelectItem value="Mother">Mother</SelectItem>
                   <SelectItem value="Guardian">Guardian</SelectItem>
@@ -165,7 +165,7 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
             </div>
 
             <div className="col-span-2 space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              <Label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">
                 Password <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -173,7 +173,7 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
                 value={form.password}
                 onChange={(e) => handleChange('password', e.target.value)}
                 placeholder="Set a secure password"
-                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                className="h-11 rounded-xl bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue"
                 required
               />
             </div>
@@ -184,14 +184,14 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
               type="button"
               variant="outline"
               onClick={onClose}
-              className="rounded-xl h-11 border-gray-200 dark:border-gray-700 dark:text-gray-300"
+              className="rounded-xl h-11 border-border dark:border-nejah-border-blue dark:text-muted-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="rounded-xl h-11 bg-emerald-900 hover:bg-emerald-800 text-white"
+              className="rounded-xl h-11 bg-primary hover:bg-nejah-azure text-white"
             >
               {loading ? 'Adding...' : 'Add Parent'}
             </Button>

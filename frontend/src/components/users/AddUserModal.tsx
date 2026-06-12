@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,18 +22,22 @@ interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultRole?: string;
 }
 
-export function AddUserModal({ open, onClose, onSuccess }: AddUserModalProps) {
+export function AddUserModal({ open, onClose, onSuccess, defaultRole = 'student' }: AddUserModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'student',
+    role: defaultRole,
     isActive: true,
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (open) setFormData((prev) => ({ ...prev, role: defaultRole }));
+  }, [open, defaultRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,6 +142,8 @@ export function AddUserModal({ open, onClose, onSuccess }: AddUserModalProps) {
                   <SelectItem value="teacher">Teacher</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
                   <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="finance_manager">Finance Manager</SelectItem>
+                  <SelectItem value="qirat_manager">Qirat Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>

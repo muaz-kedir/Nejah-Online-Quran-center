@@ -35,7 +35,7 @@ export function AuthPageLayout({
         {showBack && (
           <Link
             to="/"
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-brand-platinum transition-colors hover:text-brand-electric"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
@@ -44,12 +44,12 @@ export function AuthPageLayout({
 
         <GlassPanel className="overflow-hidden px-8 pb-10 pt-10">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-brand-electric/30 bg-brand-abyss/50 p-2 shadow-[0_0_20px_rgba(0,102,204,0.3)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-nejah-electric/30 bg-nejah-surface/50 p-2 shadow-nejah-glow">
               <img src="/logo.png" alt="Nejah" className="h-11 w-11 rounded-full object-cover" />
             </div>
-            <h1 className="text-2xl font-medium tracking-tight text-brand-silver">{title}</h1>
+            <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
             {subtitle && (
-              <p className="mt-2 text-sm leading-relaxed text-brand-platinum">{subtitle}</p>
+              <p className="mt-2 text-sm leading-relaxed text-nejah-slate-blue">{subtitle}</p>
             )}
           </div>
           {children}

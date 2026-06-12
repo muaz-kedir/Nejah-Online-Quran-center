@@ -1,6 +1,6 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
+
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
@@ -12,6 +12,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+  --radius-nejah-lg: 12px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -39,49 +40,46 @@
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Nejah brand palette (CSS vars switch in .dark) */
-  --color-brand-void: var(--brand-void);
-  --color-brand-abyss: var(--brand-abyss);
-  --color-brand-primary: var(--brand-primary);
-  --color-brand-electric: var(--brand-electric);
-  --color-brand-silver: var(--brand-silver);
-  --color-brand-platinum: var(--brand-platinum);
+  /* Nejah Online brand palette */
+  --color-nejah-azure: #0F62AC;
+  --color-nejah-sapphire: #0B355B;
+  --color-nejah-electric: #0091FF;
+  --color-nejah-midnight: #061524;
+  --color-nejah-surface: #0B223A;
+  --color-nejah-border-blue: #1C3D5A;
+  --color-nejah-white-tint: #F0F6FC;
+  --color-nejah-sky-tint: #E6F0FA;
+  --color-nejah-slate-blue: #91A7BC;
 
-  --shadow-soft: 0 4px 24px -8px oklch(0.35 0.08 160 / 0.12);
-  --shadow-elevated: 0 20px 50px -20px oklch(0.35 0.08 160 / 0.25);
-  --shadow-glow: 0 0 60px -10px oklch(0.55 0.15 160 / 0.45);
+  --shadow-soft: 0 4px 24px -8px rgba(15, 98, 172, 0.12);
+  --shadow-elevated: 0 20px 50px -20px rgba(15, 98, 172, 0.25);
+  --shadow-glow: 0 0 60px -10px rgba(15, 98, 172, 0.45);
+  --shadow-nejah-glow: 0 0 15px rgba(15, 98, 172, 0.2);
 }
 
 :root {
   --radius: 1rem;
 
-  /* Light theme brand */
-  --brand-void: #F8FAFC;
-  --brand-abyss: #F1F5F9;
-  --brand-primary: #0A3663;
-  --brand-electric: #0066CC;
-  --brand-silver: #334155;
-  --brand-platinum: #64748B;
+  --background: #f4f7fa;
+  --foreground: #0b355b;
 
-  --background: var(--brand-void);
-  --foreground: oklch(0.18 0.03 160);
+  --card: #ffffff;
+  --card-foreground: #0b355b;
 
-  --card-foreground: var(--brand-silver);
+  --popover: #ffffff;
+  --popover-foreground: #0b355b;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 160);
-
-  --primary: #0066CC;
+  --primary: #0f62ac;
   --primary-foreground: #ffffff;
-  --primary-soft: rgba(0, 102, 204, 0.1);
+  --primary-soft: rgba(15, 98, 172, 0.1);
 
-  --secondary: var(--brand-abyss);
-  --secondary-foreground: var(--brand-silver);
+  --secondary: #e6f0fa;
+  --secondary-foreground: #0b355b;
 
-  --muted: var(--brand-abyss);
-  --muted-foreground: var(--brand-platinum);
+  --muted: #e6f0fa;
+  --muted-foreground: #91a7bc;
 
-  --accent: #0A3663;
+  --accent: #0b355b;
   --accent-foreground: #ffffff;
 
   --gold: oklch(0.78 0.13 80);
@@ -89,55 +87,42 @@
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: rgba(148, 163, 184, 0.35);
-  --input: rgba(148, 163, 184, 0.35);
-  --ring: #0066CC;
-
-  --card: rgba(255, 255, 255, 0.7);
-  --foreground: var(--brand-silver);
+  --border: rgba(28, 61, 90, 0.25);
+  --input: rgba(28, 61, 90, 0.25);
+  --ring: #0f62ac;
 }
 
 .dark {
-  /* Dark theme brand */
-  --brand-void: #030B18;
-  --brand-abyss: #07162C;
-  --brand-primary: #0A3663;
-  --brand-electric: #0066CC;
-  --brand-silver: #E2E8F0;
-  --brand-platinum: #94A3B8;
+  --background: #061524;
+  --foreground: #f0f6fc;
 
-  --background: var(--brand-void);
-  --foreground: var(--brand-silver);
+  --card: #0b223a;
+  --card-foreground: #f0f6fc;
 
-  --card: oklch(0.22 0.025 160);
-  --card-foreground: oklch(0.97 0.01 160);
+  --popover: #0b223a;
+  --popover-foreground: #f0f6fc;
 
-  --popover: oklch(0.22 0.025 160);
-  --popover-foreground: oklch(0.97 0.01 160);
+  --primary: #0091ff;
+  --primary-foreground: #061524;
+  --primary-soft: rgba(0, 145, 255, 0.1);
 
-  --primary: oklch(0.62 0.14 155);
-  --primary-foreground: oklch(0.12 0.02 160);
-  --primary-soft: oklch(0.3 0.06 155);
+  --secondary: #0b223a;
+  --secondary-foreground: #f0f6fc;
 
-  --secondary: oklch(0.26 0.025 160);
-  --secondary-foreground: oklch(0.97 0.01 160);
+  --muted: #0b223a;
+  --muted-foreground: #91a7bc;
 
-  --muted: oklch(0.26 0.025 160);
-  --muted-foreground: oklch(0.7 0.02 160);
-
-  --accent: #0A3663;
-  --accent-foreground: #E2E8F0;
+  --accent: #0f62ac;
+  --accent-foreground: #f0f6fc;
 
   --gold: oklch(0.8 0.14 80);
 
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.97 0 0);
 
-  --border: oklch(0.3 0.02 160 / 60%);
-  --input: oklch(0.3 0.02 160 / 60%);
-  --ring: #0066CC;
-
-  --card: rgba(7, 22, 44, 0.6);
+  --border: #1c3d5a;
+  --input: #1c3d5a;
+  --ring: #0091ff;
 }
 
 @layer base {
@@ -175,7 +160,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(120deg, #0066CC, #0A3663);
+    background: linear-gradient(120deg, #0F62AC, #0B355B);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -183,8 +168,8 @@
 
   .bg-pattern {
     background-image:
-      radial-gradient(circle at 20% 10%, rgba(0, 102, 204, 0.1), transparent 45%),
-      radial-gradient(circle at 80% 60%, rgba(10, 54, 99, 0.08), transparent 45%);
+      radial-gradient(circle at 20% 10%, rgba(15, 98, 172, 0.1), transparent 45%),
+      radial-gradient(circle at 80% 60%, rgba(11, 53, 91, 0.08), transparent 45%);
   }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }
@@ -195,8 +180,8 @@
 
   .glass-panel {
     @apply backdrop-blur-xl;
-    @apply bg-white/70 border border-slate-200/80 shadow-xl;
-    @apply dark:bg-brand-abyss/60 dark:border-white/5 dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+    @apply bg-card/70 border border-border shadow-xl;
+    @apply dark:bg-nejah-surface/80 dark:border-nejah-border-blue dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
   }
 
   .silver-gradient-border {
@@ -213,15 +198,15 @@
   }
 
   .ambient-glow {
-    background: radial-gradient(circle at top right, rgba(0, 102, 204, 0.08), transparent 50%);
+    background: radial-gradient(circle at top right, rgba(15, 98, 172, 0.08), transparent 50%);
   }
 
   .ambient-glow-dark {
-    background: radial-gradient(circle at top right, rgba(10, 54, 99, 0.15), transparent 50%);
+    background: radial-gradient(circle at top right, rgba(11, 53, 91, 0.15), transparent 50%);
   }
 
   .admin-shell-bg {
-    @apply bg-brand-void transition-colors duration-300;
+    @apply bg-background dark:bg-nejah-midnight transition-colors duration-300;
   }
 
   .data-mono {
@@ -229,7 +214,7 @@
   }
 
   .nav-item-active {
-    @apply bg-gradient-to-r from-brand-electric/15 to-transparent text-brand-silver;
+    @apply bg-gradient-to-r from-nejah-electric/15 to-transparent text-nejah-white-tint;
   }
 
   .nav-item-hover {
@@ -237,15 +222,17 @@
   }
 
   .electric-ring {
-    box-shadow: 0 0 12px rgba(0, 102, 204, 0.5);
+    box-shadow: 0 0 12px rgba(0, 145, 255, 0.5);
   }
 
   .admin-filter-bar {
-    @apply glass-panel flex flex-wrap items-center gap-4 rounded-2xl p-4;
+    @apply backdrop-blur-xl flex flex-wrap items-center gap-4 rounded-nejah-lg p-4;
+    @apply bg-card/70 border border-border shadow-xl;
+    @apply dark:bg-nejah-surface/80 dark:border-nejah-border-blue dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
   }
 
   .admin-field-label {
-    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-brand-platinum;
+    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-nejah-slate-blue;
   }
 
   .admin-page {

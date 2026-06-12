@@ -54,79 +54,79 @@ function TeacherStudentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 tracking-widest uppercase mb-1">
+            <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               My Students
             </p>
-            <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">
+            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
               Students Directory
             </h1>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-card dark:bg-nejah-surface p-4 rounded-2xl shadow-sm border border-border dark:border-nejah-border-blue">
           <form onSubmit={handleSearch} className="flex gap-4 max-w-2xl">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search students by name, email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                className="pl-9 h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"
               />
             </div>
-            <Button type="submit" className="h-11 px-6 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl">
+            <Button type="submit" className="h-11 px-6 bg-primary hover:bg-nejah-azure text-white rounded-xl">
               Search
             </Button>
           </form>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl shadow-sm border border-border dark:border-nejah-border-blue overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gender</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quran Level</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Attendance</th>
-                  <th className="text-right py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+                <tr className="bg-muted/50 dark:bg-nejah-surface/50 border-b border-border dark:border-nejah-border-blue">
+                  <th className="text-left py-4 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Student</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Gender</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Quran Level</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                  <th className="text-left py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Attendance</th>
+                  <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-900 mx-auto" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nejah-border-blue mx-auto" />
                     </td>
                   </tr>
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-400">
+                    <td colSpan={6} className="py-12 text-center text-muted-foreground">
                       No students found. Assign students to see them here.
                     </td>
                   </tr>
                 ) : (
                   students.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition-colors">
+                    <tr key={student.id} className="hover:bg-muted/50 dark:hover:bg-nejah-surface/30 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex items-center justify-center font-bold text-lg text-emerald-800 dark:text-emerald-300">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-lg text-nejah-sapphire text-nejah-electric">
                             {student.fullName?.charAt(0) || 'U'}
                           </div>
                           <div>
-                            <p className="font-bold text-emerald-900 dark:text-gray-100">{student.fullName}</p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">{student.email}</p>
+                            <p className="font-bold text-nejah-sapphire text-foreground">{student.fullName}</p>
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground">{student.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="text-sm text-foreground dark:text-muted-foreground">
                           {student.gender === 'MALE' ? 'Male' : student.gender === 'FEMALE' ? 'Female' : 'N/A'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-3 py-1 rounded-lg text-xs">
+                        <Badge className="bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric px-3 py-1 rounded-lg text-xs">
                           {student.level}
                         </Badge>
                       </td>
@@ -135,9 +135,9 @@ function TeacherStudentsPage() {
                           className={cn(
                             'text-xs px-3 py-1 rounded-lg',
                             student.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                              ? 'bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric'
                               : student.status === 'inactive'
-                                ? 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                ? 'bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground'
                                 : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
                           )}
                         >
@@ -146,13 +146,13 @@ function TeacherStudentsPage() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 w-20 bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                          <div className="flex-1 w-20 bg-muted dark:bg-nejah-surface h-1.5 rounded-full overflow-hidden">
                             <div
-                              className="bg-emerald-600 h-full rounded-full"
+                              className="bg-primary h-full rounded-full"
                               style={{ width: `${student.attendanceRate || 0}%` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                          <span className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
                             {student.attendanceRate || 0}%
                           </span>
                         </div>
@@ -160,7 +160,7 @@ function TeacherStudentsPage() {
                       <td className="py-4 px-6 text-right">
                         <Button
                           asChild
-                          className="h-9 px-4 bg-emerald-900 hover:bg-emerald-800 text-white rounded-lg text-sm font-medium"
+                          className="h-9 px-4 bg-primary hover:bg-nejah-azure text-white rounded-lg text-sm font-medium"
                         >
                           <Link to="/teacher_students/$studentId" params={{ studentId: student.id }}>
                             <Eye className="h-4 w-4 mr-2" />
@@ -176,8 +176,8 @@ function TeacherStudentsPage() {
           </div>
 
           {meta.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-between">
-              <p className="text-xs font-medium text-gray-500">
+            <div className="px-6 py-4 border-t border-border dark:border-nejah-border-blue bg-muted/50 dark:bg-nejah-surface/50 flex items-center justify-between">
+              <p className="text-xs font-medium text-muted-foreground">
                 Showing {(meta.page - 1) * meta.limit + 1}-{Math.min(meta.page * meta.limit, meta.total)} of {meta.total} students
               </p>
               <div className="flex items-center gap-2">
@@ -186,7 +186,7 @@ function TeacherStudentsPage() {
                   size="icon"
                   disabled={meta.page === 1}
                   onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
-                  className="h-9 w-9 rounded-lg dark:border-gray-700"
+                  className="h-9 w-9 rounded-lg dark:border-nejah-border-blue"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -198,8 +198,8 @@ function TeacherStudentsPage() {
                     className={cn(
                       'h-9 w-9 rounded-lg font-medium',
                       meta.page === i + 1
-                        ? 'bg-emerald-900 hover:bg-emerald-800 text-white'
-                        : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700',
+                        ? 'bg-primary hover:bg-nejah-azure text-white'
+                        : 'bg-transparent text-muted-foreground hover:bg-muted dark:hover:bg-nejah-surface',
                     )}
                   >
                     {i + 1}
@@ -210,7 +210,7 @@ function TeacherStudentsPage() {
                   size="icon"
                   disabled={meta.page === meta.totalPages}
                   onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
-                  className="h-9 w-9 rounded-lg dark:border-gray-700"
+                  className="h-9 w-9 rounded-lg dark:border-nejah-border-blue"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

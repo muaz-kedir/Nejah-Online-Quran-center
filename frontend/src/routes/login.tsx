@@ -104,6 +104,10 @@ function LoginPage() {
         window.location.href = "/teacher_dashboard";
       } else if (role === "parent") {
         window.location.href = "/parent_dashboard";
+      } else if (role === "finance_manager") {
+        window.location.href = "/finance_dashboard";
+      } else if (role === "qirat_manager") {
+        window.location.href = "/qirat_dashboard";
       } else {
         window.location.href = "/dashboard";
       }
@@ -119,10 +123,10 @@ function LoginPage() {
       title="Welcome Back"
       subtitle="Online Quran & Islamic Center — Sign in to your account"
       footer={
-        <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-brand-platinum">
-          <button className="transition-colors hover:text-brand-electric">Privacy Policy</button>
-          <button className="transition-colors hover:text-brand-electric">Terms of Service</button>
-          <button className="transition-colors hover:text-brand-electric">Contact Support</button>
+        <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-nejah-slate-blue">
+          <button className="transition-colors hover:text-nejah-electric">Privacy Policy</button>
+          <button className="transition-colors hover:text-nejah-electric">Terms of Service</button>
+          <button className="transition-colors hover:text-nejah-electric">Contact Support</button>
         </div>
       }
     >
@@ -133,10 +137,10 @@ function LoginPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-brand-silver">Email or Phone</FormLabel>
+                <FormLabel className="text-foreground">Email or Phone</FormLabel>
                 <FormControl>
                   <div className="group relative">
-                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-platinum transition-colors group-focus-within:text-brand-electric" />
+                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
                     <Input
                       className="h-12 pl-10"
                       placeholder="email@example.com or phone"
@@ -154,10 +158,10 @@ function LoginPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-brand-silver">Password</FormLabel>
+                <FormLabel className="text-foreground">Password</FormLabel>
                 <FormControl>
                   <div className="group relative">
-                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-platinum transition-colors group-focus-within:text-brand-electric" />
+                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
                     <Input
                       className="h-12 pl-10"
                       type="password"
@@ -178,7 +182,7 @@ function LoginPage() {
               render={({ field }) => (
                 <div className="flex items-center space-x-2">
                   <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
-                  <label htmlFor="remember" className="cursor-pointer text-sm font-medium text-brand-platinum">
+                  <label htmlFor="remember" className="cursor-pointer text-sm font-medium text-nejah-slate-blue">
                     Remember me
                   </label>
                 </div>
@@ -187,7 +191,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => navigate({ to: "/forgot-password" })}
-              className="text-sm font-medium text-brand-electric underline-offset-4 hover:underline"
+              className="text-sm font-medium text-nejah-electric underline-offset-4 hover:underline"
             >
               Forgot password?
             </button>
@@ -209,23 +213,23 @@ function LoginPage() {
 
           <SilverDivider />
           <div className="space-y-2 pt-2 text-center">
-            <p className="text-sm text-brand-platinum">
+            <p className="text-sm text-nejah-slate-blue">
               New student?{" "}
               <button
                 type="button"
                 onClick={() => navigate({ to: "/register" })}
-                className="font-semibold text-brand-electric hover:underline"
+                className="font-semibold text-nejah-electric hover:underline"
               >
                 Join our Programs
               </button>
             </p>
             {isApplicationsOpen && (
-              <p className="text-sm text-brand-platinum">
+              <p className="text-sm text-nejah-slate-blue">
                 Are you a teacher?{" "}
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/apply-as-teacher" })}
-                  className="font-semibold text-brand-electric hover:underline"
+                  className="font-semibold text-nejah-electric hover:underline"
                 >
                   Apply as Teacher
                 </button>

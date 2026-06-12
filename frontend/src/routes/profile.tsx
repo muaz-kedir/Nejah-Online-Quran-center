@@ -143,7 +143,7 @@ function ProfilePage() {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </DashboardLayout>
     );
@@ -153,8 +153,8 @@ function ProfilePage() {
     <DashboardLayout>
       <Breadcrumbs />
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 font-serif">{t.greeting}, {profile?.name}</h1>
-        <p className="text-gray-600 mt-1">Manage your account details and security</p>
+        <h1 className="text-3xl font-bold text-foreground font-serif">{t.greeting}, {profile?.name}</h1>
+        <p className="text-muted-foreground mt-1">Manage your account details and security</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -164,7 +164,7 @@ function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full bg-emerald-100 flex items-center justify-center text-4xl font-bold text-emerald-800 overflow-hidden">
+                  <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-bold text-nejah-sapphire overflow-hidden">
                     {profile?.avatar ? (
                       <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -175,9 +175,9 @@ function ProfilePage() {
                     <Camera className="h-8 w-8 text-white" />
                   </div>
                 </div>
-                <h2 className="mt-4 text-xl font-bold text-gray-900">{profile?.name}</h2>
-                <p className="text-gray-500">{profile?.email}</p>
-                <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 uppercase tracking-wider">
+                <h2 className="mt-4 text-xl font-bold text-foreground">{profile?.name}</h2>
+                <p className="text-muted-foreground">{profile?.email}</p>
+                <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-nejah-sapphire uppercase tracking-wider">
                   {profile?.role?.replace('_', ' ')}
                 </div>
               </div>
@@ -190,7 +190,7 @@ function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-emerald-600" />
+                <User className="h-5 w-5 text-primary" />
                 Personal Details
               </CardTitle>
               <CardDescription>Update your personal information</CardDescription>
@@ -218,7 +218,7 @@ function ProfilePage() {
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={savingDetails} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button type="submit" disabled={savingDetails} className="bg-primary hover:bg-primary">
                   {savingDetails ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   Save Changes
                 </Button>
@@ -230,7 +230,7 @@ function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-emerald-600" />
+                <Key className="h-5 w-5 text-primary" />
                 Security
               </CardTitle>
               <CardDescription>Update your password</CardDescription>
@@ -272,7 +272,7 @@ function ProfilePage() {
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={savingPassword} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button type="submit" disabled={savingPassword} className="bg-primary hover:bg-primary">
                   {savingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Key className="mr-2 h-4 w-4" />}
                   Change Password
                 </Button>

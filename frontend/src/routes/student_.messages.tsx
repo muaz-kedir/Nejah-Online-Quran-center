@@ -81,24 +81,24 @@ function StudentMessages() {
       <main className="flex-1 px-10 py-10 max-w-3xl">
         <div className="mb-8">
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-emerald-950 font-serif">Messages</h1>
-          <p className="text-sm text-gray-500 mt-2">Chat with your assigned teacher</p>
+          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">Messages</h1>
+          <p className="text-sm text-muted-foreground mt-2">Chat with your assigned teacher</p>
         </div>
 
         {!teacherId ? (
-          <div className="bg-gray-50 rounded-3xl p-12 text-center border">
-            <MessageSquare className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No teacher assigned yet. Contact admin for support.</p>
+          <div className="bg-muted rounded-3xl p-12 text-center border">
+            <MessageSquare className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No teacher assigned yet. Contact admin for support.</p>
           </div>
         ) : (
           <>
-            <div className="bg-emerald-50 rounded-2xl px-4 py-3 mb-6 border border-emerald-100">
-              <p className="text-sm font-bold text-emerald-900">Conversation with {teacherName}</p>
+            <div className="bg-primary/10 rounded-2xl px-4 py-3 mb-6 border border-primary/100">
+              <p className="text-sm font-bold text-nejah-sapphire">Conversation with {teacherName}</p>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-4 min-h-[280px] max-h-[400px] overflow-y-auto mb-6 space-y-3 border">
+            <div className="bg-muted rounded-2xl p-4 min-h-[280px] max-h-[400px] overflow-y-auto mb-6 space-y-3 border">
               {messages.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-12">No messages yet. Start the conversation below.</p>
+                <p className="text-center text-muted-foreground text-sm py-12">No messages yet. Start the conversation below.</p>
               ) : (
                 messages.map((m) => {
                   const isMine = m.fromRole === 'student';
@@ -106,7 +106,7 @@ function StudentMessages() {
                     <div
                       key={m.id}
                       className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
-                        isMine ? 'ml-auto bg-emerald-700 text-white' : 'bg-white border text-gray-800'
+                        isMine ? 'ml-auto bg-primary text-white' : 'bg-white border text-foreground'
                       }`}
                     >
                       {m.subject && <p className="font-bold text-xs mb-1 opacity-80">{m.subject}</p>}
@@ -123,7 +123,7 @@ function StudentMessages() {
             <div className="space-y-3 bg-white border rounded-2xl p-4">
               <Input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
               <Textarea placeholder="Your message..." rows={4} value={body} onChange={(e) => setBody(e.target.value)} />
-              <Button className="bg-emerald-700 w-full" onClick={handleSend} disabled={sending}>
+              <Button className="bg-primary w-full" onClick={handleSend} disabled={sending}>
                 <Send className="h-4 w-4 mr-2" />
                 {sending ? 'Sending...' : 'Send Message'}
               </Button>

@@ -233,6 +233,8 @@ export class AuthService {
       [UserRole.TEACHER]: 'Teacher',
       [UserRole.STUDENT]: 'Student',
       [UserRole.PARENT]: 'Parent',
+      [UserRole.FINANCE_MANAGER]: 'Finance Manager',
+      [UserRole.QIRAT_MANAGER]: 'Qirat Manager',
     };
     return labels[role] || role;
   }
