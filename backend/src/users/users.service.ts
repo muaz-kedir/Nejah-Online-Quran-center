@@ -20,6 +20,30 @@ export class UsersService implements OnModuleInit {
 
   async onModuleInit() {
     await this.seedSuperAdmin();
+    await this.seedDemoAccounts();
+  }
+
+  private async seedDemoAccounts() {
+    const demoAccounts = [
+      { email: 'admin@nejah.com', password: 'Admin123', name: 'Admin User', role: UserRole.ADMIN },
+      { email: 'teacher@nejah.com', password: 'Teacher123', name: 'Demo Teacher', role: UserRole.TEACHER },
+      { email: 'student@nejah.com', password: 'Student123', name: 'Demo Student', role: UserRole.STUDENT },
+      { email: 'parent@nejah.com', password: 'Parent123', name: 'Demo Parent', role: UserRole.PARENT },
+    ];
+
+    for (const account of demoAccounts) {
+      const existing = await this.findByEmail(account.email);
+      if (!existing) {
+        const hashedPassword = await bcrypt.hash(account.password, 10);
+        await this.usersRepository.save(
+          this.usersRepository.create({
+            ...account,
+            password: hashedPassword,
+            isActive: true,
+          }),
+        );
+      }
+    }
   }
 
   private async seedSuperAdmin() {
