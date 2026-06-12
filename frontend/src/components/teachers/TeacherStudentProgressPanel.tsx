@@ -376,22 +376,22 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       Beginner: 'bg-blue-100 text-blue-700',
       Intermediate: 'bg-amber-100 text-amber-700',
       Advanced: 'bg-purple-100 text-purple-700',
-      Expert: 'bg-emerald-100 text-emerald-700',
+      Expert: 'bg-primary/10 text-primary',
     };
-    return map[rank] || 'bg-gray-100 text-gray-700';
+    return map[rank] || 'bg-muted text-foreground';
   };
 
   const progressPct = context?.progressSummary?.percentage ?? context?.progress?.progressPercentage ?? 0;
   const rank = context?.progress?.rank || 'Beginner';
 
   if (loading) {
-    return <div className="py-12 text-center text-gray-400">Loading progress...</div>;
+    return <div className="py-12 text-center text-muted-foreground">Loading progress...</div>;
   }
 
   return (
     <div className="space-y-6">
       {learningPath && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+        <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-5">
           <LearningPathCard path={learningPath} compact />
         </div>
       )}
@@ -408,7 +408,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           </div>
           <Button
             size="sm"
-            className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shrink-0"
+            className="rounded-xl bg-primary hover:bg-nejah-azure text-white shrink-0"
             disabled={promoting}
             onClick={handleRecommendPromotion}
           >
@@ -418,14 +418,14 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+      <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center">
-              <BookOpen className="h-7 w-7 text-emerald-600" />
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-nejah-sapphire/30 flex items-center justify-center">
+              <BookOpen className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-emerald-950 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">
                 {context?.learningTrackLabel || 'Learning Progress'}
               </h3>
               <div className="flex gap-2 mt-1">
@@ -453,67 +453,67 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
 
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500 flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1">
               <TrendingUp className="h-4 w-4" /> Progress
             </span>
-            <span className="font-bold text-emerald-600">{progressPct}%</span>
+            <span className="font-bold text-primary">{progressPct}%</span>
           </div>
           <ProgressBar value={progressPct} className="h-2" />
 
           {track === 'qaidah' || track === 'tajweed' ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-                <p className="text-xs text-gray-400 font-bold uppercase">Completed</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <Award className="h-4 w-4 mx-auto text-primary mb-1" />
+                <p className="text-xs text-muted-foreground font-bold uppercase">Completed</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.progressSummary.completed || 0}/{context?.progressSummary.total || 0}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <Star className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-                <p className="text-xs text-gray-400 font-bold uppercase">Remaining</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <Star className="h-4 w-4 mx-auto text-primary mb-1" />
+                <p className="text-xs text-muted-foreground font-bold uppercase">Remaining</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.progressSummary.remaining || 0}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 col-span-2 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-400 font-bold uppercase">Current Topic</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100 text-sm mt-1 truncate">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 col-span-2 rounded-xl p-4 text-center">
+                <p className="text-xs text-muted-foreground font-bold uppercase">Current Topic</p>
+                <p className="font-bold text-nejah-sapphire text-foreground text-sm mt-1 truncate">
                   {context?.currentTopic?.nameEn || context?.suggestedTopic?.nameEn || '—'}
                 </p>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <Award className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-                <p className="text-xs text-gray-400 font-bold uppercase">Surahs</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <Award className="h-4 w-4 mx-auto text-primary mb-1" />
+                <p className="text-xs text-muted-foreground font-bold uppercase">Surahs</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.completedTopicIds?.filter((id) => id.startsWith('surah-')).length ?? 0}/114
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <Star className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
-                <p className="text-xs text-gray-400 font-bold uppercase">Ayahs</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <Star className="h-4 w-4 mx-auto text-primary mb-1" />
+                <p className="text-xs text-muted-foreground font-bold uppercase">Ayahs</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.progress?.ayahsCount || 0}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-400 font-bold uppercase">Last Surah</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100 text-sm mt-1 truncate">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <p className="text-xs text-muted-foreground font-bold uppercase">Last Surah</p>
+                <p className="font-bold text-nejah-sapphire text-foreground text-sm mt-1 truncate">
                   {context?.lastPosition?.lastStudiedSurah || '—'}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-400 font-bold uppercase">Last Page</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <p className="text-xs text-muted-foreground font-bold uppercase">Last Page</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.lastPosition?.lastStudiedPage || '—'}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-400 font-bold uppercase">Last Ayah</p>
-                <p className="font-bold text-emerald-950 dark:text-gray-100">
+              <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
+                <p className="text-xs text-muted-foreground font-bold uppercase">Last Ayah</p>
+                <p className="font-bold text-nejah-sapphire text-foreground">
                   {context?.lastPosition?.lastStudiedAyah || '—'}
                 </p>
               </div>
@@ -524,10 +524,10 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
 
       {/* Session Timer for Quran Reading Level */}
       {track === 'quran_reading' && (
-        <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-2xl border border-emerald-800 dark:border-emerald-900 p-6 text-white">
+        <div className="bg-gradient-to-br from-nejah-sapphire to-nejah-midnight rounded-2xl border border-primary/800 dark:border-nejah-border-blue p-6 text-white">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-emerald-800 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-nejah-azure flex items-center justify-center">
                 {sessionActive ? (
                   <Pause className="h-6 w-6" />
                 ) : (
@@ -536,7 +536,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               </div>
               <div>
                 <h4 className="font-bold text-lg">Session Timer</h4>
-                <p className="text-xs text-emerald-200">
+                <p className="text-xs text-nejah-electric">
                   Track time and auto-increase progress
                 </p>
               </div>
@@ -547,21 +547,21 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="bg-emerald-950/30 rounded-xl p-4">
+            <div className="bg-nejah-sapphire/30 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-emerald-300">Progress</span>
+                <span className="text-xs text-nejah-electric">Progress</span>
                 <span className="text-sm font-bold">{sessionProgress.toFixed(1)}%</span>
               </div>
-              <ProgressBar value={sessionProgress} className="h-1.5 bg-emerald-800" />
+              <ProgressBar value={sessionProgress} className="h-1.5 bg-nejah-azure" />
             </div>
-            <div className="bg-emerald-950/30 rounded-xl p-4">
+            <div className="bg-nejah-sapphire/30 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-emerald-300">Session Status</span>
+                <span className="text-xs text-nejah-electric">Session Status</span>
                 <span className={cn(
                   "text-xs font-bold px-2 py-1 rounded-lg",
                   sessionActive 
-                    ? "bg-emerald-500 text-white" 
-                    : "bg-gray-500 dark:bg-gray-600 text-white"
+                    ? "bg-primary/100 text-white" 
+                    : "bg-muted0 dark:bg-nejah-surface text-white"
                 )}>
                   {sessionActive ? "Active" : "Paused"}
                 </span>
@@ -573,7 +573,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             {!sessionActive ? (
               <Button 
                 onClick={startSession} 
-                className="flex-1 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl"
+                className="flex-1 bg-white text-nejah-sapphire hover:bg-primary/10 font-bold rounded-xl"
               >
                 <Play className="h-4 w-4 mr-2" /> Start Session
               </Button>
@@ -589,7 +589,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <Button 
                 onClick={resetSession} 
                 variant="outline"
-                className="border-emerald-700 text-emerald-300 hover:bg-emerald-900 rounded-xl"
+                className="border-primary/700 text-nejah-electric hover:bg-primary rounded-xl"
               >
                 <RotateCcw className="h-4 w-4 mr-2" /> Reset
               </Button>
@@ -599,23 +599,23 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       )}
 
       {dailyLogs.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
-          <h4 className="text-sm font-bold text-emerald-950 dark:text-gray-100 mb-4">Daily Log History</h4>
+        <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
+          <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-4">Daily Log History</h4>
           <div className="space-y-3">
             {dailyLogs.slice(0, 5).map((log) => {
               const entry = formatLogEntry(log);
               return (
                 <div
                   key={log.id}
-                  className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
+                  className="bg-muted dark:bg-nejah-surface rounded-xl p-4 border border-border dark:border-nejah-border-blue"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-emerald-800">{entry.title}</span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-sm font-medium text-nejah-sapphire">{entry.title}</span>
+                    <span className="text-xs text-muted-foreground">
                       {new Date(log.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{entry.detail}</p>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">{entry.detail}</p>
                 </div>
               );
             })}
@@ -624,23 +624,23 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
       )}
 
       {feedbacks.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
-          <h4 className="text-sm font-bold text-emerald-950 dark:text-gray-100 mb-4">Recent Feedback</h4>
+        <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
+          <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-4">Recent Feedback</h4>
           <div className="space-y-3">
             {feedbacks.slice(0, 3).map((fb) => (
               <div
                 key={fb.id}
-                className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700"
+                className="bg-muted dark:bg-nejah-surface rounded-xl p-4 border border-border dark:border-nejah-border-blue"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-emerald-700">
+                  <span className="text-xs font-medium text-primary">
                     {fb.teacher?.fullName || 'Teacher'}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(fb.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">{fb.content}</p>
+                <p className="text-sm text-foreground dark:text-muted-foreground">{fb.content}</p>
               </div>
             ))}
           </div>
@@ -662,7 +662,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               {(track === 'qaidah' || track === 'tajweed') && (
                 <>
                   {context?.suggestedTopic && !logForm.isReview ? (
-                    <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 px-3 py-2 text-sm text-emerald-800">
+                    <div className="rounded-lg bg-primary/10 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue px-3 py-2 text-sm text-nejah-sapphire">
                       Suggested next lesson: <strong>{context.suggestedTopic.nameEn}</strong>
                     </div>
                   ) : null}
@@ -802,7 +802,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <Button type="button" variant="outline" onClick={() => setShowLog(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={logLoading} className="bg-emerald-900 hover:bg-emerald-800">
+              <Button type="submit" disabled={logLoading} className="bg-primary hover:bg-nejah-azure">
                 {logLoading ? 'Saving...' : 'Save Progress'}
               </Button>
             </DialogFooter>
@@ -834,7 +834,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <Button type="button" variant="outline" onClick={() => setShowFeedback(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={feedbackLoading} className="bg-emerald-900 hover:bg-emerald-800">
+              <Button type="submit" disabled={feedbackLoading} className="bg-primary hover:bg-nejah-azure">
                 {feedbackLoading ? 'Sending...' : 'Submit'}
               </Button>
             </DialogFooter>
@@ -850,7 +850,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           </DialogHeader>
           <div className="py-4 max-h-96 overflow-y-auto space-y-4">
             {dailyLogs.length === 0 && feedbacks.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No history yet</p>
+              <p className="text-muted-foreground text-center py-8">No history yet</p>
             ) : (
               <>
                 {dailyLogs.map((log) => {
@@ -858,33 +858,33 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                   return (
                     <div
                       key={log.id}
-                      className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4 border border-emerald-100 dark:border-emerald-900"
+                      className="bg-primary/10 dark:bg-nejah-sapphire/20 rounded-lg p-4 border border-primary/100 dark:border-nejah-border-blue"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-emerald-800 uppercase">Daily Log</span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs font-bold text-nejah-sapphire uppercase">Daily Log</span>
+                        <span className="text-xs text-muted-foreground">
                           {new Date(log.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm font-medium text-emerald-950">{entry.title}</p>
-                      <p className="text-sm text-gray-600">{entry.detail}</p>
+                      <p className="text-sm font-medium text-nejah-sapphire">{entry.title}</p>
+                      <p className="text-sm text-muted-foreground">{entry.detail}</p>
                     </div>
                   );
                 })}
                 {feedbacks.map((fb) => (
                   <div
                     key={fb.id}
-                    className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-700"
+                    className="bg-muted dark:bg-nejah-surface rounded-lg p-4 border border-border dark:border-nejah-border-blue"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-emerald-700">
+                      <span className="text-xs font-medium text-primary">
                         {fb.teacher?.fullName || 'Teacher'}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         {new Date(fb.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{fb.content}</p>
+                    <p className="text-sm text-foreground dark:text-muted-foreground">{fb.content}</p>
                   </div>
                 ))}
               </>

@@ -82,9 +82,9 @@ export function ManageLevelModal({ open, onClose, onSuccess, student }: ManageLe
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[680px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent className="sm:max-w-[680px] dark:bg-nejah-surface dark:border-nejah-border-blue">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold dark:text-gray-100">
+          <DialogTitle className="text-xl font-bold text-foreground">
             Manage Level{student?.fullName ? ` — ${student.fullName}` : ''}
           </DialogTitle>
           <DialogDescription>
@@ -94,30 +94,30 @@ export function ManageLevelModal({ open, onClose, onSuccess, student }: ManageLe
         </DialogHeader>
 
         {loading ? (
-          <div className="py-10 text-center text-gray-400">Loading...</div>
+          <div className="py-10 text-center text-muted-foreground">Loading...</div>
         ) : (
           <div className="space-y-6 max-h-[65vh] overflow-y-auto px-1">
             {path && (
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-5">
+              <div className="bg-muted dark:bg-nejah-surface rounded-2xl p-5">
                 <LearningPathCard path={path} />
               </div>
             )}
 
             <div className="space-y-3">
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Reason (recorded in audit log)</Label>
+                <Label className="dark:text-muted-foreground">Reason (recorded in audit log)</Label>
                 <Textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="e.g. Passed external evaluation, repeating for revision..."
                   rows={2}
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
-                  className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white"
+                  className="rounded-xl bg-primary hover:bg-nejah-azure text-white"
                   disabled={!!acting}
                   onClick={() => applyAction('promote')}
                 >
@@ -162,7 +162,7 @@ export function ManageLevelModal({ open, onClose, onSuccess, student }: ManageLe
             </div>
 
             <div>
-              <h4 className="text-sm font-bold text-emerald-900 dark:text-gray-100 mb-3">
+              <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-3">
                 Level History
               </h4>
               <LevelHistoryList history={history} />

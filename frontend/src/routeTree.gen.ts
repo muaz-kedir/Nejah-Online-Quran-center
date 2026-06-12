@@ -25,6 +25,10 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as Qirat_settingsRouteImport } from './routes/qirat_settings'
+import { Route as Qirat_notificationsRouteImport } from './routes/qirat_notifications'
+import { Route as Qirat_examsRouteImport } from './routes/qirat_exams'
+import { Route as Qirat_dashboardRouteImport } from './routes/qirat_dashboard'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ParentsRouteImport } from './routes/parents'
@@ -33,6 +37,14 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeworkRouteImport } from './routes/homework'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as Finance_teacherPaymentsRouteImport } from './routes/finance_teacher-payments'
+import { Route as Finance_studentPaymentsRouteImport } from './routes/finance_student-payments'
+import { Route as Finance_settingsRouteImport } from './routes/finance_settings'
+import { Route as Finance_revenueRouteImport } from './routes/finance_revenue'
+import { Route as Finance_reportsRouteImport } from './routes/finance_reports'
+import { Route as Finance_notificationsRouteImport } from './routes/finance_notifications'
+import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
+import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
@@ -132,6 +144,26 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Qirat_settingsRoute = Qirat_settingsRouteImport.update({
+  id: '/qirat_settings',
+  path: '/qirat_settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Qirat_notificationsRoute = Qirat_notificationsRouteImport.update({
+  id: '/qirat_notifications',
+  path: '/qirat_notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Qirat_examsRoute = Qirat_examsRouteImport.update({
+  id: '/qirat_exams',
+  path: '/qirat_exams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Qirat_dashboardRoute = Qirat_dashboardRouteImport.update({
+  id: '/qirat_dashboard',
+  path: '/qirat_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -170,6 +202,46 @@ const HomeworkRoute = HomeworkRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_teacherPaymentsRoute = Finance_teacherPaymentsRouteImport.update({
+  id: '/finance_teacher-payments',
+  path: '/finance_teacher-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_studentPaymentsRoute = Finance_studentPaymentsRouteImport.update({
+  id: '/finance_student-payments',
+  path: '/finance_student-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_settingsRoute = Finance_settingsRouteImport.update({
+  id: '/finance_settings',
+  path: '/finance_settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_revenueRoute = Finance_revenueRouteImport.update({
+  id: '/finance_revenue',
+  path: '/finance_revenue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_reportsRoute = Finance_reportsRouteImport.update({
+  id: '/finance_reports',
+  path: '/finance_reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
+  id: '/finance_notifications',
+  path: '/finance_notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_familyPaymentsRoute = Finance_familyPaymentsRouteImport.update({
+  id: '/finance_family-payments',
+  path: '/finance_family-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
+  id: '/finance_dashboard',
+  path: '/finance_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -271,6 +343,14 @@ export interface FileRoutesByFullPath {
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_family-payments': typeof Finance_familyPaymentsRoute
+  '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_reports': typeof Finance_reportsRoute
+  '/finance_revenue': typeof Finance_revenueRoute
+  '/finance_settings': typeof Finance_settingsRoute
+  '/finance_student-payments': typeof Finance_studentPaymentsRoute
+  '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
   '/login': typeof LoginRoute
@@ -279,6 +359,10 @@ export interface FileRoutesByFullPath {
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/qirat_dashboard': typeof Qirat_dashboardRoute
+  '/qirat_exams': typeof Qirat_examsRoute
+  '/qirat_notifications': typeof Qirat_notificationsRoute
+  '/qirat_settings': typeof Qirat_settingsRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
@@ -315,6 +399,14 @@ export interface FileRoutesByTo {
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_family-payments': typeof Finance_familyPaymentsRoute
+  '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_reports': typeof Finance_reportsRoute
+  '/finance_revenue': typeof Finance_revenueRoute
+  '/finance_settings': typeof Finance_settingsRoute
+  '/finance_student-payments': typeof Finance_studentPaymentsRoute
+  '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
   '/login': typeof LoginRoute
@@ -323,6 +415,10 @@ export interface FileRoutesByTo {
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/qirat_dashboard': typeof Qirat_dashboardRoute
+  '/qirat_exams': typeof Qirat_examsRoute
+  '/qirat_notifications': typeof Qirat_notificationsRoute
+  '/qirat_settings': typeof Qirat_settingsRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
@@ -360,6 +456,14 @@ export interface FileRoutesById {
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_family-payments': typeof Finance_familyPaymentsRoute
+  '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_reports': typeof Finance_reportsRoute
+  '/finance_revenue': typeof Finance_revenueRoute
+  '/finance_settings': typeof Finance_settingsRoute
+  '/finance_student-payments': typeof Finance_studentPaymentsRoute
+  '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
   '/login': typeof LoginRoute
@@ -368,6 +472,10 @@ export interface FileRoutesById {
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
+  '/qirat_dashboard': typeof Qirat_dashboardRoute
+  '/qirat_exams': typeof Qirat_examsRoute
+  '/qirat_notifications': typeof Qirat_notificationsRoute
+  '/qirat_settings': typeof Qirat_settingsRoute
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
@@ -406,6 +514,14 @@ export interface FileRouteTypes {
     | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
+    | '/finance_dashboard'
+    | '/finance_family-payments'
+    | '/finance_notifications'
+    | '/finance_reports'
+    | '/finance_revenue'
+    | '/finance_settings'
+    | '/finance_student-payments'
+    | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
     | '/login'
@@ -414,6 +530,10 @@ export interface FileRouteTypes {
     | '/parents'
     | '/profile'
     | '/progress'
+    | '/qirat_dashboard'
+    | '/qirat_exams'
+    | '/qirat_notifications'
+    | '/qirat_settings'
     | '/register'
     | '/reports'
     | '/schedules'
@@ -450,6 +570,14 @@ export interface FileRouteTypes {
     | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
+    | '/finance_dashboard'
+    | '/finance_family-payments'
+    | '/finance_notifications'
+    | '/finance_reports'
+    | '/finance_revenue'
+    | '/finance_settings'
+    | '/finance_student-payments'
+    | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
     | '/login'
@@ -458,6 +586,10 @@ export interface FileRouteTypes {
     | '/parents'
     | '/profile'
     | '/progress'
+    | '/qirat_dashboard'
+    | '/qirat_exams'
+    | '/qirat_notifications'
+    | '/qirat_settings'
     | '/register'
     | '/reports'
     | '/schedules'
@@ -494,6 +626,14 @@ export interface FileRouteTypes {
     | '/apply-as-teacher'
     | '/attendance'
     | '/dashboard'
+    | '/finance_dashboard'
+    | '/finance_family-payments'
+    | '/finance_notifications'
+    | '/finance_reports'
+    | '/finance_revenue'
+    | '/finance_settings'
+    | '/finance_student-payments'
+    | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
     | '/login'
@@ -502,6 +642,10 @@ export interface FileRouteTypes {
     | '/parents'
     | '/profile'
     | '/progress'
+    | '/qirat_dashboard'
+    | '/qirat_exams'
+    | '/qirat_notifications'
+    | '/qirat_settings'
     | '/register'
     | '/reports'
     | '/schedules'
@@ -539,6 +683,14 @@ export interface RootRouteChildren {
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
+  Finance_dashboardRoute: typeof Finance_dashboardRoute
+  Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
+  Finance_notificationsRoute: typeof Finance_notificationsRoute
+  Finance_reportsRoute: typeof Finance_reportsRoute
+  Finance_revenueRoute: typeof Finance_revenueRoute
+  Finance_settingsRoute: typeof Finance_settingsRoute
+  Finance_studentPaymentsRoute: typeof Finance_studentPaymentsRoute
+  Finance_teacherPaymentsRoute: typeof Finance_teacherPaymentsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeworkRoute: typeof HomeworkRoute
   LoginRoute: typeof LoginRoute
@@ -547,6 +699,10 @@ export interface RootRouteChildren {
   ParentsRoute: typeof ParentsRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
+  Qirat_dashboardRoute: typeof Qirat_dashboardRoute
+  Qirat_examsRoute: typeof Qirat_examsRoute
+  Qirat_notificationsRoute: typeof Qirat_notificationsRoute
+  Qirat_settingsRoute: typeof Qirat_settingsRoute
   RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
@@ -690,6 +846,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qirat_settings': {
+      id: '/qirat_settings'
+      path: '/qirat_settings'
+      fullPath: '/qirat_settings'
+      preLoaderRoute: typeof Qirat_settingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qirat_notifications': {
+      id: '/qirat_notifications'
+      path: '/qirat_notifications'
+      fullPath: '/qirat_notifications'
+      preLoaderRoute: typeof Qirat_notificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qirat_exams': {
+      id: '/qirat_exams'
+      path: '/qirat_exams'
+      fullPath: '/qirat_exams'
+      preLoaderRoute: typeof Qirat_examsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qirat_dashboard': {
+      id: '/qirat_dashboard'
+      path: '/qirat_dashboard'
+      fullPath: '/qirat_dashboard'
+      preLoaderRoute: typeof Qirat_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/progress': {
       id: '/progress'
       path: '/progress'
@@ -744,6 +928,62 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_teacher-payments': {
+      id: '/finance_teacher-payments'
+      path: '/finance_teacher-payments'
+      fullPath: '/finance_teacher-payments'
+      preLoaderRoute: typeof Finance_teacherPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_student-payments': {
+      id: '/finance_student-payments'
+      path: '/finance_student-payments'
+      fullPath: '/finance_student-payments'
+      preLoaderRoute: typeof Finance_studentPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_settings': {
+      id: '/finance_settings'
+      path: '/finance_settings'
+      fullPath: '/finance_settings'
+      preLoaderRoute: typeof Finance_settingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_revenue': {
+      id: '/finance_revenue'
+      path: '/finance_revenue'
+      fullPath: '/finance_revenue'
+      preLoaderRoute: typeof Finance_revenueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_reports': {
+      id: '/finance_reports'
+      path: '/finance_reports'
+      fullPath: '/finance_reports'
+      preLoaderRoute: typeof Finance_reportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_notifications': {
+      id: '/finance_notifications'
+      path: '/finance_notifications'
+      fullPath: '/finance_notifications'
+      preLoaderRoute: typeof Finance_notificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_family-payments': {
+      id: '/finance_family-payments'
+      path: '/finance_family-payments'
+      fullPath: '/finance_family-payments'
+      preLoaderRoute: typeof Finance_familyPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_dashboard': {
+      id: '/finance_dashboard'
+      path: '/finance_dashboard'
+      fullPath: '/finance_dashboard'
+      preLoaderRoute: typeof Finance_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -894,6 +1134,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
+  Finance_dashboardRoute: Finance_dashboardRoute,
+  Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
+  Finance_notificationsRoute: Finance_notificationsRoute,
+  Finance_reportsRoute: Finance_reportsRoute,
+  Finance_revenueRoute: Finance_revenueRoute,
+  Finance_settingsRoute: Finance_settingsRoute,
+  Finance_studentPaymentsRoute: Finance_studentPaymentsRoute,
+  Finance_teacherPaymentsRoute: Finance_teacherPaymentsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeworkRoute: HomeworkRoute,
   LoginRoute: LoginRoute,
@@ -902,6 +1150,10 @@ const rootRouteChildren: RootRouteChildren = {
   ParentsRoute: ParentsRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
+  Qirat_dashboardRoute: Qirat_dashboardRoute,
+  Qirat_examsRoute: Qirat_examsRoute,
+  Qirat_notificationsRoute: Qirat_notificationsRoute,
+  Qirat_settingsRoute: Qirat_settingsRoute,
   RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,

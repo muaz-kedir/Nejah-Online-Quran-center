@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import quranImg from "@/assets/course-quran.jpg";
 import tajweedImg from "@/assets/course-tajweed.jpg";
 import hifzImg from "@/assets/course-hifz.jpg";
@@ -19,13 +20,13 @@ export function Courses() {
       <div className="container-x">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div className="max-w-xl">
-            <div className="text-xs font-bold tracking-[0.2em] text-primary uppercase mb-3">
+            <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-nejah-electric">
               {t.courses.eyebrow}
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">
               {t.courses.title}
             </h2>
-            <p className="text-muted-foreground text-base md:text-lg">
+            <p className="text-base text-nejah-slate-blue md:text-lg">
               {t.courses.desc}
             </p>
           </div>
@@ -46,7 +47,7 @@ export function Courses() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
               whileHover={{ y: -8 }}
-              className="bg-card rounded-3xl overflow-hidden border border-border shadow-soft hover:shadow-elevated transition-all group"
+              className="glass-panel group overflow-hidden rounded-3xl transition-all hover:border-nejah-electric/30"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
@@ -55,16 +56,19 @@ export function Courses() {
                   loading="lazy"
                   className="size-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                <span className="absolute top-3 start-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-background/95 text-primary backdrop-blur">
+                <span className="absolute top-3 start-3 rounded-full border border-nejah-electric/20 bg-background/90 px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric backdrop-blur">
                   {c.badge}
                 </span>
               </div>
               <div className="p-5">
-                <h3 className="text-lg font-bold mb-2">{c.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{c.desc}</p>
-                <button className="w-full h-10 rounded-full bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground text-sm font-semibold transition-colors">
+                <h3 className="mb-2 text-lg font-medium text-foreground">{c.title}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-nejah-slate-blue">{c.desc}</p>
+                <Button
+                  variant="outline"
+                  className="h-10 w-full rounded-full border-nejah-electric/30 text-sm font-semibold text-nejah-electric hover:border-nejah-electric hover:bg-primary hover:text-white hover:shadow-[0_0_16px_rgba(0,102,204,0.35)]"
+                >
                   {t.courses.learnMore}
-                </button>
+                </Button>
               </div>
             </motion.div>
           ))}

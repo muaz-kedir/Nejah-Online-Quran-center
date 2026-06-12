@@ -193,10 +193,10 @@ export function EditScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-emerald-950 dark:text-gray-100 flex items-center gap-2 font-serif">
-            <Calendar className="h-5.5 w-5.5 text-emerald-700" />
+          <DialogTitle className="text-xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2 font-serif">
+            <Calendar className="h-5.5 w-5.5 text-primary" />
             {schedule ? 'Edit Schedule' : 'Create New Schedule'}
           </DialogTitle>
         </DialogHeader>
@@ -205,7 +205,7 @@ export function EditScheduleModal({
           {/* Session Mode Toggle */}
           {!schedule && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" /> Session Type
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -215,8 +215,8 @@ export function EditScheduleModal({
                   className={cn(
                     'h-11 rounded-xl text-sm font-bold transition-colors',
                     sessionMode === 'individual'
-                      ? 'bg-emerald-900 text-white'
-                      : 'bg-gray-50 dark:bg-gray-900 text-gray-600',
+                      ? 'bg-primary text-white'
+                      : 'bg-muted dark:bg-nejah-surface text-muted-foreground',
                   )}
                 >
                   Individual
@@ -227,8 +227,8 @@ export function EditScheduleModal({
                   className={cn(
                     'h-11 rounded-xl text-sm font-bold transition-colors',
                     sessionMode === 'group'
-                      ? 'bg-emerald-900 text-white'
-                      : 'bg-gray-50 dark:bg-gray-900 text-gray-600',
+                      ? 'bg-primary text-white'
+                      : 'bg-muted dark:bg-nejah-surface text-muted-foreground',
                   )}
                 >
                   Group Session
@@ -241,7 +241,7 @@ export function EditScheduleModal({
           <div className="grid grid-cols-1 gap-4">
             {sessionMode === 'individual' ? (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <User className="h-3.5 w-3.5" /> Student
                 </label>
                 <Select
@@ -249,12 +249,12 @@ export function EditScheduleModal({
                   onValueChange={(val) => setFormData({ ...formData, studentId: val })}
                   disabled={!!schedule}
                 >
-                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11">
+                  <SelectTrigger className="bg-muted dark:bg-nejah-surface border-none rounded-xl h-11">
                     <SelectValue placeholder="Select student" />
                   </SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     {assignedStudents.length > 0 && (
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Assigned Students
                       </div>
                     )}
@@ -265,7 +265,7 @@ export function EditScheduleModal({
                     ))}
 
                     {unassignedStudents.length > 0 && (
-                      <div className="px-2 py-1.5 mt-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-t border-gray-100 dark:border-gray-700">
+                      <div className="px-2 py-1.5 mt-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-t border-border dark:border-nejah-border-blue">
                         Unassigned Students
                       </div>
                     )}
@@ -279,26 +279,26 @@ export function EditScheduleModal({
               </div>
             ) : schedule ? (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" /> Group Students
                 </label>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 text-sm text-gray-700 dark:text-gray-300">
+                <div className="bg-muted dark:bg-nejah-surface rounded-xl p-3 text-sm text-foreground dark:text-muted-foreground">
                   {groupStudentNames || 'No students assigned'}
                 </div>
               </div>
             ) : (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" /> Select Students (min. 2)
                 </label>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2">
+                <div className="bg-muted dark:bg-nejah-surface rounded-xl p-3 max-h-40 overflow-y-auto space-y-2">
                   {assignedStudents.length === 0 ? (
-                    <p className="text-sm text-gray-400">No students assigned to this teacher.</p>
+                    <p className="text-sm text-muted-foreground">No students assigned to this teacher.</p>
                   ) : (
                     assignedStudents.map((s: any) => (
                       <label
                         key={s.id}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-gray-800 rounded-lg p-2"
+                        className="flex items-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-nejah-surface rounded-lg p-2"
                       >
                         <Checkbox
                           checked={selectedStudentIds.includes(s.id)}
@@ -310,7 +310,7 @@ export function EditScheduleModal({
                   )}
                 </div>
                 {selectedStudentIds.length > 0 && (
-                  <p className="text-xs text-emerald-700 font-semibold">
+                  <p className="text-xs text-primary font-semibold">
                     {selectedStudentIds.length} student{selectedStudentIds.length !== 1 ? 's' : ''} selected
                   </p>
                 )}
@@ -318,17 +318,17 @@ export function EditScheduleModal({
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <FileText className="h-3.5 w-3.5" /> Class Type
               </label>
               <Select
                 value={formData.classType}
                 onValueChange={(val) => setFormData({ ...formData, classType: val })}
               >
-                <SelectTrigger className="bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11">
+                <SelectTrigger className="bg-muted dark:bg-nejah-surface border-none rounded-xl h-11">
                   <SelectValue placeholder="Class Type" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                   <SelectItem value="Hifz">Hifz</SelectItem>
                   <SelectItem value="Tajweed">Tajweed</SelectItem>
                   <SelectItem value="Noorani Qaida">Noorani Qaida</SelectItem>
@@ -341,17 +341,17 @@ export function EditScheduleModal({
           {/* Day & Time */}
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5 col-span-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" /> Day
               </label>
               <Select
                 value={formData.dayOfWeek}
                 onValueChange={(val) => setFormData({ ...formData, dayOfWeek: val })}
               >
-                <SelectTrigger className="bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11">
+                <SelectTrigger className="bg-muted dark:bg-nejah-surface border-none rounded-xl h-11">
                   <SelectValue placeholder="Day" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                   {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(
                     (day) => (
                       <SelectItem key={day} value={day}>
@@ -364,33 +364,33 @@ export function EditScheduleModal({
             </div>
 
             <div className="space-y-1.5 col-span-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" /> Start
               </label>
               <input
                 type="time"
                 value={formData.startTimeString}
                 onChange={(e) => setFormData({ ...formData, startTimeString: e.target.value })}
-                className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+                className="w-full bg-muted dark:bg-nejah-surface border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-primary/500 outline-none"
               />
             </div>
 
             <div className="space-y-1.5 col-span-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" /> End
               </label>
               <input
                 type="time"
                 value={formData.endTimeString}
                 onChange={(e) => setFormData({ ...formData, endTimeString: e.target.value })}
-                className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+                className="w-full bg-muted dark:bg-nejah-surface border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-primary/500 outline-none"
               />
             </div>
           </div>
 
           {/* Meeting Link */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
               <Video className="h-3.5 w-3.5" /> Meeting Link (Zoom/Meet)
             </label>
             <input
@@ -398,20 +398,20 @@ export function EditScheduleModal({
               placeholder="https://zoom.us/j/..."
               value={formData.meetingLink}
               onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
-              className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+              className="w-full bg-muted dark:bg-nejah-surface border-none rounded-xl h-11 px-3 text-sm focus:ring-1 focus:ring-primary/500 outline-none"
             />
           </div>
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
               <FileText className="h-3.5 w-3.5" /> Notes
             </label>
             <textarea
               placeholder="Any specific instructions for this schedule..."
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl p-3 text-sm focus:ring-1 focus:ring-emerald-500 outline-none min-h-[80px] resize-none"
+              className="w-full bg-muted dark:bg-nejah-surface border-none rounded-xl p-3 text-sm focus:ring-1 focus:ring-primary/500 outline-none min-h-[80px] resize-none"
             />
           </div>
 
@@ -420,14 +420,14 @@ export function EditScheduleModal({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="rounded-xl border-gray-250 dark:border-gray-700 dark:text-gray-300 h-11"
+              className="rounded-xl border-border dark:border-nejah-border-blue dark:text-muted-foreground h-11"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={saving}
-              className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl h-11"
+              className="bg-primary hover:bg-nejah-azure text-white rounded-xl h-11"
             >
               {saving ? 'Saving...' : 'Save Schedule'}
             </Button>

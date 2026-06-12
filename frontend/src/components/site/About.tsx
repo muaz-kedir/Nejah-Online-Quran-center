@@ -12,7 +12,7 @@ export function About() {
   ];
 
   return (
-    <section id="about" className="py-20 md:py-28 bg-muted/40">
+    <section id="about" className="py-20 md:py-28">
       <div className="container-x">
         <SectionHeader
           eyebrow={t.about.eyebrow}
@@ -28,7 +28,7 @@ export function About() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
               whileHover={{ y: -6 }}
-              className="bg-card rounded-3xl p-7 border border-border shadow-soft hover:shadow-elevated transition-all"
+              className="glass-panel rounded-3xl p-7 transition-all hover:border-nejah-electric/30"
             >
               <div
                 className={`size-12 rounded-2xl grid place-items-center mb-5 ${

@@ -56,44 +56,44 @@ export function ViewParentModal({ parent, open, onClose }: ViewParentModalProps)
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
+                  <p className="text-sm text-muted-foreground">Full Name</p>
                   <p className="font-medium">{parent.fullName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
                   <Badge
                     variant={parent.status === "active" ? "default" : "secondary"}
-                    className={parent.status === "active" ? "bg-emerald-100 text-emerald-700" : ""}
+                    className={parent.status === "active" ? "bg-primary/10 text-primary" : ""}
                   >
                     {parent.status}
                   </Badge>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-700">
-                <Mail className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-foreground">
+                <Mail className="h-4 w-4 text-muted-foreground" />
                 <span>{parent.email}</span>
               </div>
 
               {parent.phoneNumber && (
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Phone className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-foreground">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
                   <span>{parent.phoneNumber}</span>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-gray-700">
-                <MapPin className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-foreground">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span>{parent.residency}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-700">
-                <Users className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-foreground">
+                <Users className="h-4 w-4 text-muted-foreground" />
                 <span>Relationship: {parent.relationshipWithStudent}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-700">
-                <Calendar className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-foreground">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Joined: {new Date(parent.createdAt).toLocaleDateString()}</span>
               </div>
             </CardContent>
@@ -110,18 +110,18 @@ export function ViewParentModal({ parent, open, onClose }: ViewParentModalProps)
                   {parent.students.map((student: any) => (
                     <div
                       key={student.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div>
                         <p className="font-medium">{student.fullName}</p>
-                        <p className="text-sm text-gray-500">{student.email}</p>
+                        <p className="text-sm text-muted-foreground">{student.email}</p>
                       </div>
                       <Badge variant="outline">{student.level}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No students linked yet</p>
+                <p className="text-muted-foreground text-center py-4">No students linked yet</p>
               )}
             </CardContent>
           </Card>

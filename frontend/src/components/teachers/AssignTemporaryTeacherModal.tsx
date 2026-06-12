@@ -199,7 +199,7 @@ export function AssignTemporaryTeacherModal({
       <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <UserCog className="h-5 w-5 text-emerald-600" />
+            <UserCog className="h-5 w-5 text-primary" />
             Assign Temporary Teacher
           </DialogTitle>
           <DialogDescription>
@@ -232,7 +232,7 @@ export function AssignTemporaryTeacherModal({
           {initialTeacherId && (
             <div className="space-y-2">
               <Label>Original Teacher</Label>
-              <Input value={originalTeacherName} readOnly className="bg-gray-50" />
+              <Input value={originalTeacherName} readOnly className="bg-muted" />
             </div>
           )}
 
@@ -273,14 +273,14 @@ export function AssignTemporaryTeacherModal({
             {!selectAllStudents && (
               <div className="max-h-32 overflow-y-auto border rounded-lg p-2 space-y-1">
                 {students.length === 0 ? (
-                  <p className="text-sm text-gray-400 p-2">No assigned students</p>
+                  <p className="text-sm text-muted-foreground p-2">No assigned students</p>
                 ) : (
                   students.map((s) => {
                     const checkboxId = `temp-student-${s.id}`;
                     return (
                       <div
                         key={s.id}
-                        className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded"
+                        className="flex items-center gap-2 p-1.5 hover:bg-muted rounded"
                       >
                         <Checkbox
                           id={checkboxId}
@@ -376,7 +376,7 @@ export function AssignTemporaryTeacherModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Assign Temporary Teacher
             </Button>

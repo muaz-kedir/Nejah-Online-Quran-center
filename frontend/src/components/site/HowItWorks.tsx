@@ -10,7 +10,7 @@ export function HowItWorks() {
     { icon: BookOpenCheck, title: t.how.s3Title, desc: t.how.s3Desc },
   ];
   return (
-    <section className="py-20 md:py-28 bg-primary text-primary-foreground relative overflow-hidden">
+    <section className="relative overflow-hidden bg-nejah-sapphire py-20 text-white md:py-28">
       <div className="absolute inset-0 bg-pattern opacity-30" />
       <div className="container-x relative">
         <motion.h2

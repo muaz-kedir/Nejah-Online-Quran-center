@@ -58,19 +58,19 @@ export function DeleteStudentModal({
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
+      <AlertDialogContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
         <AlertDialogHeader>
-          <AlertDialogTitle className="dark:text-gray-100 text-red-600">Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription className="dark:text-gray-400">
+          <AlertDialogTitle className="text-foreground text-red-600">Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription className="dark:text-muted-foreground">
             This will permanently delete the student record for{' '}
-            <span className="font-bold text-gray-900 dark:text-gray-100">
+            <span className="font-bold text-foreground text-foreground">
               {studentName}
             </span>
             . This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose} className="dark:border-gray-600 dark:text-gray-300">
+          <AlertDialogCancel onClick={onClose} className="dark:border-nejah-border-blue dark:text-muted-foreground">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction

@@ -27,7 +27,7 @@ import { getLinkedStudentId } from '@/lib/student-portal';
 
 export const Route = createFileRoute('/class-session_/$id')({
   component: ClassSessionPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'teacher', 'student']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager', 'teacher', 'student']),
 });
 
 function ClassSessionPage() {
@@ -200,10 +200,10 @@ function ClassSessionContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm">
+      <div className="glass-panel flex h-[70vh] items-center justify-center bg-card dark:bg-nejah-surface rounded-[32px] border border-border dark:border-white/5 shadow-sm">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700 mx-auto" />
-          <p className="text-sm font-bold text-gray-500 font-serif">Connecting to Quranic Classroom...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nejah-electric mx-auto" />
+          <p className="text-sm font-bold text-nejah-slate-blue font-serif">Connecting to Quranic Classroom...</p>
         </div>
       </div>
     );
@@ -211,19 +211,19 @@ function ClassSessionContent() {
 
   if (!session) {
     return (
-      <div className="bg-white dark:bg-gray-900 p-12 rounded-[32px] text-center border border-gray-100 dark:border-gray-800 shadow-sm max-w-lg mx-auto">
+      <div className="glass-panel bg-card dark:bg-nejah-surface p-12 rounded-[32px] text-center border border-border dark:border-white/5 shadow-sm max-w-lg mx-auto">
         <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-6" />
-        <h2 className="text-2xl font-bold text-emerald-950 dark:text-gray-100 font-serif mb-2">
+        <h2 className="text-2xl font-bold text-foreground dark:text-foreground font-serif mb-2">
           Class Session Not Found
         </h2>
-        <p className="text-sm text-gray-400 mb-6">
+        <p className="text-sm text-nejah-slate-blue mb-6">
           The requested class session ID does not exist or has been deleted.
         </p>
         <Button
           onClick={() => {
             window.location.href = '/dashboard';
           }}
-          className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl"
+          className="bg-nejah-sapphire hover:bg-background text-white rounded-xl"
         >
           Return to Dashboard
         </Button>
@@ -241,7 +241,7 @@ function ClassSessionContent() {
         );
       case 'COMPLETED':
         return (
-          <Badge className="bg-gray-150 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+          <Badge className="bg-muted text-nejah-slate-blue dark:bg-nejah-surface dark:text-nejah-slate-blue border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
             COMPLETED
           </Badge>
         );
@@ -266,27 +266,27 @@ function ClassSessionContent() {
             else if (userRole === 'student') window.location.href = '/student_dashboard';
             else window.location.href = '/dashboard';
           }}
-          className="flex items-center gap-1.5 text-xs font-black text-gray-400 hover:text-emerald-800 uppercase tracking-widest transition-colors mb-2"
+          className="flex items-center gap-1.5 text-xs font-black text-nejah-slate-blue hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
         >
           <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </button>
       </div>
 
-      <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-[#052c22] via-[#094d3c] to-[#0e6b54] text-white p-10 shadow-2xl border border-emerald-900/20">
+      <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-nejah-surface via-nejah-sapphire to-nejah-surface text-white p-10 shadow-2xl border border-nejah-sapphire/20">
         <div className="absolute inset-0 opacity-15 bg-[url('https://www.transparenttextures.com/patterns/islamic-art.png')]" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               {getStatusBadge(session.status)}
-              <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-[0.2em]">
+              <span className="text-[10px] text-nejah-electric/70 font-bold uppercase tracking-[0.2em]">
                 {session.quranLevel} Level
               </span>
             </div>
             <h1 className="text-4xl font-extrabold font-serif tracking-tight drop-shadow-md">
               {session.classTitle}
             </h1>
-            <p className="text-emerald-100/90 text-sm max-w-xl flex items-center gap-2">
+            <p className="text-foreground/90 text-sm max-w-xl flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-amber-400" />
               <span>
                 Subject: <strong>{session.subject}</strong>
@@ -305,14 +305,14 @@ function ClassSessionContent() {
           </div>
 
           <div className="bg-black/20 backdrop-blur-md rounded-[2rem] p-6 border border-white/5 space-y-3 min-w-[240px]">
-            <div className="flex items-center gap-3 text-xs text-emerald-200 uppercase font-black tracking-widest">
-              <Clock className="h-4 w-4 text-emerald-400" />
+            <div className="flex items-center gap-3 text-xs text-foreground/80 uppercase font-black tracking-widest">
+              <Clock className="h-4 w-4 text-nejah-electric" />
               <span>Class Timings</span>
             </div>
             <div className="text-2xl font-black font-serif text-white tabular-nums">
               {session.scheduledStartTime} - {session.scheduledEndTime}
             </div>
-            <div className="text-[10px] text-emerald-300/80 font-bold uppercase">
+            <div className="text-[10px] text-nejah-electric/70 font-bold uppercase">
               Teacher: {session.teacher?.fullName || 'Assigned Instructor'}
             </div>
           </div>
@@ -322,42 +322,42 @@ function ClassSessionContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
           {session.status === 'SCHEDULED' && (
-            <Card className="rounded-[2.5rem] border-gray-100 dark:border-gray-800 shadow-sm p-8 bg-white dark:bg-gray-900">
+            <Card className="glass-panel rounded-[2.5rem] border-border dark:border-white/5 shadow-sm p-8 bg-card dark:bg-nejah-surface">
               <CardHeader className="p-0 mb-6">
                 <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4">
                   <Video className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-2xl font-bold font-serif text-emerald-950 dark:text-gray-100">
+                <CardTitle className="text-2xl font-bold font-serif text-foreground dark:text-foreground">
                   Start the Online Meeting
                 </CardTitle>
-                <CardDescription className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                <CardDescription className="text-xs font-semibold text-nejah-slate-blue dark:text-nejah-slate-blue uppercase tracking-wider">
                   For Teacher Only
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 space-y-6">
                 {userRole === 'teacher' ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
                       To initialize this class session, paste your Google Meet or Zoom invite link below
                       and click &quot;Start Meeting&quot;. This will automatically notify the assigned
                       {(session.studentAttendances?.length || 0) > 1 ? ' students' : ' student'}, their
                       parents, and admins.
                     </p>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                      <label className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest ml-1">
                         Meeting Connection URL
                       </label>
                       <Input
                         placeholder="https://meet.google.com/abc-defg-hij  OR  https://zoom.us/j/..."
                         value={meetingLink}
                         onChange={(e) => setMeetingLink(e.target.value)}
-                        className="h-12 bg-gray-50 border-none rounded-xl text-sm"
+                        className="h-12 bg-background/50 border-none rounded-xl text-sm"
                       />
                     </div>
                     <Button
                       onClick={handleStartMeeting}
                       disabled={isSubmitting}
-                      className="w-full h-12 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl text-sm font-extrabold gap-2 shadow-lg"
+                      className="w-full h-12 bg-nejah-sapphire hover:bg-background text-white rounded-xl text-sm font-extrabold gap-2 shadow-lg"
                     >
                       <Sparkles className="h-4 w-4 text-amber-400" />
                       {isSubmitting ? 'Initializing Meeting...' : 'Start Meeting & Mark Present'}
@@ -370,7 +370,7 @@ function ClassSessionContent() {
                       <h4 className="text-sm font-bold text-amber-900 dark:text-amber-400">
                         Waiting for Instructor
                       </h4>
-                      <p className="text-xs text-amber-800/80 dark:text-gray-400 leading-relaxed">
+                      <p className="text-xs text-amber-800/80 dark:text-nejah-slate-blue leading-relaxed">
                         Assalamu Alaikum. This Quran class session is scheduled but the meeting has not
                         been started yet. You will see a &quot;Join Meeting&quot; option here as soon as
                         your teacher launches the class. Keep this tab open.
@@ -383,12 +383,12 @@ function ClassSessionContent() {
           )}
 
           {session.status === 'LIVE' && (
-            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-gradient-to-br from-emerald-900 to-emerald-950 text-white p-8 relative">
+            <Card className="glass-panel rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-gradient-to-br from-nejah-sapphire to-nejah-surface text-white p-8 relative">
               <div className="absolute right-4 bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl pointer-events-none" />
               <CardContent className="p-0 space-y-6 flex flex-col items-center text-center">
                 <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center animate-ping absolute top-8 right-8 opacity-20" />
                 <div className="w-20 h-20 bg-white/10 rounded-[2rem] flex items-center justify-center shadow-lg border border-white/5 mb-2">
-                  <Video className="h-10 w-10 text-emerald-400" />
+                  <Video className="h-10 w-10 text-nejah-electric" />
                 </div>
 
                 <div className="space-y-2">
@@ -396,7 +396,7 @@ function ClassSessionContent() {
                     Class is Live
                   </Badge>
                   <h2 className="text-3xl font-extrabold font-serif">Virtual Classroom Active</h2>
-                  <p className="text-emerald-100/70 text-xs max-w-md leading-relaxed">
+                  <p className="text-foreground/70 text-xs max-w-md leading-relaxed">
                     Teacher started this session. All attendance logs are updated automatically upon
                     joining and leaving.
                   </p>
@@ -412,7 +412,7 @@ function ClassSessionContent() {
                       />
                       <Button
                         onClick={() => window.open(meetingLink, '_blank')}
-                        className="h-11 bg-white hover:bg-emerald-50 text-emerald-950 font-extrabold rounded-xl shrink-0 px-4"
+                        className="h-11 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl shrink-0 px-4"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -435,12 +435,12 @@ function ClassSessionContent() {
                       <div className="space-y-4">
                         <div className="bg-white/10 border border-white/5 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between text-left">
                           <div>
-                            <p className="text-[9px] font-bold uppercase text-emerald-300">
+                            <p className="text-[9px] font-bold uppercase text-nejah-electric/70">
                               Your Attendance
                             </p>
                             <p className="text-sm font-bold">{myAttendance.attendanceStatus}</p>
                           </div>
-                          <span className="text-[10px] text-emerald-200 tabular-nums">
+                          <span className="text-[10px] text-foreground/80 tabular-nums">
                             Joined:{' '}
                             {new Date(myAttendance.joinTime).toLocaleTimeString([], {
                               hour: '2-digit',
@@ -452,7 +452,7 @@ function ClassSessionContent() {
                         <div className="flex gap-3">
                           <Button
                             onClick={() => window.open(meetingLink, '_blank')}
-                            className="flex-1 h-12 bg-white hover:bg-emerald-50 text-emerald-950 font-extrabold rounded-xl"
+                            className="flex-1 h-12 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" /> Re-Join Call
                           </Button>
@@ -467,9 +467,9 @@ function ClassSessionContent() {
                     ) : (
                       <Button
                         onClick={handleJoinMeeting}
-                        className="w-full h-14 bg-white hover:bg-emerald-50 text-[#052c22] font-black rounded-2xl text-base shadow-xl gap-3"
+                        className="w-full h-14 bg-white hover:bg-primary/10 text-nejah-sapphire font-black rounded-2xl text-base shadow-xl gap-3"
                       >
-                        <PlayIcon className="h-5 w-5 fill-[#052c22] text-[#052c22]" />
+                        <PlayIcon className="h-5 w-5 fill-nejah-sapphire text-nejah-sapphire" />
                         Join Meeting Now
                       </Button>
                     )}
@@ -480,17 +480,17 @@ function ClassSessionContent() {
           )}
 
           {session.status === 'COMPLETED' && (
-            <Card className="rounded-[2.5rem] border-gray-100 dark:border-gray-800 shadow-sm p-8 bg-white dark:bg-gray-900">
+            <Card className="glass-panel rounded-[2.5rem] border-border dark:border-white/5 shadow-sm p-8 bg-card dark:bg-nejah-surface">
               <CardContent className="p-0 space-y-8 text-center">
-                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 rounded-[1.5rem] flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 bg-primary/10 dark:bg-nejah-sapphire/20 text-nejah-electric dark:text-nejah-electric rounded-[1.5rem] flex items-center justify-center mx-auto">
                   <CheckCircle2 className="h-8 w-8" />
                 </div>
 
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold font-serif text-emerald-950 dark:text-gray-100">
+                  <h2 className="text-2xl font-bold font-serif text-foreground dark:text-foreground">
                     Session Completed
                   </h2>
-                  <p className="text-sm text-gray-400 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-sm text-nejah-slate-blue leading-relaxed max-w-sm mx-auto">
                     All attendance metrics, participation times, and notes have been logged and synced
                     to parent & admin portals.
                   </p>
@@ -502,7 +502,7 @@ function ClassSessionContent() {
                     else if (userRole === 'student') window.location.href = '/student_dashboard';
                     else window.location.href = '/dashboard';
                   }}
-                  className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl h-11 px-8 font-bold"
+                  className="bg-nejah-sapphire hover:bg-background text-white rounded-xl h-11 px-8 font-bold"
                 >
                   Go Back to Dashboard
                 </Button>
@@ -512,19 +512,19 @@ function ClassSessionContent() {
         </div>
 
         <div className="lg:col-span-4 space-y-8">
-          <Card className="rounded-[2.5rem] border-gray-100 dark:border-gray-800 shadow-sm p-6 bg-white dark:bg-gray-900 h-full">
-            <CardHeader className="p-0 border-b border-gray-100 dark:border-gray-800 pb-4 mb-4">
-              <CardTitle className="text-lg font-bold font-serif text-emerald-950 dark:text-gray-100 flex items-center gap-2">
-                <Users className="h-5 w-5 text-emerald-700" />
+          <Card className="glass-panel rounded-[2.5rem] border-border dark:border-white/5 shadow-sm p-6 bg-card dark:bg-nejah-surface h-full">
+            <CardHeader className="p-0 border-b border-border dark:border-white/5 pb-4 mb-4">
+              <CardTitle className="text-lg font-bold font-serif text-foreground dark:text-foreground flex items-center gap-2">
+                <Users className="h-5 w-5 text-nejah-electric" />
                 Assigned Students ({session.studentAttendances?.length || 0})
               </CardTitle>
-              <CardDescription className="text-[10px] uppercase font-bold text-gray-450 dark:text-gray-500 tracking-wider">
+              <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground dark:text-nejah-slate-blue tracking-wider">
                 Attendance Logs
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
               {!session.studentAttendances || session.studentAttendances.length === 0 ? (
-                <div className="py-8 text-center text-xs text-gray-400 font-medium italic">
+                <div className="py-8 text-center text-xs text-nejah-slate-blue font-medium italic">
                   No students assigned to this class.
                 </div>
               ) : (
@@ -538,19 +538,19 @@ function ClassSessionContent() {
                       className={cn(
                         'p-4 rounded-2xl border flex items-center justify-between transition-colors',
                         isJoined
-                          ? 'bg-emerald-50/20 border-emerald-100/50'
-                          : 'bg-gray-50/40 border-gray-100 dark:bg-gray-950/20 dark:border-gray-800',
+                          ? 'bg-primary/5 border-nejah-electric/15'
+                          : 'bg-background/50 border-border dark:bg-nejah-surface/20 dark:border-white/5',
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center font-bold text-emerald-800 text-xs shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-xs shrink-0">
                           {student.fullName?.charAt(0) || 'S'}
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-emerald-950 dark:text-gray-200">
+                          <p className="text-xs font-bold text-foreground dark:text-foreground">
                             {student.fullName}
                           </p>
-                          <p className="text-[9px] font-bold text-gray-450 dark:text-gray-550 uppercase tracking-widest mt-0.5">
+                          <p className="text-[9px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest mt-0.5">
                             ID: {student.studentCode || 'N/A'}
                           </p>
                         </div>
@@ -561,7 +561,7 @@ function ClassSessionContent() {
                           className={cn(
                             'text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border-none',
                             record.attendanceStatus === 'PRESENT'
-                              ? 'bg-emerald-100 text-emerald-700'
+                              ? 'bg-primary/15 text-nejah-electric'
                               : record.attendanceStatus === 'LATE'
                                 ? 'bg-amber-100 text-amber-700'
                                 : record.attendanceStatus === 'LEFT_EARLY'
@@ -573,7 +573,7 @@ function ClassSessionContent() {
                         </Badge>
 
                         {isJoined && (
-                          <p className="text-[9px] text-gray-400 font-bold tabular-nums mt-1.5">
+                          <p className="text-[9px] text-nejah-slate-blue font-bold tabular-nums mt-1.5">
                             Duration: {record.durationMinutes || 0} mins
                           </p>
                         )}

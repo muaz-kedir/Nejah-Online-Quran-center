@@ -47,15 +47,15 @@ export function DeleteParentModal({ open, onClose, onSuccess, parentId, parentNa
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby="delete-parent-desc" className="sm:max-w-[440px] dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
+      <DialogContent aria-describedby="delete-parent-desc" className="sm:max-w-[440px] dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader className="flex flex-col items-center text-center">
           <div className="w-14 h-14 bg-red-50 dark:bg-red-950/50 rounded-full flex items-center justify-center text-red-600 mb-4">
             <AlertTriangle className="h-7 w-7" />
           </div>
-          <DialogTitle className="text-xl font-bold dark:text-gray-100">Delete Parent</DialogTitle>
-          <DialogDescription id="delete-parent-desc" className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+          <DialogTitle className="text-xl font-bold text-foreground">Delete Parent</DialogTitle>
+          <DialogDescription id="delete-parent-desc" className="text-sm text-muted-foreground dark:text-muted-foreground mt-2 leading-relaxed">
             Are you sure you want to delete{' '}
-            <span className="font-semibold text-gray-800 dark:text-gray-200">{parentName}</span>?
+            <span className="font-semibold text-foreground dark:text-foreground">{parentName}</span>?
             This will permanently remove their profile, linked student associations, and system access credentials. This action{' '}
             <span className="font-semibold text-red-600">cannot be undone</span>.
           </DialogDescription>
@@ -66,7 +66,7 @@ export function DeleteParentModal({ open, onClose, onSuccess, parentId, parentNa
             type="button"
             variant="outline"
             onClick={onClose}
-            className="rounded-xl h-11 border-gray-200 dark:border-gray-700 dark:text-gray-300"
+            className="rounded-xl h-11 border-border dark:border-nejah-border-blue dark:text-muted-foreground"
           >
             Cancel
           </Button>

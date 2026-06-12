@@ -54,7 +54,7 @@ import {
 
 export const Route = createFileRoute('/reports')({
   component: ReportsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 const API = 'http://localhost:3000/api';
@@ -905,7 +905,7 @@ function ReportsPage() {
 
 function StatGrid({ stats }: { stats: { label: string; value: any; tone?: 'good' | 'warn' | 'bad' }[] }) {
   const toneClass = (tone?: string) =>
-    tone === 'good' ? 'text-emerald-600' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : '';
+    tone === 'good' ? 'text-primary' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : '';
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
       {stats.map((s) => (
@@ -1002,7 +1002,7 @@ function ReportDetail({
                 {topPerformers.map((s: any) => (
                   <div key={s.studentId} className="flex justify-between text-sm">
                     <span>{s.studentName}</span>
-                    <span className="font-medium text-emerald-600">{s.averageProgress}%</span>
+                    <span className="font-medium text-primary">{s.averageProgress}%</span>
                   </div>
                 ))}
               </CardContent>
@@ -1170,7 +1170,7 @@ function ReportDetail({
                       <TableCell>{row.totalStudents}</TableCell>
                       <TableCell>{row.totalClasses}</TableCell>
                       <TableCell>{row.totalHoursTaught}</TableCell>
-                      <TableCell className="text-emerald-600">{row.presentCount}</TableCell>
+                      <TableCell className="text-primary">{row.presentCount}</TableCell>
                       <TableCell className="text-amber-600">{row.lateCount}</TableCell>
                       <TableCell className="text-red-600">{row.absentCount}</TableCell>
                       <TableCell>{row.completionRate}%</TableCell>

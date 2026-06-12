@@ -21,7 +21,7 @@ import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/schedules')({
   component: SchedulesPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function SchedulesPage() {
@@ -121,11 +121,11 @@ function SchedulesPage() {
       <Breadcrumbs />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Class Schedules</h1>
-          <p className="text-gray-600 mt-1">View and manage teaching schedules by day</p>
+          <h1 className="text-3xl font-bold text-foreground">Class Schedules</h1>
+          <p className="text-muted-foreground mt-1">View and manage teaching schedules by day</p>
         </div>
         <Button 
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-primary hover:bg-primary"
           onClick={() => {
             navigate({ to: '/teachers' });
           }}
@@ -143,8 +143,8 @@ function SchedulesPage() {
             className={cn(
               'px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap flex flex-col gap-1 h-auto min-w-[88px]',
               selectedDay === day
-                ? 'bg-emerald-900 text-white hover:bg-emerald-800'
-                : 'bg-white text-gray-600 hover:bg-emerald-50 border-gray-200',
+                ? 'bg-primary text-white hover:bg-nejah-azure'
+                : 'bg-white text-muted-foreground hover:bg-primary/10 border-border',
             )}
           >
             <span>{day.substring(0, 3)}</span>
@@ -156,7 +156,7 @@ function SchedulesPage() {
       </div>
 
       <div className="relative mb-6 max-w-md">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={`Search ${selectedDay} schedules...`}
           value={search}
@@ -165,56 +165,56 @@ function SchedulesPage() {
         />
       </div>
 
-      <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-        <Calendar className="h-4 w-4 text-emerald-700" />
-        <span className="font-semibold text-emerald-900">{selectedDay}</span>
+      <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+        <Calendar className="h-4 w-4 text-primary" />
+        <span className="font-semibold text-nejah-sapphire">{selectedDay}</span>
         <span>
           — {filtered.length} {filtered.length === 1 ? 'class' : 'classes'}
         </span>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Class</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Teacher</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Student</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Day</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Time</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
-              <th className="text-right p-4 text-xs font-bold text-gray-500 uppercase">Actions</th>
+            <tr className="border-b bg-muted">
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Class</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Teacher</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Student</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Day</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Time</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Status</th>
+              <th className="text-right p-4 text-xs font-bold text-muted-foreground uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-400">
+                <td colSpan={7} className="text-center py-12 text-muted-foreground">
                   Loading...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-400">
+                <td colSpan={7} className="text-center py-12 text-muted-foreground">
                   No schedules found for {selectedDay}
                 </td>
               </tr>
             ) : (
               filtered.map((s: any) => (
-                <tr key={s.id} className="border-b hover:bg-gray-50">
+                <tr key={s.id} className="border-b hover:bg-muted">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <BookOpen className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-gray-900">{s.className || s.classType || 'Quran Class'}</span>
+                      <BookOpen className="h-5 w-5 text-primary" />
+                      <span className="font-medium text-foreground">{s.className || s.classType || 'Quran Class'}</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{s.teacher?.fullName || 'N/A'}</span>
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{s.teacher?.fullName || 'N/A'}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-sm text-gray-600">
+                  <td className="p-4 text-sm text-muted-foreground">
                     {getStudentInfo(s)}
                   </td>
                   <td className="p-4">
@@ -223,7 +223,7 @@ function SchedulesPage() {
                     </Badge>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
                       {s.startTimeString || s.startTime} - {s.endTimeString || s.endTime}
                     </div>

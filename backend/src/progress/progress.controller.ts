@@ -36,13 +36,13 @@ export class ProgressController {
   // -------------------------------------------------- progression settings
 
   @Get('progression-settings')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   getProgressionSettings() {
     return this.levelProgressionService.getSettings();
   }
 
   @Patch('progression-settings')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   updateProgressionSettings(@Body() dto: UpdateProgressionSettingsDto) {
     return this.levelProgressionService.updateSettings(dto);
   }
@@ -51,6 +51,7 @@ export class ProgressController {
   @Roles(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
     UserRole.TEACHER,
     UserRole.STUDENT,
     UserRole.PARENT,
@@ -60,7 +61,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId/learning-context')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getLearningContext(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -76,7 +77,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getProgress(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -92,7 +93,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId/learning-path')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getLearningPath(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -108,7 +109,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId/level-history')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getLevelHistory(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -137,7 +138,7 @@ export class ProgressController {
   }
 
   @Post('student/:studentId/level-action')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async applyLevelAction(
     @Request() req,
     @Param('studentId') studentId: string,
@@ -147,7 +148,7 @@ export class ProgressController {
   }
 
   @Post('student/:studentId/recommend-promotion')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async recommendPromotion(
     @Request() req,
     @Param('studentId') studentId: string,
@@ -162,7 +163,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId/logs')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getProgressLogs(
     @Request() req,
     @Param('studentId') studentId: string,
@@ -183,7 +184,7 @@ export class ProgressController {
   }
 
   @Patch('student/:studentId/log')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async logProgress(
     @Request() req,
     @Param('studentId') studentId: string,
@@ -199,7 +200,7 @@ export class ProgressController {
   }
 
   @Post('student/:studentId/feedback')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async addFeedback(
     @Request() req,
     @Param('studentId') studentId: string,
@@ -217,7 +218,7 @@ export class ProgressController {
   }
 
   @Get('student/:studentId/feedback')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async getFeedback(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);

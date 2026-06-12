@@ -21,13 +21,13 @@ import {
 
 export const Route = createFileRoute('/teacher-replacements')({
   component: TeacherReplacementsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 const STATUS_COLORS: Record<string, string> = {
   upcoming: 'bg-blue-100 text-blue-700',
-  active: 'bg-emerald-100 text-emerald-700',
-  completed: 'bg-gray-100 text-gray-700',
+  active: 'bg-primary/10 text-primary',
+  completed: 'bg-muted text-foreground',
   cancelled: 'bg-red-100 text-red-700',
 };
 
@@ -99,14 +99,14 @@ function TeacherReplacementsPage() {
       <Breadcrumbs />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Teacher Replacements</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-foreground text-foreground">Teacher Replacements</h1>
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">
             Manage temporary teacher assignments for students
           </p>
         </div>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-primary hover:bg-primary"
         >
           <Plus className="mr-2 h-4 w-4" />
           Assign Temporary Teacher
@@ -115,7 +115,7 @@ function TeacherReplacementsPage() {
 
       <div className="flex flex-wrap gap-4 mb-6">
         <form onSubmit={handleSearch} className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search student or teacher..."
             value={search}
@@ -137,41 +137,41 @@ function TeacherReplacementsPage() {
         </Select>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-gray-50 dark:bg-gray-900/50">
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Student</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Original Teacher</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Replacement</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Period</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Reason</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
-              <th className="text-right p-4 text-xs font-bold text-gray-500 uppercase">Actions</th>
+            <tr className="border-b bg-muted dark:bg-nejah-surface/50">
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Student</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Original Teacher</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Replacement</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Period</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Reason</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Status</th>
+              <th className="text-right p-4 text-xs font-bold text-muted-foreground uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-400">Loading...</td>
+                <td colSpan={7} className="text-center py-12 text-muted-foreground">Loading...</td>
               </tr>
             ) : replacements.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-400">
+                <td colSpan={7} className="text-center py-12 text-muted-foreground">
                   <UserCog className="h-10 w-10 mx-auto mb-2 opacity-30" />
                   No temporary assignments found
                 </td>
               </tr>
             ) : (
               replacements.map((r) => (
-                <tr key={r.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <tr key={r.id} className="border-b hover:bg-muted dark:hover:bg-nejah-surface/30">
                   <td className="p-4 font-medium">{r.student?.fullName || '—'}</td>
                   <td className="p-4 text-sm">{r.originalTeacher?.fullName || '—'}</td>
                   <td className="p-4 text-sm">{r.replacementTeacher?.fullName || '—'}</td>
-                  <td className="p-4 text-sm text-gray-600">
+                  <td className="p-4 text-sm text-muted-foreground">
                     {r.startDate} → {r.endDate}
                     {r.startTimeString && r.endTimeString && (
-                      <span className="block text-xs text-gray-400">
+                      <span className="block text-xs text-muted-foreground">
                         {r.startTimeString} – {r.endTimeString}
                       </span>
                     )}

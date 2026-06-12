@@ -14,10 +14,10 @@ export const Breadcrumbs = memo(function Breadcrumbs() {
   };
 
   return (
-    <nav className="flex items-center space-x-2 text-sm mb-6">
+    <nav className="mb-6 flex items-center space-x-2 text-sm">
       <Link
         to="/dashboard"
-        className="flex items-center text-gray-500 hover:text-emerald-600 transition-colors"
+        className="flex items-center text-nejah-slate-blue transition-colors hover:text-nejah-electric"
       >
         <Home className="h-4 w-4" />
       </Link>
@@ -28,13 +28,13 @@ export const Breadcrumbs = memo(function Breadcrumbs() {
 
         return (
           <div key={name} className="flex items-center">
-            <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />
+            <ChevronRight className="mx-2 h-4 w-4 text-nejah-slate-blue/50" />
             {isLast ? (
-              <span className="text-gray-900 font-medium">{formatBreadcrumb(name)}</span>
+              <span className="font-medium text-foreground">{formatBreadcrumb(name)}</span>
             ) : (
               <Link
                 to={routeTo}
-                className="text-gray-500 hover:text-emerald-600 transition-colors"
+                className="text-nejah-slate-blue transition-colors hover:text-nejah-electric"
               >
                 {formatBreadcrumb(name)}
               </Link>

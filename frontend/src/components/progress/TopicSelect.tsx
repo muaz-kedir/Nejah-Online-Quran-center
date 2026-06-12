@@ -58,7 +58,7 @@ export function TopicSelect({
             <span className="truncate text-left">
               {selected.order}. {selected.label}
               {selected.isSuggested && !allowCompleted ? (
-                <span className="ml-2 text-xs text-emerald-600">(Suggested)</span>
+                <span className="ml-2 text-xs text-primary">(Suggested)</span>
               ) : null}
             </span>
           ) : (
@@ -86,7 +86,7 @@ export function TopicSelect({
                       setOpen(false);
                     }}
                     className={cn(
-                      topic.isSuggested && !allowCompleted && 'bg-emerald-50 dark:bg-emerald-950/30',
+                      topic.isSuggested && !allowCompleted && 'bg-primary/10 dark:bg-nejah-sapphire/30',
                       topic.isCompleted && 'opacity-60',
                     )}
                   >

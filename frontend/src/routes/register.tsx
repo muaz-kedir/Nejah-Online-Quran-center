@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { Textarea } from "@/components/ui/textarea";
 
 const registerSchema = z.object({
@@ -416,40 +417,36 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div className="text-center">
-          <img src="/logo.png" alt="Nejah" className="mx-auto h-20 w-auto mb-4" />
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Join Nejah Online Quran & Islamic Center
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 max-w-lg mx-auto">
-            Embark on your journey of Quranic learning. Fill in your information to get started.
-          </p>
-        </div>
+    <AuthPageLayout
+      title="Join Nejah Online Quran & Islamic Center"
+      subtitle="Embark on your journey of Quranic learning. Fill in your information to get started."
+      maxWidth="xl"
+      showBack={!isSuccess}
+    >
+      <div className="space-y-8">
 
         {/* Progress Indicator */}
         {!isSuccess && watchAgeRange === "Under 18" && (
           <div className="flex items-center justify-center space-x-4">
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white">
                 {currentStep !== "student" ? <CheckCircle2 className="h-5 w-5" /> : "1"}
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep === "student" ? "text-emerald-600" : "text-gray-500"
+                currentStep === "student" ? "text-nejah-electric" : "text-nejah-slate-blue"
               }`}>
                 Student Info
               </span>
             </div>
-            <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-emerald-600" : "bg-gray-300"}`} />
+            <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-primary" : "bg-nejah-surface/50"}`} />
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-600"
+                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-nejah-surface/50 text-nejah-slate-blue"
               }`}>
                 2
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep !== "student" ? "text-blue-600" : "text-gray-500"
+                currentStep !== "student" ? "text-blue-600" : "text-nejah-slate-blue"
               }`}>
                 Parent Info
               </span>
@@ -467,8 +464,8 @@ function RegisterPage() {
               <div className="bg-green-100 p-4 rounded-full">
                 <CheckCircle2 className="h-16 w-16 text-green-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Registration Successful!</h3>
-              <p className="text-gray-600">You are being redirected to the login page...</p>
+              <h3 className="text-2xl font-bold text-foreground">Registration Successful!</h3>
+              <p className="text-nejah-slate-blue">You are being redirected to the login page...</p>
               <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
             </motion.div>
           ) : (
@@ -483,10 +480,10 @@ function RegisterPage() {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="border-t-4 border-t-emerald-600 shadow-lg">
+                      <Card className="border-t-4 border-t-nejah-electric shadow-lg">
                         <CardHeader>
                           <div className="flex items-center space-x-2">
-                            <User className="h-5 w-5 text-emerald-600" />
+                            <User className="h-5 w-5 text-nejah-electric" />
                             <CardTitle>Student Information</CardTitle>
                           </div>
                           <CardDescription>Details of the student enrolling in our programs.</CardDescription>
@@ -568,7 +565,7 @@ function RegisterPage() {
                                   <Select onValueChange={(val) => { field.onChange(val); form.setValue("student.city", ""); }} defaultValue={field.value}>
                                     <FormControl>
                                       <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                         <SelectTrigger className="pl-9">
                                           <SelectValue placeholder="Select Country" />
                                         </SelectTrigger>
@@ -595,7 +592,7 @@ function RegisterPage() {
                                   <Select onValueChange={field.onChange} value={field.value} disabled={!watchStudentCountry}>
                                     <FormControl>
                                       <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                         <SelectTrigger className="pl-9">
                                           <SelectValue placeholder={watchStudentCountry ? "Select City" : "Select Country First"} />
                                         </SelectTrigger>
@@ -624,7 +621,7 @@ function RegisterPage() {
                                 <FormLabel>Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
                                       <Phone className="h-4 w-4" />
                                       {studentCountryData ? `+${studentCountryData.phonecode}` : ""}
                                     </div>
@@ -651,7 +648,7 @@ function RegisterPage() {
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <div className="relative">
-                                      <BookOpen className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <BookOpen className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                       <SelectTrigger className="pl-9">
                                         <SelectValue placeholder="Select Program" />
                                       </SelectTrigger>
@@ -758,7 +755,7 @@ function RegisterPage() {
                                 <Select onValueChange={(val) => { field.onChange(val); if (val !== 'Other') form.setValue('student.referralSource', val); }} defaultValue={field.value === "Other" || !["YouTube","TikTok","Facebook","Instagram","Friend Referral","Google Search"].includes(field.value) && field.value ? "Other" : field.value}>
                                   <FormControl>
                                     <div className="relative">
-                                      <Info className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                      <Info className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                       <SelectTrigger className="pl-9">
                                         <SelectValue placeholder="Select Source" />
                                       </SelectTrigger>
@@ -798,7 +795,7 @@ function RegisterPage() {
 
                           {/* Account Settings */}
                           <div className="border-t pt-6 mt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Credentials</h3>
+                            <h3 className="text-lg font-medium text-foreground mb-4">Account Credentials</h3>
                             <FormField
                               control={form.control as any}
                               name="student.email"
@@ -807,7 +804,7 @@ function RegisterPage() {
                                   <FormLabel>Email Address *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
-                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                       <Input className="pl-9" placeholder="student@example.com" {...field} />
                                     </div>
                                   </FormControl>
@@ -824,11 +821,11 @@ function RegisterPage() {
                                     <FormLabel>Password *</FormLabel>
                                     <FormControl>
                                       <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input className="pl-9" type="password" {...field} />
                                       </div>
                                     </FormControl>
-                                    <p className="text-xs text-gray-500 mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
+                                    <p className="text-xs text-nejah-slate-blue mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -841,7 +838,7 @@ function RegisterPage() {
                                     <FormLabel>Confirm Password *</FormLabel>
                                     <FormControl>
                                       <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input className="pl-9" type="password" {...field} />
                                       </div>
                                     </FormControl>
@@ -860,7 +857,7 @@ function RegisterPage() {
                           <Button
                             type="button"
                             onClick={handleNext}
-                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                            className="min-w-[200px] h-12 text-base bg-primary hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
                           >
                             Next: Parent Information
                             <ArrowRight className="ml-2 h-5 w-5" />
@@ -868,7 +865,7 @@ function RegisterPage() {
                         ) : (
                           <Button
                             type="submit"
-                            className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                            className="min-w-[200px] h-12 text-base bg-primary hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
                             disabled={isLoading}
                           >
                             {isLoading ? (
@@ -905,20 +902,20 @@ function RegisterPage() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 py-8">
-                          <p className="text-lg font-medium text-gray-900 text-center">
+                          <p className="text-lg font-medium text-foreground text-center">
                             Has this student's parent already been registered in the system?
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
                             <button
                               type="button"
                               onClick={() => handleParentChoice(true)}
-                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-emerald-500 hover:bg-emerald-50 ${
-                                isParentExisting === true ? "border-emerald-600 bg-emerald-50" : "border-gray-200 bg-white"
+                              className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-nejah-electric hover:bg-primary/10 ${
+                                isParentExisting === true ? "border-nejah-electric bg-primary/10" : "border-white/10 bg-background/30"
                               }`}
                             >
-                              <Search className="h-8 w-8 text-emerald-600" />
-                              <span className="font-semibold text-gray-900">Yes</span>
-                              <span className="text-sm text-gray-500">
+                              <Search className="h-8 w-8 text-nejah-electric" />
+                              <span className="font-semibold text-foreground">Yes</span>
+                              <span className="text-sm text-nejah-slate-blue">
                                 Search for the existing parent account and link this student to it.
                               </span>
                             </button>
@@ -926,12 +923,12 @@ function RegisterPage() {
                               type="button"
                               onClick={() => handleParentChoice(false)}
                               className={`flex flex-col items-center gap-2 border-2 rounded-xl p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50 ${
-                                isParentExisting === false ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white"
+                                isParentExisting === false ? "border-nejah-electric bg-primary/10" : "border-white/10 bg-background/30"
                               }`}
                             >
                               <Users className="h-8 w-8 text-blue-600" />
-                              <span className="font-semibold text-gray-900">No</span>
-                              <span className="text-sm text-gray-500">
+                              <span className="font-semibold text-foreground">No</span>
+                              <span className="text-sm text-nejah-slate-blue">
                                 Register the parent's information and create a new parent account.
                               </span>
                             </button>
@@ -959,10 +956,10 @@ function RegisterPage() {
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="border-t-4 border-t-emerald-600 shadow-lg">
+                      <Card className="border-t-4 border-t-nejah-electric shadow-lg">
                         <CardHeader>
                           <div className="flex items-center space-x-2">
-                            <Search className="h-5 w-5 text-emerald-600" />
+                            <Search className="h-5 w-5 text-nejah-electric" />
                             <CardTitle>Find Existing Parent</CardTitle>
                           </div>
                           <CardDescription>
@@ -988,7 +985,7 @@ function RegisterPage() {
                               type="button"
                               onClick={searchParent}
                               disabled={searchingParent}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              className="bg-primary hover:bg-primary/90 text-white"
                             >
                               {searchingParent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                               <span className="ml-2">Search</span>
@@ -996,26 +993,26 @@ function RegisterPage() {
                           </div>
 
                           {parentResults.length > 0 && (
-                            <div className="border border-gray-200 rounded-lg max-h-72 overflow-y-auto bg-white shadow-sm">
+                            <div className="border border-border rounded-lg max-h-72 overflow-y-auto bg-white shadow-sm">
                               <table className="w-full text-sm">
-                                <thead className="bg-gray-50 sticky top-0">
+                                <thead className="bg-muted sticky top-0">
                                   <tr>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Parent Name</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Email</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Phone</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">Children</th>
-                                    <th className="px-3 py-2 text-right font-medium text-gray-500">Action</th>
+                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Parent Name</th>
+                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Email</th>
+                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Phone</th>
+                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Children</th>
+                                    <th className="px-3 py-2 text-right font-medium text-nejah-slate-blue">Action</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-border">
                                   {parentResults.map((parent) => (
-                                    <tr key={parent.id} className="hover:bg-gray-50">
-                                      <td className="px-3 py-2 font-medium text-gray-900">{parent.fullName}</td>
-                                      <td className="px-3 py-2 text-gray-500">{parent.email}</td>
-                                      <td className="px-3 py-2 text-gray-500">{parent.phoneNumber || '—'}</td>
-                                      <td className="px-3 py-2 text-gray-500">
+                                    <tr key={parent.id} className="hover:bg-muted">
+                                      <td className="px-3 py-2 font-medium text-foreground">{parent.fullName}</td>
+                                      <td className="px-3 py-2 text-nejah-slate-blue">{parent.email}</td>
+                                      <td className="px-3 py-2 text-nejah-slate-blue">{parent.phoneNumber || '—'}</td>
+                                      <td className="px-3 py-2 text-nejah-slate-blue">
                                         {parent.childrenCount > 0 ? (
-                                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">
+                                          <span className="inline-flex items-center gap-1 bg-primary/10 text-nejah-electric px-2 py-0.5 rounded-full text-xs">
                                             <Users className="w-3 h-3" />
                                             {parent.childrenCount} Registered
                                           </span>
@@ -1029,7 +1026,7 @@ function RegisterPage() {
                                           variant="outline"
                                           size="sm"
                                           onClick={() => handleSelectParent(parent)}
-                                          className="text-emerald-600 border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50"
+                                          className="text-nejah-electric border-nejah-electric/30 hover:bg-primary/10"
                                         >
                                           <CheckCircle2 className="w-4 h-4 mr-1" />
                                           Select Parent
@@ -1043,8 +1040,8 @@ function RegisterPage() {
                           )}
 
                           {parentSearchPerformed && !searchingParent && parentResults.length === 0 && !selectedParent && (
-                            <div className="text-center border border-dashed border-gray-300 rounded-lg p-6 space-y-2">
-                              <p className="text-sm text-gray-600">No matching parent account found.</p>
+                            <div className="text-center border border-dashed border-border rounded-lg p-6 space-y-2">
+                              <p className="text-sm text-nejah-slate-blue">No matching parent account found.</p>
                               <Button
                                 type="button"
                                 variant="outline"
@@ -1056,17 +1053,17 @@ function RegisterPage() {
                           )}
 
                           {selectedParent && (
-                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between bg-primary/10 border border-nejah-electric/20 rounded-lg p-4">
                               <div className="flex items-center gap-3">
-                                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                                <CheckCircle2 className="w-6 h-6 text-nejah-electric" />
                                 <div>
-                                  <p className="text-sm font-semibold text-emerald-900">
+                                  <p className="text-sm font-semibold text-foreground">
                                     Selected: {selectedParent.fullName}
                                   </p>
-                                  <p className="text-xs text-emerald-700">
+                                  <p className="text-xs text-nejah-electric">
                                     {selectedParent.email}{selectedParent.phoneNumber ? ` • ${selectedParent.phoneNumber}` : ''} • {selectedParent.childrenCount || 0} child(ren) registered
                                   </p>
-                                  <p className="text-xs text-emerald-600 mt-1">
+                                  <p className="text-xs text-nejah-electric mt-1">
                                     The student will be linked to this parent account. No new parent account will be created.
                                   </p>
                                 </div>
@@ -1097,7 +1094,7 @@ function RegisterPage() {
                         </Button>
                         <Button
                           type="submit"
-                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          className="min-w-[200px] h-12 text-base bg-primary hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
                           disabled={isLoading || !selectedParent}
                         >
                           {isLoading ? (
@@ -1180,7 +1177,7 @@ function RegisterPage() {
                                   <Select onValueChange={(val) => { field.onChange(val); form.setValue("parent.city", ""); }} defaultValue={field.value}>
                                     <FormControl>
                                       <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                         <SelectTrigger className="pl-9">
                                           <SelectValue placeholder="Select Country" />
                                         </SelectTrigger>
@@ -1207,7 +1204,7 @@ function RegisterPage() {
                                   <Select onValueChange={field.onChange} value={field.value} disabled={!watchParentCountry}>
                                     <FormControl>
                                       <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
+                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                                         <SelectTrigger className="pl-9">
                                           <SelectValue placeholder={watchParentCountry ? "Select City" : "Select Country First"} />
                                         </SelectTrigger>
@@ -1235,7 +1232,7 @@ function RegisterPage() {
                                 <FormLabel>Contact Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-gray-500 text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
                                       <Phone className="h-4 w-4" />
                                       {parentCountryData ? `+${parentCountryData.phonecode}` : ""}
                                     </div>
@@ -1253,7 +1250,7 @@ function RegisterPage() {
                           />
 
                           <div className="border-t pt-6 mt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Parent Account Credentials</h3>
+                            <h3 className="text-lg font-medium text-foreground mb-4">Parent Account Credentials</h3>
                             <FormField
                               control={form.control as any}
                               name="parent.email"
@@ -1262,7 +1259,7 @@ function RegisterPage() {
                                   <FormLabel>Parent Email *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
-                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                       <Input className="pl-9" placeholder="parent@example.com" {...field} />
                                     </div>
                                   </FormControl>
@@ -1280,7 +1277,7 @@ function RegisterPage() {
                                     <FormLabel>Password *</FormLabel>
                                     <FormControl>
                                       <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input className="pl-9" type="password" {...field} />
                                       </div>
                                     </FormControl>
@@ -1296,7 +1293,7 @@ function RegisterPage() {
                                     <FormLabel>Confirm Password *</FormLabel>
                                     <FormControl>
                                       <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input className="pl-9" type="password" {...field} />
                                       </div>
                                     </FormControl>
@@ -1310,7 +1307,7 @@ function RegisterPage() {
 
                         {/* Duplicate Detection Warning */}
                         {duplicateParent && (
-                          <div className="border-t border-gray-100 px-6 py-6">
+                          <div className="border-t border-border px-6 py-6">
                             <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 space-y-3">
                               <div className="flex items-start gap-2">
                                 <Info className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
@@ -1326,10 +1323,10 @@ function RegisterPage() {
 
                               {showDuplicateDetails && (
                                 <div className="bg-white border border-amber-200 rounded-md p-3 text-sm space-y-1">
-                                  <p><span className="font-medium text-gray-700">Name:</span> {duplicateParent.fullName}</p>
-                                  <p><span className="font-medium text-gray-700">Email:</span> {duplicateParent.email}</p>
-                                  <p><span className="font-medium text-gray-700">Phone:</span> {duplicateParent.phoneNumber || '—'}</p>
-                                  <p><span className="font-medium text-gray-700">Children Registered:</span> {duplicateParent.childrenCount || 0}</p>
+                                  <p><span className="font-medium text-foreground">Name:</span> {duplicateParent.fullName}</p>
+                                  <p><span className="font-medium text-foreground">Email:</span> {duplicateParent.email}</p>
+                                  <p><span className="font-medium text-foreground">Phone:</span> {duplicateParent.phoneNumber || '—'}</p>
+                                  <p><span className="font-medium text-foreground">Children Registered:</span> {duplicateParent.childrenCount || 0}</p>
                                 </div>
                               )}
 
@@ -1351,7 +1348,7 @@ function RegisterPage() {
                                     handleSelectParent(duplicateParent);
                                     submitRegistration(form.getValues(), duplicateParent.id);
                                   }}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  className="bg-primary hover:bg-primary/90 text-white"
                                 >
                                   <CheckCircle2 className="w-4 h-4 mr-1" />
                                   Link to Existing Parent
@@ -1365,7 +1362,7 @@ function RegisterPage() {
                                     setAllowDuplicateCreate(true);
                                     toast.info("Proceeding with new parent details. Matching accounts may still be linked automatically by the administration.");
                                   }}
-                                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                  className="border-border text-foreground hover:bg-muted"
                                 >
                                   Create New Parent (Admin Permission Required)
                                 </Button>
@@ -1387,7 +1384,7 @@ function RegisterPage() {
                         </Button>
                         <Button
                           type="submit"
-                          className="min-w-[200px] h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-all hover:scale-[1.02]"
+                          className="min-w-[200px] h-12 text-base bg-primary hover:bg-primary/90 shadow-lg transition-all hover:scale-[1.02]"
                           disabled={isLoading}
                         >
                           {isLoading ? (
@@ -1407,12 +1404,12 @@ function RegisterPage() {
                   )}
                 </AnimatePresence>
                 
-                <p className="text-center text-sm text-gray-600 pt-4">
+                <p className="text-center text-sm text-nejah-slate-blue pt-4">
                   Already have an account?{" "}
                   <button
                     type="button"
                     onClick={() => navigate({ to: "/login" })}
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-nejah-electric hover:text-nejah-electric/80"
                   >
                     Log in here
                   </button>
@@ -1422,6 +1419,6 @@ function RegisterPage() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }

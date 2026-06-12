@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { AmbientSection, PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { AddParentModal } from '@/components/parents/AddParentModal';
 import { EditParentModal } from '@/components/parents/EditParentModal';
 import { DeleteParentModal } from '@/components/parents/DeleteParentModal';
@@ -45,7 +46,7 @@ const getInitials = (name: string) => {
 
 const getAvatarBg = (name: string) => {
   const palettes = [
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric',
     'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
     'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
     'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
@@ -57,7 +58,7 @@ const getAvatarBg = (name: string) => {
 const getStudentBadgeColor = (level?: string) => {
   switch (level?.toLowerCase()) {
     case 'beginner':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300';
+      return 'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric';
     case 'intermediate':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300';
     case 'advanced':
@@ -65,7 +66,7 @@ const getStudentBadgeColor = (level?: string) => {
     case 'hifz':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300';
     default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      return 'bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground';
   }
 };
 
@@ -82,7 +83,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
 }) {
   return (
     <tr
-      className="hover:bg-gray-50/60 dark:hover:bg-gray-750/30 transition-colors group"
+      className="hover:bg-primary/5 transition-colors group"
     >
       {/* Parent Name */}
       <td className="py-5 px-6">
@@ -96,10 +97,10 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
             {getInitials(parent.fullName)}
           </div>
           <div>
-            <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors">
+            <p className="font-bold text-foreground dark:text-foreground group-hover:text-nejah-sapphire dark:group-hover:text-nejah-electric transition-colors">
               {parent.fullName}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+            <p className="text-xs text-nejah-slate-blue mt-0.5">
               ID: {parentIdCode(parent.id)}
             </p>
           </div>
@@ -110,7 +111,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
       <td className="py-5 px-6">
         {parent.students && parent.students.length > 0 ? (
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">
+            <span className="text-sm font-semibold text-nejah-sapphire dark:text-nejah-electric">
               {parent.students.length > 2
                 ? `${parent.students[0].fullName} +${parent.students.length - 1}`
                 : parent.students.map((s: any) => s.fullName).join(' & ')}
@@ -129,7 +130,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
             </span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400 dark:text-gray-500 italic">
+          <span className="text-sm text-nejah-slate-blue italic">
             No students linked
           </span>
         )}
@@ -138,12 +139,12 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
       {/* Contact Information */}
       <td className="py-5 px-6">
         <div className="space-y-1.5 text-sm">
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-            <Phone className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-nejah-slate-blue">
+            <Phone className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
             <span>{parent.phoneNumber || 'N/A'}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-            <Mail className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-nejah-slate-blue">
+            <Mail className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
             <span className="truncate max-w-[200px]">{parent.email}</span>
           </div>
         </div>
@@ -156,16 +157,16 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
             className={cn(
               'text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center gap-1.5 w-max',
               parent.status?.toLowerCase() === 'active'
-                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                ? 'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric'
+                : 'bg-muted text-muted-foreground dark:bg-nejah-surface dark:text-muted-foreground'
             )}
           >
             <span
               className={cn(
                 'w-1.5 h-1.5 rounded-full',
                 parent.status?.toLowerCase() === 'active'
-                  ? 'bg-emerald-500'
-                  : 'bg-gray-400'
+                  ? 'bg-primary'
+                  : 'bg-nejah-slate-blue'
               )}
             />
             {parent.status || 'Active'}
@@ -178,21 +179,21 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={() => onView(parent)}
-            className="p-2 hover:bg-emerald-50 dark:hover:bg-gray-700 text-gray-400 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-lg transition-colors"
+            className="p-2 hover:bg-primary/10 dark:hover:bg-nejah-surface text-muted-foreground hover:text-nejah-electric dark:hover:text-nejah-electric rounded-lg transition-colors"
             title="View Profile"
           >
             <Eye className="h-[18px] w-[18px]" />
           </button>
           <button
             onClick={() => onEdit(parent)}
-            className="p-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors"
+            className="p-2 hover:bg-blue-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors"
             title="Edit"
           >
             <Pencil className="h-[18px] w-[18px]" />
           </button>
           <button
             onClick={() => onDelete(parent)}
-            className="p-2 hover:bg-red-50 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
+            className="p-2 hover:bg-red-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
             title="Delete"
           >
             <Trash2 className="h-[18px] w-[18px]" />
@@ -319,51 +320,45 @@ function ParentsPage() {
     <DashboardLayout>
       <div className="space-y-8 pb-12">
         {/* ─── Header Section ─── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="max-w-2xl">
-            <span className="text-[11px] uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 font-bold mb-2 block">
-              Management
-            </span>
-            <h1 className="text-4xl font-extrabold text-emerald-950 dark:text-gray-100 tracking-tight font-serif">
-              Parents
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md leading-relaxed text-sm">
-              Manage guardian profiles, monitor student linkages, and oversee communication status within the Nejah ecosystem.
-            </p>
-          </div>
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-gradient-to-br from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white gap-2 h-12 px-7 rounded-xl font-semibold shadow-lg shadow-emerald-900/15 hover:scale-[1.02] transition-transform"
-          >
-            <UserPlus className="h-5 w-5" />
-            Add Parent
-          </Button>
-        </div>
+        <PageHeader
+          eyebrow="Management"
+          title="Parents"
+          description="Manage guardian profiles, monitor student linkages, and oversee communication status within the Nejah ecosystem."
+          actions={
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-gradient-to-br from-nejah-sapphire to-nejah-surface hover:from-nejah-electric hover:to-nejah-sapphire text-white gap-2 h-12 px-7 rounded-xl font-semibold shadow-lg shadow-nejah-sapphire/20 hover:scale-[1.02] transition-transform"
+            >
+              <UserPlus className="h-5 w-5" />
+              Add Parent
+            </Button>
+          }
+        />
 
         {/* ─── Filters Bento Card ─── */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap items-end gap-4">
+        <GlassPanel className="p-5 flex flex-wrap items-end gap-4">
           <div className="flex-1 min-w-[220px]">
             <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-nejah-slate-blue" />
               <Input
                 placeholder="Search for parents or students..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-11 bg-gray-50 dark:bg-gray-900 border-none rounded-xl"
+                className="pl-9 h-11 bg-background/50 border-none rounded-xl"
               />
             </form>
           </div>
 
           <div className="flex items-end gap-3 flex-wrap">
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1 mb-1.5">
+              <span className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest ml-1 mb-1.5">
                 Filter by Status
               </span>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                <SelectTrigger className="w-[160px] h-11 rounded-xl bg-background/50 border-none">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-nejah-surface dark:border-white/5">
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
@@ -372,14 +367,14 @@ function ParentsPage() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1 mb-1.5">
+              <span className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest ml-1 mb-1.5">
                 Class Assignment
               </span>
               <Select value={classFilter} onValueChange={setClassFilter}>
-                <SelectTrigger className="w-[160px] h-11 rounded-xl bg-gray-50 dark:bg-gray-900 border-none">
+                <SelectTrigger className="w-[160px] h-11 rounded-xl bg-background/50 border-none">
                   <SelectValue placeholder="All Classes" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectContent className="dark:bg-nejah-surface dark:border-white/5">
                   <SelectItem value="all">All Classes</SelectItem>
                   <SelectItem value="grade1">Grade 1</SelectItem>
                   <SelectItem value="grade2">Grade 2</SelectItem>
@@ -391,7 +386,7 @@ function ParentsPage() {
 
             <Button
               onClick={fetchParents}
-              className="h-11 px-6 bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white font-semibold rounded-xl border-none"
+              className="h-11 px-6 bg-nejah-sapphire hover:bg-background text-white font-semibold rounded-xl border-none"
             >
               Apply Filters
             </Button>
@@ -399,63 +394,63 @@ function ParentsPage() {
             <Button
               variant="ghost"
               onClick={resetFilters}
-              className="h-11 w-11 rounded-xl p-0 hover:bg-emerald-50 dark:hover:bg-gray-700 text-emerald-700 dark:text-emerald-400"
+              className="h-11 w-11 rounded-xl p-0 hover:bg-primary/10 dark:hover:bg-nejah-surface text-nejah-electric dark:text-nejah-electric"
             >
               <RotateCcw className="h-5 w-5" />
             </Button>
           </div>
-        </div>
+        </GlassPanel>
 
         {/* ─── Table Card ─── */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <GlassPanel className="overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50/70 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                  <th className="text-left py-4 px-6 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                <tr className="bg-background/50 border-b border-white/5">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
                     Parent Name
                   </th>
-                  <th className="text-left py-4 px-6 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
                     Students
                   </th>
-                  <th className="text-left py-4 px-6 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
                     Contact Information
                   </th>
-                  <th className="text-center py-4 px-6 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  <th className="text-center py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
                     Status
                   </th>
-                  <th className="text-right py-4 px-6 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                  <th className="text-right py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-white/5">
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       <td className="py-5 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-xl bg-gray-200 dark:bg-gray-700" />
+                          <div className="w-11 h-11 rounded-xl bg-muted dark:bg-nejah-surface" />
                           <div className="space-y-2">
-                            <div className="h-3 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
-                            <div className="h-2.5 w-16 bg-gray-100 dark:bg-gray-800 rounded" />
+                            <div className="h-3 w-28 bg-muted dark:bg-nejah-surface rounded" />
+                            <div className="h-2.5 w-16 bg-muted dark:bg-nejah-surface rounded" />
                           </div>
                         </div>
                       </td>
                       <td className="py-5 px-6">
-                        <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-3 w-24 bg-muted dark:bg-nejah-surface rounded" />
                       </td>
                       <td className="py-5 px-6">
                         <div className="space-y-2">
-                          <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-                          <div className="h-3 w-40 bg-gray-100 dark:bg-gray-800 rounded" />
+                          <div className="h-3 w-32 bg-muted dark:bg-nejah-surface rounded" />
+                          <div className="h-3 w-40 bg-muted dark:bg-nejah-surface rounded" />
                         </div>
                       </td>
                       <td className="py-5 px-6">
-                        <div className="h-6 w-16 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full" />
+                        <div className="h-6 w-16 mx-auto bg-muted dark:bg-nejah-surface rounded-full" />
                       </td>
                       <td className="py-5 px-6">
-                        <div className="h-6 w-20 ml-auto bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-6 w-20 ml-auto bg-muted dark:bg-nejah-surface rounded" />
                       </td>
                     </tr>
                   ))
@@ -463,13 +458,13 @@ function ParentsPage() {
                   <tr>
                     <td colSpan={5} className="py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          <Search className="h-7 w-7 text-gray-300 dark:text-gray-500" />
+                        <div className="w-16 h-16 rounded-full bg-background/50 flex items-center justify-center">
+                          <Search className="h-7 w-7 text-nejah-slate-blue" />
                         </div>
-                        <p className="text-gray-400 dark:text-gray-500 font-medium font-serif text-lg">
+                        <p className="text-nejah-slate-blue font-medium font-serif text-lg">
                           No parents found
                         </p>
-                        <p className="text-gray-300 dark:text-gray-600 text-sm">
+                        <p className="text-nejah-slate-blue/60 text-sm">
                           Try adjusting your filters or add a new parent
                         </p>
                       </div>
@@ -485,15 +480,15 @@ function ParentsPage() {
           </div>
 
           {/* ─── Pagination ─── */}
-          <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 flex items-center justify-between">
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+          <div className="px-6 py-4 border-t border-white/5 bg-background/30 flex items-center justify-between">
+            <p className="text-xs text-nejah-slate-blue">
               Showing{' '}
-              <span className="font-bold text-gray-700 dark:text-gray-300">
+              <span className="font-bold text-foreground">
                 {meta.total > 0 ? (meta.page - 1) * meta.limit + 1 : 0}-
                 {Math.min(meta.page * meta.limit, meta.total)}
               </span>{' '}
               of{' '}
-              <span className="font-bold text-gray-700 dark:text-gray-300">{meta.total}</span>{' '}
+              <span className="font-bold text-foreground">{meta.total}</span>{' '}
               parents
             </p>
             <div className="flex items-center gap-1.5">
@@ -502,7 +497,7 @@ function ParentsPage() {
                 size="icon"
                 disabled={meta.page === 1}
                 onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
-                className="h-8 w-8 rounded-lg dark:border-gray-700 disabled:opacity-40"
+                className="h-8 w-8 rounded-lg dark:border-white/10 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -514,8 +509,8 @@ function ParentsPage() {
                   className={cn(
                     'h-8 w-8 rounded-lg font-bold text-xs border-none',
                     meta.page === i + 1
-                      ? 'bg-emerald-900 hover:bg-emerald-800 text-white'
-                      : 'bg-transparent text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-emerald-800'
+                      ? 'bg-nejah-sapphire hover:bg-background text-white'
+                      : 'bg-transparent text-nejah-slate-blue hover:bg-primary/10 dark:hover:bg-nejah-surface hover:text-nejah-sapphire'
                   )}
                 >
                   {i + 1}
@@ -526,30 +521,30 @@ function ParentsPage() {
                 size="icon"
                 disabled={meta.page >= meta.totalPages}
                 onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
-                className="h-8 w-8 rounded-lg dark:border-gray-700 disabled:opacity-40"
+                className="h-8 w-8 rounded-lg dark:border-white/10 disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        </div>
+        </GlassPanel>
 
         {/* ─── Quick Stats Bento Grid ─── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           {/* Engagement Rate */}
-          <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 p-7 rounded-2xl text-white relative overflow-hidden shadow-xl min-h-[160px] flex flex-col justify-between group hover:shadow-2xl transition-shadow">
+          <div className="glass-panel bg-gradient-to-br from-nejah-sapphire to-nejah-surface p-7 rounded-2xl text-white relative overflow-hidden shadow-xl min-h-[160px] flex flex-col justify-between group hover:shadow-2xl transition-shadow">
             <div className="absolute -right-4 -bottom-6 opacity-10 pointer-events-none">
               <TrendingUp className="h-36 w-36" />
             </div>
             <div>
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-4">
-                <TrendingUp className="h-5 w-5 text-emerald-200" />
+                <TrendingUp className="h-5 w-5 text-foreground" />
               </div>
-              <h3 className="text-base font-bold text-emerald-100">Engagement Rate</h3>
+              <h3 className="text-base font-bold text-foreground">Engagement Rate</h3>
             </div>
             <div>
               <span className="text-4xl font-extrabold font-serif">{stats.engagementRate}%</span>
-              <p className="text-xs mt-1.5 text-emerald-200/70">Parents active in last 7 days</p>
+              <p className="text-xs mt-1.5 text-foreground/70">Parents active in last 7 days</p>
             </div>
           </div>
 
@@ -571,23 +566,23 @@ function ParentsPage() {
           </div>
 
           {/* New Registrations */}
-          <div className="bg-white dark:bg-gray-800 p-7 rounded-2xl relative overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 min-h-[160px] flex flex-col justify-between group hover:shadow-md transition-shadow">
+          <GlassPanel className="p-7 min-h-[160px] flex flex-col justify-between group hover:shadow-md transition-shadow">
             <div className="absolute -right-4 -bottom-6 opacity-5 pointer-events-none">
-              <UserPlus className="h-36 w-36 text-emerald-900 dark:text-emerald-200" />
+              <UserPlus className="h-36 w-36 text-nejah-sapphire" />
             </div>
             <div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center mb-4">
-                <UserPlus className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <UserPlus className="h-5 w-5 text-nejah-electric" />
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">New Registrations</h3>
+              <h3 className="text-base font-bold text-foreground">New Registrations</h3>
             </div>
             <div>
-              <span className="text-4xl font-extrabold font-serif text-emerald-900 dark:text-emerald-300">
+              <span className="text-4xl font-extrabold font-serif text-nejah-sapphire">
                 +{stats.newRegistrations}
               </span>
-              <p className="text-xs mt-1.5 text-gray-400 dark:text-gray-500">Since the start of this term</p>
+              <p className="text-xs mt-1.5 text-nejah-slate-blue">Since the start of this term</p>
             </div>
-          </div>
+          </GlassPanel>
         </div>
       </div>
 

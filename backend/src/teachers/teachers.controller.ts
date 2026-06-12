@@ -96,49 +96,49 @@ export class TeachersController {
   // ─── Admin / staff management ───
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   create(@Body() createTeacherDto: CreateTeacherDto) {
     return this.teachersService.create(createTeacherDto);
   }
 
   @Get('stats')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   getOverallStats() {
     return this.teachersService.getOverallStats();
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   findAll(@Query() queryDto: QueryTeacherDto) {
     return this.teachersService.findAll(queryDto);
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   findOne(@Param('id') id: string) {
     return this.teachersService.findOne(id);
   }
 
   @Get(':id/analytics')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   getAnalytics(@Param('id') id: string) {
     return this.teachersService.getTeacherAnalytics(id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   update(@Param('id') id: string, @Body() updateTeacherDto: UpdateTeacherDto) {
     return this.teachersService.update(id, updateTeacherDto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   remove(@Param('id') id: string) {
     return this.teachersService.remove(id);
   }
 
   @Post(':id/assign-students')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   assignStudents(
     @Param('id') id: string,
     @Body('studentIds') studentIds: string[],

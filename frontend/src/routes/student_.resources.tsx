@@ -53,12 +53,12 @@ function StudentResources() {
       <main className="flex-1 px-10 py-10">
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-emerald-950 font-serif">Learning Resources</h1>
+          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">Learning Resources</h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search resources..."
               className="pl-10 rounded-xl"
@@ -73,7 +73,7 @@ function StudentResources() {
                 type="button"
                 size="sm"
                 variant={category === c ? 'default' : 'outline'}
-                className={category === c ? 'bg-emerald-700' : ''}
+                className={category === c ? 'bg-primary' : ''}
                 onClick={() => setCategory(c)}
               >
                 {c}
@@ -83,17 +83,17 @@ function StudentResources() {
         </div>
 
         {resources.length === 0 ? (
-          <div className="bg-gray-50 rounded-3xl p-16 text-center border border-gray-100">
-            <FolderOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No resources available yet.</p>
+          <div className="bg-muted rounded-3xl p-16 text-center border border-border">
+            <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No resources available yet.</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {resources.map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <Badge className="mb-3 bg-emerald-50 text-emerald-800 border-none">{r.category}</Badge>
-                <h3 className="font-bold text-lg text-emerald-950">{r.title}</h3>
-                <p className="text-sm text-gray-500 mt-2 line-clamp-3">{r.description}</p>
+              <div key={r.id} className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+                <Badge className="mb-3 bg-primary/10 text-nejah-sapphire border-none">{r.category}</Badge>
+                <h3 className="font-bold text-lg text-nejah-sapphire">{r.title}</h3>
+                <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{r.description}</p>
                 <div className="flex gap-2 mt-4">
                   <Button size="sm" variant="outline" asChild>
                     <a href={fileHref(r.fileUrl)} target="_blank" rel="noopener noreferrer">
@@ -102,7 +102,7 @@ function StudentResources() {
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-emerald-700"
+                    className="bg-primary"
                     onClick={async () => {
                       await fetch(apiUrl(`/resources/${r.id}`), { headers: apiHeaders() });
                       window.open(fileHref(r.fileUrl), '_blank');

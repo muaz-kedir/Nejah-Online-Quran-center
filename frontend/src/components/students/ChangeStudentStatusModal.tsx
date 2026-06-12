@@ -118,7 +118,7 @@ export function ChangeStudentStatusModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

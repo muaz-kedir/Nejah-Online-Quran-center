@@ -41,7 +41,7 @@ export function Navbar() {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-soft"
+          ? "glass-panel border-b border-border dark:border-white/5 !rounded-none !shadow-lg"
           : "bg-transparent"
       }`}
     >
@@ -55,7 +55,7 @@ export function Navbar() {
             <a
               key={l.href}
               href={l.href}
-              className="relative px-4 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors group"
+              className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
             >
               {l.label}
               <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
@@ -125,7 +125,7 @@ export function Navbar() {
             </Button>
           </Link>
           <Link to="/register">
-            <Button className="rounded-full bg-primary hover:bg-primary/90 shadow-soft">
+            <Button className="rounded-full shadow-[0_0_16px_rgba(0,102,204,0.35)]">
               {t.nav.register}
             </Button>
           </Link>

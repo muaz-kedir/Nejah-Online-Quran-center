@@ -134,63 +134,63 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-nejah-surface dark:border-nejah-border-blue">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold dark:text-gray-100">Edit Student</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-foreground">Edit Student</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-fullName" className="dark:text-gray-300">Full Name *</Label>
+                <Label htmlFor="edit-fullName" className="dark:text-muted-foreground">Full Name *</Label>
                 <Input
                   id="edit-fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-email" className="dark:text-gray-300">Email *</Label>
+                <Label htmlFor="edit-email" className="dark:text-muted-foreground">Email *</Label>
                 <Input
                   id="edit-email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Gender *</Label>
+                <Label className="dark:text-muted-foreground">Gender *</Label>
                 <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-age" className="dark:text-gray-300">Age *</Label>
+                <Label htmlFor="edit-age" className="dark:text-muted-foreground">Age *</Label>
                 <Input
                   id="edit-age"
                   type="number"
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Level *</Label>
+                <Label className="dark:text-muted-foreground">Level *</Label>
                 <Select value={formData.level} onValueChange={(v) => setFormData({ ...formData, level: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
                     <SelectItem value="Quran Reading">Quran Reading</SelectItem>
                     <SelectItem value="Tajweed Program">Tajweed Program</SelectItem>
@@ -203,10 +203,10 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Status *</Label>
+                <Label className="dark:text-muted-foreground">Status *</Label>
                 <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -214,21 +214,21 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-residency" className="dark:text-gray-300">Residency</Label>
+                <Label htmlFor="edit-residency" className="dark:text-muted-foreground">Residency</Label>
                 <Input
                   id="edit-residency"
                   value={formData.currentResidency}
                   onChange={(e) => setFormData({ ...formData, currentResidency: e.target.value })}
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label className="dark:text-gray-300">Teacher</Label>
+              <Label className="dark:text-muted-foreground">Teacher</Label>
               <Select value={formData.teacherId} onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
-                <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                   {teachers?.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.fullName || t.user?.name || 'Unknown'} {t.specialization ? `— ${t.specialization}` : ''}
@@ -239,55 +239,55 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
             </div>
 
             <div className="grid gap-2">
-              <Label className="dark:text-gray-300">Learning Goals</Label>
+              <Label className="dark:text-muted-foreground">Learning Goals</Label>
               <Textarea
                 value={formData.learningGoals}
                 onChange={(e) => setFormData({ ...formData, learningGoals: e.target.value })}
-                className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 placeholder="e.g. Memorize Juz 30, improve Tajweed..."
                 rows={2}
               />
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Family Information (Optional)</p>
+            <div className="border-t border-border dark:border-nejah-border-blue pt-4">
+              <p className="text-sm font-semibold text-muted-foreground dark:text-muted-foreground mb-3">Family Information (Optional)</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-familyName" className="dark:text-gray-300">Parent/Guardian Name</Label>
+                  <Label htmlFor="edit-familyName" className="dark:text-muted-foreground">Parent/Guardian Name</Label>
                   <Input
                     id="edit-familyName"
                     value={formData.familyName}
                     onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-familyPhone" className="dark:text-gray-300">Phone Number</Label>
+                  <Label htmlFor="edit-familyPhone" className="dark:text-muted-foreground">Phone Number</Label>
                   <Input
                     id="edit-familyPhone"
                     value={formData.familyPhone}
                     onChange={(e) => setFormData({ ...formData, familyPhone: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-familyAddress" className="dark:text-gray-300">Address</Label>
+                  <Label htmlFor="edit-familyAddress" className="dark:text-muted-foreground">Address</Label>
                   <Input
                     id="edit-familyAddress"
                     value={formData.familyAddress}
                     onChange={(e) => setFormData({ ...formData, familyAddress: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-familyCountry" className="dark:text-gray-300">Country</Label>
+                  <Label htmlFor="edit-familyCountry" className="dark:text-muted-foreground">Country</Label>
                   <Input
                     id="edit-familyCountry"
                     value={formData.familyCountry}
                     onChange={(e) => setFormData({ ...formData, familyCountry: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
               </div>
@@ -295,10 +295,10 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} className="dark:border-gray-600 dark:text-gray-300">
+            <Button type="button" variant="outline" onClick={onClose} className="dark:border-nejah-border-blue dark:text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-800 text-white">
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-nejah-azure text-white">
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>

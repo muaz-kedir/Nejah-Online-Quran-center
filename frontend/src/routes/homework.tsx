@@ -39,7 +39,7 @@ const API = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/homework')({
   component: HomeworkPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function HomeworkPage() {
@@ -191,15 +191,15 @@ function HomeworkPage() {
       Medium: 'bg-amber-100 text-amber-700',
       High: 'bg-red-100 text-red-700',
     };
-    return map[d] || 'bg-gray-100 text-gray-700';
+    return map[d] || 'bg-muted text-foreground';
   };
 
   const getStatusColor = (s: string) => {
     const map: Record<string, string> = {
       Pending: 'bg-yellow-100 text-yellow-700',
-      Completed: 'bg-emerald-100 text-emerald-700',
+      Completed: 'bg-primary/10 text-primary',
     };
-    return map[s] || 'bg-gray-100 text-gray-700';
+    return map[s] || 'bg-muted text-foreground';
   };
 
   return (
@@ -207,11 +207,11 @@ function HomeworkPage() {
       <Breadcrumbs />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Homework Management</h1>
-          <p className="text-gray-600 mt-1">Assign and track student homework</p>
+          <h1 className="text-3xl font-bold text-foreground">Homework Management</h1>
+          <p className="text-muted-foreground mt-1">Assign and track student homework</p>
         </div>
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-primary hover:bg-primary"
           disabled={!selectedStudentId}
           onClick={() => {
             setFormData({ ...formData, studentId: selectedStudentId });
@@ -224,7 +224,7 @@ function HomeworkPage() {
 
       <div className="flex gap-4 mb-6">
         <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search homework..."
             value={search}
@@ -248,38 +248,38 @@ function HomeworkPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Title</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Student</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Difficulty</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
-              <th className="text-left p-4 text-xs font-bold text-gray-500 uppercase">Due Date</th>
-              <th className="text-right p-4 text-xs font-bold text-gray-500 uppercase">Actions</th>
+            <tr className="border-b bg-muted">
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Title</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Student</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Difficulty</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Status</th>
+              <th className="text-left p-4 text-xs font-bold text-muted-foreground uppercase">Due Date</th>
+              <th className="text-right p-4 text-xs font-bold text-muted-foreground uppercase">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!selectedStudentId ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">Select a student to view homework</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Select a student to view homework</td></tr>
             ) : loading ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-400">No homework found for this student</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No homework found for this student</td></tr>
             ) : (
               filtered.map((hw: any) => (
-                <tr key={hw.id} className="border-b hover:bg-gray-50">
+                <tr key={hw.id} className="border-b hover:bg-muted">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <ClipboardList className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-gray-900">{hw.title}</span>
+                      <ClipboardList className="h-5 w-5 text-primary" />
+                      <span className="font-medium text-foreground">{hw.title}</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{hw.student?.fullName || 'N/A'}</span>
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{hw.student?.fullName || 'N/A'}</span>
                     </div>
                   </td>
                   <td className="p-4">
@@ -296,7 +296,7 @@ function HomeworkPage() {
                     </select>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
                       {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : 'N/A'}
                     </div>
@@ -375,7 +375,7 @@ function HomeworkPage() {
               <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createLoading} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="submit" disabled={createLoading} className="bg-primary hover:bg-primary">
                 {createLoading ? 'Assigning...' : 'Assign'}
               </Button>
             </DialogFooter>

@@ -111,7 +111,7 @@ export class TeacherApplicationsController {
 
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   getStats() {
     return this.applicationsService.getStats();
   }
@@ -125,21 +125,21 @@ export class TeacherApplicationsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   findAll(@Query() queryDto: QueryTeacherApplicationDto) {
     return this.applicationsService.findAll(queryDto);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   findOne(@Param('id') id: string) {
     return this.applicationsService.findOne(id);
   }
 
   @Patch(':id/review')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   review(
     @Param('id') id: string,
     @Body() dto: ReviewTeacherApplicationDto,

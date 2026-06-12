@@ -1,6 +1,7 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -11,6 +12,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+  --radius-nejah-lg: 12px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -34,80 +36,93 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --shadow-soft: 0 4px 24px -8px oklch(0.35 0.08 160 / 0.12);
-  --shadow-elevated: 0 20px 50px -20px oklch(0.35 0.08 160 / 0.25);
-  --shadow-glow: 0 0 60px -10px oklch(0.55 0.15 160 / 0.45);
+  /* Nejah Online brand palette */
+  --color-nejah-azure: #0F62AC;
+  --color-nejah-sapphire: #0B355B;
+  --color-nejah-electric: #0091FF;
+  --color-nejah-midnight: #061524;
+  --color-nejah-surface: #0B223A;
+  --color-nejah-border-blue: #1C3D5A;
+  --color-nejah-white-tint: #F0F6FC;
+  --color-nejah-sky-tint: #E6F0FA;
+  --color-nejah-slate-blue: #91A7BC;
+
+  --shadow-soft: 0 4px 24px -8px rgba(15, 98, 172, 0.12);
+  --shadow-elevated: 0 20px 50px -20px rgba(15, 98, 172, 0.25);
+  --shadow-glow: 0 0 60px -10px rgba(15, 98, 172, 0.45);
+  --shadow-nejah-glow: 0 0 15px rgba(15, 98, 172, 0.2);
 }
 
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.99 0.005 160);
-  --foreground: oklch(0.18 0.03 160);
+  --background: #f4f7fa;
+  --foreground: #0b355b;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 160);
+  --card: #ffffff;
+  --card-foreground: #0b355b;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 160);
+  --popover: #ffffff;
+  --popover-foreground: #0b355b;
 
-  --primary: oklch(0.42 0.11 155);
-  --primary-foreground: oklch(0.99 0.005 160);
-  --primary-soft: oklch(0.93 0.04 155);
+  --primary: #0f62ac;
+  --primary-foreground: #ffffff;
+  --primary-soft: rgba(15, 98, 172, 0.1);
 
-  --secondary: oklch(0.96 0.01 160);
-  --secondary-foreground: oklch(0.25 0.05 160);
+  --secondary: #e6f0fa;
+  --secondary-foreground: #0b355b;
 
-  --muted: oklch(0.96 0.008 160);
-  --muted-foreground: oklch(0.5 0.02 160);
+  --muted: #e6f0fa;
+  --muted-foreground: #91a7bc;
 
-  --accent: oklch(0.55 0.13 155);
-  --accent-foreground: oklch(0.99 0.005 160);
+  --accent: #0b355b;
+  --accent-foreground: #ffffff;
 
   --gold: oklch(0.78 0.13 80);
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.92 0.01 160);
-  --input: oklch(0.92 0.01 160);
-  --ring: oklch(0.42 0.11 155);
+  --border: rgba(28, 61, 90, 0.25);
+  --input: rgba(28, 61, 90, 0.25);
+  --ring: #0f62ac;
 }
 
 .dark {
-  --background: oklch(0.16 0.02 160);
-  --foreground: oklch(0.97 0.01 160);
+  --background: #061524;
+  --foreground: #f0f6fc;
 
-  --card: oklch(0.22 0.025 160);
-  --card-foreground: oklch(0.97 0.01 160);
+  --card: #0b223a;
+  --card-foreground: #f0f6fc;
 
-  --popover: oklch(0.22 0.025 160);
-  --popover-foreground: oklch(0.97 0.01 160);
+  --popover: #0b223a;
+  --popover-foreground: #f0f6fc;
 
-  --primary: oklch(0.62 0.14 155);
-  --primary-foreground: oklch(0.12 0.02 160);
-  --primary-soft: oklch(0.3 0.06 155);
+  --primary: #0091ff;
+  --primary-foreground: #061524;
+  --primary-soft: rgba(0, 145, 255, 0.1);
 
-  --secondary: oklch(0.26 0.025 160);
-  --secondary-foreground: oklch(0.97 0.01 160);
+  --secondary: #0b223a;
+  --secondary-foreground: #f0f6fc;
 
-  --muted: oklch(0.26 0.025 160);
-  --muted-foreground: oklch(0.7 0.02 160);
+  --muted: #0b223a;
+  --muted-foreground: #91a7bc;
 
-  --accent: oklch(0.55 0.14 155);
-  --accent-foreground: oklch(0.97 0.01 160);
+  --accent: #0f62ac;
+  --accent-foreground: #f0f6fc;
 
   --gold: oklch(0.8 0.14 80);
 
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.97 0 0);
 
-  --border: oklch(0.3 0.02 160 / 60%);
-  --input: oklch(0.3 0.02 160 / 60%);
-  --ring: oklch(0.62 0.14 155);
+  --border: #1c3d5a;
+  --input: #1c3d5a;
+  --ring: #0091ff;
 }
 
 @layer base {
@@ -127,8 +142,9 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
 }
 
@@ -144,7 +160,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(120deg, var(--color-primary), var(--color-accent));
+    background: linear-gradient(120deg, #0F62AC, #0B355B);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -152,11 +168,74 @@
 
   .bg-pattern {
     background-image:
-      radial-gradient(circle at 20% 10%, oklch(0.55 0.13 155 / 0.08), transparent 40%),
-      radial-gradient(circle at 80% 60%, oklch(0.78 0.13 80 / 0.06), transparent 40%);
+      radial-gradient(circle at 20% 10%, rgba(15, 98, 172, 0.1), transparent 45%),
+      radial-gradient(circle at 80% 60%, rgba(11, 53, 91, 0.08), transparent 45%);
   }
 
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-elevated { box-shadow: var(--shadow-elevated); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
+
+  /* ── Nejah Admin Design System ── */
+
+  .glass-panel {
+    @apply backdrop-blur-xl;
+    @apply bg-card/70 border border-border shadow-xl;
+    @apply dark:bg-nejah-surface/80 dark:border-nejah-border-blue dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  }
+
+  .silver-gradient-border {
+    @apply border border-transparent bg-gradient-to-b from-white/20 via-white/5 to-transparent;
+  }
+
+  .badge-live-pulse {
+    @apply relative overflow-hidden bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-mono text-xs tracking-wider uppercase;
+  }
+
+  .badge-live-pulse::before {
+    content: "";
+    @apply absolute inset-0 animate-pulse bg-red-500/5;
+  }
+
+  .ambient-glow {
+    background: radial-gradient(circle at top right, rgba(15, 98, 172, 0.08), transparent 50%);
+  }
+
+  .ambient-glow-dark {
+    background: radial-gradient(circle at top right, rgba(11, 53, 91, 0.15), transparent 50%);
+  }
+
+  .admin-shell-bg {
+    @apply bg-background dark:bg-nejah-midnight transition-colors duration-300;
+  }
+
+  .data-mono {
+    font-family: var(--font-mono);
+  }
+
+  .nav-item-active {
+    @apply bg-gradient-to-r from-nejah-electric/15 to-transparent text-nejah-white-tint;
+  }
+
+  .nav-item-hover {
+    @apply hover:bg-gradient-to-r hover:from-white/10 hover:to-transparent transition-all duration-200;
+  }
+
+  .electric-ring {
+    box-shadow: 0 0 12px rgba(0, 145, 255, 0.5);
+  }
+
+  .admin-filter-bar {
+    @apply backdrop-blur-xl flex flex-wrap items-center gap-4 rounded-nejah-lg p-4;
+    @apply bg-card/70 border border-border shadow-xl;
+    @apply dark:bg-nejah-surface/80 dark:border-nejah-border-blue dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  }
+
+  .admin-field-label {
+    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-nejah-slate-blue;
+  }
+
+  .admin-page {
+    @apply space-y-6 pb-12;
+  }
 }

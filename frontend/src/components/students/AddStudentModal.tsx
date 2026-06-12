@@ -195,33 +195,33 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-gray-800 dark:border-gray-700">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-nejah-surface dark:border-nejah-border-blue">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold dark:text-gray-100">Add New Student</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-foreground">Add New Student</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="fullName" className="dark:text-gray-300">Full Name *</Label>
+                <Label htmlFor="fullName" className="dark:text-muted-foreground">Full Name *</Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   placeholder="e.g. Omar Al-Fayid"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="email" className="dark:text-gray-300">Email *</Label>
+                <Label htmlFor="email" className="dark:text-muted-foreground">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   placeholder="student@example.com"
                 />
               </div>
@@ -229,17 +229,17 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Gender *</Label>
+                <Label className="dark:text-muted-foreground">Gender *</Label>
                 <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="age" className="dark:text-gray-300">Age *</Label>
+                <Label htmlFor="age" className="dark:text-muted-foreground">Age *</Label>
                 <Input
                   id="age"
                   type="number"
@@ -248,14 +248,14 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                   required
-                  className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="dark:text-gray-300">Level *</Label>
+                <Label className="dark:text-muted-foreground">Level *</Label>
                 <Select value={formData.level} onValueChange={(v) => setFormData({ ...formData, level: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Qaida Nooraniya">Qaida Nooraniya</SelectItem>
                     <SelectItem value="Quran Reading">Quran Reading</SelectItem>
                     <SelectItem value="Tajweed Program">Tajweed Program</SelectItem>
@@ -267,21 +267,21 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="residency" className="dark:text-gray-300">Current Residency</Label>
+              <Label htmlFor="residency" className="dark:text-muted-foreground">Current Residency</Label>
               <Input
                 id="residency"
                 value={formData.currentResidency}
                 onChange={(e) => setFormData({ ...formData, currentResidency: e.target.value })}
-                className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 placeholder="e.g. Addis Ababa, Ethiopia"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label className="dark:text-gray-300">Assign Teacher</Label>
+              <Label className="dark:text-muted-foreground">Assign Teacher</Label>
               <Select value={formData.teacherId} onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
-                <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue placeholder="Select teacher..." /></SelectTrigger>
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                   {teachers?.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.fullName || t.user?.name || 'Unknown'} {t.specialization ? `— ${t.specialization}` : ''}
@@ -291,95 +291,95 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
               </Select>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Account Credentials (Optional)</p>
-              <p className="text-xs text-gray-400 mb-3">Set a password so the student can log in using their email, family email, or family phone number.</p>
+            <div className="border-t border-border dark:border-nejah-border-blue pt-4">
+              <p className="text-sm font-semibold text-muted-foreground dark:text-muted-foreground mb-3">Account Credentials (Optional)</p>
+              <p className="text-xs text-muted-foreground mb-3">Set a password so the student can log in using their email, family email, or family phone number.</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="password" className="dark:text-gray-300">Password</Label>
+                  <Label htmlFor="password" className="dark:text-muted-foreground">Password</Label>
                   <Input
                     id="password"
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Min. 6 characters"
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="confirmPassword" className="dark:text-gray-300">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="dark:text-muted-foreground">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="Re-enter password"
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                   />
                 </div>
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label className="dark:text-gray-300">Learning Goals</Label>
+              <Label className="dark:text-muted-foreground">Learning Goals</Label>
               <Textarea
                 value={formData.learningGoals}
                 onChange={(e) => setFormData({ ...formData, learningGoals: e.target.value })}
-                className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                 placeholder="e.g. Memorize Juz 30, improve Tajweed..."
                 rows={2}
               />
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Family Information (Optional)</p>
+            <div className="border-t border-border dark:border-nejah-border-blue pt-4">
+              <p className="text-sm font-semibold text-muted-foreground dark:text-muted-foreground mb-3">Family Information (Optional)</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="familyName" className="dark:text-gray-300">Parent/Guardian Name</Label>
+                  <Label htmlFor="familyName" className="dark:text-muted-foreground">Parent/Guardian Name</Label>
                   <Input
                     id="familyName"
                     value={formData.familyName}
                     onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     placeholder="e.g. Ahmed Al-Fayid"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="familyPhone" className="dark:text-gray-300">Phone Number</Label>
+                  <Label htmlFor="familyPhone" className="dark:text-muted-foreground">Phone Number</Label>
                   <Input
                     id="familyPhone"
                     value={formData.familyPhone}
                     onChange={(e) => setFormData({ ...formData, familyPhone: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     placeholder="e.g. +251 912 345 678"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="familyAddress" className="dark:text-gray-300">Address</Label>
+                  <Label htmlFor="familyAddress" className="dark:text-muted-foreground">Address</Label>
                   <Input
                     id="familyAddress"
                     value={formData.familyAddress}
                     onChange={(e) => setFormData({ ...formData, familyAddress: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     placeholder="e.g. 123 Main St"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="familyCountry" className="dark:text-gray-300">Country</Label>
+                  <Label htmlFor="familyCountry" className="dark:text-muted-foreground">Country</Label>
                   <Input
                     id="familyCountry"
                     value={formData.familyCountry}
                     onChange={(e) => setFormData({ ...formData, familyCountry: e.target.value })}
-                    className="dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     placeholder="e.g. Ethiopia"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="border-t border-border dark:border-nejah-border-blue pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <input
                   id="useExistingParent"
@@ -392,9 +392,9 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                       clearParentSelection();
                     }
                   }}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 dark:bg-gray-900 dark:border-gray-600"
+                  className="rounded text-primary focus:ring-primary/500 dark:bg-nejah-surface dark:border-nejah-border-blue"
                 />
-                <Label htmlFor="useExistingParent" className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">
+                <Label htmlFor="useExistingParent" className="text-sm font-semibold text-foreground dark:text-muted-foreground cursor-pointer">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     Link to Existing Parent Account
@@ -415,40 +415,40 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                           searchParent();
                         }
                       }}
-                      className="flex-1 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+                      className="flex-1 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                       disabled={searchingParent}
                     />
                     <Button
                       type="button"
                       onClick={searchParent}
                       disabled={searchingParent}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                      className="bg-primary hover:bg-nejah-azure text-white"
                     >
                       {searchingParent ? 'Searching...' : <Search className="w-4 h-4" />}
                     </Button>
                   </div>
 
                   {parentResults.length > 0 && (
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+                    <div className="border border-border dark:border-nejah-border-blue rounded-lg max-h-48 overflow-y-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
+                        <thead className="bg-muted dark:bg-nejah-surface sticky top-0">
                           <tr>
-                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Parent Name</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Email</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Phone</th>
-                            <th className="px-3 py-2 text-left font-medium text-gray-500 dark:text-gray-300">Children</th>
-                            <th className="px-3 py-2 text-right font-medium text-gray-500 dark:text-gray-300">Action</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Parent Name</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Email</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Phone</th>
+                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Children</th>
+                            <th className="px-3 py-2 text-right font-medium text-muted-foreground dark:text-muted-foreground">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
                           {parentResults.map((parent) => (
-                            <tr key={parent.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                              <td className="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{parent.fullName}</td>
-                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{parent.email}</td>
-                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{parent.phoneNumber}</td>
-                              <td className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                            <tr key={parent.id} className="hover:bg-muted dark:hover:bg-nejah-surface/50">
+                              <td className="px-3 py-2 font-medium text-foreground text-foreground">{parent.fullName}</td>
+                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">{parent.email}</td>
+                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">{parent.phoneNumber}</td>
+                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">
                                 {parent.students.length > 0 ? (
-                                  <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full text-xs">
+                                  <span className="inline-flex items-center gap-1 bg-primary/10 dark:bg-primary/10 text-primary text-nejah-electric px-2 py-0.5 rounded-full text-xs">
                                     <Users className="w-3 h-3" />
                                     {parent.students.length}
                                   </span>
@@ -462,7 +462,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleSelectParent(parent)}
-                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
+                                  className="text-primary hover:text-primary hover:bg-primary/10 text-nejah-electric dark:hover:bg-primary/30"
                                 >
                                   <Check className="w-4 h-4" />
                                 </Button>
@@ -475,14 +475,14 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                   )}
 
                   {selectedParent && (
-                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between bg-primary/10 dark:bg-primary/10/20 border border-primary/200 dark:border-primary/800 rounded-lg p-3">
                       <div className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <Check className="w-5 h-5 text-primary text-nejah-electric" />
                         <div>
-                          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                          <p className="text-sm font-medium text-nejah-sapphire dark:text-nejah-electric">
                             Selected: {selectedParent.fullName}
                           </p>
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                          <p className="text-xs text-primary text-nejah-electric">
                             {selectedParent.email} • {selectedParent.students.length} child(ren)
                           </p>
                         </div>
@@ -502,7 +502,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
               )}
 
               {!useExistingParent && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2">
                   Uncheck to create a new parent account for this student.
                 </p>
               )}
@@ -510,10 +510,10 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} className="dark:border-gray-600 dark:text-gray-300">
+            <Button type="button" variant="outline" onClick={onClose} className="dark:border-nejah-border-blue dark:text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-emerald-700 hover:bg-emerald-800 text-white">
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-nejah-azure text-white">
               {loading ? 'Creating...' : 'Add Student'}
             </Button>
           </DialogFooter>
