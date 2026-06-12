@@ -29,7 +29,7 @@ export class SchedulesController {
   ) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async create(@Request() req, @Body() createScheduleDto: CreateScheduleDto) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -39,7 +39,7 @@ export class SchedulesController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
   async findAll(
     @Request() req,
     @Query('studentId') studentId?: string,
@@ -53,7 +53,7 @@ export class SchedulesController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
   async getStudentSchedules(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -63,7 +63,7 @@ export class SchedulesController {
   }
 
   @Get('teacher/:teacherId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async getTeacherSchedules(@Request() req, @Param('teacherId') teacherId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -75,7 +75,7 @@ export class SchedulesController {
   }
 
   @Get('teacher/:teacherId/day/:day')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async getTeacherSchedulesByDay(
     @Request() req,
     @Param('teacherId') teacherId: string,
@@ -91,7 +91,7 @@ export class SchedulesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
   async findOne(@Request() req, @Param('id') id: string) {
     const schedule = await this.schedulesService.findOne(id);
     if (req.user.role === UserRole.TEACHER) {
@@ -104,7 +104,7 @@ export class SchedulesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async update(
     @Request() req,
     @Param('id') id: string,
@@ -119,7 +119,7 @@ export class SchedulesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async remove(@Request() req, @Param('id') id: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);

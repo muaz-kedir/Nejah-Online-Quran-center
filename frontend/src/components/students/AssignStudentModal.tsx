@@ -115,12 +115,12 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         aria-describedby="assign-student-desc"
-        className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden dark:bg-gray-900 dark:border-gray-800"
+        className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden dark:bg-nejah-surface dark:border-nejah-border-blue"
       >
         <div className="bg-gradient-to-r from-[#084133] to-[#0a5c48] px-8 pt-8 pb-7">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white shadow-inner">
-              <UserCheck className="h-6 w-6 text-emerald-300" />
+              <UserCheck className="h-6 w-6 text-nejah-electric" />
             </div>
             <div>
               <DialogHeader>
@@ -129,7 +129,7 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
                 </DialogTitle>
                 <DialogDescription
                   id="assign-student-desc"
-                  className="text-emerald-200/80 text-sm mt-0.5 font-medium"
+                  className="text-nejah-electric/80 text-sm mt-0.5 font-medium"
                 >
                   Link a student to their instructor. Set up recurring class times from the
                   teacher&apos;s Faculty profile.
@@ -141,16 +141,16 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
 
         <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 bg-white/50 dark:bg-transparent backdrop-blur-sm">
           <div className="space-y-2.5">
-            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-900/60 dark:text-emerald-400/60 flex items-center gap-2">
+            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-nejah-sapphire/60 text-nejah-electric/60 flex items-center gap-2">
               <Search className="h-3 w-3" /> Select Student
             </Label>
             <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-              <SelectTrigger className="h-12 rounded-2xl bg-gray-50/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:ring-emerald-500/20 data-[placeholder]:text-gray-400">
+              <SelectTrigger className="h-12 rounded-2xl bg-muted/50 dark:bg-nejah-surface/50 border-border dark:border-nejah-border-blue focus:ring-primary/500/20 data-[placeholder]:text-muted-foreground">
                 <SelectValue placeholder="Choose a student" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl dark:bg-gray-800 dark:border-gray-700">
+              <SelectContent className="rounded-2xl dark:bg-nejah-surface dark:border-nejah-border-blue">
                 {unassignedStudents.length === 0 ? (
-                  <div className="px-2 py-4 text-center text-xs text-gray-500">
+                  <div className="px-2 py-4 text-center text-xs text-muted-foreground">
                     No unassigned students available
                   </div>
                 ) : (
@@ -165,14 +165,14 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
           </div>
 
           <div className="space-y-2.5">
-            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-900/60 dark:text-emerald-400/60 flex items-center gap-2">
+            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-nejah-sapphire/60 text-nejah-electric/60 flex items-center gap-2">
               <GraduationCap className="h-3 w-3" /> Select Teacher
             </Label>
             <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
-              <SelectTrigger className="h-12 rounded-2xl bg-gray-50/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:ring-emerald-500/20 data-[placeholder]:text-gray-400">
+              <SelectTrigger className="h-12 rounded-2xl bg-muted/50 dark:bg-nejah-surface/50 border-border dark:border-nejah-border-blue focus:ring-primary/500/20 data-[placeholder]:text-muted-foreground">
                 <SelectValue placeholder="Choose a teacher" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl dark:bg-gray-800 dark:border-gray-700">
+              <SelectContent className="rounded-2xl dark:bg-nejah-surface dark:border-nejah-border-blue">
                 {teachers.map((t) => (
                   <SelectItem key={t.id} value={t.id} className="rounded-xl">
                     {t.fullName}
@@ -182,7 +182,7 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
             </Select>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-4 py-3">
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground leading-relaxed rounded-xl bg-primary/10/50 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue/30 px-4 py-3">
             After assigning, open the teacher&apos;s Faculty profile to add recurring weekly
             schedules using <strong>Add Schedule</strong>.
           </p>
@@ -192,14 +192,14 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="rounded-2xl h-12 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="rounded-2xl h-12 text-muted-foreground dark:text-muted-foreground font-bold hover:bg-muted dark:hover:bg-nejah-surface"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="rounded-2xl h-12 bg-gradient-to-br from-[#084133] to-[#0a5c48] hover:shadow-lg hover:shadow-emerald-900/20 text-white font-bold transition-all"
+              className="rounded-2xl h-12 bg-gradient-to-br from-[#084133] to-[#0a5c48] hover:shadow-lg hover:shadow-nejah-glow text-white font-bold transition-all"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

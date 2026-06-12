@@ -23,7 +23,7 @@ import { EditUserModal } from '@/components/users/EditUserModal';
 import { DeleteUserModal } from '@/components/users/DeleteUserModal';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
+import { AmbientSection, PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 
 interface User {
   id: string;
@@ -108,176 +108,178 @@ function UsersPage() {
 
   const getRoleBadgeColor = (role: string) => {
     const colors: Record<string, string> = {
-      super_admin: 'bg-purple-500',
-      admin: 'bg-blue-500',
-      teacher: 'bg-green-500',
-      student: 'bg-yellow-500',
-      parent: 'bg-orange-500',
+      super_admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+      admin: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      teacher: 'bg-primary/10 text-nejah-electric border-nejah-electric/20',
+      student: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+      parent: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
     };
-    return colors[role] || 'bg-gray-500';
+    return colors[role] || 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
   };
 
   return (
     <DashboardLayout>
-      <Breadcrumbs />
-      
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage all system users and their roles</p>
+      <AmbientSection className="admin-page">
+        <PageHeader
+          eyebrow="System Users"
+          title="User Management"
+          actions={
+            <Button onClick={() => setShowAddModal(true)} className="bg-primary hover:bg-nejah-sapphire">
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          }
+        />
+
+        {/* Filters */}
+        <div className="admin-filter-bar">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
+            <Input
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-11 rounded-xl border-none pl-9"
+            />
+          </div>
+
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="h-11 w-[160px] rounded-xl border-white/10 bg-background/50">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="super_admin">Super Admin</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="teacher">Teacher</SelectItem>
+              <SelectItem value="student">Student</SelectItem>
+              <SelectItem value="parent">Parent</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-11 w-[140px] rounded-xl border-white/10 bg-background/50">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="true">Active</SelectItem>
+              <SelectItem value="false">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="super_admin">Super Admin</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="teacher">Teacher</SelectItem>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="parent">Parent</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="true">Active</SelectItem>
-            <SelectItem value="false">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Loading...
-                </TableCell>
+        {/* Users Table */}
+        <GlassPanel className="overflow-hidden rounded-3xl">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-white/5 bg-background/50 hover:bg-background/50">
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Name</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Email</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Role</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Status</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Created Date</TableHead>
+                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Actions</TableHead>
               </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowEditModal(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleStatus(user.id)}
-                      >
-                        {user.isActive ? (
-                          <PowerOff className="h-4 w-4" />
-                        ) : (
-                          <Power className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowDeleteModal(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-nejah-slate-blue">
+                    Loading...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-nejah-slate-blue">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id} className="hover:bg-primary/5 transition-colors">
+                    <TableCell className="font-medium text-foreground">{user.name}</TableCell>
+                    <TableCell className="text-nejah-slate-blue">{user.email}</TableCell>
+                    <TableCell>
+                      <Badge className={getRoleBadgeColor(user.role) + ' text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none'}>
+                        {user.role.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-nejah-slate-blue">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowEditModal(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleStatus(user.id)}
+                        >
+                          {user.isActive ? (
+                            <PowerOff className="h-4 w-4" />
+                          ) : (
+                            <Power className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 p-4">
-            <Button
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
-              Previous
-            </Button>
-            <span className="flex items-center px-4">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setPage(page + 1)}
-              disabled={page === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 border-t border-white/5 p-4">
+              <Button
+                variant="outline"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="h-9 rounded-xl dark:border-nejah-border-blue"
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-4 text-nejah-slate-blue">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+                className="h-9 rounded-xl dark:border-nejah-border-blue"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </GlassPanel>
+      </AmbientSection>
 
       {/* Modals */}
       <AddUserModal

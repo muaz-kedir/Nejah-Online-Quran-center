@@ -9,7 +9,7 @@ import { AssignStudentDto, UnassignStudentDto } from './dto/assign-student.dto';
 
 @Controller('students/assignments')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
 export class AssignmentsController {
   constructor(
     private readonly studentsService: StudentsService,

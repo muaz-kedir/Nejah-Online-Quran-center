@@ -29,7 +29,7 @@ export class HomeworkController {
   ) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async create(@Request() req, @Body() dto: CreateHomeworkDto) {
     let assignedByTeacherId: string | undefined;
     let replacementAssignmentId: string | undefined;
@@ -48,7 +48,7 @@ export class HomeworkController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
   async findByStudent(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -58,7 +58,7 @@ export class HomeworkController {
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT)
   async updateStatus(
     @Request() req,
     @Param('id') id: string,
@@ -73,7 +73,7 @@ export class HomeworkController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async remove(@Request() req, @Param('id') id: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);

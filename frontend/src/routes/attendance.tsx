@@ -34,7 +34,7 @@ import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/attendance')({
   component: AdminAttendancePage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
 function AdminAttendancePage() {
@@ -170,13 +170,13 @@ function AdminAttendancePage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-500 tracking-widest uppercase mb-1">
+            <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-nejah-slate-blue mb-1">
               Supervision Center
             </p>
-            <h1 className="text-3xl font-extrabold text-[#052c22] dark:text-gray-150 font-serif">
+            <h1 className="text-3xl font-medium tracking-tight text-foreground">
               Attendance & Live Meeting Monitor
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            <p className="text-sm leading-relaxed text-nejah-slate-blue mt-1">
               Supervise all online Quran classes, track student punctuality, and monitor live audio sessions in real-time.
             </p>
           </div>
@@ -185,10 +185,10 @@ function AdminAttendancePage() {
             <Button
               onClick={() => fetchAttendanceData(false)}
               variant="outline"
-              className="border-gray-250 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-bold gap-2 h-11 px-5 rounded-xl"
+              className="border-border dark:border-white/5 hover:bg-background/50 dark:hover:bg-nejah-surface font-bold gap-2 h-11 px-5 rounded-xl"
               disabled={refreshing}
             >
-              <RefreshCw className={cn("h-4 w-4 text-emerald-800", refreshing && "animate-spin")} />
+              <RefreshCw className={cn("h-4 w-4 text-nejah-sapphire", refreshing && "animate-spin")} />
               {refreshing ? 'Refreshing...' : 'Refresh Status'}
             </Button>
           </div>
@@ -196,41 +196,41 @@ function AdminAttendancePage() {
 
         {/* Analytics Statistics Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 shadow-sm p-6 rounded-3xl relative overflow-hidden">
+          <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 shadow-sm p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-2 translate-x-2">
-              <Video className="w-24 h-24 text-[#052c22]" />
+              <Video className="w-24 h-24 text-nejah-sapphire" />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Live Sessions</p>
+            <p className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest leading-none">Live Sessions</p>
             <h3 className="text-4xl font-extrabold text-red-500 font-serif mt-4 flex items-center gap-2 leading-none">
               {liveCount}
               {liveCount > 0 && <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />}
             </h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mt-2">Active online classes now</p>
+            <p className="text-[10px] text-nejah-slate-blue font-bold uppercase tracking-wide mt-2">Active online classes now</p>
           </Card>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 shadow-sm p-6 rounded-3xl relative overflow-hidden">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Total Classes Today</p>
-            <h3 className="text-4xl font-extrabold text-emerald-950 dark:text-emerald-450 font-serif mt-4 leading-none">{totalClassesCount}</h3>
-            <p className="text-[10px] text-gray-450 font-semibold mt-2">
-              <span className="text-emerald-700 font-bold">{completedCount}</span> completed • <span className="text-amber-600 font-bold">{scheduledCount}</span> remaining
+          <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 shadow-sm p-6 rounded-3xl relative overflow-hidden">
+            <p className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest leading-none">Total Classes Today</p>
+            <h3 className="text-4xl font-extrabold text-foreground dark:text-nejah-electric font-serif mt-4 leading-none">{totalClassesCount}</h3>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-2">
+              <span className="text-nejah-electric font-bold">{completedCount}</span> completed • <span className="text-amber-600 font-bold">{scheduledCount}</span> remaining
             </p>
           </Card>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 shadow-sm p-6 rounded-3xl relative overflow-hidden">
+          <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 shadow-sm p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-2 translate-x-2">
-              <TrendingUp className="w-24 h-24 text-[#052c22]" />
+              <TrendingUp className="w-24 h-24 text-nejah-sapphire" />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Avg. Attendance Rate</p>
-            <h3 className="text-4xl font-extrabold text-emerald-700 dark:text-emerald-400 font-serif mt-4 leading-none">{attendanceRate.toFixed(1)}%</h3>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full mt-3.5 overflow-hidden">
-              <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${attendanceRate}%` }} />
+            <p className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest leading-none">Avg. Attendance Rate</p>
+            <h3 className="text-4xl font-extrabold text-nejah-electric text-nejah-electric font-serif mt-4 leading-none">{attendanceRate.toFixed(1)}%</h3>
+            <div className="w-full bg-background/50 dark:bg-nejah-surface h-1.5 rounded-full mt-3.5 overflow-hidden">
+              <div className="bg-primary h-full rounded-full" style={{ width: `${attendanceRate}%` }} />
             </div>
           </Card>
 
-          <Card className="bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 shadow-sm p-6 rounded-3xl relative overflow-hidden">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Missed Classes / Absent</p>
+          <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 shadow-sm p-6 rounded-3xl relative overflow-hidden">
+            <p className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest leading-none">Missed Classes / Absent</p>
             <h3 className="text-4xl font-extrabold text-amber-600 font-serif mt-4 leading-none">{totalStudentsAbsent}</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mt-2">Requires parent notification</p>
+            <p className="text-[10px] text-nejah-slate-blue font-bold uppercase tracking-wide mt-2">Requires parent notification</p>
           </Card>
         </div>
 
@@ -241,12 +241,12 @@ function AdminAttendancePage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
             </span>
-            <h2 className="text-xl font-bold text-[#052c22] dark:text-gray-150 font-serif">Live Meeting Monitoring</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Live Meeting Monitoring</h2>
           </div>
 
           {liveSessions.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-12 text-center text-gray-400 font-medium italic">
-              <Video className="h-10 w-10 text-gray-300 mx-auto mb-2 opacity-50" />
+            <div className="glass-panel bg-card dark:bg-nejah-surface border border-border dark:border-white/5 rounded-[2.5rem] p-12 text-center text-nejah-slate-blue font-medium italic">
+              <Video className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
               No online meetings are active at this moment.
             </div>
           ) : (
@@ -258,40 +258,40 @@ function AdminAttendancePage() {
                 return (
                   <div 
                     key={meeting.id} 
-                    className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-6 border-2 border-red-100 dark:border-red-950/20 shadow-lg hover:shadow-xl transition-all relative flex flex-col justify-between"
+                    className="glass-panel bg-card dark:bg-nejah-surface rounded-[2.5rem] p-6 border-2 border-red-100 dark:border-red-950/20 shadow-lg hover:shadow-xl transition-all relative flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <Badge className="bg-red-500 text-white font-extrabold text-[8px] uppercase tracking-widest border-none">Live</Badge>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                        <span className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest flex items-center gap-1">
                           <Clock className="h-3 w-3 text-red-500" />
                           Started: {startTime ? startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
                         </span>
                       </div>
                       
-                      <h3 className="text-lg font-black text-[#052c22] dark:text-white font-serif truncate">{meeting.classTitle}</h3>
+                      <h3 className="text-lg font-black text-nejah-sapphire dark:text-white font-serif truncate">{meeting.classTitle}</h3>
                       <p className="text-xs font-semibold text-amber-600 dark:text-amber-500 mt-1 uppercase tracking-wide">{meeting.quranLevel} Level</p>
                       
-                      <div className="bg-gray-50 dark:bg-gray-950/30 rounded-2xl p-4 my-5 border border-gray-100 dark:border-gray-800 space-y-2">
+                      <div className="bg-background/50 dark:bg-nejah-surface/30 rounded-2xl p-4 my-5 border border-border dark:border-white/5 space-y-2">
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-400 font-medium">Teacher</span>
-                          <span className="font-bold text-gray-700 dark:text-gray-200">{meeting.teacher?.fullName}</span>
+                          <span className="text-nejah-slate-blue font-medium">Teacher</span>
+                          <span className="font-bold text-nejah-slate-blue dark:text-foreground">{meeting.teacher?.fullName}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-400 font-medium">Joined Students</span>
-                          <span className="font-bold text-emerald-700">
+                          <span className="text-nejah-slate-blue font-medium">Joined Students</span>
+                          <span className="font-bold text-nejah-electric">
                             {meeting.totalStudentsPresent || 0} Joined
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-400 font-medium">Students Absent</span>
+                          <span className="text-nejah-slate-blue font-medium">Students Absent</span>
                           <span className="font-bold text-red-500">
                             {meeting.totalStudentsAbsent || 0} Absent
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-400 font-medium">Session Progress</span>
-                          <span className="font-bold text-gray-700 dark:text-gray-200">{elapsedMins} Mins elapsed</span>
+                          <span className="text-nejah-slate-blue font-medium">Session Progress</span>
+                          <span className="font-bold text-nejah-slate-blue dark:text-foreground">{elapsedMins} Mins elapsed</span>
                         </div>
                       </div>
                     </div>
@@ -299,7 +299,7 @@ function AdminAttendancePage() {
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleRowClick(meeting.id)}
-                        className="flex-1 bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl h-10 text-xs font-bold gap-1.5"
+                        className="flex-1 bg-nejah-sapphire hover:bg-background text-white rounded-xl h-10 text-xs font-bold gap-1.5"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Supervise Logs
@@ -308,10 +308,10 @@ function AdminAttendancePage() {
                         <Button
                           onClick={() => window.open(meeting.meetingLink, '_blank')}
                           variant="outline"
-                          className="h-10 w-10 border-gray-200 dark:border-gray-700 rounded-xl p-0 hover:bg-gray-50"
+                          className="h-10 w-10 border-border dark:border-white/5 rounded-xl p-0 hover:bg-background/50"
                           title="Open Live Meeting Stream"
                         >
-                          <ExternalLink className="h-4 w-4 text-gray-500" />
+                          <ExternalLink className="h-4 w-4 text-nejah-slate-blue" />
                         </Button>
                       )}
                     </div>
@@ -324,18 +324,18 @@ function AdminAttendancePage() {
 
         {/* Daily Session History Log Table */}
         <section className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
-            <h2 className="text-xl font-bold text-[#052c22] dark:text-gray-150 font-serif">Daily Session Log</h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border dark:border-white/5 pb-4">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Daily Session Log</h2>
             
             {/* Search & filters */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-450" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search classes or teachers..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-10 bg-gray-50 dark:bg-gray-900 border-none rounded-xl text-xs w-60"
+                  className="pl-9 h-10 bg-background/50 dark:bg-nejah-surface border-none rounded-xl text-xs w-60"
                 />
               </div>
               
@@ -347,8 +347,8 @@ function AdminAttendancePage() {
                     className={cn(
                       "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
                       statusFilter === status 
-                        ? "bg-emerald-950 text-white" 
-                        : "bg-gray-100 text-gray-550 hover:bg-gray-200"
+                        ? "bg-nejah-sapphire text-white" 
+                        : "bg-background/50 text-nejah-slate-blue hover:bg-muted"
                     )}
                   >
                     {status}
@@ -358,21 +358,21 @@ function AdminAttendancePage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[2rem] border border-border dark:border-white/5 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                    <th className="py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class Title</th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Teacher</th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Punctuality</th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Students present</th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Students absent</th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="py-4 px-6 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                  <tr className="bg-background/50 dark:bg-nejah-surface/50 border-b border-border dark:border-white/5">
+                    <th className="py-4 px-6 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Class Title</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Teacher</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Punctuality</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Students present</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Students absent</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Status</th>
+                    <th className="py-4 px-6 text-right text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
                   {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
                       <tr key={i} className="animate-pulse">
@@ -381,31 +381,31 @@ function AdminAttendancePage() {
                     ))
                   ) : filteredSessions.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center text-gray-400 font-medium italic">No class sessions match your query.</td>
+                      <td colSpan={7} className="py-16 text-center text-nejah-slate-blue font-medium italic">No class sessions match your query.</td>
                     </tr>
                   ) : (
                     filteredSessions.map((session) => (
-                      <tr key={session.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all">
+                      <tr key={session.id} className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all">
                         <td className="py-4 px-6">
                           <div>
-                            <p className="font-extrabold text-[#052c22] dark:text-gray-100 text-sm">{session.classTitle}</p>
-                            <p className="text-[10px] text-gray-450 dark:text-gray-500 font-bold uppercase mt-0.5">{session.quranLevel} Level</p>
+                            <p className="font-extrabold text-nejah-sapphire dark:text-foreground text-sm">{session.classTitle}</p>
+                            <p className="text-[10px] text-muted-foreground dark:text-nejah-slate-blue font-bold uppercase mt-0.5">{session.quranLevel} Level</p>
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{session.teacher?.fullName}</p>
+                          <p className="text-xs font-semibold text-nejah-slate-blue dark:text-muted-foreground">{session.teacher?.fullName}</p>
                         </td>
                         <td className="py-4 px-4">
                           <Badge className={cn(
                             "text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md border-none",
-                            session.teacherAttendanceStatus === 'PRESENT' ? "bg-emerald-50 text-emerald-700" :
+                            session.teacherAttendanceStatus === 'PRESENT' ? "bg-primary/10 text-nejah-electric" :
                             session.teacherAttendanceStatus === 'LATE' ? "bg-amber-50 text-amber-700" :
-                            "bg-gray-100 text-gray-400"
+                            "bg-background/50 text-nejah-slate-blue"
                           )}>
                             {session.teacherAttendanceStatus || 'Scheduled'}
                           </Badge>
                         </td>
-                        <td className="py-4 px-4 font-bold text-xs text-emerald-700 tabular-nums">
+                        <td className="py-4 px-4 font-bold text-xs text-nejah-electric tabular-nums">
                           {session.totalStudentsPresent + session.totalStudentsLate} Joined
                         </td>
                         <td className="py-4 px-4 font-bold text-xs text-red-500 tabular-nums">
@@ -415,7 +415,7 @@ function AdminAttendancePage() {
                           <Badge className={cn(
                             "text-[8px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border-none",
                             session.status === 'LIVE' ? "bg-red-500 text-white animate-pulse" :
-                            session.status === 'COMPLETED' ? "bg-gray-150 text-gray-650" :
+                            session.status === 'COMPLETED' ? "bg-muted text-muted-foreground" :
                             "bg-amber-100 text-amber-800"
                           )}>
                             {session.status}
@@ -424,7 +424,7 @@ function AdminAttendancePage() {
                         <td className="py-4 px-6 text-right">
                           <Button
                             onClick={() => handleRowClick(session.id)}
-                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-250/20 rounded-lg h-8 px-3 text-[10px] font-black uppercase tracking-wider"
+                            className="bg-primary/10 hover:bg-primary/15 text-foreground border border-primary/250/20 rounded-lg h-8 px-3 text-[10px] font-black uppercase tracking-wider"
                           >
                             Details
                           </Button>
@@ -440,10 +440,10 @@ function AdminAttendancePage() {
 
         {/* Detailed Session Logs Modal */}
         <Dialog open={!!selectedSession} onOpenChange={(open) => !open && setSelectedSession(null)}>
-          <DialogContent className="sm:max-w-[700px] dark:bg-gray-850 dark:border-gray-800 rounded-[2.5rem] p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <DialogHeader className="border-b border-gray-150 pb-4 mb-4">
-              <DialogTitle className="text-xl font-bold font-serif text-[#052c22] dark:text-white flex items-center gap-2">
-                <BookOpen className="h-5.5 w-5.5 text-emerald-700" />
+          <DialogContent className="glass-panel sm:max-w-[700px] dark:bg-nejah-surface dark:border-white/5 rounded-[2.5rem] p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
+            <DialogHeader className="border-b border-border pb-4 mb-4">
+              <DialogTitle className="text-xl font-bold font-serif text-nejah-sapphire dark:text-white flex items-center gap-2">
+                <BookOpen className="h-5.5 w-5.5 text-nejah-electric" />
                 Class Session Details Report
               </DialogTitle>
             </DialogHeader>
@@ -452,14 +452,14 @@ function AdminAttendancePage() {
               <div className="space-y-6">
                 
                 {/* Meta details */}
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-900 p-5 rounded-3xl border border-gray-100 dark:border-gray-800">
+                <div className="grid grid-cols-2 gap-4 bg-background/50 dark:bg-nejah-surface p-5 rounded-3xl border border-border dark:border-white/5">
                   <div>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Class Title / Subject</p>
-                    <p className="text-sm font-bold text-emerald-950 dark:text-white mt-1">{selectedSession.classTitle} ({selectedSession.subject})</p>
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-widest">Class Title / Subject</p>
+                    <p className="text-sm font-bold text-foreground dark:text-white mt-1">{selectedSession.classTitle} ({selectedSession.subject})</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Status / Date</p>
-                    <p className="text-sm font-bold text-emerald-950 dark:text-white mt-1">
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-widest">Status / Date</p>
+                    <p className="text-sm font-bold text-foreground dark:text-white mt-1">
                       {selectedSession.status} • {new Date(selectedSession.sessionDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -467,17 +467,17 @@ function AdminAttendancePage() {
 
                 {/* Teacher logs */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider">Teacher Performance Log</h4>
-                  <div className="bg-[#f0f9f1] rounded-[2rem] p-5 border border-emerald-100 flex justify-between items-center">
+                  <h4 className="text-xs font-black uppercase text-nejah-slate-blue tracking-wider">Teacher Performance Log</h4>
+                  <div className="glass-panel bg-primary/5 border-nejah-electric/15 rounded-[2rem] p-5 flex justify-between items-center">
                     <div>
-                      <p className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Instructor FullName</p>
-                      <p className="text-sm font-extrabold text-[#052c22]">{selectedSession.teacher?.fullName}</p>
+                      <p className="text-[9px] font-bold text-nejah-electric uppercase tracking-widest">Instructor FullName</p>
+                      <p className="text-sm font-extrabold text-nejah-sapphire">{selectedSession.teacher?.fullName}</p>
                     </div>
                     <div className="text-right">
-                      <Badge className="bg-emerald-100 text-emerald-700 font-extrabold text-[9px] uppercase tracking-wider rounded-md border-none px-2">
+                      <Badge className="bg-primary/15 text-nejah-electric font-extrabold text-[9px] uppercase tracking-wider rounded-md border-none px-2">
                         {selectedSession.teacherAttendanceStatus || 'Scheduled'}
                       </Badge>
-                      <p className="text-[10px] font-bold text-emerald-700/70 mt-1">
+                      <p className="text-[10px] font-bold text-nejah-electric/70 mt-1">
                         Joined: {selectedSession.teacherJoinTime ? new Date(selectedSession.teacherJoinTime).toLocaleTimeString() : 'N/A'}
                       </p>
                     </div>
@@ -486,39 +486,39 @@ function AdminAttendancePage() {
 
                 {/* Students logs */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider">Assigned Students Attendance Records</h4>
+                  <h4 className="text-xs font-black uppercase text-nejah-slate-blue tracking-wider">Assigned Students Attendance Records</h4>
                   <div className="space-y-2">
                     {selectedSession.studentAttendances && selectedSession.studentAttendances.length > 0 ? (
                       selectedSession.studentAttendances.map((rec: any) => (
-                        <div key={rec.id} className="p-4 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center justify-between">
+                        <div key={rec.id} className="p-4 border border-border dark:border-white/5 rounded-2xl flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center font-bold text-xs text-gray-400">
+                            <div className="w-8 h-8 rounded-full bg-background/50 flex items-center justify-center font-bold text-xs text-nejah-slate-blue">
                               {rec.student?.fullName?.charAt(0)}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-gray-800 dark:text-gray-250">{rec.student?.fullName}</p>
-                              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">ID: {rec.student?.studentCode}</p>
+                              <p className="text-xs font-bold text-foreground dark:text-foreground">{rec.student?.fullName}</p>
+                              <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-widest mt-0.5">ID: {rec.student?.studentCode}</p>
                             </div>
                           </div>
                           
                           <div className="text-right space-y-1">
                             <Badge className={cn(
                               "text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border-none",
-                              rec.attendanceStatus === 'PRESENT' ? "bg-emerald-100 text-emerald-700" :
+                              rec.attendanceStatus === 'PRESENT' ? "bg-primary/15 text-nejah-electric" :
                               rec.attendanceStatus === 'LATE' ? "bg-amber-100 text-amber-700" :
                               rec.attendanceStatus === 'LEFT_EARLY' ? "bg-blue-150 text-blue-700" :
                               "bg-red-50 text-red-600"
                             )}>
                               {rec.attendanceStatus}
                             </Badge>
-                            <p className="text-[9px] text-gray-450 dark:text-gray-500 tabular-nums">
+                            <p className="text-[9px] text-muted-foreground dark:text-nejah-slate-blue tabular-nums">
                               In-class: {rec.joinTime ? new Date(rec.joinTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'N/A'} - {rec.leaveTime ? new Date(rec.leaveTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'N/A'} ({rec.durationMinutes || 0} mins)
                             </p>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="py-4 text-center text-xs text-gray-400 font-medium italic border border-dashed rounded-2xl">No students assigned to this session.</div>
+                      <div className="py-4 text-center text-xs text-nejah-slate-blue font-medium italic border border-dashed rounded-2xl">No students assigned to this session.</div>
                     )}
                   </div>
                 </div>

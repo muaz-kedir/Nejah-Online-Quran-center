@@ -16,18 +16,18 @@ interface StaffMember {
 }
 
 const avatarColors = [
-  'from-brand-primary to-brand-electric',
+  'from-nejah-sapphire to-nejah-electric',
   'from-violet-500 to-purple-600',
   'from-amber-500 to-orange-600',
   'from-rose-500 to-pink-600',
-  'from-teal-500 to-emerald-600',
+  'from-teal-500 to-nejah-azure',
   'from-indigo-500 to-blue-600',
 ];
 
 const statusConfig = {
-  active: { dot: 'bg-brand-electric', label: 'Active', pulse: true },
+  active: { dot: 'bg-primary', label: 'Active', pulse: true },
   'on-leave': { dot: 'bg-amber-400', label: 'On Leave', pulse: false },
-  offline: { dot: 'bg-brand-platinum', label: 'Offline', pulse: false },
+  offline: { dot: 'bg-nejah-slate-blue', label: 'Offline', pulse: false },
 };
 
 export const StaffOverview = memo(function StaffOverview() {
@@ -72,7 +72,7 @@ export const StaffOverview = memo(function StaffOverview() {
       <PanelHeader
         title={t.staffOverview}
         action={
-          <span className="rounded-full border border-brand-electric/20 bg-brand-electric/10 px-2.5 py-1 font-mono text-xs text-brand-electric">
+          <span className="rounded-full border border-nejah-electric/20 bg-primary/10 px-2.5 py-1 font-mono text-xs text-nejah-electric">
             {teachers.length} Active
           </span>
         }
@@ -80,9 +80,9 @@ export const StaffOverview = memo(function StaffOverview() {
 
       <div className="space-y-1 p-4">
         {loading ? (
-          <div className="py-8 text-center text-brand-platinum">Loading teachers...</div>
+          <div className="py-8 text-center text-nejah-slate-blue">Loading teachers...</div>
         ) : teachers.length === 0 ? (
-          <div className="py-8 text-center text-brand-platinum">No teachers registered yet</div>
+          <div className="py-8 text-center text-nejah-slate-blue">No teachers registered yet</div>
         ) : (
           teachers.map((staff) => {
             const status = statusConfig[staff.status];
@@ -103,22 +103,22 @@ export const StaffOverview = memo(function StaffOverview() {
                     </div>
                     <span
                       className={cn(
-                        'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-brand-void',
+                        'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
                         status.dot,
                         status.pulse && 'animate-pulse electric-ring',
                       )}
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-brand-silver transition-colors group-hover:text-brand-electric">
+                    <p className="text-sm font-medium text-foreground transition-colors group-hover:text-nejah-electric">
                       {staff.fullName}
                     </p>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-brand-platinum">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-nejah-slate-blue">
                       {staff.role}
                     </p>
                   </div>
                 </div>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-platinum opacity-0 transition-opacity hover:bg-brand-electric/10 group-hover:opacity-100">
+                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-nejah-slate-blue opacity-0 transition-opacity hover:bg-primary/10 group-hover:opacity-100">
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </div>
@@ -130,7 +130,7 @@ export const StaffOverview = memo(function StaffOverview() {
       <div className="px-4 pb-4">
         <button
           onClick={() => navigate({ to: '/teachers' })}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-electric/30 py-2.5 text-xs font-bold uppercase tracking-wider text-brand-electric transition-colors hover:bg-brand-electric/10 group"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-nejah-electric/30 py-2.5 text-xs font-bold uppercase tracking-wider text-nejah-electric transition-colors hover:bg-primary/10 group"
         >
           {t.manageAllStaff}
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />

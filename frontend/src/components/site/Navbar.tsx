@@ -41,7 +41,7 @@ export function Navbar() {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "glass-panel border-b border-slate-200/80 dark:border-white/5 !rounded-none !shadow-lg"
+          ? "glass-panel border-b border-border dark:border-white/5 !rounded-none !shadow-lg"
           : "bg-transparent"
       }`}
     >
@@ -55,7 +55,7 @@ export function Navbar() {
             <a
               key={l.href}
               href={l.href}
-              className="group relative px-4 py-2 text-sm font-medium text-brand-platinum transition-colors hover:text-brand-electric"
+              className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
             >
               {l.label}
               <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />

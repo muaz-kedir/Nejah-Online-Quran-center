@@ -4,7 +4,11 @@ const ROLE_DASHBOARDS: Record<string, string> = {
   parent: '/parent_dashboard',
   admin: '/dashboard',
   super_admin: '/dashboard',
+  finance_manager: '/finance_dashboard',
+  qirat_manager: '/qirat_dashboard',
 };
+
+export const ACADEMIC_ROLES = ['admin', 'super_admin', 'qirat_manager'] as const;
 
 export function requireAuth(allowedRoles?: string[]) {
   if (typeof window === 'undefined') return;

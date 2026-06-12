@@ -10,14 +10,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-brand-electric text-white shadow-md hover:bg-brand-electric/90 shadow-[0_0_16px_rgba(0,102,204,0.35)]",
+          "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 shadow-nejah-glow",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-brand-electric/30 bg-transparent text-brand-silver hover:bg-brand-electric/10 hover:border-brand-electric/50",
+          "border border-nejah-border-blue bg-transparent text-foreground hover:bg-primary/10 hover:border-primary/50",
         secondary:
-          "bg-brand-abyss/60 text-brand-silver border border-white/5 hover:bg-brand-primary/30",
-        ghost: "text-brand-platinum hover:bg-white/5 hover:text-brand-silver",
-        link: "text-brand-electric underline-offset-4 hover:underline",
+          "bg-nejah-surface/60 text-foreground border border-nejah-border-blue hover:bg-nejah-sapphire/30",
+        ghost: "text-nejah-slate-blue hover:bg-muted hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

@@ -52,20 +52,20 @@ export function DeleteTeacherModal({ open, onClose, onSuccess, teacherId, teache
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader className="flex flex-col items-center text-center">
           <div className="w-12 h-12 bg-red-50 dark:bg-red-950/50 rounded-full flex items-center justify-center text-red-600 mb-4 animate-bounce">
             <AlertTriangle className="h-6 w-6" />
           </div>
-          <DialogTitle className="text-xl font-bold dark:text-gray-100">Delete Teacher</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Are you sure you want to delete <span className="font-semibold text-gray-800 dark:text-gray-200">{teacherName}</span>?
+          <DialogTitle className="text-xl font-bold text-foreground">Delete Teacher</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
+            Are you sure you want to delete <span className="font-semibold text-foreground dark:text-foreground">{teacherName}</span>?
             This will permanently remove their records, assigned students associations, and delete their system user login credentials. This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
         <DialogFooter className="grid grid-cols-2 gap-2 mt-4 sm:space-x-0">
-          <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-gray-200 dark:border-gray-700 dark:text-gray-300">
+          <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-border dark:border-nejah-border-blue dark:text-muted-foreground">
             Cancel
           </Button>
           <Button type="button" onClick={handleDelete} disabled={loading} className="bg-red-600 hover:bg-red-700 text-white rounded-xl">

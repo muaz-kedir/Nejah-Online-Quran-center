@@ -20,13 +20,13 @@ export function Courses() {
       <div className="container-x">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div className="max-w-xl">
-            <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-electric">
+            <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-nejah-electric">
               {t.courses.eyebrow}
             </div>
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-brand-silver md:text-4xl lg:text-5xl">
+            <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">
               {t.courses.title}
             </h2>
-            <p className="text-base text-brand-platinum md:text-lg">
+            <p className="text-base text-nejah-slate-blue md:text-lg">
               {t.courses.desc}
             </p>
           </div>
@@ -47,7 +47,7 @@ export function Courses() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
               whileHover={{ y: -8 }}
-              className="glass-panel group overflow-hidden rounded-3xl transition-all hover:border-brand-electric/30"
+              className="glass-panel group overflow-hidden rounded-3xl transition-all hover:border-nejah-electric/30"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
@@ -56,16 +56,16 @@ export function Courses() {
                   loading="lazy"
                   className="size-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                <span className="absolute top-3 start-3 rounded-full border border-brand-electric/20 bg-brand-void/90 px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-brand-electric backdrop-blur">
+                <span className="absolute top-3 start-3 rounded-full border border-nejah-electric/20 bg-background/90 px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric backdrop-blur">
                   {c.badge}
                 </span>
               </div>
               <div className="p-5">
-                <h3 className="mb-2 text-lg font-medium text-brand-silver">{c.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-brand-platinum">{c.desc}</p>
+                <h3 className="mb-2 text-lg font-medium text-foreground">{c.title}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-nejah-slate-blue">{c.desc}</p>
                 <Button
                   variant="outline"
-                  className="h-10 w-full rounded-full border-brand-electric/30 text-sm font-semibold text-brand-electric hover:border-brand-electric hover:bg-brand-electric hover:text-white hover:shadow-[0_0_16px_rgba(0,102,204,0.35)]"
+                  className="h-10 w-full rounded-full border-nejah-electric/30 text-sm font-semibold text-nejah-electric hover:border-nejah-electric hover:bg-primary hover:text-white hover:shadow-[0_0_16px_rgba(0,102,204,0.35)]"
                 >
                   {t.courses.learnMore}
                 </Button>

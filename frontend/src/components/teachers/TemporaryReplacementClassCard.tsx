@@ -63,7 +63,7 @@ export function TemporaryReplacementClassCard({
   };
 
   return (
-    <li className="text-sm text-amber-900 bg-white/80 rounded-xl px-4 py-4 border border-amber-100 space-y-3">
+    <li className="text-sm text-amber-900 bg-card/80 rounded-xl px-4 py-4 border border-amber-100 space-y-3">
       <div>
         <span className="font-semibold">{assignment.student?.fullName || 'Student'}</span>
         <span className="text-amber-700 block text-xs mt-1">

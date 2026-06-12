@@ -1,109 +1,137 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
+import { PageHeader } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Shield, Mail, Phone, CalendarDays } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Search, Shield, Wallet, BookOpen, Mail, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { AddUserModal } from '@/components/users/AddUserModal';
 
 export const Route = createFileRoute('/admins')({
   component: AdminsPage,
   beforeLoad: () => requireAuth(['super_admin']),
 });
 
+function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loading: boolean; icon: any; color: string }) {
+  if (loading) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">Loading...</div>;
+  if (users.length === 0) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">No users found</div>;
+  return users.map((user) => (
+    <div key={user.id} className="glass-panel rounded-2xl p-6">
+      <div className="mb-4 flex items-center gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${color}`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground">{user.name}</h3>
+          <Badge variant="outline" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+        </div>
+      </div>
+      <div className="space-y-2 text-sm text-nejah-slate-blue">
+        <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> {user.email}</div>
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4" /> Joined {new Date(user.createdAt).toLocaleDateString()}
+        </div>
+      </div>
+      <div className="mt-4 border-t border-white/10 pt-4">
+        <Badge variant={user.isActive ? 'default' : 'secondary'}>{user.isActive ? 'Active' : 'Inactive'}</Badge>
+      </div>
+    </div>
+  ));
+}
+
 function AdminsPage() {
-  const [admins, setAdmins] = useState<any[]>([]);
+  const [tab, setTab] = useState<'admin' | 'finance_manager' | 'qirat_manager'>('admin');
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [defaultRole, setDefaultRole] = useState('admin');
 
-  const fetchAdmins = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const params = new URLSearchParams({ limit: '100' });
+      const params = new URLSearchParams({ limit: '100', role: tab });
       if (search) params.append('search', search);
-      params.append('role', 'admin');
-
       const res = await fetch(`http://localhost:3000/api/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch');
       const result = await res.json();
-      setAdmins(result.data || []);
-    } catch (error) {
-      toast.error('Failed to load admins');
+      setUsers(result.data || []);
+    } catch {
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchAdmins(); }, [search]);
+  useEffect(() => { fetchUsers(); }, [search, tab]);
+
+  const openAdd = (role: string) => {
+    setDefaultRole(role);
+    setShowAdd(true);
+  };
 
   return (
     <DashboardLayout>
-      <Breadcrumbs />
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
-          <p className="text-gray-600 mt-1">Manage system administrators</p>
-        </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="mr-2 h-4 w-4" /> Add Admin
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Staff Management"
+        title="Staff Management"
+        description="Create admin, finance manager, and qirat manager accounts"
+        actions={
+          <Button onClick={() => openAdd(tab)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add {tab === 'admin' ? 'Admin' : tab === 'finance_manager' ? 'Finance Manager' : 'Qirat Manager'}
+          </Button>
+        }
+      />
 
-      <div className="relative mb-6 max-w-md">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search admins..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'admin' | 'finance_manager' | 'qirat_manager')} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="admin"><Shield className="mr-2 h-4 w-4" /> Admins</TabsTrigger>
+          <TabsTrigger value="finance_manager"><Wallet className="mr-2 h-4 w-4" /> Finance Managers</TabsTrigger>
+          <TabsTrigger value="qirat_manager"><BookOpen className="mr-2 h-4 w-4" /> Qirat Managers</TabsTrigger>
+        </TabsList>
+        <TabsContent value="admin" className="mt-4">
+          <div className="relative mb-6 max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
+            <Input placeholder="Search admins..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <StaffGrid users={users} loading={loading} icon={Shield} color="bg-primary/15 text-nejah-electric" />
+          </div>
+        </TabsContent>
+        <TabsContent value="finance_manager" className="mt-4">
+          <div className="relative mb-6 max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
+            <Input placeholder="Search finance managers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <StaffGrid users={users} loading={loading} icon={Wallet} color="bg-amber-500/15 text-amber-600" />
+          </div>
+        </TabsContent>
+        <TabsContent value="qirat_manager" className="mt-4">
+          <div className="relative mb-6 max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
+            <Input placeholder="Search qirat managers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <StaffGrid users={users} loading={loading} icon={BookOpen} color="bg-primary/100/15 text-primary" />
+          </div>
+        </TabsContent>
+      </Tabs>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          <div className="col-span-full text-center py-12 text-gray-400">Loading...</div>
-        ) : admins.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-400">No admins found</div>
-        ) : (
-          admins.map((admin: any) => (
-            <div key={admin.id} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{admin.name}</h3>
-                  <Badge className="bg-purple-100 text-purple-700">{admin.role.replace('_', ' ').toUpperCase()}</Badge>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> {admin.email}
-                </div>
-                {admin.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" /> {admin.phone}
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" /> Joined {new Date(admin.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Badge variant={admin.isActive ? 'default' : 'secondary'}>
-                  {admin.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <AddUserModal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onSuccess={fetchUsers}
+        defaultRole={defaultRole}
+      />
     </DashboardLayout>
   );
 }

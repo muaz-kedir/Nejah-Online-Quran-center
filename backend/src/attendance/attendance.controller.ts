@@ -59,7 +59,7 @@ export class AttendanceController {
   }
 
   @Post('sessions')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async createSession(@Request() req, @Body() dto: CreateClassSessionDto) {
     if (req.user.role === UserRole.TEACHER) {
       dto.teacherId = await this.resolveTeacherIdForUser(req);
@@ -68,19 +68,19 @@ export class AttendanceController {
   }
 
   @Post('sessions/start-meeting')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async startMeeting(@Body() dto: StartMeetingDto) {
     return this.attendanceService.startMeeting(dto);
   }
 
   @Post('sessions/end')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async endSession(@Body() dto: EndSessionDto) {
     return this.attendanceService.endSession(dto);
   }
 
   @Post('record')
-  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async recordAttendance(@Request() req, @Body() dto: RecordStudentAttendanceDto) {
     if (req.user.role === UserRole.STUDENT) {
       dto.studentId = await this.resolveStudentIdForUser(req);
@@ -91,13 +91,13 @@ export class AttendanceController {
   }
 
   @Get('sessions/:id')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getSession(@Param('id') id: string) {
     return this.attendanceService.getClassSessionWithAttendance(id);
   }
 
   @Get('sessions/by-schedule-today/:scheduleId')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getSessionByScheduleToday(@Request() req, @Param('scheduleId') scheduleId: string) {
     let requestingTeacherId: string | undefined;
     if (req.user.role === UserRole.TEACHER) {
@@ -111,14 +111,14 @@ export class AttendanceController {
   }
 
   @Get('student/live')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getStudentLiveClass(@Request() req) {
     const studentId = await this.resolveStudentIdForUser(req);
     return this.attendanceService.getStudentLiveClass(studentId);
   }
 
   @Get('teacher/sessions')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getTeacherSessions(
     @Request() req,
     @Query('date') date?: string,
@@ -133,7 +133,7 @@ export class AttendanceController {
   }
 
   @Get('student/history')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getStudentHistory(@Request() req, @Query('studentId') studentIdQuery?: string) {
     const studentId = await this.resolveStudentIdForUser({
       user: req.user,
@@ -143,7 +143,7 @@ export class AttendanceController {
   }
 
   @Get('student/stats')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getStudentStats(@Request() req, @Query('studentId') studentIdQuery?: string) {
     const studentId = await this.resolveStudentIdForUser({
       user: req.user,
@@ -153,13 +153,13 @@ export class AttendanceController {
   }
 
   @Get('live-classes')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async getLiveClasses() {
     return this.attendanceService.getLiveClasses();
   }
 
   @Get('todays-sessions')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getTodaysSessions(@Request() req) {
     const teacherId =
       req.user.role === UserRole.TEACHER ? await this.resolveTeacherIdForUser(req) : undefined;

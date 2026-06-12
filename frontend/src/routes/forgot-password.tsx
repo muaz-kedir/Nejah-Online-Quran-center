@@ -64,7 +64,7 @@ function ForgotPasswordPage() {
     >
       {isSent ? (
         <div className="space-y-4 py-4 text-center">
-          <div className="rounded-xl border border-brand-electric/20 bg-brand-electric/10 p-4 text-sm text-brand-silver">
+          <div className="rounded-xl border border-nejah-electric/20 bg-primary/10 p-4 text-sm text-foreground">
             Check your inbox at <strong>{form.getValues("email")}</strong> for recovery instructions.
           </div>
           <Button variant="outline" onClick={() => navigate({ to: "/login" })} className="w-full">
@@ -79,12 +79,12 @@ function ForgotPasswordPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-mono text-[10px] uppercase tracking-widest text-brand-platinum">
+                  <FormLabel className="font-mono text-[10px] uppercase tracking-widest text-nejah-slate-blue">
                     Email Address
                   </FormLabel>
                   <FormControl>
                     <div className="group relative">
-                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-platinum transition-colors group-focus-within:text-brand-electric" />
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
                       <Input className="h-12 pl-10" placeholder="your@email.com" {...field} />
                     </div>
                   </FormControl>
@@ -111,7 +111,7 @@ function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/login" })}
-                className="inline-flex items-center text-sm font-medium text-brand-platinum transition-colors hover:text-brand-electric"
+                className="inline-flex items-center text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Login

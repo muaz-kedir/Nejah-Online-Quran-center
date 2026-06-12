@@ -153,8 +153,8 @@ function StudentDashboard() {
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">
             Assalamu Alaikum, {welcome?.studentName?.split(' ')[0] || student?.name?.split(' ')[0] || 'Student'}!
           </p>
-          <h2 className="text-3xl font-extrabold text-emerald-950 font-serif">Your Learning Center</h2>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+          <h2 className="text-3xl font-extrabold dark:text-foreground text-nejah-sapphire font-serif">Your Learning Center</h2>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm dark:text-nejah-slate-blue text-muted-foreground">
             <span><strong>Level:</strong> {displayLevel}</span>
             <span><strong>Teacher:</strong> {displayTeacher}</span>
             <span><strong>Enrolled:</strong> {displayEnrolled}</span>
@@ -162,7 +162,7 @@ function StudentDashboard() {
         </div>
 
         {student?.isTemporaryTeacher && student?.temporaryTeacher && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-sm text-amber-900 dark:text-amber-200">
             <p className="font-bold mb-1">Temporary Teacher Assigned</p>
             <p>
               <strong>{student.temporaryTeacher.name}</strong> is teaching your classes from{' '}
@@ -173,41 +173,41 @@ function StudentDashboard() {
         )}
 
         {learningPath && (
-          <div className="bg-white rounded-3xl p-6 border shadow-sm">
+          <div className="glass-panel">
             <LearningPathCard path={learningPath} />
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl p-6 border shadow-sm">
+            <div className="glass-panel">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-emerald-900">Current Hifz Progress</h3>
-                  <p className="text-sm text-gray-400">{progress?.currentSurah} · Ayah {progress?.currentAyah}</p>
+                  <h3 className="text-lg font-bold dark:text-foreground text-nejah-sapphire">Current Hifz Progress</h3>
+                  <p className="text-sm dark:text-nejah-slate-blue text-muted-foreground">{progress?.currentSurah} · Ayah {progress?.currentAyah}</p>
                 </div>
-                <Badge className="bg-emerald-50 text-emerald-800 border-none">{progress?.rank}</Badge>
+                <Badge className="bg-primary/10 text-nejah-electric border-none">{progress?.rank}</Badge>
               </div>
               <ProgressBar value={progress?.percentage || 0} className="h-2 mb-4" />
               <div className="grid grid-cols-3 gap-3 text-center text-sm mb-4">
-                <div className="bg-gray-50 p-3 rounded-xl"><p className="font-bold text-lg">{progress?.memorizedSurahs}</p><p className="text-xs text-gray-400">Surahs</p></div>
-                <div className="bg-gray-50 p-3 rounded-xl"><p className="font-bold text-lg">{progress?.memorizedAyahs}</p><p className="text-xs text-gray-400">Ayahs</p></div>
-                <div className="bg-gray-50 p-3 rounded-xl"><p className="font-bold text-lg">{progress?.completedJuz}</p><p className="text-xs text-gray-400">Juz</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl"><p className="font-bold text-lg dark:text-foreground">{progress?.memorizedSurahs}</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Surahs</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl"><p className="font-bold text-lg dark:text-foreground">{progress?.memorizedAyahs}</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Ayahs</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl"><p className="font-bold text-lg dark:text-foreground">{progress?.completedJuz}</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Juz</p></div>
               </div>
               <Button variant="outline" className="w-full" onClick={() => navigate({ to: studentPaths.progress })}>
                 View Full Progress <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
 
-            <div className="bg-white rounded-3xl p-6 border shadow-sm">
-              <h3 className="text-lg font-bold text-emerald-900 mb-3">Today&apos;s Lesson</h3>
+            <div className="glass-panel">
+              <h3 className="text-lg font-bold dark:text-foreground text-nejah-sapphire mb-3">Today&apos;s Lesson</h3>
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                <div className="bg-gray-50 p-3 rounded-xl"><p className="text-xs text-gray-400 font-bold uppercase">Surah</p><p className="font-medium">{data?.todaysLesson?.surah}</p></div>
-                <div className="bg-gray-50 p-3 rounded-xl"><p className="text-xs text-gray-400 font-bold uppercase">Ayah Range</p><p className="font-medium">{data?.todaysLesson?.ayahRange}</p></div>
-                <div className="bg-gray-50 p-3 rounded-xl sm:col-span-2"><p className="text-xs text-gray-400 font-bold uppercase">Revision</p><p className="font-medium">{data?.todaysLesson?.revision}</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl"><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">Surah</p><p className="font-medium dark:text-foreground">{data?.todaysLesson?.surah}</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl"><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">Ayah Range</p><p className="font-medium dark:text-foreground">{data?.todaysLesson?.ayahRange}</p></div>
+                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl sm:col-span-2"><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">Revision</p><p className="font-medium dark:text-foreground">{data?.todaysLesson?.revision}</p></div>
                 {data?.todaysLesson?.homework && (
-                  <div className="bg-amber-50 p-3 rounded-xl sm:col-span-2 border border-amber-100">
-                    <p className="text-xs text-amber-700 font-bold uppercase">Homework</p>
+                  <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                    <p className="text-xs text-amber-700 dark:text-amber-300 font-bold uppercase">Homework</p>
                     <p className="font-medium">{data.todaysLesson.homework.title}</p>
                   </div>
                 )}
@@ -215,11 +215,11 @@ function StudentDashboard() {
             </div>
 
             {data?.recentFeedback?.length > 0 && (
-              <div className="bg-emerald-950 text-white rounded-3xl p-6">
+              <div className="glass-panel text-foreground">
                 <h3 className="font-bold mb-4">Recent Teacher Feedback</h3>
                 {data.recentFeedback.slice(0, 2).map((f: any) => (
                   <div key={f.id} className="mb-4 last:mb-0 border-b border-white/10 pb-4 last:border-0">
-                    <p className="text-xs text-emerald-300">{f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ''}</p>
+                    <p className="text-xs text-nejah-electric/70">{f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ''}</p>
                     <p className="text-sm mt-1 italic">&quot;{f.summary}&quot;</p>
                   </div>
                 ))}
@@ -231,24 +231,24 @@ function StudentDashboard() {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-emerald-900 text-white rounded-3xl p-6">
-              <Badge className="bg-white/10 text-emerald-100 border-none mb-3">Upcoming Class</Badge>
+            <div className="glass-panel bg-nejah-sapphire text-white">
+              <Badge className="bg-white/10 text-foreground border-none mb-3">Upcoming Class</Badge>
               {data?.liveClass ? (
                 <>
                   <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
-                  <p className="text-emerald-200 text-sm mb-4">Live now</p>
+                  <p className="text-nejah-electric/70 text-sm mb-4">Live now</p>
                 </>
               ) : data?.upcomingClass ? (
                 <>
                   <h3 className="text-xl font-bold">{data.upcomingClass.name}</h3>
-                  <p className="text-emerald-200 text-sm">with {data.upcomingClass.teacher}</p>
-                  <p className="text-sm font-bold text-emerald-400 mt-1">{data.upcomingClass.time}</p>
+                  <p className="text-nejah-electric/70 text-sm">with {data.upcomingClass.teacher}</p>
+                  <p className="text-sm font-bold text-nejah-electric mt-1">{data.upcomingClass.time}</p>
                 </>
               ) : (
-                <p className="text-emerald-200">No class scheduled</p>
+                <p className="text-nejah-slate-blue">No class scheduled</p>
               )}
               <div className="flex flex-col gap-2 mt-4">
-                <Button className="bg-white text-emerald-950" onClick={joinClass}>
+                <Button className="bg-white text-nejah-surface" onClick={joinClass}>
                   <Play className="h-4 w-4 mr-2" /> Join Class
                 </Button>
                 <Button variant="outline" className="border-white/30 text-white" onClick={() => navigate({ to: studentPaths.classes })}>
@@ -259,40 +259,40 @@ function StudentDashboard() {
 
             <button
               type="button"
-              className="w-full bg-gray-50 rounded-3xl p-6 border text-left hover:border-emerald-200 transition-colors"
+              className="w-full dark:bg-nejah-surface/50 bg-muted rounded-3xl p-6 border dark:border-white/10 border-border text-left hover:border-nejah-electric/30 transition-colors"
               onClick={() => navigate({ to: studentPaths.progress })}
             >
-              <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-3 text-center">Weekly Attendance</h4>
+              <h4 className="text-xs font-extrabold dark:text-nejah-slate-blue text-muted-foreground uppercase tracking-widest mb-3 text-center">Weekly Attendance</h4>
               <div className="flex justify-between px-1 mb-3">
                 {attendance?.weekly?.map((day: any) => {
                   const wd = new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                   const short = dayLabels[wd] || '?';
                   return (
                     <div key={day.date} className="flex flex-col items-center gap-1">
-                      <div className={`w-2 h-12 rounded-full ${day.present ? 'bg-emerald-600' : 'bg-gray-200'}`} />
-                      <span className="text-[10px] font-bold text-gray-400">{short}</span>
+                      <div className={`w-2 h-12 rounded-full ${day.present ? 'bg-primary' : 'dark:bg-nejah-surface bg-muted'}`} />
+                      <span className="text-[10px] font-bold dark:text-nejah-slate-blue text-muted-foreground">{short}</span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-center text-sm font-bold text-emerald-800">{attendance?.rate ?? 0}% · Present {attendance?.presentDays ?? 0} / Absent {attendance?.absentDays ?? 0}</p>
+              <p className="text-center text-sm font-bold dark:text-foreground text-nejah-sapphire">{attendance?.rate ?? 0}% · Present {attendance?.presentDays ?? 0} / Absent {attendance?.absentDays ?? 0}</p>
             </button>
 
-            <div className="bg-white rounded-3xl p-6 border">
+            <div className="glass-panel">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-emerald-900 flex items-center gap-2"><Bell className="h-4 w-4" /> Notifications</h3>
+                <h3 className="font-bold dark:text-foreground text-nejah-sapphire flex items-center gap-2"><Bell className="h-4 w-4" /> Notifications</h3>
                 {data?.unreadNotifications > 0 && <Badge className="bg-red-500 text-white border-none">{data.unreadNotifications}</Badge>}
               </div>
               {data?.notifications?.length ? (
                 <ul className="space-y-2 text-sm">
                   {data.notifications.slice(0, 3).map((n: any) => (
-                    <li key={n.id} className={n.isRead ? 'text-gray-400' : 'font-medium text-gray-800'}>{n.title}</li>
+                    <li key={n.id} className={n.isRead ? 'dark:text-nejah-slate-blue text-muted-foreground' : 'font-medium dark:text-foreground text-foreground'}>{n.title}</li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400">No notifications</p>
+                <p className="text-sm dark:text-nejah-slate-blue text-muted-foreground">No notifications</p>
               )}
-              <Button variant="link" className="px-0 text-emerald-700 mt-2" onClick={() => navigate({ to: studentPaths.notifications })}>
+              <Button variant="link" className="px-0 text-nejah-electric mt-2" onClick={() => navigate({ to: studentPaths.notifications })}>
                 View All Notifications
               </Button>
             </div>
@@ -303,8 +303,8 @@ function StudentDashboard() {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="rounded-3xl">
           <DialogHeader><DialogTitle>Settings</DialogTitle></DialogHeader>
-          <button type="button" className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50" onClick={() => { setSettingsOpen(false); setChangePasswordOpen(true); }}>
-            <Lock className="h-5 w-5 text-emerald-700" />
+          <button type="button" className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted" onClick={() => { setSettingsOpen(false); setChangePasswordOpen(true); }}>
+            <Lock className="h-5 w-5 text-nejah-electric" />
             <span className="font-bold text-sm">Change Password</span>
           </button>
         </DialogContent>
@@ -321,13 +321,13 @@ function StudentDashboard() {
             <div><Label>Phone</Label><Input value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} /></div>
             <div><Label>Email</Label><Input value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-2 pt-2 text-center">
-              <div className="bg-gray-50 p-2 rounded-lg"><p className="font-bold">{profile?.statistics?.attendancePercentage}%</p><p className="text-xs text-gray-400">Attendance</p></div>
-              <div className="bg-gray-50 p-2 rounded-lg"><p className="font-bold">{profile?.statistics?.progressPercentage}%</p><p className="text-xs text-gray-400">Progress</p></div>
-              <div className="bg-gray-50 p-2 rounded-lg"><p className="font-bold">{profile?.statistics?.homeworkCompletionRate}%</p><p className="text-xs text-gray-400">Homework</p></div>
+              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg"><p className="font-bold dark:text-foreground">{profile?.statistics?.attendancePercentage}%</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Attendance</p></div>
+              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg"><p className="font-bold dark:text-foreground">{profile?.statistics?.progressPercentage}%</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Progress</p></div>
+              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg"><p className="font-bold dark:text-foreground">{profile?.statistics?.homeworkCompletionRate}%</p><p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Homework</p></div>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={saveProfile} className="bg-emerald-700">Save Contact Info</Button>
+            <Button onClick={saveProfile} className="bg-nejah-sapphire">Save Contact Info</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -353,7 +353,7 @@ function StudentDashboard() {
             ))}
           </div>
           <DialogFooter>
-            <Button onClick={handleChangePassword} disabled={changingPw} className="bg-emerald-700">{changingPw ? 'Saving...' : 'Update Password'}</Button>
+            <Button onClick={handleChangePassword} disabled={changingPw} className="bg-nejah-sapphire">{changingPw ? 'Saving...' : 'Update Password'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -26,20 +26,20 @@ export function Teachers() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -8 }}
-              className="glass-panel rounded-3xl p-7 text-center transition-all hover:border-brand-electric/30"
+              className="glass-panel rounded-3xl p-7 text-center transition-all hover:border-nejah-electric/30"
             >
               <div className="relative mx-auto mb-5 w-fit">
-                <div className="absolute inset-0 rounded-full bg-brand-electric/20 blur-xl" />
+                <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
                 <img
                   src={tc.img}
                   alt={tc.name}
                   loading="lazy"
-                  className="relative size-24 rounded-full object-cover ring-4 ring-brand-void"
+                  className="relative size-24 rounded-full object-cover ring-4 ring-background"
                 />
               </div>
-              <h3 className="text-lg font-medium text-brand-silver">{tc.name}</h3>
-              <div className="mb-3 text-sm font-semibold text-brand-electric">{tc.spec}</div>
-              <p className="mb-5 text-sm leading-relaxed text-brand-platinum">{tc.exp}</p>
+              <h3 className="text-lg font-medium text-foreground">{tc.name}</h3>
+              <div className="mb-3 text-sm font-semibold text-nejah-electric">{tc.spec}</div>
+              <p className="mb-5 text-sm leading-relaxed text-nejah-slate-blue">{tc.exp}</p>
               <Button className="h-11 w-full rounded-full font-semibold shadow-[0_0_16px_rgba(0,102,204,0.35)]">
                 {t.teachers.bookTrial}
               </Button>

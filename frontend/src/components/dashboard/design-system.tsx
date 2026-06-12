@@ -18,13 +18,13 @@ export function GlassPanel({
   return (
     <div
       className={cn(
-        'glass-panel relative overflow-hidden rounded-2xl',
-        glow && 'ring-1 ring-brand-electric/20 shadow-[0_0_24px_rgba(0,102,204,0.15)]',
+        'glass-panel relative overflow-hidden rounded-nejah-lg',
+        glow && 'ring-1 ring-nejah-electric/20 shadow-nejah-glow',
         className,
       )}
     >
       {/* Subtle hex corner accent */}
-      <span className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rotate-45 border border-brand-silver/10 dark:border-white/5" />
+      <span className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rotate-45 border border-nejah-border-blue/30 dark:border-white/5" />
       {children}
     </div>
   );
@@ -35,7 +35,7 @@ export function SilverDivider({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'h-px w-full bg-gradient-to-r from-transparent via-brand-silver/30 to-transparent',
+        'h-px w-full bg-gradient-to-r from-transparent via-nejah-slate-blue/30 to-transparent',
         className,
       )}
     />
@@ -74,13 +74,13 @@ export function PageHeader({
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow && (
-          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-brand-platinum">
+          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-nejah-slate-blue">
             {eyebrow}
           </p>
         )}
-        <h1 className="text-3xl font-medium tracking-tight text-brand-silver">{title}</h1>
+        <h1 className="text-3xl font-medium tracking-tight text-foreground">{title}</h1>
         {description && (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-platinum">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-nejah-slate-blue">{description}</p>
         )}
       </div>
       {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
@@ -108,25 +108,25 @@ export function BentoStatCard({
     <GlassPanel
       glow={highlight}
       className={cn(
-        'group p-6 transition-all duration-300 hover:border-brand-electric/30',
-        highlight && 'bg-brand-primary/20 dark:bg-brand-primary/30',
+        'group p-6 transition-all duration-300 hover:border-nejah-electric/30',
+        highlight && 'bg-nejah-sapphire/20 dark:bg-nejah-sapphire/30',
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-brand-platinum">{label}</p>
-          <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-brand-silver">{value}</p>
-          {sub && <p className="mt-1 text-xs text-brand-platinum">{sub}</p>}
+          <p className="text-[10px] font-medium uppercase tracking-widest text-nejah-slate-blue">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-foreground">{value}</p>
+          {sub && <p className="mt-1 text-xs text-nejah-slate-blue">{sub}</p>}
         </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-electric/20 bg-brand-electric/10 text-brand-electric transition-transform group-hover:scale-105">
+        <div className="flex h-12 w-12 items-center justify-center rounded-nejah-lg border border-nejah-electric/20 bg-primary/10 text-nejah-electric transition-transform group-hover:scale-105">
           {icon}
         </div>
       </div>
       {progress !== undefined && (
         <div className="mt-4">
-          <div className="h-1.5 overflow-hidden rounded-full bg-brand-void/50 dark:bg-black/30">
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted dark:bg-nejah-midnight/50">
             <div
-              className="h-full rounded-full bg-brand-electric shadow-[0_0_12px_rgba(0,102,204,0.5)] transition-all duration-500"
+              className="h-full rounded-full bg-nejah-electric shadow-nejah-glow transition-all duration-500"
               style={{ width: `${Math.min(100, progress)}%` }}
             />
           </div>
@@ -147,7 +147,7 @@ export function PanelHeader({
   return (
     <>
       <div className="flex items-center justify-between px-6 py-4">
-        <h2 className="text-sm font-medium tracking-tight text-brand-silver">{title}</h2>
+        <h2 className="text-sm font-medium tracking-tight text-foreground">{title}</h2>
         {action}
       </div>
       <SilverDivider />

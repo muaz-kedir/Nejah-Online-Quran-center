@@ -63,7 +63,7 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
     <div className={cn('w-full', className)}>
       {!compact && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-emerald-900 dark:text-gray-100">Learning Path</h3>
+          <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">Learning Path</h3>
           {path.progressionPaused && (
             <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
               <Pause className="h-3 w-3" /> Progression paused
@@ -82,11 +82,11 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                     'rounded-full flex items-center justify-center border-2',
                     compact ? 'w-8 h-8' : 'w-10 h-10',
                     stage.status === 'completed' &&
-                      'bg-emerald-600 border-emerald-600 text-white',
+                      'bg-primary border-primary/600 text-white',
                     stage.status === 'current' &&
-                      'bg-white dark:bg-gray-900 border-emerald-600 text-emerald-700 ring-4 ring-emerald-100 dark:ring-emerald-900',
+                      'bg-card dark:bg-nejah-surface border-primary/600 text-primary ring-4 ring-primary/100 dark:ring-primary/900',
                     stage.status === 'upcoming' &&
-                      'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400',
+                      'bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue text-muted-foreground',
                   )}
                 >
                   {stage.status === 'completed' ? (
@@ -104,16 +104,16 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                     'font-bold mt-2 leading-tight',
                     compact ? 'text-[10px]' : 'text-xs',
                     stage.status === 'current'
-                      ? 'text-emerald-800 dark:text-emerald-300'
+                      ? 'text-nejah-sapphire text-nejah-electric'
                       : stage.status === 'completed'
-                        ? 'text-emerald-950 dark:text-gray-200'
-                        : 'text-gray-400',
+                        ? 'text-nejah-sapphire dark:text-foreground'
+                        : 'text-muted-foreground',
                   )}
                 >
                   {stage.label}
                 </p>
                 {!compact && (
-                  <p className="text-[10px] text-gray-400 mt-0.5">
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     {stage.status === 'completed' &&
                       `${formatMonthYear(stage.startedAt)} – ${formatMonthYear(stage.completedAt)}`}
                     {stage.status === 'current' &&
@@ -127,7 +127,7 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                   className={cn(
                     'flex-1 h-0.5 rounded-full',
                     compact ? 'mt-4' : 'mt-5',
-                    stage.status === 'completed' ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700',
+                    stage.status === 'completed' ? 'bg-primary/100' : 'bg-muted dark:bg-nejah-surface',
                   )}
                 />
               )}
@@ -172,45 +172,45 @@ const CHANGE_LABELS: Record<string, string> = {
 
 export function LevelHistoryList({ history }: { history: LevelHistoryEntry[] }) {
   if (!history?.length) {
-    return <p className="text-gray-400 text-sm">No level history yet.</p>;
+    return <p className="text-muted-foreground text-sm">No level history yet.</p>;
   }
 
   return (
-    <div className="space-y-4 border-l-2 border-emerald-200 pl-6">
+    <div className="space-y-4 border-l-2 border-primary/200 pl-6">
       {history.map((h) => (
         <div key={h.id} className="relative">
           <span
             className={cn(
               'absolute -left-[31px] w-3 h-3 rounded-full top-1',
               h.status === 'completed'
-                ? 'bg-emerald-600'
+                ? 'bg-primary'
                 : h.status === 'in_progress'
                   ? 'bg-amber-500'
-                  : 'bg-gray-300',
+                  : 'bg-muted',
             )}
           />
-          <p className="font-bold text-sm text-emerald-900 dark:text-gray-100">
+          <p className="font-bold text-sm text-nejah-sapphire text-foreground">
             {h.level}
             <span
               className={cn(
                 'ml-2 text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5',
                 h.status === 'completed'
-                  ? 'bg-emerald-50 text-emerald-700'
+                  ? 'bg-primary/10 text-primary'
                   : h.status === 'in_progress'
                     ? 'bg-amber-50 text-amber-700'
-                    : 'bg-gray-100 text-gray-500',
+                    : 'bg-muted text-muted-foreground',
               )}
             >
               {STATUS_LABELS[h.status] || h.status}
             </span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {formatMonthYear(h.startedAt)}
             {h.completedAt ? ` – ${formatMonthYear(h.completedAt)}` : h.status === 'in_progress' ? ' – present' : ''}
             {h.teacherName ? ` · ${h.teacherName}` : ''}
             {h.progressPercentage != null ? ` · ${Math.round(h.progressPercentage)}%` : ''}
           </p>
-          <p className="text-[10px] text-gray-400 mt-0.5">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {CHANGE_LABELS[h.changeType] || h.changeType}
             {h.reason ? ` — ${h.reason}` : ''}
           </p>

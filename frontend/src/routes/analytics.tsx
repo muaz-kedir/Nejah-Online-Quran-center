@@ -36,7 +36,7 @@ function AnalyticsPage() {
               label={m.label}
               value={m.value}
               sub={
-                <span className={cn('inline-flex items-center gap-1', m.up ? 'text-brand-electric' : 'text-red-400')}>
+                <span className={cn('inline-flex items-center gap-1', m.up ? 'text-nejah-electric' : 'text-red-400')}>
                   {m.up ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                   {m.change}
                 </span>
@@ -49,18 +49,18 @@ function AnalyticsPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <GlassPanel className="p-6">
-            <h3 className="mb-4 text-sm font-medium text-brand-silver">Monthly Enrollment Trends</h3>
-            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-brand-silver/20">
-              <div className="text-center text-brand-platinum">
+            <h3 className="mb-4 text-sm font-medium text-foreground">Monthly Enrollment Trends</h3>
+            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-nejah-border-blue/20">
+              <div className="text-center text-nejah-slate-blue">
                 <TrendingUp className="mx-auto mb-2 h-12 w-12 opacity-30" />
                 <p className="text-sm">Chart visualization placeholder</p>
               </div>
             </div>
           </GlassPanel>
           <GlassPanel className="p-6">
-            <h3 className="mb-4 text-sm font-medium text-brand-silver">Attendance Distribution</h3>
-            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-brand-silver/20">
-              <div className="text-center text-brand-platinum">
+            <h3 className="mb-4 text-sm font-medium text-foreground">Attendance Distribution</h3>
+            <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-nejah-border-blue/20">
+              <div className="text-center text-nejah-slate-blue">
                 <Users className="mx-auto mb-2 h-12 w-12 opacity-30" />
                 <p className="text-sm">Chart visualization placeholder</p>
               </div>

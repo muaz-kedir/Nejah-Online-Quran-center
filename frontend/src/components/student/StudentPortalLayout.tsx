@@ -62,14 +62,16 @@ export function StudentPortalLayout({
   const displayName = student?.fullName || student?.name || 'Student';
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden text-gray-900 font-sans">
-      <div className="w-64 bg-gray-50/50 border-r border-gray-100 flex flex-col h-screen shrink-0">
+    <div className="flex h-screen dark:bg-background bg-white overflow-hidden dark:text-foreground text-foreground font-sans">
+      <div className="w-64 dark:bg-nejah-surface bg-card/80 backdrop-blur-xl border-r dark:border-white/5 border-slate-200 flex flex-col h-screen shrink-0">
         <div className="p-8">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Nejah" className="h-10 w-auto" />
+            <div className="h-10 w-10 rounded-full ring-2 ring-nejah-electric/30 ring-offset-2 ring-offset-nejah-surface flex items-center justify-center bg-background shrink-0">
+              <span className="text-nejah-electric font-black text-sm">N</span>
+            </div>
             <div>
-              <h1 className="font-extrabold text-emerald-900 tracking-tight leading-none text-lg">Nejah</h1>
-              <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">Student Portal</p>
+              <h1 className="font-extrabold text-foreground tracking-tight leading-none text-lg">Nejah</h1>
+              <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">Student Portal</p>
             </div>
           </div>
         </div>
@@ -85,14 +87,14 @@ export function StudentPortalLayout({
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group',
                   isActive
-                    ? 'bg-white text-emerald-900 shadow-sm border-l-4 border-emerald-700'
-                    : 'text-gray-500 hover:bg-white hover:text-emerald-700',
+                    ? 'bg-primary/15 text-foreground shadow-sm border-l-4 border-nejah-electric'
+                    : 'dark:text-nejah-slate-blue text-muted-foreground hover:bg-primary/10 hover:text-foreground',
                 )}
               >
                 <item.icon
                   className={cn(
                     'h-5 w-5',
-                    isActive ? 'text-emerald-700' : 'text-gray-400 group-hover:text-emerald-600',
+                    isActive ? 'text-nejah-electric' : 'dark:text-nejah-slate-blue text-muted-foreground group-hover:text-nejah-electric',
                   )}
                 />
                 <span className="font-bold text-sm flex-1 text-left">{item.label}</span>
@@ -111,7 +113,7 @@ export function StudentPortalLayout({
             <button
               type="button"
               onClick={onOpenSettings}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-white hover:text-emerald-700"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl dark:text-nejah-slate-blue text-muted-foreground hover:bg-primary/10 hover:text-foreground"
             >
               <Settings className="h-5 w-5" />
               <span className="font-bold text-sm">Settings</span>
@@ -120,7 +122,7 @@ export function StudentPortalLayout({
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl dark:text-nejah-slate-blue text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400"
           >
             <LogOut className="h-5 w-5" />
             <span className="font-bold text-sm">Logout</span>
@@ -131,20 +133,20 @@ export function StudentPortalLayout({
           <button
             type="button"
             onClick={onOpenProfile}
-            className="w-full bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:border-emerald-200 transition-colors text-left"
+            className="w-full dark:bg-nejah-surface bg-white p-3 rounded-2xl border dark:border-white/10 border-border shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left"
           >
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center overflow-hidden shrink-0">
               {student?.avatarUrl ? (
                 <img src={student.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="font-bold text-sm text-emerald-700">{student?.initials || 'S'}</span>
+                <span className="font-bold text-sm text-nejah-electric">{student?.initials || 'S'}</span>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold text-gray-800 leading-tight truncate">{displayName}</p>
-              <p className="text-[10px] text-gray-400 font-medium truncate">{student?.level || 'Student'} Program</p>
+              <p className="text-sm font-extrabold dark:text-foreground text-foreground leading-tight truncate">{displayName}</p>
+              <p className="text-[10px] dark:text-nejah-slate-blue text-muted-foreground font-medium truncate">{student?.level || 'Student'} Program</p>
             </div>
-            <User className="h-4 w-4 text-gray-400 shrink-0" />
+            <User className="h-4 w-4 dark:text-nejah-slate-blue text-muted-foreground shrink-0" />
           </button>
         </div>
       </div>
@@ -156,8 +158,8 @@ export function StudentPortalLayout({
 
 export function StudentPageLoader() {
   return (
-    <div className="flex h-screen items-center justify-center bg-white">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-700" />
+    <div className="flex h-screen items-center justify-center dark:bg-background bg-white">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nejah-electric" />
     </div>
   );
 }

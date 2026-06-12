@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 const statusStyle: Record<string, string> = {
   Pending: 'bg-amber-50 text-amber-700',
-  Completed: 'bg-emerald-50 text-emerald-700',
+  Completed: 'bg-primary/10 text-primary',
   Late: 'bg-red-50 text-red-600',
 };
 
@@ -55,13 +55,13 @@ function StudentHomework() {
       <main className="flex-1 px-10 py-10 max-w-4xl">
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-emerald-950 font-serif">Homework</h1>
+          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">Homework</h1>
         </div>
 
         {homeworks.length === 0 ? (
-          <div className="bg-gray-50 rounded-[32px] p-16 text-center border">
-            <ClipboardList className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No homework assigned.</p>
+          <div className="bg-muted rounded-[32px] p-16 text-center border">
+            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No homework assigned.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -69,16 +69,16 @@ function StudentHomework() {
               const isOpen = expanded === hw.id;
               const status = hw.status || 'Pending';
               return (
-                <div key={hw.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div key={hw.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                   <button
                     type="button"
                     className="w-full p-6 text-left flex items-start justify-between gap-4"
                     onClick={() => setExpanded(isOpen ? null : hw.id)}
                   >
                     <div>
-                      <h3 className="font-bold text-lg text-emerald-950">{hw.title}</h3>
-                      <p className="text-xs text-gray-400 mt-1">Teacher: {hw.teacher}</p>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                      <h3 className="font-bold text-lg text-nejah-sapphire">{hw.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">Teacher: {hw.teacher}</p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <CalendarDays className="h-3 w-3" />
                         Due: {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : '—'}
                       </div>
@@ -91,9 +91,9 @@ function StudentHomework() {
                     </div>
                   </button>
                   {isOpen && (
-                    <div className="px-6 pb-6 border-t bg-gray-50/30">
-                      <p className="text-sm text-gray-600 mt-4 whitespace-pre-wrap">{hw.description}</p>
-                      <p className="text-xs text-gray-400 mt-2">
+                    <div className="px-6 pb-6 border-t bg-muted/30">
+                      <p className="text-sm text-muted-foreground mt-4 whitespace-pre-wrap">{hw.description}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
                         Assigned: {hw.assignedDate ? new Date(hw.assignedDate).toLocaleDateString() : '—'}
                       </p>
                       {status === 'Pending' || status === 'Late' ? (
@@ -104,7 +104,7 @@ function StudentHomework() {
                             onChange={(e) => setNotes({ ...notes, [hw.id]: e.target.value })}
                           />
                           <Button
-                            className="bg-emerald-700"
+                            className="bg-primary"
                             disabled={submitting === hw.id}
                             onClick={() => submit(hw.id)}
                           >
@@ -112,7 +112,7 @@ function StudentHomework() {
                           </Button>
                         </div>
                       ) : (
-                        <p className="text-sm text-emerald-700 font-medium mt-4">Submitted / reviewed</p>
+                        <p className="text-sm text-primary font-medium mt-4">Submitted / reviewed</p>
                       )}
                     </div>
                   )}

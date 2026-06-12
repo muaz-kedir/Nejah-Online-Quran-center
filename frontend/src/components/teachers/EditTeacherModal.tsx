@@ -163,10 +163,10 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-emerald-900 dark:text-gray-100 flex items-center gap-2">
-            <Pencil className="h-6 w-6 text-emerald-700" />
+          <DialogTitle className="text-2xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+            <Pencil className="h-6 w-6 text-primary" />
             Edit Teacher Profile
           </DialogTitle>
         </DialogHeader>
@@ -177,7 +177,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
             <div
               onClick={handleAvatarClick}
               className={cn(
-                'w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex items-center justify-center cursor-pointer border-2 border-dashed border-emerald-300 dark:border-emerald-700 hover:border-emerald-500 transition-colors relative group',
+                'w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center cursor-pointer border-2 border-dashed border-primary/300 dark:border-primary/700 hover:border-primary/500 transition-colors relative group',
                 avatarUploading && 'animate-pulse',
               )}
             >
@@ -188,12 +188,12 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Upload className="h-6 w-6 text-emerald-400 group-hover:text-emerald-600 transition-colors" />
+                <Upload className="h-6 w-6 text-nejah-electric group-hover:text-primary transition-colors" />
               )}
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Profile Picture</p>
-              <p className="text-xs text-gray-400">Click to upload (max 5MB)</p>
+              <p className="text-sm font-bold text-foreground dark:text-foreground">Profile Picture</p>
+              <p className="text-xs text-muted-foreground">Click to upload (max 5MB)</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -201,37 +201,37 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                 className="hidden"
                 onChange={handleAvatarUpload}
               />
-              {avatarUploading && <p className="text-xs text-emerald-600 mt-1">Uploading...</p>}
+              {avatarUploading && <p className="text-xs text-primary mt-1">Uploading...</p>}
             </div>
           </div>
 
           {/* Section 1: Personal Details */}
-          <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-              <span className="p-1.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg text-emerald-600">
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
+              <span className="p-1.5 bg-primary/10 dark:bg-primary/10 rounded-lg text-primary">
                 <GraduationCap className="h-4 w-4" />
               </span>
-              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Personal Details</h3>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Personal Details</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-fullName" className="text-xs font-semibold dark:text-gray-300">Full Name *</Label>
+                <Label htmlFor="edit-fullName" className="text-xs font-semibold dark:text-muted-foreground">Full Name *</Label>
                 <Input
                   id="edit-fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
                   placeholder="e.g. Dr. Amina Mansour"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-gender" className="text-xs font-semibold dark:text-gray-300">Gender *</Label>
+                <Label htmlFor="edit-gender" className="text-xs font-semibold dark:text-muted-foreground">Gender *</Label>
                 <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                   </SelectContent>
@@ -239,7 +239,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-email" className="text-xs font-semibold dark:text-gray-300">Email Address *</Label>
+                <Label htmlFor="edit-email" className="text-xs font-semibold dark:text-muted-foreground">Email Address *</Label>
                 <Input
                   id="edit-email"
                   type="email"
@@ -247,24 +247,24 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                   placeholder="name@nejah-center.com"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-phoneNumber" className="text-xs font-semibold dark:text-gray-300">Phone Number</Label>
+                <Label htmlFor="edit-phoneNumber" className="text-xs font-semibold dark:text-muted-foreground">Phone Number</Label>
                 <Input
                   id="edit-phoneNumber"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                   placeholder="+1 (555) 000-0000"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
 
               {/* Address Information */}
               <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold dark:text-gray-300">Country</Label>
+                <Label className="text-xs font-semibold dark:text-muted-foreground">Country</Label>
                 <Select
                   value={getCountryIsoByName(formData.country)}
                   onValueChange={(val) => {
@@ -272,8 +272,8 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                     setFormData({ ...formData, country: country?.name || val, city: '' });
                   }}
                 >
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select Country" /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select Country" /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
                     {Country.getAllCountries().map((c) => (
                       <SelectItem key={c.isoCode} value={c.isoCode}>
                         {c.name}
@@ -284,14 +284,14 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
 
               <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold dark:text-gray-300">City</Label>
+                <Label className="text-xs font-semibold dark:text-muted-foreground">City</Label>
                 <Select
                   value={formData.city}
                   onValueChange={(val) => setFormData({ ...formData, city: val })}
                   disabled={!formData.country}
                 >
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select City" /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700 max-h-60">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select City" /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
                     {cityOptions.map((cityName) => (
                       <SelectItem key={cityName} value={cityName}>
                         {cityName}
@@ -302,21 +302,21 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
 
               <div className="grid gap-1.5 col-span-2">
-                <Label className="text-xs font-semibold dark:text-gray-300">Street Address</Label>
+                <Label className="text-xs font-semibold dark:text-muted-foreground">Street Address</Label>
                 <Input
                   value={formData.streetAddress}
                   onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
                   placeholder="Enter street address"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
 
               {/* Professional Details merged */}
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-status" className="text-xs font-semibold dark:text-gray-300">Status</Label>
+                <Label htmlFor="edit-status" className="text-xs font-semibold dark:text-muted-foreground">Status</Label>
                 <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -328,28 +328,28 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
           </div>
 
           {/* Section 2: Academic Qualifications */}
-          <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
               <span className="p-1.5 bg-amber-50 dark:bg-amber-950/50 rounded-lg text-amber-600">
                 <BookOpen className="h-4 w-4" />
               </span>
-              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Academic Qualifications</h3>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Academic Qualifications</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-specialization" className="text-xs font-semibold dark:text-gray-300">Specialization</Label>
+                <Label htmlFor="edit-specialization" className="text-xs font-semibold dark:text-muted-foreground">Specialization</Label>
                 <Input
                   id="edit-specialization"
                   value={formData.specialization}
                   onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
                   placeholder="e.g. Islamic Jurisprudence, Quranic Sciences"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-experience" className="text-xs font-semibold dark:text-gray-300">Experience (Years)</Label>
+                <Label htmlFor="edit-experience" className="text-xs font-semibold dark:text-muted-foreground">Experience (Years)</Label>
                 <Input
                   id="edit-experience"
                   type="number"
@@ -357,41 +357,41 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                   value={formData.experience}
                   onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                   placeholder="0"
-                  className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
                 />
               </div>
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="edit-qualification" className="text-xs font-semibold dark:text-gray-300">Certifications / Ijazah</Label>
+              <Label htmlFor="edit-qualification" className="text-xs font-semibold dark:text-muted-foreground">Certifications / Ijazah</Label>
               <Textarea
                 id="edit-qualification"
                 value={formData.qualification}
                 onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
                 placeholder="List all formal certifications and ijazahs received with respective institutions..."
-                className="dark:bg-gray-900 dark:border-gray-600 rounded-xl min-h-[80px]"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl min-h-[80px]"
               />
             </div>
           </div>
 
           {/* Section 3: Islamic Education Level & Topics */}
-          <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
               <span className="p-1.5 bg-purple-50 dark:bg-purple-950/50 rounded-lg text-purple-600">
                 <Star className="h-4 w-4" />
               </span>
-              <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200">Islamic Education & Topics</h3>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Islamic Education & Topics</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-islamicEducationLevel" className="text-xs font-semibold dark:text-gray-300">Islamic Education Level</Label>
+                <Label htmlFor="edit-islamicEducationLevel" className="text-xs font-semibold dark:text-muted-foreground">Islamic Education Level</Label>
                 <Select
                   value={formData.islamicEducationLevel}
                   onValueChange={(v) => setFormData({ ...formData, islamicEducationLevel: v })}
                 >
-                  <SelectTrigger className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"><SelectValue placeholder="Select level" /></SelectTrigger>
-                  <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select level" /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
                     <SelectItem value="Beginner">Beginner</SelectItem>
                     <SelectItem value="Intermediate">Intermediate</SelectItem>
                     <SelectItem value="Advanced">Advanced</SelectItem>
@@ -401,9 +401,9 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
 
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-monthlySalary" className="text-xs font-semibold dark:text-gray-300">Monthly Salary</Label>
+                <Label htmlFor="edit-monthlySalary" className="text-xs font-semibold dark:text-muted-foreground">Monthly Salary</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="edit-monthlySalary"
                     type="number"
@@ -412,20 +412,20 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                     value={formData.monthlySalary}
                     onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
                     placeholder="0.00"
-                    className="dark:bg-gray-900 dark:border-gray-600 rounded-xl pl-9"
+                    className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl pl-9"
                   />
                 </div>
               </div>
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="edit-teachingTopics" className="text-xs font-semibold dark:text-gray-300">Teaching Topics</Label>
+              <Label htmlFor="edit-teachingTopics" className="text-xs font-semibold dark:text-muted-foreground">Teaching Topics</Label>
               <Input
                 id="edit-teachingTopics"
                 value={formData.teachingTopics}
                 onChange={(e) => setFormData({ ...formData, teachingTopics: e.target.value })}
                 placeholder="e.g. Quran Recitation, Tajweed, Fiqh, Hadith (comma separated)"
-                className="dark:bg-gray-900 dark:border-gray-600 rounded-xl"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
               />
             </div>
           </div>
@@ -433,10 +433,10 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
 
 
           <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-gray-200 dark:border-gray-700 dark:text-gray-300">
+            <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-border dark:border-nejah-border-blue dark:text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || avatarUploading} className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-xl px-6">
+            <Button type="submit" disabled={loading || avatarUploading} className="bg-primary hover:bg-nejah-azure text-white rounded-xl px-6">
               {loading ? 'Saving Changes...' : 'Save Changes'}
             </Button>
           </DialogFooter>

@@ -80,16 +80,16 @@ function TeacherStudentDetailContent() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-900" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nejah-border-blue" />
       </div>
     );
   }
 
   if (error || !student) {
     return (
-      <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-100 dark:border-gray-700">
+      <div className="max-w-lg mx-auto bg-card dark:bg-nejah-surface rounded-2xl p-8 text-center border border-border dark:border-nejah-border-blue">
         <p className="text-red-600 mb-4">{error || 'Student not found'}</p>
-        <Link to="/teacher_students" className="text-sm font-bold text-emerald-700 hover:underline">
+        <Link to="/teacher_students" className="text-sm font-bold text-primary hover:underline">
           Back to Students Directory
         </Link>
       </div>
@@ -100,19 +100,19 @@ function TeacherStudentDetailContent() {
     <div className="space-y-6">
       <Link
         to="/teacher_students"
-        className="inline-flex items-center gap-1.5 text-xs font-black text-gray-400 hover:text-emerald-800 uppercase tracking-widest"
+        className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest"
       >
         <ChevronLeft className="h-4 w-4" /> Back to Students Directory
       </Link>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 md:p-8">
+      <div className="bg-card dark:bg-nejah-surface rounded-3xl border border-border dark:border-nejah-border-blue p-6 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex items-center justify-center font-bold text-2xl text-emerald-800 dark:text-emerald-300 shrink-0">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-2xl text-nejah-sapphire text-nejah-electric shrink-0">
             {student.fullName?.charAt(0) || 'S'}
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-950 dark:text-gray-100 font-serif">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-nejah-sapphire text-foreground font-serif">
                 {student.fullName}
               </h1>
               {student.isTemporaryAssignment && (
@@ -121,20 +121,20 @@ function TeacherStudentDetailContent() {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-gray-500 flex items-center gap-2">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Mail className="h-4 w-4" /> {student.email || '—'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-3 py-1">
+            <Badge className="bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric px-3 py-1">
               {student.level || '—'}
             </Badge>
             <Badge
               className={cn(
                 'px-3 py-1',
                 student.status === 'active'
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-gray-100 text-gray-600',
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-muted text-muted-foreground',
               )}
             >
               {student.status || '—'}
@@ -142,16 +142,16 @@ function TeacherStudentDetailContent() {
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+        <div className="mt-6 pt-6 border-t border-border dark:border-nejah-border-blue">
           <div className="flex items-center gap-3 max-w-xs">
-            <span className="text-xs font-bold text-gray-400 uppercase">Attendance</span>
-            <div className="flex-1 bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+            <span className="text-xs font-bold text-muted-foreground uppercase">Attendance</span>
+            <div className="flex-1 bg-muted dark:bg-nejah-surface h-2 rounded-full overflow-hidden">
               <div
-                className="bg-emerald-600 h-full rounded-full"
+                className="bg-primary h-full rounded-full"
                 style={{ width: `${student.attendanceRate || 0}%` }}
               />
             </div>
-            <span className="text-sm font-bold text-emerald-800">{student.attendanceRate ?? 0}%</span>
+            <span className="text-sm font-bold text-nejah-sapphire">{student.attendanceRate ?? 0}%</span>
           </div>
         </div>
       </div>
@@ -159,7 +159,7 @@ function TeacherStudentDetailContent() {
       <div className="space-y-6">
         <div
           role="tablist"
-          className="inline-flex flex-wrap gap-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-1"
+          className="inline-flex flex-wrap gap-1 bg-card dark:bg-nejah-surface border border-border dark:border-nejah-border-blue rounded-xl p-1"
         >
           {TAB_ITEMS.map(({ id, label, icon: Icon }) => (
             <button
@@ -171,8 +171,8 @@ function TeacherStudentDetailContent() {
               className={cn(
                 'inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                 activeTab === id
-                  ? 'bg-emerald-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700',
+                  ? 'bg-primary text-white'
+                  : 'text-muted-foreground hover:bg-muted dark:text-muted-foreground dark:hover:bg-nejah-surface',
               )}
             >
               <Icon className="h-4 w-4" />
@@ -184,44 +184,44 @@ function TeacherStudentDetailContent() {
         {activeTab === 'overview' && (
           <div
             role="tabpanel"
-            className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6"
+            className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6"
           >
-            <h2 className="text-lg font-bold text-emerald-950 dark:text-gray-100 mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-emerald-600" /> Student Profile
+            <h2 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" /> Student Profile
             </h2>
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Full Name</dt>
-                <dd className="font-medium text-emerald-950 dark:text-gray-100 mt-1">{student.fullName || '—'}</dd>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Full Name</dt>
+                <dd className="font-medium text-nejah-sapphire text-foreground mt-1">{student.fullName || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Email</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Email</dt>
                 <dd className="font-medium mt-1">{student.email || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Gender</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Gender</dt>
                 <dd className="font-medium mt-1">
                   {student.gender === 'MALE' ? 'Male' : student.gender === 'FEMALE' ? 'Female' : '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Quran Level</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Quran Level</dt>
                 <dd className="font-medium mt-1">{student.level || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Status</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Status</dt>
                 <dd className="font-medium mt-1 capitalize">{student.status || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Student Code</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Student Code</dt>
                 <dd className="font-medium mt-1">{student.studentCode || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Parent</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Parent</dt>
                 <dd className="font-medium mt-1">{student.parent?.fullName || student.parentName || '—'}</dd>
               </div>
               <div>
-                <dt className="text-gray-500 text-xs font-bold uppercase tracking-wider">Parent Phone</dt>
+                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Parent Phone</dt>
                 <dd className="font-medium mt-1">{student.parent?.phone || '—'}</dd>
               </div>
               {student.temporaryReplacement && (

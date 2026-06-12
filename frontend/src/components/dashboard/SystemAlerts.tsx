@@ -40,7 +40,7 @@ const alerts: Alert[] = [
 const alertConfig = {
   error: { dot: 'bg-red-500', dotPulse: true },
   warning: { dot: 'bg-amber-400', dotPulse: false },
-  success: { dot: 'bg-brand-electric', dotPulse: false },
+  success: { dot: 'bg-primary', dotPulse: false },
 };
 
 export const SystemAlerts = memo(function SystemAlerts() {
@@ -53,7 +53,7 @@ export const SystemAlerts = memo(function SystemAlerts() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10">
           <Megaphone className="h-4 w-4 text-amber-500" />
         </div>
-        <h2 className="text-sm font-medium tracking-tight text-brand-silver">{t.systemAlerts}</h2>
+        <h2 className="text-sm font-medium tracking-tight text-foreground">{t.systemAlerts}</h2>
         <span className="badge-live-pulse ml-auto">
           {alerts.filter((a) => a.type === 'error').length} Critical
         </span>
@@ -78,9 +78,9 @@ export const SystemAlerts = memo(function SystemAlerts() {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="mb-0.5 text-sm font-medium text-brand-silver">{alert.title}</p>
-                <p className="text-xs leading-relaxed text-brand-platinum">{alert.description}</p>
-                <p className="mt-1.5 font-mono text-[10px] text-brand-platinum">{alert.time}</p>
+                <p className="mb-0.5 text-sm font-medium text-foreground">{alert.title}</p>
+                <p className="text-xs leading-relaxed text-nejah-slate-blue">{alert.description}</p>
+                <p className="mt-1.5 font-mono text-[10px] text-nejah-slate-blue">{alert.time}</p>
               </div>
             </div>
           );
@@ -91,7 +91,7 @@ export const SystemAlerts = memo(function SystemAlerts() {
       <div className="px-4 py-4">
         <button
           onClick={() => navigate({ to: '/teacher_notifications' })}
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-brand-electric transition-colors hover:bg-brand-electric/10 group"
+          className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-nejah-electric transition-colors hover:bg-primary/10 group"
         >
           {t.viewAllNotifications}
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />

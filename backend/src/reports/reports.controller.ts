@@ -22,7 +22,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('summary')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getSummary(@Query() query: any) {
     const dateRange: DateRangeFilter = {};
 
@@ -42,7 +42,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('students/performance')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getStudentPerformance(@Query() query: any) {
     const filters: any = {};
 
@@ -90,7 +90,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('teachers/activity')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getTeacherActivity(@Query() query: any) {
     const filters: any = {};
 
@@ -126,7 +126,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('attendance/analytics')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getAttendanceAnalytics(@Query() query: any) {
     const filters: any = {};
 
@@ -154,7 +154,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('progress/analytics')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getProgressAnalytics(@Query() query: any) {
     const filters: any = {};
 
@@ -174,7 +174,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('registrations')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getRegistrationReports(@Query() query: any) {
     const filters: any = {};
 
@@ -202,7 +202,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('parents/activity')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getParentActivityReports(@Query() query: any) {
     const filters: any = {};
 
@@ -226,7 +226,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('homework')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getHomeworkReports(@Query() query: any) {
     const filters: any = {};
 
@@ -254,7 +254,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('exams')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getExamReports(@Query() query: any) {
     const filters: any = {};
 
@@ -282,7 +282,7 @@ export class ReportsController {
   // ────────────────────────────────────────────────────────────────────────────────
 
   @Get('teacher-replacements')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async getTeacherReplacementReports(@Query() query: any) {
     const filters: any = {};
 

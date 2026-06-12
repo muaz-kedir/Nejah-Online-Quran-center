@@ -61,7 +61,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
       <aside
         className={cn(
           'flex h-full flex-col transition-all duration-300 ease-in-out',
-          'border-r border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-white/5 dark:bg-brand-abyss/90',
+          'border-r border-border bg-card/80 backdrop-blur-xl dark:border-nejah-border-blue dark:bg-nejah-surface/90',
           /* Mobile: fixed overlay drawer */
           'fixed inset-y-0 left-0 z-30 w-64',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
@@ -80,40 +80,40 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
           {!sidebarCollapsed ? (
             <>
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-brand-electric/30 bg-brand-abyss/50 p-1 shadow-[0_0_16px_rgba(0,102,204,0.25)]">
+                <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-nejah-electric/30 bg-nejah-surface/50 p-1 shadow-[0_0_16px_rgba(0,102,204,0.25)]">
                   <img src="/logo.png" alt="Nejah" className="h-7 w-7 rounded-full object-cover" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="truncate text-sm font-medium leading-none tracking-tight text-brand-silver">
+                  <h1 className="truncate text-sm font-medium leading-none tracking-tight text-foreground">
                     Nejah Admin Console
                   </h1>
-                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-brand-electric">
+                  <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.2em] text-nejah-electric">
                     Command Center
                   </p>
                 </div>
               </div>
               <button
                 onClick={toggleCollapse}
-                className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-brand-primary/30 text-brand-platinum transition-all duration-200 hover:border-brand-electric/40 hover:text-brand-silver lg:flex"
+                className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all duration-200 hover:border-nejah-electric/40 hover:text-foreground lg:flex"
                 title="Collapse sidebar"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={onToggle}
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-brand-primary/30 text-brand-platinum lg:hidden"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue lg:hidden"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
             </>
           ) : (
             <>
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-electric/30 bg-brand-abyss/50 p-1 shadow-[0_0_16px_rgba(0,102,204,0.25)]">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-nejah-electric/30 bg-nejah-surface/50 p-1 shadow-[0_0_16px_rgba(0,102,204,0.25)]">
                 <img src="/logo.png" alt="Nejah" className="h-7 w-7 rounded-full object-cover" />
               </div>
               <button
                 onClick={toggleCollapse}
-                className="hidden h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-brand-primary/30 text-brand-platinum transition-all hover:border-brand-electric/40 hover:text-brand-silver lg:flex"
+                className="hidden h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all hover:border-nejah-electric/40 hover:text-foreground lg:flex"
                 title="Expand sidebar"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -133,7 +133,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
               const label = menuLabels[item.label] || item.label;
 
               return (
-                <li key={item.path}>
+                <li key={`${item.path}-${item.label}`}>
                   <Link
                     to={item.path}
                     title={sidebarCollapsed ? label : undefined}
@@ -141,18 +141,18 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
                       'group relative flex items-center gap-3 rounded-xl transition-all duration-200',
                       sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
                       isActive
-                        ? 'nav-item-active text-brand-silver'
-                        : 'text-brand-platinum nav-item-hover hover:text-brand-silver',
+                        ? 'nav-item-active text-foreground'
+                        : 'text-nejah-slate-blue nav-item-hover hover:text-foreground',
                     )}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-brand-electric shadow-[0_0_8px_rgba(0,102,204,0.6)]" />
+                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_8px_rgba(0,102,204,0.6)]" />
                     )}
 
                     <Icon
                       className={cn(
                         'h-5 w-5 flex-shrink-0 transition-transform duration-200',
-                        isActive ? 'text-brand-electric' : 'text-brand-platinum group-hover:text-brand-silver',
+                        isActive ? 'text-nejah-electric' : 'text-nejah-slate-blue group-hover:text-foreground',
                         !sidebarCollapsed && 'group-hover:scale-110',
                       )}
                     />
@@ -169,7 +169,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
                     )}
 
                     {sidebarCollapsed && (
-                      <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-brand-silver shadow-lg group-hover:flex">
+                      <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
                         {label}
                         {item.badge && (
                           <span className="badge-live-pulse ml-2">{item.badge}</span>
@@ -191,7 +191,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
             onClick={handleLogout}
             className={cn(
               'relative flex w-full items-center gap-3 rounded-xl transition-all duration-200',
-              'text-brand-platinum hover:bg-red-500/10 hover:text-red-400',
+              'text-nejah-slate-blue hover:bg-red-500/10 hover:text-red-400',
               sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
             )}
             title={!sidebarCollapsed ? 'Logout' : undefined}
@@ -199,7 +199,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
             <LogOut className="h-5 w-5 flex-shrink-0" />
             {!sidebarCollapsed && <span className="text-sm font-medium">Logout</span>}
             {sidebarCollapsed && (
-              <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-brand-silver shadow-lg group-hover:flex">
+              <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
                 Logout
               </div>
             )}
@@ -208,7 +208,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
 
         {!sidebarCollapsed && (
           <div className="flex-shrink-0 p-4">
-            <p className="text-center font-mono text-[10px] uppercase tracking-widest text-brand-platinum">
+            <p className="text-center font-mono text-[10px] uppercase tracking-widest text-nejah-slate-blue">
               © 2026 Nejah Center
             </p>
           </div>

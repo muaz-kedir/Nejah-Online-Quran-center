@@ -59,11 +59,11 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
 
   const getStatusColor = (s: string) => {
     switch (s?.toLowerCase()) {
-      case 'active': return 'bg-emerald-500';
+      case 'active': return 'bg-primary/100';
       case 'inactive': return 'bg-red-500';
       case 'pending': return 'bg-blue-500';
       case 'on leave': return 'bg-amber-500';
-      default: return 'bg-gray-400';
+      default: return 'bg-nejah-slate-blue';
     }
   };
 
@@ -71,9 +71,9 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
     switch (level?.toLowerCase()) {
       case 'beginner': return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400';
       case 'intermediate': return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400';
-      case 'advanced': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400';
+      case 'advanced': return 'bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric';
       case 'ijazah': return 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400';
-      default: return 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      default: return 'bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground';
     }
   };
 
@@ -81,20 +81,20 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:border-gray-700 rounded-3xl p-6">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-emerald-900 dark:text-gray-100 font-serif flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 flex items-center justify-center font-bold text-lg text-emerald-800 dark:text-emerald-300">
+          <DialogTitle className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-lg text-nejah-sapphire text-nejah-electric">
               {teacher.fullName?.charAt(0)}
             </div>
             <div>
               <span>{teacher.fullName}</span>
               <div className="flex items-center gap-2 mt-0.5">
-                <Badge className={cn('text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border-none flex items-center gap-1', getStatusColor(teacher.status)?.replace('bg-', 'bg-').replace('500', '100').replace('emerald', 'emerald-50'))}>
+                <Badge className={cn('text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border-none flex items-center gap-1', getStatusColor(teacher.status)?.replace('bg-', 'bg-').replace('500', '100').replace('emerald', 'primary'))}>
                   <span className={cn('w-1.5 h-1.5 rounded-full', getStatusColor(teacher.status))} />
                   {teacher.status || 'Active'}
                 </Badge>
-                <span className="text-xs text-gray-400 font-medium">{teacher.specialization || 'General Islamic Studies'}</span>
+                <span className="text-xs text-muted-foreground font-medium">{teacher.specialization || 'General Islamic Studies'}</span>
               </div>
             </div>
           </DialogTitle>
@@ -103,27 +103,27 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
         <div className="space-y-5 mt-2">
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Students</p>
-              <p className="text-xl font-extrabold text-emerald-900 dark:text-gray-100 mt-1 font-serif">
+            <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Students</p>
+              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
                 {analytics?.studentCount ?? (teacher.students?.length || 0)}
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Weekly Hours</p>
-              <p className="text-xl font-extrabold text-emerald-900 dark:text-gray-100 mt-1 font-serif">
+            <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Weekly Hours</p>
+              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
                 {analytics?.totalWeeklyHours ?? '-'}
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Experience</p>
-              <p className="text-xl font-extrabold text-emerald-900 dark:text-gray-100 mt-1 font-serif">
+            <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Experience</p>
+              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
                 {teacher.experience || 0}y
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Topics</p>
-              <p className="text-xl font-extrabold text-emerald-900 dark:text-gray-100 mt-1 font-serif">
+            <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Topics</p>
+              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
                 {analytics?.topics?.length || 0}
               </p>
             </div>
@@ -133,26 +133,26 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
               {teacher.country && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Globe className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
                   <span>{teacher.country}</span>
                 </div>
               )}
               {teacher.city && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <MapPin className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>{teacher.city}</span>
                 </div>
               )}
               {analytics?.monthlySalary && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <span>${Number(analytics.monthlySalary).toLocaleString()}/month</span>
                 </div>
               )}
               {teacher.email && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Email:</span> {teacher.email}
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+                  <span className="font-medium text-foreground dark:text-muted-foreground">Email:</span> {teacher.email}
                 </div>
               )}
             </div>
@@ -166,8 +166,8 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
                 </div>
               )}
               {teacher.phoneNumber && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Phone:</span> {teacher.phoneNumber}
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+                  <span className="font-medium text-foreground dark:text-muted-foreground">Phone:</span> {teacher.phoneNumber}
                 </div>
               )}
             </div>
@@ -176,12 +176,12 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
           {/* Teaching Topics */}
           {analytics?.topics && analytics.topics.length > 0 && (
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
                 <BookOpen className="h-3.5 w-3.5" /> Teaching Topics
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {analytics.topics.map((topic: string, i: number) => (
-                  <Badge key={i} className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30 rounded-full text-[10px] font-bold px-2.5 py-0.5">
+                  <Badge key={i} className="bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric border border-primary/50 dark:border-nejah-border-blue/30 rounded-full text-[10px] font-bold px-2.5 py-0.5">
                     {topic}
                   </Badge>
                 ))}
@@ -191,41 +191,41 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
 
           {/* Per-Student Progress */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5" /> Student Progress
             </h4>
             {loading ? (
-              <div className="py-6 text-center text-sm text-gray-400 animate-pulse">Loading student progress...</div>
+              <div className="py-6 text-center text-sm text-muted-foreground animate-pulse">Loading student progress...</div>
             ) : !analytics?.studentDetails || analytics.studentDetails.length === 0 ? (
-              <div className="py-6 text-center text-sm text-gray-400">No students assigned yet.</div>
+              <div className="py-6 text-center text-sm text-muted-foreground">No students assigned yet.</div>
             ) : (
               <div className="space-y-3">
                 {analytics.studentDetails.map((s: any) => (
-                  <div key={s.studentId} className="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div key={s.studentId} className="bg-muted dark:bg-nejah-surface/30 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-primary text-nejah-electric flex items-center justify-center font-bold text-xs">
                           {s.studentName?.charAt(0)}
                         </div>
-                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{s.studentName}</span>
+                        <span className="text-sm font-bold text-foreground dark:text-foreground">{s.studentName}</span>
                       </div>
                       <Badge className={cn('text-[9px] font-bold uppercase tracking-widest rounded-full px-2 py-0.5 border-none', getLevelBadge(s.rank))}>
                         {s.rank}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                      <div className="flex-1 bg-muted dark:bg-nejah-surface h-2 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all"
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-nejah-azure transition-all"
                           style={{ width: `${s.progressPercentage || 0}%` }}
                         />
                       </div>
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 min-w-[40px] text-right">
+                      <span className="text-xs font-bold text-muted-foreground dark:text-muted-foreground min-w-[40px] text-right">
                         {s.progressPercentage || 0}%
                       </span>
                     </div>
                     {s.lastStudiedSurah && (
-                      <p className="text-[10px] text-gray-400 mt-1.5">
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
                         Last: {s.lastStudiedSurah}{s.lastStudiedAyah ? `:${s.lastStudiedAyah}` : ''} · {s.surahsCount || 0} surahs
                       </p>
                     )}
@@ -242,7 +242,7 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
                 window.location.href = `/teachers/${teacher.id}`;
               }}
               variant="outline"
-              className="w-full rounded-xl border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 gap-1.5"
+              className="w-full rounded-xl border-primary/200 dark:border-nejah-border-blue text-primary text-nejah-electric hover:bg-primary/10 dark:hover:bg-nejah-sapphire/30 gap-1.5"
             >
               View Full Profile <ArrowRight className="h-4 w-4" />
             </Button>
