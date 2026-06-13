@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Patch,
-  Delete,
   Param,
   Body,
   Query,
@@ -58,7 +57,13 @@ export class LiveSessionController {
   }
 
   @Get('upcoming')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getUpcoming(@Request() req, @Query('studentId') studentId?: string) {
     let teacherId: string | undefined;
     if (req.user.role === UserRole.TEACHER) {
@@ -93,7 +98,11 @@ export class LiveSessionController {
 
   @Get('teacher')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async getTeacherSessions(@Request() req, @Query('page') page?: number, @Query('limit') limit?: number) {
+  async getTeacherSessions(
+    @Request() req,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       return this.liveSessionService.getTeacherSessions(teacher.id, page, limit);
@@ -102,13 +111,30 @@ export class LiveSessionController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async getStudentSessions(@Param('studentId') studentId: string, @Query('page') page?: number, @Query('limit') limit?: number) {
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
+  async getStudentSessions(
+    @Param('studentId') studentId: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
     return this.liveSessionService.getStudentSessions(studentId, page, limit);
   }
 
   @Get(':id')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async findOne(@Param('id') id: string) {
     return this.liveSessionService.findById(id);
   }

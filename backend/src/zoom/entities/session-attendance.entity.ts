@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { LiveSession } from './live-session.entity';
 import { Student } from '../../students/entities/student.entity';
@@ -43,4 +44,7 @@ export class SessionAttendance {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
