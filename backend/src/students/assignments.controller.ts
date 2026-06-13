@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -33,9 +41,9 @@ export class AssignmentsController {
     await this.schedulesService.clearStudentSchedules(studentId);
 
     // 3. Update student mapping
-    await this.studentsService.update(studentId, { 
-      teacherId, 
-      isAssigned: true 
+    await this.studentsService.update(studentId, {
+      teacherId,
+      isAssigned: true,
     });
 
     // 4. Create schedules only when explicitly provided (recurring schedules are set from Faculty profile)
@@ -60,11 +68,11 @@ export class AssignmentsController {
   @Post('unassign')
   async unassignStudent(@Body() dto: UnassignStudentDto) {
     const { studentId } = dto;
-    
+
     await this.studentsService.unassignFromTeacher(studentId);
-    
+
     await this.schedulesService.clearStudentSchedules(studentId);
-    
+
     return { message: 'Student unassigned successfully' };
   }
 }
