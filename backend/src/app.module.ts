@@ -37,7 +37,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get('DATABASE_URL');
-        
+
         // Prefer DATABASE_URL if available
         if (databaseUrl) {
           return {
@@ -51,7 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
             },
           };
         }
-        
+
         // Fallback to individual credentials
         return {
           type: 'postgres',
