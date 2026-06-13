@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GraduationCap, UserRound, CalendarClock } from "lucide-react";
+import { GraduationCap, UserRound, CalendarClock, BookOpen } from "lucide-react";
 import { SectionHeader } from "./SectionHeader";
 import { useTheme } from "./ThemeProvider";
 
@@ -19,6 +19,49 @@ export function About() {
           title={t.about.title}
           description={t.about.desc}
         />
+
+        <div className="grid lg:grid-cols-2 gap-10 items-center mb-14">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-primary mb-4">
+              <BookOpen className="size-3.5" />
+              Our Mission
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+              Connecting Students with Expert Quran Teachers Worldwide
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              At Nejah Online Quran Center, we provide personalized one-on-one Quran education
+              through live interactive sessions. Our certified teachers guide students of all ages
+              in Quran recitation, memorization (Hifz), Tajweed, and Islamic studies — all from the
+              comfort of home.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              With flexible scheduling, progress tracking, and a supportive learning environment,
+              we've helped thousands of students worldwide connect with the Quran.
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="relative"
+          >
+            <div className="rounded-3xl overflow-hidden shadow-elevated">
+              <img
+                src="/Nejah-2.png"
+                alt="Nejah Online Quran Center - About"
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          </motion.div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <motion.div
