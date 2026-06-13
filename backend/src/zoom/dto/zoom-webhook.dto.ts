@@ -1,11 +1,12 @@
-import { IsString, IsObject, IsOptional } from 'class-validator';
+import { IsString, IsObject, IsOptional, IsNotEmptyObject } from 'class-validator';
 
 export class ZoomWebhookDto {
   @IsString()
   event: string;
 
   @IsObject()
-  payload: any;
+  @IsNotEmptyObject()
+  payload: Record<string, unknown>;
 
   @IsOptional()
   @IsString()
