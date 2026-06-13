@@ -120,7 +120,7 @@ export class ZoomService {
       join_before_host: true,
       mute_upon_entry: true,
       waiting_room: false,
-      auto_recording: 'cloud',
+      auto_recording: 'none',
       approval_type: 2,
       audio: 'voip',
     };
@@ -262,46 +262,6 @@ export class ZoomService {
     } catch (error) {
       this.logger.error(`Failed to get Zoom meeting analytics: ${error.message}`, error.stack);
       return null;
-    }
-  }
-
-  async getRecordings(zoomMeetingId: string): Promise<Record<string, unknown>[]> {
-    const token = await this.getAccessToken();
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/meetings/${zoomMeetingId}/recordings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      );
-      return response.data?.recording_files || [];
-    } catch (error) {
-      this.logger.error(`Failed to get Zoom recordings: ${error.message}`, error.stack);
-      return [];
-    }
-  }
-
-  async listRecordings(
-    zoomUserId: string,
-    from?: string,
-    to?: string,
-  ): Promise<Record<string, unknown>[]> {
-    const token = await this.getAccessToken();
-    const params: Record<string, unknown> = { page_size: 30 };
-    if (from) params.from = from;
-    if (to) params.to = to;
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/${zoomUserId}/recordings`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        }),
-      );
-      return response.data?.meetings || [];
-    } catch (error) {
-      this.logger.error(`Failed to list Zoom recordings: ${error.message}`, error.stack);
-      return [];
     }
   }
 

@@ -13,8 +13,9 @@ import { LiveSessionController } from './live-session.controller';
 import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
 import { ZoomSettingsController } from './zoom-settings.controller';
-import { RecordingController } from './recording.controller';
 import { ZoomAnalyticsController } from './zoom-analytics.controller';
+import { SessionAttendanceController } from './session-attendance.controller';
+import { ParentSessionController } from './parent-session.controller';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionAttendance } from './entities/session-attendance.entity';
@@ -22,6 +23,7 @@ import { SessionNote } from './entities/session-note.entity';
 import { ProcessedWebhook } from './entities/processed-webhook.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { Parent } from '../parents/entities/parent.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeachersModule } from '../teachers/teachers.module';
 import { EncryptionService } from '../common/encryption.service';
@@ -36,6 +38,7 @@ import { EncryptionService } from '../common/encryption.service';
       ProcessedWebhook,
       Student,
       Teacher,
+      Parent,
     ]),
     HttpModule.register({
       timeout: 15000,
@@ -55,8 +58,9 @@ import { EncryptionService } from '../common/encryption.service';
     SessionNoteController,
     ZoomWebhookController,
     ZoomSettingsController,
-    RecordingController,
     ZoomAnalyticsController,
+    SessionAttendanceController,
+    ParentSessionController,
   ],
   providers: [
     EncryptionService,
