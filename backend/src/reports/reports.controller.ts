@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { DateRangeFilter } from './reports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
