@@ -46,13 +46,13 @@ export class ZoomSettingsController {
   }
 
   @Get('all')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN)
   async getAll() {
     return this.zoomService.getAllIntegrations();
   }
 
   @Get('user/:zoomUserId')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN)
   async getZoomUser(@Param('zoomUserId') zoomUserId: string) {
     return this.zoomService.getZoomUser(zoomUserId);
   }
