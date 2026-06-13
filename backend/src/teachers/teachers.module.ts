@@ -31,6 +31,6 @@ import { TeacherReplacementsModule } from '../teacher-replacements/teacher-repla
   ],
   controllers: [TeachersController, TeacherDashboardController],
   providers: [TeachersService],
-  exports: [TeachersService],
+  exports: [TeachersService, TypeOrmModule],
 })
 export class TeachersModule {}

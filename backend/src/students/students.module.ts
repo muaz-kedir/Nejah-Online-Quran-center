@@ -49,6 +49,6 @@ import { ParentsModule } from '../parents/parents.module';
   ],
   controllers: [StudentsController, StudentDashboardController, AssignmentsController],
   providers: [StudentsService, StudentPortalService],
-  exports: [StudentsService, StudentPortalService],
+  exports: [StudentsService, StudentPortalService, TypeOrmModule],
 })
 export class StudentsModule {}

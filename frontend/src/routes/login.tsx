@@ -7,7 +7,7 @@ import {
   Loader2, Mail, Lock, ArrowLeft, ChevronDown, Eye, EyeOff,
   Shield, ShieldAlert, GraduationCap, User, Users, Zap,
 } from "lucide-react";
-import { Loader2, Mail, Lock, LogIn } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
-import { SilverDivider } from "@/components/dashboard/design-system";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -247,29 +246,9 @@ function LoginPage() {
                 })}
               </div>
             </div>
+          </div>
+        </div>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-600 text-sm font-medium">Email or Phone</FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-emerald-600 transition-all duration-300" />
-                          <Input
-                            className="pl-10 h-12 bg-white/60 backdrop-blur-sm border-slate-200/80 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-gray-800 placeholder:text-gray-400"
-                            placeholder="email@example.com"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
     <AuthPageLayout
       title="Welcome Back"
       subtitle="Online Quran & Islamic Center — Sign in to your account"
@@ -304,34 +283,6 @@ function LoginPage() {
             )}
           />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-600 text-sm font-medium">Password</FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-emerald-600 transition-all duration-300" />
-                          <Input
-                            className="pl-10 pr-12 h-12 bg-white/60 backdrop-blur-sm border-slate-200/80 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-gray-800 placeholder:text-gray-400"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-3 text-gray-400 hover:text-emerald-700 transition-colors"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
           <FormField
             control={form.control}
             name="password"
@@ -354,39 +305,18 @@ function LoginPage() {
             )}
           />
 
-                <div className="flex items-center justify-between pt-1">
-                  <FormField
-                    control={form.control}
-                    name="rememberMe"
-                    render={({ field }) => (
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange}
-                          className="border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" />
-                        <label
-                          htmlFor="remember"
-                          className="text-sm font-medium leading-none text-gray-500 cursor-pointer select-none"
-                        >
-                          Remember me
-                        </label>
-                      </div>
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => navigate({ to: "/forgot-password" })}
-                    className="text-sm font-semibold text-emerald-700 hover:text-emerald-600 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
           <div className="flex items-center justify-between">
             <FormField
               control={form.control}
               name="rememberMe"
               render={({ field }) => (
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
-                  <label htmlFor="remember" className="cursor-pointer text-sm font-medium text-nejah-slate-blue">
+                  <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange}
+                    className="border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" />
+                  <label
+                    htmlFor="remember"
+                    className="text-sm font-medium leading-none text-gray-500 cursor-pointer select-none"
+                  >
                     Remember me
                   </label>
                 </div>
@@ -395,31 +325,18 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => navigate({ to: "/forgot-password" })}
-              className="text-sm font-medium text-nejah-electric underline-offset-4 hover:underline"
+              className="text-sm font-semibold text-emerald-700 hover:text-emerald-600 transition-colors"
             >
               Forgot password?
             </button>
           </div>
 
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="relative w-full h-12 text-lg font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/40 transition-all duration-300 active:scale-[0.98] border-0 overflow-hidden group"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent bg-[length:200%_100%] group-hover:animate-[shimmer_1.5s_ease-in-out_infinite]" />
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="mr-2 h-5 w-5" />
-                      Login
-                    </>
-                  )}
-                </Button>
-          <Button type="submit" className="h-12 w-full text-base" disabled={isLoading}>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="relative w-full h-12 text-lg font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/40 transition-all duration-300 active:scale-[0.98] border-0 overflow-hidden group"
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent bg-[length:200%_100%] group-hover:animate-[shimmer_1.5s_ease-in-out_infinite]" />
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -427,99 +344,64 @@ function LoginPage() {
               </>
             ) : (
               <>
+                <Zap className="mr-2 h-5 w-5" />
                 Login
-                <LogIn className="ml-2 h-5 w-5" />
               </>
             )}
           </Button>
 
-                <div className="text-center pt-3 space-y-2">
-                  <p className="text-sm text-gray-500">
-                    New student?{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate({ to: "/register" })}
-                      className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
-                    >
-                      Join our Programs
-                    </button>
-                  </p>
-                  {isApplicationsOpen && (
-                    <p className="text-sm text-gray-500">
-                      Are you a teacher?{" "}
-                      <button
-                        type="button"
-                        onClick={() => navigate({ to: "/apply-as-teacher" })}
-                        className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
-                      >
-                        Apply as Teacher
-                      </button>
-                    </p>
-                  )}
-                </div>
-
-                {/* Demo Accounts */}
-                <div className="pt-4 border-t border-slate-200/60">
-                  <details className="group">
-                    <summary className="text-xs font-semibold text-gray-400 hover:text-emerald-700 cursor-pointer list-none flex items-center gap-1 select-none transition-colors">
-                      <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
-                      Demo Accounts
-                    </summary>
-                    <div className="mt-3 text-xs text-gray-500">
-                      <div className="grid grid-cols-3 gap-2 font-semibold text-gray-600 pb-1.5 border-b border-slate-200/60 mb-1">
-                        <span>Role</span>
-                        <span>Email</span>
-                        <span>Password</span>
-                      </div>
-                      {demoAccounts.map(({ role, email, password }) => (
-                        <div className="grid grid-cols-3 gap-2 py-0.5 hover:bg-white/40 rounded px-1 -mx-1 transition-colors" key={role}>
-                          <span>{role}</span>
-                          <span className="font-mono text-emerald-700">{email}</span>
-                          <span className="font-mono text-amber-700">{password}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                </div>
-              </form>
-            </Form>
-          </div>
-
-          <div className="mt-6 flex justify-center space-x-6 text-[11px] text-gray-500/60 font-medium">
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Privacy Policy</button>
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Terms of Service</button>
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Contact Support</button>
-          </div>
-        </div>
-      </div>
-    </>
-          <SilverDivider />
-          <div className="space-y-2 pt-2 text-center">
-            <p className="text-sm text-nejah-slate-blue">
+          <div className="text-center pt-3 space-y-2">
+            <p className="text-sm text-gray-500">
               New student?{" "}
               <button
                 type="button"
                 onClick={() => navigate({ to: "/register" })}
-                className="font-semibold text-nejah-electric hover:underline"
+                className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
               >
                 Join our Programs
               </button>
             </p>
             {isApplicationsOpen && (
-              <p className="text-sm text-nejah-slate-blue">
+              <p className="text-sm text-gray-500">
                 Are you a teacher?{" "}
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/apply-as-teacher" })}
-                  className="font-semibold text-nejah-electric hover:underline"
+                  className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
                 >
                   Apply as Teacher
                 </button>
               </p>
             )}
           </div>
-        </form>
-      </Form>
+
+          {/* Demo Accounts */}
+          <div className="pt-4 border-t border-slate-200/60">
+            <details className="group">
+              <summary className="text-xs font-semibold text-gray-400 hover:text-emerald-700 cursor-pointer list-none flex items-center gap-1 select-none transition-colors">
+                <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
+                Demo Accounts
+              </summary>
+              <div className="mt-3 text-xs text-gray-500">
+                <div className="grid grid-cols-3 gap-2 font-semibold text-gray-600 pb-1.5 border-b border-slate-200/60 mb-1">
+                  <span>Role</span>
+                  <span>Email</span>
+                  <span>Password</span>
+                </div>
+                {demoAccounts.map(({ role, email, password }) => (
+                  <div className="grid grid-cols-3 gap-2 py-0.5 hover:bg-white/40 rounded px-1 -mx-1 transition-colors" key={role}>
+                    <span>{role}</span>
+                    <span className="font-mono text-emerald-700">{email}</span>
+                    <span className="font-mono text-amber-700">{password}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          </div>
+              </form>
+            </Form>
     </AuthPageLayout>
+      </div>
+    </>
   );
 }

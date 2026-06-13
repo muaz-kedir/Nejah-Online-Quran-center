@@ -39,23 +39,26 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { LanguageProvider, useLanguage } from '@/context/LanguageContext';
 
 // --- Sidebar Component ---
-const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) => {
+const ParentSidebar = ({ activeTab, onTabChange, isCollapsed }: { activeTab: string; onTabChange: (tab: string) => void; isCollapsed: boolean }) => {
+  const { translations } = useLanguage();
+  
   const menuItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, tab: 'dashboard' },
-    { label: 'My Children', icon: Users, tab: 'children' },
-    { label: 'Quran Progress', icon: BookOpen, tab: 'quran' },
-    { label: 'Attendance', icon: Calendar, tab: 'attendance' },
-    { label: 'Homework', icon: ClipboardList, tab: 'homework' },
-    { label: 'Exams & Results', icon: FileText, tab: 'exams' },
-    { label: 'Class Schedule', icon: Clock, tab: 'schedule' },
-    { label: 'Recitation Audio', icon: Mic, tab: 'recitations' },
+    { label: translations.dashboard, icon: LayoutDashboard, tab: 'dashboard' },
+    { label: translations.myChildren, icon: Users, tab: 'children' },
+    { label: translations.quranProgress, icon: BookOpen, tab: 'quran' },
+    { label: translations.attendance, icon: Calendar, tab: 'attendance' },
+    { label: translations.homework, icon: ClipboardList, tab: 'homework' },
+    { label: translations.examsResults, icon: FileText, tab: 'exams' },
+    { label: translations.classSchedule, icon: Clock, tab: 'schedule' },
+    { label: translations.recitationAudio, icon: Mic, tab: 'recitations' },
   ];
 
   const bottomItems = [
-    { label: 'Messages / Chat', icon: MessageSquare, tab: 'messages' },
-    { label: 'Profile Settings', icon: Settings, tab: 'settings' },
+    { label: translations.messagesChat, icon: MessageSquare, tab: 'messages' },
+    { label: translations.profileSettings, icon: Settings, tab: 'settings' },
     { label: 'Logout', icon: LogOut, tab: 'logout', className: 'text-red-400 hover:bg-red-500/10' },
   ];
 
@@ -69,21 +72,27 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
     }
   };
 
+  const toggleSidebar = () => {
+    const newValue = !isCollapsed;
+    setIsCollapsed(newValue);
+    localStorage.setItem('sidebarCollapsed', newValue.toString());
+  };
+
   return (
-    <div className="w-72 dark:bg-nejah-surface bg-card/80 backdrop-blur-xl dark:border-white/5 border-r border-slate-200 text-foreground flex flex-col h-screen fixed inset-y-0 left-0 shadow-2xl z-30">
+    <div className={`${isCollapsed ? 'w-20' : 'w-72'} dark:bg-nejah-surface bg-card/80 backdrop-blur-xl dark:border-white/5 border-r border-slate-200 text-foreground flex flex-col h-screen fixed inset-y-0 left-0 shadow-2xl z-30 transition-all duration-300`}>
       {/* Brand Logo */}
-      <div className="p-8 pb-10">
-        <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="Nejah" className="h-12 w-auto rounded-2xl" />
-          <div>
-            <h1 className="font-extrabold text-xl leading-none tracking-tight">Nejah Online</h1>
-            <p className="text-[10px] text-nejah-electric font-bold tracking-[0.2em] mt-1.5 uppercase">Islamic Center</p>
+      <div className="p-6 pb-8 flex items-center justify-between shrink-0">
+        <div className={`flex items-center gap-3 transition-all duration-300 overflow-hidden ${isCollapsed ? 'w-0 opacity-0 px-0' : 'w-auto opacity-100'}`}>
+          <img src="/logo.png" alt="Nejah" className="h-10 w-auto rounded-xl flex-shrink-0" />
+          <div className="overflow-hidden">
+            <h1 className="font-extrabold text-lg leading-none tracking-tight text-foreground whitespace-nowrap">Nejah Online</h1>
+            <p className="text-[9px] text-nejah-electric font-bold tracking-[0.2em] mt-1 uppercase whitespace-nowrap">Islamic Center</p>
           </div>
         </div>
       </div>
 
       {/* Main Nav */}
-      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const isActive = activeTab === item.tab;
           return (
@@ -97,8 +106,8 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
                   : "text-foreground/50 hover:bg-white/5 hover:text-foreground"
               )}
             >
-              <item.icon className={cn("h-5 w-5", isActive ? "text-nejah-electric" : "text-foreground/30 group-hover:text-nejah-electric")} />
-              <span className="font-bold text-[13px] tracking-wide">{item.label}</span>
+              <item.icon className={cn("h-5 w-5 shrink-0", isActive ? "text-nejah-electric" : "text-foreground/30 group-hover:text-nejah-electric")} />
+              <span className={cn("font-bold text-[13px] tracking-wide transition-all duration-300", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>{item.label}</span>
               {isActive && <div className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full" />}
             </button>
           );
@@ -106,7 +115,7 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
       </nav>
 
       {/* Bottom Nav */}
-      <div className="p-4 mt-auto space-y-1 bg-background/80">
+      <div className="p-4 mt-auto space-y-1 bg-background/80 shrink-0">
         {bottomItems.map((item) => {
           const isActive = activeTab === item.tab;
           return (
@@ -119,7 +128,7 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
               )}
             >
               <item.icon className="h-5 w-5 opacity-50 shrink-0" />
-              <span className="font-bold text-[13px] tracking-wide">{item.label}</span>
+              <span className={cn("font-bold text-[13px] tracking-wide transition-all duration-300", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>{item.label}</span>
             </button>
           );
         })}
@@ -129,12 +138,18 @@ const ParentSidebar = ({ activeTab, onTabChange }: { activeTab: string; onTabCha
 };
 
 // --- Topbar Component ---
-const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: string) => void }) => {
-  const [lang, setLang] = useState('English');
+const Topbar = ({ parent, onTabChange, isCollapsed, setIsCollapsed }: { parent: any; onTabChange: (tab: string) => void; isCollapsed: boolean; setIsCollapsed: (val: boolean) => void }) => {
+  const { lang, setLang, translations } = useLanguage();
   
   return (
     <div className="h-24 flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
       <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="lg:hidden p-2 rounded-xl hover:bg-white/10 transition-colors text-foreground/50"
+        >
+          {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronRight className="h-5 w-5 rotate-180" />}
+        </button>
           <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
           
           <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
@@ -324,6 +339,7 @@ function ParentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedChildId, setSelectedChildId] = useState<string>('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Attendance details states
   const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
@@ -477,11 +493,11 @@ function ParentDashboard() {
   return (
     <div className="flex min-h-screen bg-[#f8f9fb] text-foreground font-sans selection:bg-primary/15">
       {/* Sidebar navigation */}
-      <ParentSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <ParentSidebar activeTab={activeTab} onTabChange={setActiveTab} isCollapsed={isCollapsed} />
 
-      <div className="flex-1 flex flex-col ml-72">
+      <div className={`flex-1 flex flex-col ${isCollapsed ? 'ml-20' : 'ml-72'} transition-all duration-300`}>
         {/* Topbar */}
-        <Topbar parent={data?.parent} onTabChange={setActiveTab} />
+        <Topbar parent={data?.parent} onTabChange={setActiveTab} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
         <main className="p-12 space-y-12 w-full">
           
@@ -1441,7 +1457,7 @@ text-nejah-electric" />
 }
 
 export const Route = createFileRoute('/parent_dashboard')({
-  component: ParentDashboard,
+  component: ParentDashboardRoute,
   beforeLoad: () => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
@@ -1457,3 +1473,12 @@ export const Route = createFileRoute('/parent_dashboard')({
     }
   },
 });
+
+// Wrap component with LanguageProvider for translation support
+function ParentDashboardRoute() {
+  return (
+    <LanguageProvider>
+      <ParentDashboard />
+    </LanguageProvider>
+  );
+}
