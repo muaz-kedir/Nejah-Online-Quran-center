@@ -64,7 +64,8 @@ export class TeacherDashboardController {
     const studentsRes = await this.studentsRepository.find({ where: { teacherId } });
     const avgAttendance =
       studentsRes.length > 0
-        ? studentsRes.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / studentsRes.length
+        ? studentsRes.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) /
+          studentsRes.length
         : 0;
 
     const homeworkPending = await this.homeworkRepository.count({
@@ -117,10 +118,7 @@ export class TeacherDashboardController {
 
     const formattedSessions = sessions.map((s) => ({
       id: s.id,
-      time:
-        s.startTimeString && s.endTimeString
-          ? `${s.startTimeString} - ${s.endTimeString}`
-          : '',
+      time: s.startTimeString && s.endTimeString ? `${s.startTimeString} - ${s.endTimeString}` : '',
       title: s.className,
       type: s.classType || (s.student ? 'Private Hifz • 1:1 Session' : 'Group Session'),
       students: s.student ? [s.student.fullName] : [],
@@ -220,10 +218,7 @@ export class TeacherDashboardController {
   }
 
   @Post('notes')
-  async createNote(
-    @Request() req,
-    @Body() body: { title: string; content: string; type: string },
-  ) {
+  async createNote(@Request() req, @Body() body: { title: string; content: string; type: string }) {
     const teacher = await this.requireTeacher(req);
     const note = this.notesRepository.create({
       teacherId: teacher.id,
