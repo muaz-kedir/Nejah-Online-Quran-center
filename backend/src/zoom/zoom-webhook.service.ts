@@ -59,9 +59,7 @@ export class ZoomWebhookService {
       case 'participant.left':
         await this.handleParticipantLeft(payload);
         break;
-      case 'recording.completed':
-        await this.handleRecordingCompleted(payload);
-        break;
+
       default:
         this.logger.log(`Unhandled webhook event: ${event}`);
     }
@@ -159,35 +157,6 @@ export class ZoomWebhookService {
     } catch (err) {
       this.logger.error('Failed to send completion notification', err);
     }
-
-    try {
-      const integration = await this.zoomService.getTeacherIntegration(session.teacherId);
-      if (integration?.zoomUserId) {
-        const recordings = await this.zoomService.getRecordings(zoomMeetingId);
-        if (recordings.length > 0) {
-          const recordingData = recordings.map((r: Record<string, unknown>) => ({
-            id: r.id,
-            url: (r as any).play_url || (r as any).download_url,
-            duration: r.duration,
-            size: (r as any).file_size,
-            type: (r as any).recording_type,
-          }));
-
-          session.recordingData = recordingData;
-          session.recordingUrl = recordingData[0]?.url || null;
-          await this.liveSessionRepository.save(session);
-
-          await this.notificationsService.sendCustomNotifications(
-            studentIds,
-            'Recording Available',
-            'The recording for your class is now available.',
-            { sessionId: session.id, recordingUrl: recordingData[0]?.url },
-          );
-        }
-      }
-    } catch (err) {
-      this.logger.error('Failed to fetch recordings after meeting end', err);
-    }
   }
 
   private async handleParticipantJoined(payload: Record<string, unknown>): Promise<void> {
@@ -274,54 +243,6 @@ export class ZoomWebhookService {
       `Unable to resolve participant to student: email=${email} name=${name} zoomUserId=${zoomUserId}`,
     );
     return null;
-  }
-
-  private async handleRecordingCompleted(payload: Record<string, unknown>): Promise<void> {
-    const zoomMeetingId = this.extractMeetingId(payload);
-    if (!zoomMeetingId) {
-      this.logger.warn('Recording completed webhook missing meeting ID');
-      return;
-    }
-
-    const session = await this.liveSessionRepository.findOne({
-      where: { zoomMeetingId },
-    });
-
-    if (!session) {
-      this.logger.warn(`No session found for meeting ${zoomMeetingId} recording`);
-      return;
-    }
-
-    try {
-      const recordings = await this.zoomService.getRecordings(zoomMeetingId);
-      if (recordings.length > 0) {
-        const recordingData = recordings.map((r: Record<string, unknown>) => ({
-          id: r.id,
-          url: (r as any).play_url || (r as any).download_url,
-          duration: r.duration,
-          size: (r as any).file_size,
-          type: (r as any).recording_type,
-        }));
-
-        session.recordingData = recordingData;
-        session.recordingUrl = recordingData[0]?.url || null;
-        await this.liveSessionRepository.save(session);
-
-        const attendances = await this.attendanceRepository.find({
-          where: { sessionId: session.id },
-        });
-        const studentIds = attendances.map((a) => a.studentId);
-
-        await this.notificationsService.sendCustomNotifications(
-          studentIds,
-          'Recording Available',
-          'The recording for your class is now available for review.',
-          { sessionId: session.id, recordingUrl: recordingData[0]?.url },
-        );
-      }
-    } catch (err) {
-      this.logger.error('Failed to process recording completed webhook', err);
-    }
   }
 
   private extractMeetingId(payload: Record<string, unknown>): string | null {
