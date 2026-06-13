@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle, Sparkles, Users, GraduationCap, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroImg from "@/assets/hero-quran.jpg";
 import { useTheme } from "./ThemeProvider";
 
 export function Hero() {
@@ -61,11 +60,9 @@ export function Hero() {
         >
           <div className="relative rounded-3xl overflow-hidden shadow-elevated">
             <img
-              src={heroImg}
-              alt="Open Quran with Islamic patterns"
-              width={1024}
-              height={1024}
-              className="w-full h-auto"
+              src="/Nejah-1.png"
+              alt="Nejah Online Quran Center"
+              className="w-full h-auto object-cover"
             />
           </div>
 
