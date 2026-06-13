@@ -1,0 +1,30 @@
+import { Teacher } from '../../teachers/entities/teacher.entity';
+import { Student } from '../../students/entities/student.entity';
+import { Schedule } from '../../schedules/entities/schedule.entity';
+import { SessionAttendance } from './session-attendance.entity';
+import { SessionNote } from './session-note.entity';
+import { LiveSessionStatus } from '../enums/live-session-status.enum';
+export declare class LiveSession {
+    id: string;
+    teacher: Teacher;
+    teacherId: string;
+    student: Student;
+    studentId: string;
+    schedule: Schedule;
+    scheduleId: string;
+    zoomMeetingId: string;
+    zoomJoinUrl: string;
+    zoomStartUrl: string;
+    scheduledStart: Date;
+    scheduledEnd: Date;
+    actualStart: Date;
+    actualEnd: Date;
+    durationMinutes: number;
+    status: LiveSessionStatus;
+    notes: string;
+    metadata: any;
+    attendances: SessionAttendance[];
+    sessionNotes: SessionNote[];
+    createdAt: Date;
+    updatedAt: Date;
+}

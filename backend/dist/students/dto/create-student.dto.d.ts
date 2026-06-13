@@ -1,0 +1,31 @@
+import { AgeRange, QuranLevel, StudentStatus } from '../entities/student.entity';
+import { Gender } from '../../common/enums/gender.enum';
+export declare class CreateStudentDto {
+    fullName: string;
+    gender: Gender;
+    ageRange: AgeRange;
+    currentResidency?: string;
+    country?: string;
+    city?: string;
+    phone?: string;
+    kitabRequested?: boolean;
+    kitabName?: string;
+    previousTraining?: boolean;
+    trainingDetails?: string;
+    referralSource?: string;
+    level: QuranLevel;
+    email: string;
+    status?: StudentStatus;
+    avatarUrl?: string;
+    parentId?: string;
+    teacherId?: string | null;
+    userId?: string;
+    attendanceRate?: number;
+    progressRate?: number;
+    familyName?: string;
+    familyPhone?: string;
+    familyAddress?: string;
+    familyCountry?: string;
+    learningGoals?: string;
+    password?: string;
+}

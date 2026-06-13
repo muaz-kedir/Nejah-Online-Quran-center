@@ -1,0 +1,32 @@
+import { Student } from '../../students/entities/student.entity';
+import { Parent } from '../../parents/entities/parent.entity';
+import { Teacher } from '../../teachers/entities/teacher.entity';
+import { PaymentStatus } from '../../common/enums/payment-status.enum';
+import { PaymentTransaction } from './payment-transaction.entity';
+export declare class StudentFeeAccount {
+    id: string;
+    studentId: string;
+    student: Student;
+    parentId: string;
+    parent: Parent;
+    teacherId: string;
+    teacher: Teacher;
+    program: string;
+    sessionRate: number;
+    weeklyScheduleDays: number;
+    sessionDurationMinutes: number;
+    monthlySessions: number;
+    monthlyFee: number;
+    amountPaid: number;
+    discountAmount: number;
+    scholarshipAmount: number;
+    remainingBalance: number;
+    status: PaymentStatus;
+    dueDate: string;
+    billingMonth: string;
+    isFamilyBundled: boolean;
+    familyBillingGroupId: string;
+    transactions: PaymentTransaction[];
+    createdAt: Date;
+    updatedAt: Date;
+}

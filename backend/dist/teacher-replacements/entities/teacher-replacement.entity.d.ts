@@ -1,0 +1,32 @@
+import { Student } from '../../students/entities/student.entity';
+import { Teacher } from '../../teachers/entities/teacher.entity';
+import { User } from '../../users/entities/user.entity';
+import { ReplacementStatus } from '../../common/enums/replacement-status.enum';
+import { ReplacementReason } from '../../common/enums/replacement-reason.enum';
+export declare class TeacherReplacement {
+    id: string;
+    studentId: string;
+    student: Student;
+    originalTeacherId: string;
+    originalTeacher: Teacher;
+    replacementTeacherId: string;
+    replacementTeacher: Teacher;
+    startDate: string;
+    endDate: string;
+    startTimeString: string;
+    endTimeString: string;
+    meetingLink: string;
+    classSessionId: string;
+    reason: ReplacementReason;
+    customReason: string;
+    notes: string;
+    status: ReplacementStatus;
+    createdBy: string;
+    creator: User;
+    updatedBy: string;
+    cancelledBy: string;
+    cancelledAt: Date;
+    completedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}

@@ -1,0 +1,30 @@
+import { Repository } from 'typeorm';
+import { Schedule } from './entities/schedule.entity';
+import { ScheduleStudent } from './entities/schedule-student.entity';
+import { Student } from '../students/entities/student.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { CreateScheduleDto } from './dto/create-schedule.dto';
+import { UpdateScheduleDto } from './dto/update-schedule.dto';
+import { LiveSessionService } from '../zoom/live-session.service';
+export declare class SchedulesService {
+    private schedulesRepository;
+    private scheduleStudentsRepository;
+    private studentsRepository;
+    private teachersRepository;
+    private liveSessionService;
+    private readonly logger;
+    constructor(schedulesRepository: Repository<Schedule>, scheduleStudentsRepository: Repository<ScheduleStudent>, studentsRepository: Repository<Student>, teachersRepository: Repository<Teacher>, liveSessionService: LiveSessionService);
+    private isOverlap;
+    private validateNoOverlap;
+    private validateGroupStudents;
+    createSchedule(data: CreateScheduleDto): Promise<Schedule>;
+    findAll(studentId?: string, teacherId?: string): Promise<Schedule[]>;
+    findOne(id: string): Promise<Schedule>;
+    getStudentSchedules(studentId: string): Promise<Schedule[]>;
+    getTeacherSchedules(teacherId: string): Promise<Schedule[]>;
+    getTeacherSchedulesByDay(teacherId: string, day: string): Promise<Schedule[]>;
+    updateSchedule(id: string, updateData: UpdateScheduleDto): Promise<Schedule>;
+    clearStudentSchedules(studentId: string): Promise<void>;
+    deleteSchedule(id: string): Promise<Schedule>;
+    private getNextDayOfWeekDate;
+}

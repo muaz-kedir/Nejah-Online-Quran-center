@@ -1,0 +1,33 @@
+import { Repository } from 'typeorm';
+import { ClassSession } from './entities/class-session.entity';
+import { StudentAttendance } from './entities/student-attendance.entity';
+import { CreateClassSessionDto } from './dto/create-class-session.dto';
+import { StartMeetingDto } from './dto/start-meeting.dto';
+import { RecordStudentAttendanceDto } from './dto/record-student-attendance.dto';
+import { EndSessionDto } from './dto/end-session.dto';
+import { Student } from '../students/entities/student.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { Schedule } from '../schedules/entities/schedule.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+export declare class AttendanceService {
+    private classSessionRepository;
+    private studentAttendanceRepository;
+    private studentRepository;
+    private teacherRepository;
+    private scheduleRepository;
+    private notificationsService;
+    constructor(classSessionRepository: Repository<ClassSession>, studentAttendanceRepository: Repository<StudentAttendance>, studentRepository: Repository<Student>, teacherRepository: Repository<Teacher>, scheduleRepository: Repository<Schedule>, notificationsService: NotificationsService);
+    createClassSession(dto: CreateClassSessionDto): Promise<ClassSession>;
+    getLiveClassSessionByScheduleToday(scheduleId: string, requestingTeacherId?: string): Promise<ClassSession>;
+    startMeeting(dto: StartMeetingDto): Promise<ClassSession>;
+    recordStudentAttendance(dto: RecordStudentAttendanceDto): Promise<StudentAttendance>;
+    endSession(dto: EndSessionDto): Promise<ClassSession>;
+    private updateSessionStatistics;
+    getClassSessionWithAttendance(classSessionId: string): Promise<ClassSession>;
+    getTeacherSessions(teacherId: string, date?: Date): Promise<ClassSession[]>;
+    getStudentAttendanceHistory(studentId: string): Promise<StudentAttendance[]>;
+    getAttendanceStats(studentId: string): Promise<any>;
+    getLiveClasses(): Promise<ClassSession[]>;
+    getTodaysSessions(teacherId?: string): Promise<ClassSession[]>;
+    getStudentLiveClass(studentId: string): Promise<ClassSession>;
+}
