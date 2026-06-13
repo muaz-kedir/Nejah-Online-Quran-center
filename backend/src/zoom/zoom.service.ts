@@ -5,6 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
+import { EncryptionService } from '../common/encryption.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class ZoomService {
@@ -17,6 +19,7 @@ export class ZoomService {
     private readonly httpService: HttpService,
     @InjectRepository(ZoomIntegration)
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   private get accountId(): string {
@@ -65,18 +68,37 @@ export class ZoomService {
 
       return access_token;
     } catch (error) {
-      this.logger.error(`Failed to get Zoom access token: ${error.message}`, error.stack);
+      this.logger.error('Failed to get Zoom access token', error.stack);
       throw new HttpException('Failed to authenticate with Zoom', HttpStatus.UNAUTHORIZED);
     }
   }
 
-  verifyWebhookSignature(body: any, signatureHeader: string): boolean {
+  verifyWebhookSignature(body: Record<string, unknown>, signatureHeader: string): boolean {
     if (!this.secretToken) {
       this.logger.warn('ZOOM_SECRET_TOKEN not configured, skipping webhook verification');
       return true;
     }
-    const expectedSignature = this.secretToken;
-    return signatureHeader === expectedSignature;
+
+    if (!signatureHeader) {
+      this.logger.warn('Webhook request missing authorization header');
+      return false;
+    }
+
+    try {
+      const rawBody = JSON.stringify(body);
+      const expectedSignature = crypto
+        .createHmac('sha256', this.secretToken)
+        .update(rawBody)
+        .digest('hex');
+
+      const expected = `v0=${expectedSignature}`;
+      const actual = signatureHeader.trim();
+
+      return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
+    } catch {
+      this.logger.warn('Webhook signature verification failed');
+      return false;
+    }
   }
 
   async createMeeting(
@@ -84,8 +106,13 @@ export class ZoomService {
     topic: string,
     startTime: Date,
     durationMinutes: number,
-    settings?: any,
-  ): Promise<any> {
+    settings?: Record<string, unknown>,
+  ): Promise<{
+    zoomMeetingId: string;
+    zoomJoinUrl: string;
+    zoomStartUrl: string;
+    zoomPassword: string;
+  }> {
     const token = await this.getAccessToken();
     const defaultSettings = {
       host_video: true,
@@ -128,17 +155,33 @@ export class ZoomService {
       };
     } catch (error) {
       this.logger.error(`Failed to create Zoom meeting: ${error.message}`, error.stack);
-      throw new HttpException('Failed to create Zoom meeting', HttpStatus.BAD_GATEWAY);
+      const status = error?.response?.status;
+      if (status === 404) {
+        throw new HttpException(
+          'Zoom user not found — check Zoom integration settings',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      if (status === 429) {
+        throw new HttpException(
+          'Zoom API rate limit exceeded — try again later',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+      throw new HttpException(
+        `Failed to create Zoom meeting: ${error.message}`,
+        error?.response?.status || HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 
-  async updateMeeting(zoomMeetingId: string, updateData: any): Promise<void> {
+  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>): Promise<void> {
     const token = await this.getAccessToken();
 
-    const payload: any = {};
+    const payload: Record<string, unknown> = {};
     if (updateData.topic) payload.topic = updateData.topic;
     if (updateData.startTime) {
-      payload.start_time = new Date(updateData.startTime).toISOString();
+      payload.start_time = new Date(updateData.startTime as string | Date).toISOString();
       payload.type = 2;
     }
     if (updateData.durationMinutes) payload.duration = updateData.durationMinutes;
@@ -154,8 +197,14 @@ export class ZoomService {
         }),
       );
     } catch (error) {
-      this.logger.error(`Failed to update Zoom meeting ${zoomMeetingId}: ${error.message}`, error.stack);
-      throw new HttpException('Failed to update Zoom meeting', HttpStatus.BAD_GATEWAY);
+      this.logger.error(
+        `Failed to update Zoom meeting ${zoomMeetingId}: ${error.message}`,
+        error.stack,
+      );
+      throw new HttpException(
+        `Failed to update Zoom meeting: ${error.message}`,
+        error?.response?.status || HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 
@@ -169,12 +218,18 @@ export class ZoomService {
         }),
       );
     } catch (error) {
-      this.logger.error(`Failed to delete Zoom meeting ${zoomMeetingId}: ${error.message}`, error.stack);
-      throw new HttpException('Failed to delete Zoom meeting', HttpStatus.BAD_GATEWAY);
+      this.logger.error(
+        `Failed to delete Zoom meeting ${zoomMeetingId}: ${error.message}`,
+        error.stack,
+      );
+      throw new HttpException(
+        `Failed to delete Zoom meeting: ${error.message}`,
+        error?.response?.status || HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 
-  async getMeeting(zoomMeetingId: string): Promise<any> {
+  async getMeeting(zoomMeetingId: string): Promise<Record<string, unknown> | null> {
     const token = await this.getAccessToken();
 
     try {
@@ -185,12 +240,15 @@ export class ZoomService {
       );
       return response.data;
     } catch (error) {
-      this.logger.error(`Failed to get Zoom meeting ${zoomMeetingId}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to get Zoom meeting ${zoomMeetingId}: ${error.message}`,
+        error.stack,
+      );
       return null;
     }
   }
 
-  async getMeetingAnalytics(zoomMeetingId: string): Promise<any> {
+  async getMeetingAnalytics(zoomMeetingId: string): Promise<Record<string, unknown> | null> {
     const token = await this.getAccessToken();
 
     try {
@@ -207,7 +265,7 @@ export class ZoomService {
     }
   }
 
-  async getRecordings(zoomMeetingId: string): Promise<any[]> {
+  async getRecordings(zoomMeetingId: string): Promise<Record<string, unknown>[]> {
     const token = await this.getAccessToken();
 
     try {
@@ -223,9 +281,13 @@ export class ZoomService {
     }
   }
 
-  async listRecordings(zoomUserId: string, from?: string, to?: string): Promise<any[]> {
+  async listRecordings(
+    zoomUserId: string,
+    from?: string,
+    to?: string,
+  ): Promise<Record<string, unknown>[]> {
     const token = await this.getAccessToken();
-    const params: any = { page_size: 30 };
+    const params: Record<string, unknown> = { page_size: 30 };
     if (from) params.from = from;
     if (to) params.to = to;
 
@@ -243,7 +305,7 @@ export class ZoomService {
     }
   }
 
-  async getZoomUser(zoomUserId: string): Promise<any> {
+  async getZoomUser(zoomUserId: string): Promise<Record<string, unknown> | null> {
     const token = await this.getAccessToken();
 
     try {
@@ -276,8 +338,10 @@ export class ZoomService {
     integration.connectionStatus = 'connected';
     integration.connectedAt = new Date();
 
-    if (tokens?.accessToken) integration.accessToken = tokens.accessToken;
-    if (tokens?.refreshToken) integration.refreshToken = tokens.refreshToken;
+    if (tokens?.accessToken)
+      integration.accessToken = this.encryptionService.encrypt(tokens.accessToken);
+    if (tokens?.refreshToken)
+      integration.refreshToken = this.encryptionService.encrypt(tokens.refreshToken);
     if (tokens?.expiresAt) integration.tokenExpiresAt = tokens.expiresAt;
 
     return this.zoomIntegrationRepository.save(integration);
@@ -298,19 +362,15 @@ export class ZoomService {
     return this.zoomIntegrationRepository.save(integration);
   }
 
-  async getTeacherIntegration(teacherId: string): Promise<ZoomIntegration> {
-    const integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
-    if (!integration) {
-      return null;
-    }
-    return integration;
+  async getTeacherIntegration(teacherId: string): Promise<ZoomIntegration | null> {
+    return this.zoomIntegrationRepository.findOne({ where: { teacherId } });
   }
 
   async getAllIntegrations(): Promise<ZoomIntegration[]> {
     return this.zoomIntegrationRepository.find({ relations: ['teacher'] });
   }
 
-  async getTeacherByZoomUserId(zoomUserId: string): Promise<ZoomIntegration> {
+  async getTeacherByZoomUserId(zoomUserId: string): Promise<ZoomIntegration | null> {
     return this.zoomIntegrationRepository.findOne({
       where: { zoomUserId },
       relations: ['teacher'],
