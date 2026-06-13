@@ -68,11 +68,7 @@ export class TeacherReplacementsController {
 
   @Post(':id/start-class')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
-  startClass(
-    @Request() req,
-    @Param('id') id: string,
-    @Body() dto: StartReplacementClassDto,
-  ) {
+  startClass(@Request() req, @Param('id') id: string, @Body() dto: StartReplacementClassDto) {
     return this.replacementsService.startReplacementClass(id, req.user, dto.meetingLink);
   }
 }

@@ -66,8 +66,15 @@ export class TeacherReplacementsService {
     return new Date().toISOString().slice(0, 10);
   }
 
-  private deriveStatus(startDate: string, endDate: string, currentStatus: ReplacementStatus): ReplacementStatus {
-    if (currentStatus === ReplacementStatus.CANCELLED || currentStatus === ReplacementStatus.COMPLETED) {
+  private deriveStatus(
+    startDate: string,
+    endDate: string,
+    currentStatus: ReplacementStatus,
+  ): ReplacementStatus {
+    if (
+      currentStatus === ReplacementStatus.CANCELLED ||
+      currentStatus === ReplacementStatus.COMPLETED
+    ) {
       return currentStatus;
     }
     const today = this.todayDateString();
@@ -89,7 +96,10 @@ export class TeacherReplacementsService {
 
     if (!replacement) return null;
     if (refDate < replacement.startDate || refDate > replacement.endDate) return null;
-    if (replacement.status === ReplacementStatus.CANCELLED || replacement.status === ReplacementStatus.COMPLETED) {
+    if (
+      replacement.status === ReplacementStatus.CANCELLED ||
+      replacement.status === ReplacementStatus.COMPLETED
+    ) {
       return null;
     }
     return replacement;
@@ -173,7 +183,12 @@ export class TeacherReplacementsService {
       where: {
         studentId,
         replacementTeacherId: teacherId,
-        status: In([ReplacementStatus.COMPLETED, ReplacementStatus.CANCELLED, ReplacementStatus.ACTIVE, ReplacementStatus.UPCOMING]),
+        status: In([
+          ReplacementStatus.COMPLETED,
+          ReplacementStatus.CANCELLED,
+          ReplacementStatus.ACTIVE,
+          ReplacementStatus.UPCOMING,
+        ]),
       },
     });
     return !!wasReplacement;
@@ -225,9 +240,14 @@ export class TeacherReplacementsService {
     );
   }
 
-  private async validateReplacementTeachers(originalTeacherId: string, replacementTeacherId: string) {
+  private async validateReplacementTeachers(
+    originalTeacherId: string,
+    replacementTeacherId: string,
+  ) {
     if (originalTeacherId === replacementTeacherId) {
-      throw new BadRequestException('Replacement teacher cannot be the same as the original teacher');
+      throw new BadRequestException(
+        'Replacement teacher cannot be the same as the original teacher',
+      );
     }
 
     const replacementTeacher = await this.teachersRepository.findOne({
@@ -240,7 +260,12 @@ export class TeacherReplacementsService {
     }
   }
 
-  private async assertNoOverlap(studentId: string, startDate: string, endDate: string, excludeId?: string) {
+  private async assertNoOverlap(
+    studentId: string,
+    startDate: string,
+    endDate: string,
+    excludeId?: string,
+  ) {
     const qb = this.replacementsRepository
       .createQueryBuilder('r')
       .where('r.studentId = :studentId', { studentId })
@@ -295,7 +320,9 @@ export class TeacherReplacementsService {
       const student = await this.studentsRepository.findOne({ where: { id: studentId } });
       if (!student) throw new NotFoundException(`Student ${studentId} not found`);
       if (student.teacherId !== dto.originalTeacherId) {
-        throw new BadRequestException(`Student ${student.fullName} is not assigned to the original teacher`);
+        throw new BadRequestException(
+          `Student ${student.fullName} is not assigned to the original teacher`,
+        );
       }
 
       await this.assertNoOverlap(studentId, dto.startDate, dto.endDate);
@@ -350,7 +377,9 @@ export class TeacherReplacementsService {
     if (query.status) qb.andWhere('r.status = :status', { status: query.status });
     if (query.studentId) qb.andWhere('r.studentId = :studentId', { studentId: query.studentId });
     if (query.originalTeacherId) {
-      qb.andWhere('r.originalTeacherId = :originalTeacherId', { originalTeacherId: query.originalTeacherId });
+      qb.andWhere('r.originalTeacherId = :originalTeacherId', {
+        originalTeacherId: query.originalTeacherId,
+      });
     }
     if (query.replacementTeacherId) {
       qb.andWhere('r.replacementTeacherId = :replacementTeacherId', {
@@ -480,7 +509,11 @@ export class TeacherReplacementsService {
     await this.ensureReplacementSchedules(replacement);
 
     const schedules = await this.schedulesRepository.find({
-      where: { studentId: replacement.studentId, teacherId: replacement.originalTeacherId, status: 'active' },
+      where: {
+        studentId: replacement.studentId,
+        teacherId: replacement.originalTeacherId,
+        status: 'active',
+      },
     });
 
     for (const schedule of schedules) {
@@ -490,7 +523,8 @@ export class TeacherReplacementsService {
       if (existing) {
         existing.status = 'active';
         existing.replacementTeacherId = replacement.replacementTeacherId;
-        existing.meetingLink = replacement.meetingLink || schedule.meetingLink || existing.meetingLink;
+        existing.meetingLink =
+          replacement.meetingLink || schedule.meetingLink || existing.meetingLink;
         existing.startTimeString = replacement.startTimeString || schedule.startTimeString;
         existing.endTimeString = replacement.endTimeString || schedule.endTimeString;
         await this.overridesRepository.save(existing);
@@ -604,10 +638,9 @@ export class TeacherReplacementsService {
       .leftJoinAndSelect('schedule.scheduleStudents', 'scheduleStudents')
       .leftJoinAndSelect('scheduleStudents.student', 'groupStudent')
       .where('schedule.status = :status', { status: 'active' })
-      .andWhere(
-        '(schedule.studentId = :studentId OR scheduleStudents.studentId = :studentId)',
-        { studentId },
-      )
+      .andWhere('(schedule.studentId = :studentId OR scheduleStudents.studentId = :studentId)', {
+        studentId,
+      })
       .orderBy('schedule.startTimeString', 'ASC')
       .getMany();
 
@@ -628,8 +661,10 @@ export class TeacherReplacementsService {
           teacherId: override.replacementTeacherId,
           teacher: override.replacementTeacher,
           meetingLink: override.meetingLink || replacement.meetingLink || schedule.meetingLink,
-          startTimeString: override.startTimeString || replacement.startTimeString || schedule.startTimeString,
-          endTimeString: override.endTimeString || replacement.endTimeString || schedule.endTimeString,
+          startTimeString:
+            override.startTimeString || replacement.startTimeString || schedule.startTimeString,
+          endTimeString:
+            override.endTimeString || replacement.endTimeString || schedule.endTimeString,
           isTemporaryOverride: true,
           temporaryReplacementId: replacement.id,
         };
@@ -699,7 +734,8 @@ export class TeacherReplacementsService {
       },
     );
 
-    const student = replacement.student ||
+    const student =
+      replacement.student ||
       (await this.studentsRepository.findOne({ where: { id: replacement.studentId } }));
 
     let session: ClassSession | null = null;
@@ -723,7 +759,9 @@ export class TeacherReplacementsService {
         relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
       });
 
-      const hasStudent = session?.studentAttendances?.some((a) => a.studentId === replacement.studentId);
+      const hasStudent = session?.studentAttendances?.some(
+        (a) => a.studentId === replacement.studentId,
+      );
       if (session && !hasStudent) {
         session = null;
       }
@@ -744,7 +782,7 @@ export class TeacherReplacementsService {
     }
 
     if (session.status === SessionStatus.COMPLETED) {
-      throw new BadRequestException('Today\'s class session is already completed');
+      throw new BadRequestException("Today's class session is already completed");
     }
 
     if (session.status !== SessionStatus.LIVE || session.meetingLink !== trimmedLink) {
@@ -753,7 +791,10 @@ export class TeacherReplacementsService {
 
     replacement.classSessionId = session.id;
     await this.replacementsRepository.save(replacement);
-    await this.logAudit(replacement.id, 'class_started', user.id, { meetingLink: trimmedLink, sessionId: session.id });
+    await this.logAudit(replacement.id, 'class_started', user.id, {
+      meetingLink: trimmedLink,
+      sessionId: session.id,
+    });
 
     return {
       message: 'Class created and meeting link sent to student',
@@ -810,7 +851,10 @@ export class TeacherReplacementsService {
     return this.loadClassSession(saved.id);
   }
 
-  private async startReplacementMeeting(sessionId: string, meetingLink: string): Promise<ClassSession> {
+  private async startReplacementMeeting(
+    sessionId: string,
+    meetingLink: string,
+  ): Promise<ClassSession> {
     const session = await this.classSessionRepository.findOne({
       where: { id: sessionId },
       relations: ['teacher'],
@@ -857,14 +901,17 @@ export class TeacherReplacementsService {
     replacement: TeacherReplacement,
     event: 'assigned' | 'updated' | 'cancelled' | 'ended',
   ) {
-    const student = replacement.student ||
+    const student =
+      replacement.student ||
       (await this.studentsRepository.findOne({
         where: { id: replacement.studentId },
         relations: ['parent', 'parent.user'],
       }));
-    const originalTeacher = replacement.originalTeacher ||
+    const originalTeacher =
+      replacement.originalTeacher ||
       (await this.teachersRepository.findOne({ where: { id: replacement.originalTeacherId } }));
-    const replacementTeacher = replacement.replacementTeacher ||
+    const replacementTeacher =
+      replacement.replacementTeacher ||
       (await this.teachersRepository.findOne({ where: { id: replacement.replacementTeacherId } }));
 
     const titles: Record<string, string> = {
