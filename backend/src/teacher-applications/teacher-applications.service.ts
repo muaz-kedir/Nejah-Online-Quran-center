@@ -6,16 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  TeacherApplication,
-  ApplicationStatus,
-} from './entities/teacher-application.entity';
+import { TeacherApplication, ApplicationStatus } from './entities/teacher-application.entity';
 import { TeacherApplicationSettings } from './entities/teacher-application-settings.entity';
 import { CreateTeacherApplicationDto } from './dto/create-teacher-application.dto';
-import {
-  ReviewTeacherApplicationDto,
-  ReviewAction,
-} from './dto/review-teacher-application.dto';
+import { ReviewTeacherApplicationDto, ReviewAction } from './dto/review-teacher-application.dto';
 import { QueryTeacherApplicationDto } from './dto/query-teacher-application.dto';
 import { TeachersService } from '../teachers/teachers.service';
 import { EmailService } from '../email/email.service';
@@ -51,9 +45,7 @@ export class TeacherApplicationsService {
 
   // ── Public ────────────────────────────────────────────────────────
 
-  async submit(
-    dto: CreateTeacherApplicationDto,
-  ): Promise<TeacherApplication> {
+  async submit(dto: CreateTeacherApplicationDto): Promise<TeacherApplication> {
     const settings = await this.getSettings();
     if (!settings.isApplicationsOpen) {
       throw new BadRequestException('Teacher applications are currently closed.');
@@ -64,9 +56,7 @@ export class TeacherApplicationsService {
       where: { email: dto.email, status: ApplicationStatus.PENDING_REVIEW },
     });
     if (existing) {
-      throw new ConflictException(
-        'An application with this email is already pending review',
-      );
+      throw new ConflictException('An application with this email is already pending review');
     }
 
     const applicationNumber = this.generateApplicationNumber();
@@ -221,9 +211,7 @@ export class TeacherApplicationsService {
 
   // ── Private helpers ───────────────────────────────────────────────
 
-  private async approveApplication(
-    application: TeacherApplication,
-  ): Promise<TeacherApplication> {
+  private async approveApplication(application: TeacherApplication): Promise<TeacherApplication> {
     // Use application password or generate a temporary password
     const userPassword = application.password || this.generateTempPassword();
 
@@ -264,9 +252,7 @@ export class TeacherApplicationsService {
 
       return saved;
     } catch (err) {
-      throw new BadRequestException(
-        `Failed to create teacher account: ${err.message}`,
-      );
+      throw new BadRequestException(`Failed to create teacher account: ${err.message}`);
     }
   }
 
