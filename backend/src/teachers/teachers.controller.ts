@@ -139,10 +139,7 @@ export class TeachersController {
 
   @Post(':id/assign-students')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  assignStudents(
-    @Param('id') id: string,
-    @Body('studentIds') studentIds: string[],
-  ) {
+  assignStudents(@Param('id') id: string, @Body('studentIds') studentIds: string[]) {
     return this.teachersService.assignStudents(id, studentIds);
   }
 }

@@ -17,10 +17,10 @@ import { TeacherReplacementsModule } from '../teacher-replacements/teacher-repla
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Teacher, 
-      TeacherNote, 
-      Student, 
-      Schedule, 
+      Teacher,
+      TeacherNote,
+      Student,
+      Schedule,
       Homework,
       Progress,
       Attendance,
