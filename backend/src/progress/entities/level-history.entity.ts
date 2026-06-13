@@ -10,12 +10,7 @@ import {
 import { Student } from '../../students/entities/student.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
 
-export type LevelHistoryStatus =
-  | 'in_progress'
-  | 'completed'
-  | 'repeated'
-  | 'demoted'
-  | 'paused';
+export type LevelHistoryStatus = 'in_progress' | 'completed' | 'repeated' | 'demoted' | 'paused';
 
 export type LevelChangeType =
   | 'initial'

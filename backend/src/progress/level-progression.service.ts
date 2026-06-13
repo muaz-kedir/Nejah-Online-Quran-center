@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
@@ -90,7 +86,9 @@ export class LevelProgressionService {
   }
 
   async updateSettings(
-    dto: Partial<Pick<ProgressionSettings, 'quranReadingCompletionMode' | 'tajweedRequiresEvaluation'>>,
+    dto: Partial<
+      Pick<ProgressionSettings, 'quranReadingCompletionMode' | 'tajweedRequiresEvaluation'>
+    >,
   ): Promise<ProgressionSettings> {
     const settings = await this.getSettings();
     if (dto.quranReadingCompletionMode !== undefined) {
@@ -178,10 +176,17 @@ export class LevelProgressionService {
         learningTrack: track,
         label: getTrackLabel(track),
         status,
-        startedAt: (status === 'current' ? openRow?.startedAt : completedRow?.startedAt) || completedRow?.startedAt || null,
+        startedAt:
+          (status === 'current' ? openRow?.startedAt : completedRow?.startedAt) ||
+          completedRow?.startedAt ||
+          null,
         completedAt: completedRow?.completedAt || null,
         progressPercentage:
-          status === 'current' ? activeProgress?.progressPercentage ?? 0 : status === 'completed' ? 100 : 0,
+          status === 'current'
+            ? (activeProgress?.progressPercentage ?? 0)
+            : status === 'completed'
+              ? 100
+              : 0,
       };
     });
 
@@ -229,7 +234,13 @@ export class LevelProgressionService {
 
     if (track === 'qaidah') {
       if (this.isTrackCurriculumComplete('qaidah', completedIds)) {
-        await this.promote(student, nextLevel, 'auto_promotion', null, 'All Qaidah Nooraniyah lessons completed');
+        await this.promote(
+          student,
+          nextLevel,
+          'auto_promotion',
+          null,
+          'All Qaidah Nooraniyah lessons completed',
+        );
       }
       return;
     }
@@ -237,7 +248,13 @@ export class LevelProgressionService {
     if (track === 'quran_reading') {
       if (settings.quranReadingCompletionMode === 'full_quran') {
         if (this.isTrackCurriculumComplete('quran_reading', completedIds)) {
-          await this.promote(student, nextLevel, 'auto_promotion', null, 'Completed reading of the entire Quran');
+          await this.promote(
+            student,
+            nextLevel,
+            'auto_promotion',
+            null,
+            'Completed reading of the entire Quran',
+          );
         }
       }
       // teacher_recommendation mode: promotion happens via recommendPromotion()
@@ -248,7 +265,13 @@ export class LevelProgressionService {
       if (!this.isTrackCurriculumComplete('tajweed', completedIds)) return;
 
       if (!settings.tajweedRequiresEvaluation) {
-        await this.promote(student, nextLevel, 'auto_promotion', null, 'All Tajweed topics completed');
+        await this.promote(
+          student,
+          nextLevel,
+          'auto_promotion',
+          null,
+          'All Tajweed topics completed',
+        );
         return;
       }
 
@@ -262,7 +285,11 @@ export class LevelProgressionService {
   }
 
   /** Teacher confirms evaluation pass / recommends promotion. */
-  async recommendPromotion(studentId: string, teacherUserId: string | null, reason?: string): Promise<Progress> {
+  async recommendPromotion(
+    studentId: string,
+    teacherUserId: string | null,
+    reason?: string,
+  ): Promise<Progress> {
     const student = await this.studentRepository.findOne({ where: { id: studentId } });
     if (!student) throw new NotFoundException('Student not found');
 
@@ -276,17 +303,34 @@ export class LevelProgressionService {
     const settings = await this.getSettings();
 
     if (track === 'tajweed') {
-      const completedIds = Array.isArray(progress?.completedTopicIds) ? progress.completedTopicIds : [];
+      const completedIds = Array.isArray(progress?.completedTopicIds)
+        ? progress.completedTopicIds
+        : [];
       if (!this.isTrackCurriculumComplete('tajweed', completedIds)) {
         throw new BadRequestException('All Tajweed topics must be completed before the evaluation');
       }
       // Teacher evaluation pass promotes directly per the progression rules.
-      await this.promote(student, nextLevel, 'auto_promotion', teacherUserId, reason || 'Teacher evaluation passed');
+      await this.promote(
+        student,
+        nextLevel,
+        'auto_promotion',
+        teacherUserId,
+        reason || 'Teacher evaluation passed',
+      );
       return this.getActiveProgress(studentId, resolveLearningTrack(nextLevel));
     }
 
-    if (track === 'quran_reading' && settings.quranReadingCompletionMode === 'teacher_recommendation') {
-      await this.promote(student, nextLevel, 'auto_promotion', teacherUserId, reason || 'Teacher recommendation + evaluation pass');
+    if (
+      track === 'quran_reading' &&
+      settings.quranReadingCompletionMode === 'teacher_recommendation'
+    ) {
+      await this.promote(
+        student,
+        nextLevel,
+        'auto_promotion',
+        teacherUserId,
+        reason || 'Teacher recommendation + evaluation pass',
+      );
       return this.getActiveProgress(studentId, resolveLearningTrack(nextLevel));
     }
 
@@ -295,7 +339,10 @@ export class LevelProgressionService {
 
   // -------------------------------------------------------------- promotion
 
-  private async getActiveProgress(studentId: string, track: LearningTrack): Promise<Progress | null> {
+  private async getActiveProgress(
+    studentId: string,
+    track: LearningTrack,
+  ): Promise<Progress | null> {
     return this.progressRepository.findOne({
       where: { studentId, learningTrack: track },
       order: { createdAt: 'DESC' },
@@ -403,14 +450,27 @@ export class LevelProgressionService {
         const target = dto.targetLevel || getNextLevel(student.level);
         if (!target) throw new BadRequestException('Student is already at the final level');
         this.assertValidLevel(target);
-        await this.promote(student, target, 'manual_promotion', adminUserId, reason || 'Manual promotion by admin');
+        await this.promote(
+          student,
+          target,
+          'manual_promotion',
+          adminUserId,
+          reason || 'Manual promotion by admin',
+        );
         return { student, message: `Student promoted to ${target}` };
       }
       case 'demote': {
         const target = dto.targetLevel || getPreviousLevel(student.level);
         if (!target) throw new BadRequestException('Student is already at the first level');
         this.assertValidLevel(target);
-        await this.promote(student, target, 'manual_demotion', adminUserId, reason || 'Manual demotion by admin', 'demoted');
+        await this.promote(
+          student,
+          target,
+          'manual_demotion',
+          adminUserId,
+          reason || 'Manual demotion by admin',
+          'demoted',
+        );
         return { student, message: `Student moved back to ${target}` };
       }
       case 'repeat': {
