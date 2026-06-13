@@ -9,10 +9,10 @@ async function createSuperAdmin() {
 
   try {
     const superAdminEmail = 'nejahsuperadmin@gmail.com';
-    
+
     // Check if super admin already exists
     const existingAdmin = await usersService.findByEmail(superAdminEmail);
-    
+
     if (existingAdmin) {
       console.log('Super Admin already exists!');
       console.log('Email:', superAdminEmail);

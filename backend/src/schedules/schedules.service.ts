@@ -1,4 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
@@ -28,12 +35,7 @@ export class SchedulesService {
     private liveSessionService: LiveSessionService,
   ) {}
 
-  private isOverlap(
-    existingStart: string,
-    existingEnd: string,
-    newStart: string,
-    newEnd: string,
-  ) {
+  private isOverlap(existingStart: string, existingEnd: string, newStart: string, newEnd: string) {
     return existingStart < newEnd && newStart < existingEnd;
   }
 
@@ -151,7 +153,9 @@ export class SchedulesService {
         metadata: { className: data.className || 'Quran Class', dayOfWeek },
       });
     } catch (error) {
-      this.logger.warn(`Zoom meeting auto-creation failed for schedule ${saved.id}: ${error.message}`);
+      this.logger.warn(
+        `Zoom meeting auto-creation failed for schedule ${saved.id}: ${error.message}`,
+      );
     }
 
     return this.findOne(saved.id);
@@ -168,10 +172,9 @@ export class SchedulesService {
       .where('schedule.status = :status', { status: 'active' });
 
     if (studentId) {
-      qb.andWhere(
-        '(schedule.studentId = :studentId OR scheduleStudents.studentId = :studentId)',
-        { studentId },
-      );
+      qb.andWhere('(schedule.studentId = :studentId OR scheduleStudents.studentId = :studentId)', {
+        studentId,
+      });
     }
 
     if (teacherId) {
@@ -221,9 +224,7 @@ export class SchedulesService {
       order: { startTimeString: 'ASC' },
     });
 
-    return schedules.filter((schedule) =>
-      matchesDayOfWeek(schedule.dayOfWeek, day),
-    );
+    return schedules.filter((schedule) => matchesDayOfWeek(schedule.dayOfWeek, day));
   }
 
   async updateSchedule(id: string, updateData: UpdateScheduleDto) {
@@ -265,7 +266,12 @@ export class SchedulesService {
         const newEnd = new Date(nextDate);
         newEnd.setHours(endHour, endMin, 0, 0);
 
-        await this.liveSessionService.updateZoomMeeting(schedule.id, newStart, newEnd, rest.className);
+        await this.liveSessionService.updateZoomMeeting(
+          schedule.id,
+          newStart,
+          newEnd,
+          rest.className,
+        );
       }
     } catch (error) {
       this.logger.warn(`Zoom meeting update failed for schedule ${schedule.id}: ${error.message}`);
