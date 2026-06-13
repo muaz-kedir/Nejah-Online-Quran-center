@@ -1,4 +1,16 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested, IsNumber, IsOptional, IsBoolean, ValidateIf, IsEnum, IsUUID } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  ValidateNested,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  ValidateIf,
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { AgeRange } from '../../students/entities/student.entity';
 
