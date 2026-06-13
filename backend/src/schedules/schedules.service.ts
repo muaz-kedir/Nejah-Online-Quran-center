@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
@@ -8,9 +8,13 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
+import { LiveSessionService } from '../zoom/live-session.service';
+import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 
 @Injectable()
 export class SchedulesService {
+  private readonly logger = new Logger(SchedulesService.name);
+
   constructor(
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
@@ -20,6 +24,8 @@ export class SchedulesService {
     private studentsRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private teachersRepository: Repository<Teacher>,
+    @Inject(forwardRef(() => LiveSessionService))
+    private liveSessionService: LiveSessionService,
   ) {}
 
   private isOverlap(
@@ -127,6 +133,27 @@ export class SchedulesService {
       await this.scheduleStudentsRepository.save(rows);
     }
 
+    try {
+      const nextDate = this.getNextDayOfWeekDate(dayOfWeek);
+      const [startHour, startMin] = startTimeString.split(':').map(Number);
+      const [endHour, endMin] = endTimeString.split(':').map(Number);
+      const scheduledStart = new Date(nextDate);
+      scheduledStart.setHours(startHour, startMin, 0, 0);
+      const scheduledEnd = new Date(nextDate);
+      scheduledEnd.setHours(endHour, endMin, 0, 0);
+
+      await this.liveSessionService.createWithZoom({
+        teacherId,
+        studentId: isGroupSession ? null : data.studentId,
+        scheduleId: saved.id,
+        scheduledStart,
+        scheduledEnd,
+        metadata: { className: data.className || 'Quran Class', dayOfWeek },
+      });
+    } catch (error) {
+      this.logger.warn(`Zoom meeting auto-creation failed for schedule ${saved.id}: ${error.message}`);
+    }
+
     return this.findOne(saved.id);
   }
 
@@ -222,7 +249,29 @@ export class SchedulesService {
 
     const { studentIds, isGroupSession, studentId, ...rest } = updateData;
     Object.assign(schedule, rest);
-    return this.schedulesRepository.save(schedule);
+    const updated = await this.schedulesRepository.save(schedule);
+
+    try {
+      const startString = updateData.startTimeString || schedule.startTimeString;
+      const endString = updateData.endTimeString || schedule.endTimeString;
+      const day = updateData.dayOfWeek || schedule.dayOfWeek;
+
+      if (startString && endString) {
+        const nextDate = this.getNextDayOfWeekDate(day);
+        const [startHour, startMin] = startString.split(':').map(Number);
+        const [endHour, endMin] = endString.split(':').map(Number);
+        const newStart = new Date(nextDate);
+        newStart.setHours(startHour, startMin, 0, 0);
+        const newEnd = new Date(nextDate);
+        newEnd.setHours(endHour, endMin, 0, 0);
+
+        await this.liveSessionService.updateZoomMeeting(schedule.id, newStart, newEnd, rest.className);
+      }
+    } catch (error) {
+      this.logger.warn(`Zoom meeting update failed for schedule ${schedule.id}: ${error.message}`);
+    }
+
+    return this.findOne(schedule.id);
   }
 
   async clearStudentSchedules(studentId: string) {
@@ -248,6 +297,28 @@ export class SchedulesService {
   async deleteSchedule(id: string) {
     const schedule = await this.schedulesRepository.findOne({ where: { id } });
     if (!schedule) throw new NotFoundException('Schedule not found');
+
+    try {
+      await this.liveSessionService.deleteZoomMeeting(id);
+    } catch (error) {
+      this.logger.warn(`Zoom meeting deletion failed for schedule ${id}: ${error.message}`);
+    }
+
     return this.schedulesRepository.remove(schedule);
+  }
+
+  private getNextDayOfWeekDate(dayOfWeek: string): Date {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const targetIndex = days.indexOf(dayOfWeek.toLowerCase());
+    if (targetIndex === -1) return new Date();
+
+    const today = new Date();
+    const todayIndex = today.getDay();
+    let daysUntil = targetIndex - todayIndex;
+    if (daysUntil <= 0) daysUntil += 7;
+
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + daysUntil);
+    return nextDate;
   }
 }
