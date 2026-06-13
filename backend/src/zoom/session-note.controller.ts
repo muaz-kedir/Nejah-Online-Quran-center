@@ -35,7 +35,14 @@ export class SessionNoteController {
   }
 
   @Get('session/:sessionId')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async findBySession(@Param('sessionId') sessionId: string) {
     return this.sessionNoteService.findBySession(sessionId);
   }

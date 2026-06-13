@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsArray,
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class CreateTeacherApplicationDto {
   // ── Personal Details ─────────────────────────────────────────────

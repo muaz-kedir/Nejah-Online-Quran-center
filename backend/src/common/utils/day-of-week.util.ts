@@ -29,9 +29,7 @@ const DAY_ALIASES: Record<string, string> = {
   saturday: 'Saturday',
 };
 
-export function normalizeDayOfWeek(
-  value: string | number | null | undefined,
-): string | null {
+export function normalizeDayOfWeek(value: string | number | null | undefined): string | null {
   if (value == null || value === '') return null;
 
   if (typeof value === 'number' || /^\d+$/.test(String(value).trim())) {

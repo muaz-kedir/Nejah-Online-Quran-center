@@ -26,9 +26,7 @@ export class EmailService {
       });
       this.logger.log('SMTP transporter configured');
     } else {
-      this.logger.warn(
-        'SMTP not configured – emails will be logged to console only',
-      );
+      this.logger.warn('SMTP not configured – emails will be logged to console only');
     }
   }
 
@@ -46,9 +44,7 @@ export class EmailService {
         this.logger.error(`Failed to send email to ${to}: ${err.message}`);
       }
     } else {
-      this.logger.log(
-        `[EMAIL LOG] To: ${to} | Subject: ${subject}\n${html}`,
-      );
+      this.logger.log(`[EMAIL LOG] To: ${to} | Subject: ${subject}\n${html}`);
     }
   }
 
@@ -73,11 +69,7 @@ export class EmailService {
 
   // ── Application lifecycle emails ──────────────────────────────────
 
-  async sendApplicationReceived(
-    to: string,
-    applicantName: string,
-    applicationNumber: string,
-  ) {
+  async sendApplicationReceived(to: string, applicantName: string, applicationNumber: string) {
     const html = this.wrap(`
       <h2 style="color: #065f46; margin: 0 0 16px;">Application Received</h2>
       <p style="color: #374151; line-height: 1.6;">Assalamu Alaikum <strong>${applicantName}</strong>,</p>
@@ -114,32 +106,28 @@ export class EmailService {
     await this.send(to, '🎉 Application Approved – Welcome to Nejah!', html);
   }
 
-  async sendApplicationRejected(
-    to: string,
-    applicantName: string,
-    reason: string,
-  ) {
+  async sendApplicationRejected(to: string, applicantName: string, reason: string) {
     const html = this.wrap(`
       <h2 style="color: #065f46; margin: 0 0 16px;">Application Update</h2>
       <p style="color: #374151; line-height: 1.6;">Assalamu Alaikum <strong>${applicantName}</strong>,</p>
       <p style="color: #374151; line-height: 1.6;">Thank you for your interest in teaching at Nejah Online Quran &amp; Islamic Center. After careful review, we regret to inform you that your application has not been approved at this time.</p>
-      ${reason ? `
+      ${
+        reason
+          ? `
       <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0;">
         <p style="color: #991b1b; margin: 0; font-size: 14px;"><strong>Reason:</strong></p>
         <p style="color: #7f1d1d; margin: 8px 0 0; font-size: 14px;">${reason}</p>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
       <p style="color: #374151; line-height: 1.6;">You are welcome to reapply in the future. May Allah bless your efforts in seeking knowledge and teaching.</p>
       <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">JazakAllahu Khairan,<br>Nejah Admissions Team</p>
     `);
     await this.send(to, 'Application Update – Nejah Center', html);
   }
 
-  async sendMoreInfoRequired(
-    to: string,
-    applicantName: string,
-    message: string,
-  ) {
+  async sendMoreInfoRequired(to: string, applicantName: string, message: string) {
     const html = this.wrap(`
       <h2 style="color: #065f46; margin: 0 0 16px;">Additional Information Required</h2>
       <p style="color: #374151; line-height: 1.6;">Assalamu Alaikum <strong>${applicantName}</strong>,</p>

@@ -8,9 +8,7 @@ import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Notification, Student, Parent, User]),
-  ],
+  imports: [TypeOrmModule.forFeature([Notification, Student, Parent, User])],
   controllers: [NotificationsController],
   providers: [NotificationsService],
   exports: [NotificationsService, TypeOrmModule],

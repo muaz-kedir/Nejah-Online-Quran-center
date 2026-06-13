@@ -1,4 +1,12 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateIf, Matches } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateIf,
+  Matches,
+} from 'class-validator';
 import { ReplacementReason } from '../../common/enums/replacement-reason.enum';
 
 export class UpdateTeacherReplacementDto {

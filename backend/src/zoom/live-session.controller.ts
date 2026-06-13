@@ -3,13 +3,16 @@ import {
   Get,
   Post,
   Patch,
-  Delete,
   Param,
   Body,
   Query,
   UseGuards,
   Request,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { LiveSessionService } from './live-session.service';
 import { SessionAttendanceService } from './session-attendance.service';
 import { CreateLiveSessionDto } from './dto/create-live-session.dto';
@@ -20,7 +23,8 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
-import { ForbiddenException } from '@nestjs/common';
+import { Parent } from '../parents/entities/parent.entity';
+import { Student } from '../students/entities/student.entity';
 
 @Controller('live-sessions')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,6 +33,10 @@ export class LiveSessionController {
     private readonly liveSessionService: LiveSessionService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly teachersService: TeachersService,
+    @InjectRepository(Parent)
+    private readonly parentRepository: Repository<Parent>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
   ) {}
 
   @Post()
@@ -52,13 +60,19 @@ export class LiveSessionController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async findAll(@Query() query: QueryLiveSessionDto) {
     return this.liveSessionService.findAll(query);
   }
 
   @Get('upcoming')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getUpcoming(@Request() req, @Query('studentId') studentId?: string) {
     let teacherId: string | undefined;
     if (req.user.role === UserRole.TEACHER) {
@@ -69,7 +83,7 @@ export class LiveSessionController {
   }
 
   @Get('live')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getLiveSessions() {
     return this.liveSessionService.getLiveSessions();
   }
@@ -93,7 +107,11 @@ export class LiveSessionController {
 
   @Get('teacher')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async getTeacherSessions(@Request() req, @Query('page') page?: number, @Query('limit') limit?: number) {
+  async getTeacherSessions(
+    @Request() req,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       return this.liveSessionService.getTeacherSessions(teacher.id, page, limit);
@@ -102,13 +120,48 @@ export class LiveSessionController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async getStudentSessions(@Param('studentId') studentId: string, @Query('page') page?: number, @Query('limit') limit?: number) {
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
+  async getStudentSessions(
+    @Request() req,
+    @Param('studentId') studentId: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    if (req.user.role === UserRole.PARENT) {
+      const parent = await this.parentRepository.findOne({
+        where: { user: { id: req.user.id } },
+        relations: ['students'],
+      });
+      if (!parent || !parent.students.some((s) => s.id === studentId)) {
+        throw new ForbiddenException('You can only view your own children\'s sessions');
+      }
+    }
+    if (req.user.role === UserRole.STUDENT) {
+      const student = await this.studentRepository.findOne({
+        where: { id: studentId, userId: req.user.id },
+      });
+      if (!student) {
+        throw new ForbiddenException('You can only view your own sessions');
+      }
+    }
     return this.liveSessionService.getStudentSessions(studentId, page, limit);
   }
 
   @Get(':id')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async findOne(@Param('id') id: string) {
     return this.liveSessionService.findById(id);
   }

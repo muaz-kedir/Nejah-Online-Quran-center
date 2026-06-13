@@ -19,7 +19,11 @@ export class ResourcesService {
     private userRepository: Repository<User>,
   ) {}
 
-  async findAll(studentId?: string, search?: string, category?: ResourceCategory): Promise<Resource[]> {
+  async findAll(
+    studentId?: string,
+    search?: string,
+    category?: ResourceCategory,
+  ): Promise<Resource[]> {
     const qb = this.resourcesRepository.createQueryBuilder('resource');
 
     if (studentId) {

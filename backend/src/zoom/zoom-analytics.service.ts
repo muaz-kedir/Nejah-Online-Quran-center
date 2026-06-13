@@ -40,16 +40,21 @@ export class ZoomAnalyticsService {
     });
 
     const totalDuration = sessions.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
-    const averageSessionDuration = sessions.length > 0 ? Math.round(totalDuration / sessions.length) : 0;
+    const averageSessionDuration =
+      sessions.length > 0 ? Math.round(totalDuration / sessions.length) : 0;
 
     const allAttendances = await this.attendanceRepository.find();
     const totalAttendances = allAttendances.length;
     const presentCount = allAttendances.filter(
-      (a) => a.attendanceStatus === AttendanceStatus.PRESENT || a.attendanceStatus === AttendanceStatus.LATE,
+      (a) =>
+        a.attendanceStatus === AttendanceStatus.PRESENT ||
+        a.attendanceStatus === AttendanceStatus.LATE,
     ).length;
     const attendanceRate = totalAttendances > 0 ? (presentCount / totalAttendances) * 100 : 0;
 
-    const totalStudents = await this.studentRepository.count({ where: { status: 'active' as any } });
+    const totalStudents = await this.studentRepository.count({
+      where: { status: 'active' as any },
+    });
     const totalTeachers = await this.teacherRepository.count();
 
     return {
@@ -73,19 +78,27 @@ export class ZoomAnalyticsService {
     });
 
     const totalSessions = sessions.length;
-    const completedSessions = sessions.filter((s) => s.status === LiveSessionStatus.COMPLETED).length;
-    const cancelledSessions = sessions.filter((s) => s.status === LiveSessionStatus.CANCELLED).length;
+    const completedSessions = sessions.filter(
+      (s) => s.status === LiveSessionStatus.COMPLETED,
+    ).length;
+    const cancelledSessions = sessions.filter(
+      (s) => s.status === LiveSessionStatus.CANCELLED,
+    ).length;
     const liveSessions = sessions.filter((s) => s.status === LiveSessionStatus.LIVE).length;
 
     const completed = sessions.filter((s) => s.status === LiveSessionStatus.COMPLETED);
     const totalDuration = completed.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
-    const averageSessionDuration = completed.length > 0 ? Math.round(totalDuration / completed.length) : 0;
+    const averageSessionDuration =
+      completed.length > 0 ? Math.round(totalDuration / completed.length) : 0;
 
     const allAttendances = sessions.flatMap((s) => s.attendances || []);
     const presentCount = allAttendances.filter(
-      (a) => a.attendanceStatus === AttendanceStatus.PRESENT || a.attendanceStatus === AttendanceStatus.LATE,
+      (a) =>
+        a.attendanceStatus === AttendanceStatus.PRESENT ||
+        a.attendanceStatus === AttendanceStatus.LATE,
     ).length;
-    const attendanceRate = allAttendances.length > 0 ? (presentCount / allAttendances.length) * 100 : 0;
+    const attendanceRate =
+      allAttendances.length > 0 ? (presentCount / allAttendances.length) * 100 : 0;
 
     const studentIds = [...new Set(allAttendances.map((a) => a.studentId))];
 
@@ -97,9 +110,8 @@ export class ZoomAnalyticsService {
       averageSessionDuration,
       attendanceRate: Math.round(attendanceRate * 100) / 100,
       totalStudents: studentIds.length,
-      teacherUtilization: totalSessions > 0
-        ? Math.round((completedSessions / totalSessions) * 100)
-        : 0,
+      teacherUtilization:
+        totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0,
     };
   }
 
@@ -113,17 +125,20 @@ export class ZoomAnalyticsService {
     const sessionsAttended = attendances.filter(
       (a) => a.attendanceStatus !== AttendanceStatus.ABSENT,
     ).length;
-    const present = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.PRESENT).length;
+    const present = attendances.filter(
+      (a) => a.attendanceStatus === AttendanceStatus.PRESENT,
+    ).length;
     const late = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.LATE).length;
     const absent = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.ABSENT).length;
-    const leftEarly = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.LEFT_EARLY).length;
+    const leftEarly = attendances.filter(
+      (a) => a.attendanceStatus === AttendanceStatus.LEFT_EARLY,
+    ).length;
 
     const totalDuration = attendances.reduce((sum, a) => sum + (a.duration || 0), 0);
     const averageDuration = sessionsAttended > 0 ? Math.round(totalDuration / sessionsAttended) : 0;
 
-    const attendanceRate = totalSessions > 0
-      ? Math.round(((present + late) / totalSessions) * 100 * 100) / 100
-      : 0;
+    const attendanceRate =
+      totalSessions > 0 ? Math.round(((present + late) / totalSessions) * 100 * 100) / 100 : 0;
 
     return {
       totalSessions,
@@ -135,9 +150,7 @@ export class ZoomAnalyticsService {
       attendanceRate,
       totalDuration,
       averageDuration,
-      engagement: totalSessions > 0
-        ? Math.round((sessionsAttended / totalSessions) * 100)
-        : 0,
+      engagement: totalSessions > 0 ? Math.round((sessionsAttended / totalSessions) * 100) : 0,
     };
   }
 
@@ -163,9 +176,12 @@ export class ZoomAnalyticsService {
 
     const allAttendances = sessions.flatMap((s) => s.attendances || []);
     const presentCount = allAttendances.filter(
-      (a) => a.attendanceStatus === AttendanceStatus.PRESENT || a.attendanceStatus === AttendanceStatus.LATE,
+      (a) =>
+        a.attendanceStatus === AttendanceStatus.PRESENT ||
+        a.attendanceStatus === AttendanceStatus.LATE,
     ).length;
-    const attendanceRate = allAttendances.length > 0 ? Math.round((presentCount / allAttendances.length) * 100) : 0;
+    const attendanceRate =
+      allAttendances.length > 0 ? Math.round((presentCount / allAttendances.length) * 100) : 0;
 
     const sessionsByDay: Record<string, number> = {};
     sessions.forEach((s) => {
@@ -187,14 +203,21 @@ export class ZoomAnalyticsService {
 
   async getOverallStats(): Promise<any> {
     const totalSessions = await this.liveSessionRepository.count();
-    const completedSessions = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.COMPLETED } });
-    const cancelledSessions = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.CANCELLED } });
-    const liveSessions = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.LIVE } });
-    const scheduledSessions = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.SCHEDULED } });
+    const completedSessions = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.COMPLETED },
+    });
+    const cancelledSessions = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.CANCELLED },
+    });
+    const liveSessions = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.LIVE },
+    });
+    const scheduledSessions = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.SCHEDULED },
+    });
 
-    const completionRate = totalSessions > 0
-      ? Math.round((completedSessions / totalSessions) * 100)
-      : 0;
+    const completionRate =
+      totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
 
     return {
       totalSessions,

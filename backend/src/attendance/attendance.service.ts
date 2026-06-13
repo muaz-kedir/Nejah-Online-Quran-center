@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ClassSession, SessionStatus, TeacherAttendanceStatus } from './entities/class-session.entity';
+import {
+  ClassSession,
+  SessionStatus,
+  TeacherAttendanceStatus,
+} from './entities/class-session.entity';
 import { StudentAttendance, StudentAttendanceStatus } from './entities/student-attendance.entity';
 import { CreateClassSessionDto } from './dto/create-class-session.dto';
 import { StartMeetingDto } from './dto/start-meeting.dto';
@@ -370,7 +379,10 @@ export class AttendanceService {
       query.andWhere('session.sessionDate = :date', { date });
     }
 
-    return query.orderBy('session.sessionDate', 'DESC').addOrderBy('session.scheduledStartTime', 'DESC').getMany();
+    return query
+      .orderBy('session.sessionDate', 'DESC')
+      .addOrderBy('session.scheduledStartTime', 'DESC')
+      .getMany();
   }
 
   async getStudentAttendanceHistory(studentId: string): Promise<StudentAttendance[]> {
@@ -445,9 +457,7 @@ export class AttendanceService {
     });
 
     for (const session of liveSessions) {
-      const isAssigned = session.studentAttendances.some(
-        (a) => a.studentId === studentId,
-      );
+      const isAssigned = session.studentAttendances.some((a) => a.studentId === studentId);
       if (isAssigned) {
         return session;
       }

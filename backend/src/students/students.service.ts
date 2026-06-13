@@ -94,9 +94,12 @@ export class StudentsService {
         // If parent's students array is not loaded, fetch and update
         const parentWithStudents = await this.parentsRepository.findOne({
           where: { id: parentId },
-          relations: ['students']
+          relations: ['students'],
         });
-        if (parentWithStudents && !parentWithStudents.students.some(s => s.id === savedStudent.id)) {
+        if (
+          parentWithStudents &&
+          !parentWithStudents.students.some((s) => s.id === savedStudent.id)
+        ) {
           parentWithStudents.students = [...(parentWithStudents.students || []), savedStudent];
           await this.parentsRepository.save(parentWithStudents);
         }
@@ -107,10 +110,18 @@ export class StudentsService {
   }
 
   async findAll(queryDto: QueryStudentDto & { isAssigned?: boolean }) {
-    const { 
-      search, level, teacherId, status, 
-      country, city, startDate, endDate,
-      page = 1, limit = 10, isAssigned 
+    const {
+      search,
+      level,
+      teacherId,
+      status,
+      country,
+      city,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      isAssigned,
     } = queryDto;
 
     const qb = this.studentsRepository
@@ -125,13 +136,13 @@ export class StudentsService {
     if (search) {
       qb.andWhere(
         '(LOWER(student.fullName) LIKE LOWER(:search) ' +
-        'OR LOWER(student.email) LIKE LOWER(:search) ' +
-        'OR LOWER(student.studentCode) LIKE LOWER(:search) ' +
-        'OR LOWER(student.phone) LIKE LOWER(:search) ' +
-        'OR LOWER(student.familyName) LIKE LOWER(:search) ' +
-        'OR LOWER(student.familyPhone) LIKE LOWER(:search) ' +
-        'OR LOWER(parent.name) LIKE LOWER(:search) ' +
-        'OR LOWER(parent.phone) LIKE LOWER(:search))',
+          'OR LOWER(student.email) LIKE LOWER(:search) ' +
+          'OR LOWER(student.studentCode) LIKE LOWER(:search) ' +
+          'OR LOWER(student.phone) LIKE LOWER(:search) ' +
+          'OR LOWER(student.familyName) LIKE LOWER(:search) ' +
+          'OR LOWER(student.familyPhone) LIKE LOWER(:search) ' +
+          'OR LOWER(parent.name) LIKE LOWER(:search) ' +
+          'OR LOWER(parent.phone) LIKE LOWER(:search))',
         { search: `%${search}%` },
       );
     }
@@ -191,12 +202,9 @@ export class StudentsService {
 
   async findAllUnassigned() {
     return this.studentsRepository.find({
-      where: [
-        { isAssigned: false },
-        { teacherId: IsNull() }
-      ],
+      where: [{ isAssigned: false }, { teacherId: IsNull() }],
       relations: ['parent'],
-      order: { fullName: 'ASC' }
+      order: { fullName: 'ASC' },
     });
   }
 
@@ -235,9 +243,9 @@ export class StudentsService {
 
   async unassignFromTeacher(id: string): Promise<void> {
     // Explicit update to handle nulls more reliably than generic update DTOs
-    await this.studentsRepository.update(id, { 
-      teacherId: null, 
-      isAssigned: false 
+    await this.studentsRepository.update(id, {
+      teacherId: null,
+      isAssigned: false,
     });
   }
 
@@ -249,7 +257,7 @@ export class StudentsService {
   async getStats() {
     const total = await this.studentsRepository.count();
     const active = await this.studentsRepository.count({ where: { status: 'active' as any } });
-    
+
     // New Students this month
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -273,19 +281,19 @@ export class StudentsService {
   }
 
   async changeStatus(
-    id: string, 
-    status: any, 
-    reason: string, 
-    notes: string, 
-    adminId: string
+    id: string,
+    status: any,
+    reason: string,
+    notes: string,
+    adminId: string,
   ): Promise<Student> {
     const student = await this.findOne(id);
-    
+
     student.status = status;
     student.statusChangeReason = reason;
     student.statusNotes = notes;
     student.statusChangedAt = new Date();
-    
+
     // Attempt to get admin details
     const admin = await this.usersService.findOne(adminId).catch(() => null);
     student.statusChangedBy = admin ? admin.name : 'System Admin';
@@ -343,8 +351,12 @@ export class StudentsService {
     }
 
     // Update existing user's password
-    await this.usersService.update(student.userId, { password: newPassword } as any, {
-      role: UserRole.SUPER_ADMIN,
-    } as any);
+    await this.usersService.update(
+      student.userId,
+      { password: newPassword } as any,
+      {
+        role: UserRole.SUPER_ADMIN,
+      } as any,
+    );
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Parent } from './entities/parent.entity';
@@ -62,7 +67,8 @@ export class ParentsService {
       if (existingByPhone) {
         return {
           parent: existingByPhone,
-          message: 'Existing parent found. Student will be connected to the existing parent account.',
+          message:
+            'Existing parent found. Student will be connected to the existing parent account.',
         };
       }
     }
@@ -77,7 +83,8 @@ export class ParentsService {
       const parent = await this.createProfileForExistingUser(existingUser, dto);
       return {
         parent,
-        message: 'Existing parent account linked. Student will be connected to the existing parent account.',
+        message:
+          'Existing parent account linked. Student will be connected to the existing parent account.',
       };
     }
 
@@ -138,9 +145,9 @@ export class ParentsService {
   }
 
   async findByEmail(email: string): Promise<Parent | null> {
-    return this.parentsRepository.findOne({ 
+    return this.parentsRepository.findOne({
       where: { email },
-      relations: ['user', 'students']
+      relations: ['user', 'students'],
     });
   }
 
@@ -149,7 +156,7 @@ export class ParentsService {
 
     // Build where clause
     const where: any = {};
-    
+
     if (status) {
       where.status = status;
     }
@@ -175,15 +182,15 @@ export class ParentsService {
   }
 
   async findOne(id: string): Promise<Parent> {
-    const parent = await this.parentsRepository.findOne({ 
+    const parent = await this.parentsRepository.findOne({
       where: { id },
-      relations: ['user', 'students', 'students.user']
+      relations: ['user', 'students', 'students.user'],
     });
-    
+
     if (!parent) {
       throw new NotFoundException('Parent not found');
     }
-    
+
     return parent;
   }
 
@@ -200,11 +207,15 @@ export class ParentsService {
 
     // Update user if email or name changed
     if (parent.user && (updateParentDto.email || updateParentDto.fullName)) {
-      await this.usersService.update(parent.user.id, {
-        email: updateParentDto.email,
-        name: updateParentDto.fullName,
-        phone: updateParentDto.phoneNumber,
-      }, parent.user);
+      await this.usersService.update(
+        parent.user.id,
+        {
+          email: updateParentDto.email,
+          name: updateParentDto.fullName,
+          phone: updateParentDto.phoneNumber,
+        },
+        parent.user,
+      );
     }
 
     Object.assign(parent, updateParentDto);
@@ -213,10 +224,12 @@ export class ParentsService {
 
   async remove(id: string): Promise<void> {
     const parent = await this.findOne(id);
-    
+
     // Check if parent has students
     if (parent.students && parent.students.length > 0) {
-      throw new BadRequestException('Cannot delete parent with linked students. Please reassign or remove students first.');
+      throw new BadRequestException(
+        'Cannot delete parent with linked students. Please reassign or remove students first.',
+      );
     }
 
     await this.parentsRepository.remove(parent);

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { LiveSession } from './entities/live-session.entity';
-import { AttendanceStatus, LiveSessionStatus } from './enums/live-session-status.enum';
+import { AttendanceStatus } from './enums/live-session-status.enum';
 
 @Injectable()
 export class SessionAttendanceService {
@@ -27,21 +27,19 @@ export class SessionAttendanceService {
     });
 
     const now = new Date();
+    const isLate = now > session.scheduledStart;
 
     if (!attendance) {
       attendance = this.attendanceRepository.create({
         sessionId,
         studentId,
         joinTime: now,
-        attendanceStatus: AttendanceStatus.PRESENT,
+        attendanceStatus: isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT,
       });
     } else {
       attendance.joinTime = now;
-
-      if (now > session.scheduledStart) {
-        attendance.attendanceStatus = AttendanceStatus.LATE;
-      } else {
-        attendance.attendanceStatus = AttendanceStatus.PRESENT;
+      if (attendance.attendanceStatus === AttendanceStatus.ABSENT) {
+        attendance.attendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
       }
     }
 
@@ -70,9 +68,7 @@ export class SessionAttendanceService {
     attendance.leaveTime = now;
 
     if (attendance.joinTime) {
-      attendance.duration = Math.floor(
-        (now.getTime() - attendance.joinTime.getTime()) / 60000,
-      );
+      attendance.duration = Math.floor((now.getTime() - attendance.joinTime.getTime()) / 60000);
     }
 
     if (attendance.joinTime && now < session.scheduledEnd) {
@@ -108,7 +104,14 @@ export class SessionAttendanceService {
     });
   }
 
-  async getAttendanceForStudent(studentId: string, page = 1, limit = 20): Promise<any> {
+  async getAttendanceForStudent(
+    studentId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    data: SessionAttendance[];
+    meta: { total: number; page: number; limit: number; totalPages: number };
+  }> {
     const [data, total] = await this.attendanceRepository.findAndCount({
       where: { studentId },
       relations: ['session', 'session.teacher', 'session.schedule'],
@@ -123,16 +126,27 @@ export class SessionAttendanceService {
     };
   }
 
-  async getAttendanceStats(studentId: string): Promise<any> {
+  async getAttendanceStats(studentId: string): Promise<{
+    total: number;
+    present: number;
+    late: number;
+    absent: number;
+    leftEarly: number;
+    attendancePercentage: number;
+  }> {
     const attendances = await this.attendanceRepository.find({
       where: { studentId },
     });
 
     const total = attendances.length;
-    const present = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.PRESENT).length;
+    const present = attendances.filter(
+      (a) => a.attendanceStatus === AttendanceStatus.PRESENT,
+    ).length;
     const late = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.LATE).length;
     const absent = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.ABSENT).length;
-    const leftEarly = attendances.filter((a) => a.attendanceStatus === AttendanceStatus.LEFT_EARLY).length;
+    const leftEarly = attendances.filter(
+      (a) => a.attendanceStatus === AttendanceStatus.LEFT_EARLY,
+    ).length;
     const attendancePercentage = total > 0 ? ((present + late) / total) * 100 : 0;
 
     return { total, present, late, absent, leftEarly, attendancePercentage };

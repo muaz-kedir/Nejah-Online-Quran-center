@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -26,9 +27,17 @@ const LANGUAGES = [
 function TopbarInner({ onMenuClick }: TopbarProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme, language, setLanguage, t } = useApp();
-  const notifications = 3;
+  const [notifCount, setNotifCount] = useState(0);
   const [userName, setUserName] = useState('Admin User');
   const [userRole, setUserRole] = useState('super_admin');
+
+  const fetchNotifCount = useCallback(async () => {
+    try {
+      const data = await api<any[]>('/notifications');
+      const unread = Array.isArray(data) ? data.filter((n: any) => !n.isRead).length : 0;
+      setNotifCount(unread);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const loadUserData = () => {
@@ -38,15 +47,15 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
 
     if (typeof window !== 'undefined') {
       loadUserData();
+      fetchNotifCount();
       window.addEventListener('profileUpdated', loadUserData);
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
+      const interval = setInterval(fetchNotifCount, 30000);
+      return () => {
+        clearInterval(interval);
         window.removeEventListener('profileUpdated', loadUserData);
-      }
-    };
-  }, []);
+      };
+    }
+  }, [fetchNotifCount]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -133,12 +142,21 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
         </DropdownMenu>
 
         <div className="relative">
-          <button className={iconBtn}>
+          <button className={iconBtn} onClick={() => {
+            const role = localStorage.getItem('userRole');
+            const paths: Record<string, string> = {
+              teacher: '/teacher_notifications',
+              student: '/student/notifications',
+              qirat_manager: '/qirat_notifications',
+              parent: '/parent_notifications',
+            };
+            navigate({ to: paths[role || ''] || '/dashboard' });
+          }}>
             <Bell className="h-4 w-4" />
           </button>
-          {notifications > 0 && (
+          {notifCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-background bg-red-500 font-mono text-[10px] text-white">
-              {notifications}
+              {notifCount > 9 ? '9+' : notifCount}
             </span>
           )}
         </div>

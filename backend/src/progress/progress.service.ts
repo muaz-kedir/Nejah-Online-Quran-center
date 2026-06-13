@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Progress } from './entities/progress.entity';
@@ -81,7 +86,7 @@ export class ProgressService {
         relations: ['students'],
       });
       if (!parent?.students?.some((s) => s.id === studentId)) {
-        throw new ForbiddenException('You can only view your children\'s progress');
+        throw new ForbiddenException("You can only view your children's progress");
       }
     }
   }
@@ -145,7 +150,12 @@ export class ProgressService {
       // Ticked surahs are the single source of truth for the completed count.
       const completed = completedIds.filter((id) => id.startsWith('surah-')).length;
       const percentage = Math.min(Math.round((completed / TOTAL_SURAHS) * 1000) / 10, 100);
-      return { completed, total: TOTAL_SURAHS, remaining: Math.max(TOTAL_SURAHS - completed, 0), percentage };
+      return {
+        completed,
+        total: TOTAL_SURAHS,
+        remaining: Math.max(TOTAL_SURAHS - completed, 0),
+        percentage,
+      };
     }
 
     return { completed: 0, total: 0, remaining: 0, percentage: 0 };
@@ -209,11 +219,7 @@ export class ProgressService {
     };
   }
 
-  private validateTopicLog(
-    track: LearningTrack,
-    dto: UpdateProgressDto,
-    completedIds: string[],
-  ) {
+  private validateTopicLog(track: LearningTrack, dto: UpdateProgressDto, completedIds: string[]) {
     if (!dto.topicId) {
       throw new BadRequestException('Topic is required');
     }
@@ -437,11 +443,7 @@ export class ProgressService {
     });
   }
 
-  async addFeedback(
-    teacherId: string,
-    studentId: string,
-    content: string,
-  ): Promise<Feedback> {
+  async addFeedback(teacherId: string, studentId: string, content: string): Promise<Feedback> {
     const teacher = await this.teacherRepository.findOne({
       where: { id: teacherId },
     });

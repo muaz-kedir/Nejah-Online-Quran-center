@@ -1,4 +1,11 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  ForbiddenException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -26,9 +33,24 @@ export class UsersService implements OnModuleInit {
   private async seedDemoAccounts() {
     const demoAccounts = [
       { email: 'admin@nejah.com', password: 'Admin123', name: 'Admin User', role: UserRole.ADMIN },
-      { email: 'teacher@nejah.com', password: 'Teacher123', name: 'Demo Teacher', role: UserRole.TEACHER },
-      { email: 'student@nejah.com', password: 'Student123', name: 'Demo Student', role: UserRole.STUDENT },
-      { email: 'parent@nejah.com', password: 'Parent123', name: 'Demo Parent', role: UserRole.PARENT },
+      {
+        email: 'teacher@nejah.com',
+        password: 'Teacher123',
+        name: 'Demo Teacher',
+        role: UserRole.TEACHER,
+      },
+      {
+        email: 'student@nejah.com',
+        password: 'Student123',
+        name: 'Demo Student',
+        role: UserRole.STUDENT,
+      },
+      {
+        email: 'parent@nejah.com',
+        password: 'Parent123',
+        name: 'Demo Parent',
+        role: UserRole.PARENT,
+      },
     ];
 
     for (const account of demoAccounts) {
@@ -49,7 +71,7 @@ export class UsersService implements OnModuleInit {
   private async seedSuperAdmin() {
     const logFile = path.resolve(process.cwd(), 'seed-log.txt');
     fs.appendFileSync(logFile, `[${new Date().toISOString()}] Checking super admin...\n`);
-    
+
     const superAdminEmail = 'nejahsuperadmin@gmail.com';
     const existingAdmin = await this.findByEmail(superAdminEmail);
 
@@ -65,18 +87,30 @@ export class UsersService implements OnModuleInit {
           isActive: true,
         });
         await this.usersRepository.save(superAdmin);
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ Super Admin seeded successfully!\n`);
+        fs.appendFileSync(
+          logFile,
+          `[${new Date().toISOString()}] ✅ Super Admin seeded successfully!\n`,
+        );
       } catch (error) {
-        fs.appendFileSync(logFile, `[${new Date().toISOString()}] ❌ Error seeding Super Admin: ${error.message}\n`);
+        fs.appendFileSync(
+          logFile,
+          `[${new Date().toISOString()}] ❌ Error seeding Super Admin: ${error.message}\n`,
+        );
       }
     } else {
-      fs.appendFileSync(logFile, `[${new Date().toISOString()}] Super Admin already exists. Forcing password update...\n`);
+      fs.appendFileSync(
+        logFile,
+        `[${new Date().toISOString()}] Super Admin already exists. Forcing password update...\n`,
+      );
       const hashedPassword = await bcrypt.hash('SuperAdmin123', 10);
       existingAdmin.password = hashedPassword;
       existingAdmin.isActive = true;
       existingAdmin.role = UserRole.SUPER_ADMIN;
       await this.usersRepository.save(existingAdmin);
-      fs.appendFileSync(logFile, `[${new Date().toISOString()}] ✅ Super Admin password updated successfully!\n`);
+      fs.appendFileSync(
+        logFile,
+        `[${new Date().toISOString()}] ✅ Super Admin password updated successfully!\n`,
+      );
     }
   }
 
@@ -120,7 +154,17 @@ export class UsersService implements OnModuleInit {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'name',
+        'role',
+        'phone',
+        'avatar',
+        'isActive',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     return {
@@ -137,7 +181,17 @@ export class UsersService implements OnModuleInit {
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'name', 'role', 'phone', 'avatar', 'isActive', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'name',
+        'role',
+        'phone',
+        'avatar',
+        'isActive',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     if (!user) {

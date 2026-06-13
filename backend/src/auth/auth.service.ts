@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -47,7 +52,9 @@ export class AuthService {
           where: { userId: existingStudentUser.id },
         });
         if (existingProfile) {
-          throw new ConflictException('A student with this email is already registered. Please log in instead.');
+          throw new ConflictException(
+            'A student with this email is already registered. Please log in instead.',
+          );
         }
         if (existingStudentUser.role !== UserRole.STUDENT) {
           throw new ConflictException(
@@ -71,7 +78,11 @@ export class AuthService {
             throw new BadRequestException('Parent information is required for students under 18.');
           }
 
-          console.log('[AuthService] Resolving parent for registration:', parent.email, parent.phoneNumber);
+          console.log(
+            '[AuthService] Resolving parent for registration:',
+            parent.email,
+            parent.phoneNumber,
+          );
           const parentResult = await this.parentsService.findOrCreateForRegistration({
             fullName: parent.fullName,
             email: parent.email,
@@ -100,7 +111,10 @@ export class AuthService {
         });
         console.log('[AuthService] Student user created:', studentUser.id);
       } else {
-        console.log('[AuthService] Reusing existing student user from prior attempt:', studentUser.id);
+        console.log(
+          '[AuthService] Reusing existing student user from prior attempt:',
+          studentUser.id,
+        );
       }
 
       console.log('[AuthService] Creating student profile...');
@@ -129,7 +143,7 @@ export class AuthService {
 
       // 5. Generate token for the student (since they just registered)
       const payload = { sub: studentUser.id, email: studentUser.email, role: studentUser.role };
-      
+
       console.log('[AuthService] Registration completed successfully');
       return {
         message: 'Registration successful!',
@@ -158,10 +172,7 @@ export class AuthService {
 
     if (!user) {
       const student = await this.studentsRepository.findOne({
-        where: [
-          { email: identifier },
-          { familyPhone: identifier },
-        ],
+        where: [{ email: identifier }, { familyPhone: identifier }],
         relations: ['user'],
       });
 
@@ -179,9 +190,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    console.log(`[AuthService] User found. ID: ${user.id}, Role: ${user.role}, IsActive: ${user.isActive}`);
+    console.log(
+      `[AuthService] User found. ID: ${user.id}, Role: ${user.role}, IsActive: ${user.isActive}`,
+    );
     if (!user.password) {
-      console.error(`[AuthService] CRITICAL: Password field is missing on user object from database!`);
+      console.error(
+        `[AuthService] CRITICAL: Password field is missing on user object from database!`,
+      );
     }
 
     console.log(`[AuthService] Stored Hash: ${user.password}`);
@@ -334,7 +349,12 @@ export class AuthService {
     }
 
     if (match) {
-      return { exists: true, parent: this.toParentSearchResult(match), conflict: false, message: null };
+      return {
+        exists: true,
+        parent: this.toParentSearchResult(match),
+        conflict: false,
+        message: null,
+      };
     }
 
     // No parent record, but the email may already belong to a non-parent user,
@@ -364,7 +384,7 @@ export class AuthService {
 
     // Mock sending email
     console.log(`Sending password reset link to ${email}`);
-    
+
     return {
       message: 'Password recovery instructions have been sent to your email.',
     };

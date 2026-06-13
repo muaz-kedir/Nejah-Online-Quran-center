@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
-import { StudentSessionAttendance, StudentAttendanceStatus } from './entities/student-session-attendance.entity';
+import {
+  StudentSessionAttendance,
+  StudentAttendanceStatus,
+} from './entities/student-session-attendance.entity';
 import { SessionMeeting } from './entities/session-meeting.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 

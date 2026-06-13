@@ -5,9 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   Loader2, Mail, Lock, ArrowLeft, ChevronDown, Eye, EyeOff,
-  Shield, ShieldAlert, GraduationCap, User, Users, Zap,
+  Shield, ShieldAlert, GraduationCap, User, Users, Zap, LogIn,
 } from "lucide-react";
-import { Loader2, Mail, Lock, LogIn } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -174,352 +173,150 @@ function LoginPage() {
         .delay-500 { animation-delay: 0.5s; }
       `}</style>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        {/* Animated Background Orbs */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full"
-               style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%)', animation: 'orbFloat 25s ease-in-out infinite' }} />
-          <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full"
-               style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.12) 0%, transparent 70%)', animation: 'orbFloat 30s ease-in-out infinite reverse', animationDelay: '-7s' }} />
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full"
-               style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 70%)', animation: 'orbFloat 20s ease-in-out infinite', animationDelay: '-14s' }} />
-          <div className="absolute top-1/2 -translate-y-1/2 left-1/4 w-[350px] h-[350px] rounded-full"
-               style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%)', animation: 'orbFloat 35s ease-in-out infinite reverse', animationDelay: '-21s' }} />
-        </div>
-
-        {/* Subtle Grid Overlay */}
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]" aria-hidden="true"
-             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-
-        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-fade-slide-up">
-          {/* Glassmorphism Card */}
-          <div className="bg-white/80 backdrop-blur-xl px-8 pt-10 pb-12 shadow-2xl shadow-emerald-900/20 rounded-2xl border border-white/20 relative overflow-hidden">
-            {/* Animated Glowing Top Accent */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400"
-                 style={{ animation: 'glowPulse 3s ease-in-out infinite' }} />
-
-            {/* Back to home */}
-            <button
-              onClick={() => navigate({ to: "/" })}
-              className="absolute top-4 left-4 p-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-sm transition-all text-gray-400 hover:text-emerald-700 border border-white/30"
-              title="Back to home"
+      <AuthPageLayout
+              title="Welcome Back"
+              subtitle="Online Quran & Islamic Center — Sign in to your account"
+              footer={
+                <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-nejah-slate-blue">
+                  <button className="transition-colors hover:text-nejah-electric">Privacy Policy</button>
+                  <button className="transition-colors hover:text-nejah-electric">Terms of Service</button>
+                  <button className="transition-colors hover:text-nejah-electric">Contact Support</button>
+                </div>
+              }
             >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="animate-logo-glow inline-block">
-                <img
-                  src="/logo.png"
-                  alt="Nejah Logo"
-                  className="mx-auto h-16 w-auto mb-2"
-                />
-              </div>
-              <h2 className="text-3xl font-serif font-bold bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
-                Nejah
-              </h2>
-              <p className="text-sm text-gray-400 font-medium tracking-wide">Online Quran & Islamic Center</p>
-            </div>
-
-            {/* Quick Login - One-Click Role Access */}
-            <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2.5 font-semibold">Quick Access</p>
-              <div className="flex flex-wrap gap-1.5">
-                {demoAccounts.map(acc => {
-                  const Icon = acc.icon;
-                  return (
-                    <button
-                      key={acc.role}
-                      type="button"
-                      onClick={() => handleQuickLogin(acc.email, acc.password, acc.role)}
-                      disabled={isLoading}
-                      className={`group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-white transition-all duration-300 bg-gradient-to-r ${acc.gradient} hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                        quickLoginRole === acc.role ? 'ring-2 ring-white/60 scale-105' : ''
-                      }`}
-                    >
-                      <Icon className="w-3 h-3" />
-                      <span>{acc.role}</span>
-                      {quickLoginRole === acc.role && (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-600 text-sm font-medium">Email or Phone</FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-emerald-600 transition-all duration-300" />
-                          <Input
-                            className="pl-10 h-12 bg-white/60 backdrop-blur-sm border-slate-200/80 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-gray-800 placeholder:text-gray-400"
-                            placeholder="email@example.com"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-    <AuthPageLayout
-      title="Welcome Back"
-      subtitle="Online Quran & Islamic Center — Sign in to your account"
-      footer={
-        <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-nejah-slate-blue">
-          <button className="transition-colors hover:text-nejah-electric">Privacy Policy</button>
-          <button className="transition-colors hover:text-nejah-electric">Terms of Service</button>
-          <button className="transition-colors hover:text-nejah-electric">Contact Support</button>
-        </div>
-      }
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-foreground">Email or Phone</FormLabel>
-                <FormControl>
-                  <div className="group relative">
-                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
-                    <Input
-                      className="h-12 pl-10"
-                      placeholder="email@example.com or phone"
-                      {...field}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-600 text-sm font-medium">Password</FormLabel>
-                      <FormControl>
-                        <div className="relative group">
-                          <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-focus-within:text-emerald-600 transition-all duration-300" />
-                          <Input
-                            className="pl-10 pr-12 h-12 bg-white/60 backdrop-blur-sm border-slate-200/80 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 text-gray-800 placeholder:text-gray-400"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-3 text-gray-400 hover:text-emerald-700 transition-colors"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-foreground">Password</FormLabel>
-                <FormControl>
-                  <div className="group relative">
-                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
-                    <Input
-                      className="h-12 pl-10"
-                      type="password"
-                      placeholder="••••••••"
-                      {...field}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-                <div className="flex items-center justify-between pt-1">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
                     control={form.control}
-                    name="rememberMe"
+                    name="email"
                     render={({ field }) => (
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange}
-                          className="border-slate-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" />
-                        <label
-                          htmlFor="remember"
-                          className="text-sm font-medium leading-none text-gray-500 cursor-pointer select-none"
-                        >
-                          Remember me
-                        </label>
-                      </div>
+                      <FormItem>
+                        <FormLabel className="text-foreground">Email or Phone</FormLabel>
+                        <FormControl>
+                          <div className="group relative">
+                            <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                            <Input
+                              className="h-12 pl-10"
+                              placeholder="email@example.com or phone"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                  <button
-                    type="button"
-                    onClick={() => navigate({ to: "/forgot-password" })}
-                    className="text-sm font-semibold text-emerald-700 hover:text-emerald-600 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-          <div className="flex items-center justify-between">
-            <FormField
-              control={form.control}
-              name="rememberMe"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
-                  <label htmlFor="remember" className="cursor-pointer text-sm font-medium text-nejah-slate-blue">
-                    Remember me
-                  </label>
-                </div>
-              )}
-            />
-            <button
-              type="button"
-              onClick={() => navigate({ to: "/forgot-password" })}
-              className="text-sm font-medium text-nejah-electric underline-offset-4 hover:underline"
-            >
-              Forgot password?
-            </button>
-          </div>
 
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="relative w-full h-12 text-lg font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/40 transition-all duration-300 active:scale-[0.98] border-0 overflow-hidden group"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent bg-[length:200%_100%] group-hover:animate-[shimmer_1.5s_ease-in-out_infinite]" />
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="mr-2 h-5 w-5" />
-                      Login
-                    </>
-                  )}
-                </Button>
-          <Button type="submit" className="h-12 w-full text-base" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                Login
-                <LogIn className="ml-2 h-5 w-5" />
-              </>
-            )}
-          </Button>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Password</FormLabel>
+                        <FormControl>
+                          <div className="group relative">
+                            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                            <Input
+                              className="h-12 pl-10"
+                              type="password"
+                              placeholder="••••••••"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="text-center pt-3 space-y-2">
-                  <p className="text-sm text-gray-500">
-                    New student?{" "}
+                  <div className="flex items-center justify-between">
+                    <FormField
+                      control={form.control}
+                      name="rememberMe"
+                      render={({ field }) => (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
+                          <label htmlFor="remember" className="cursor-pointer text-sm font-medium text-nejah-slate-blue">
+                            Remember me
+                          </label>
+                        </div>
+                      )}
+                    />
                     <button
                       type="button"
-                      onClick={() => navigate({ to: "/register" })}
-                      className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
+                      onClick={() => navigate({ to: "/forgot-password" })}
+                      className="text-sm font-medium text-nejah-electric underline-offset-4 hover:underline"
                     >
-                      Join our Programs
+                      Forgot password?
                     </button>
-                  </p>
-                  {isApplicationsOpen && (
-                    <p className="text-sm text-gray-500">
-                      Are you a teacher?{" "}
+                  </div>
+
+                  <Button type="submit" className="h-12 w-full text-base" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        Login
+                        <LogIn className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+
+                  <SilverDivider />
+
+                  <div className="space-y-2 pt-2 text-center">
+                    <p className="text-sm text-nejah-slate-blue">
+                      New student?{" "}
                       <button
                         type="button"
-                        onClick={() => navigate({ to: "/apply-as-teacher" })}
-                        className="font-bold text-emerald-700 hover:text-emerald-600 transition-colors"
+                        onClick={() => navigate({ to: "/register" })}
+                        className="font-semibold text-nejah-electric hover:underline"
                       >
-                        Apply as Teacher
+                        Join our Programs
                       </button>
                     </p>
-                  )}
-                </div>
+                    {isApplicationsOpen && (
+                      <p className="text-sm text-nejah-slate-blue">
+                        Are you a teacher?{" "}
+                        <button
+                          type="button"
+                          onClick={() => navigate({ to: "/apply-as-teacher" })}
+                          className="font-semibold text-nejah-electric hover:underline"
+                        >
+                          Apply as Teacher
+                        </button>
+                      </p>
+                    )}
+                  </div>
 
-                {/* Demo Accounts */}
-                <div className="pt-4 border-t border-slate-200/60">
-                  <details className="group">
-                    <summary className="text-xs font-semibold text-gray-400 hover:text-emerald-700 cursor-pointer list-none flex items-center gap-1 select-none transition-colors">
-                      <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
-                      Demo Accounts
-                    </summary>
-                    <div className="mt-3 text-xs text-gray-500">
-                      <div className="grid grid-cols-3 gap-2 font-semibold text-gray-600 pb-1.5 border-b border-slate-200/60 mb-1">
-                        <span>Role</span>
-                        <span>Email</span>
-                        <span>Password</span>
-                      </div>
-                      {demoAccounts.map(({ role, email, password }) => (
-                        <div className="grid grid-cols-3 gap-2 py-0.5 hover:bg-white/40 rounded px-1 -mx-1 transition-colors" key={role}>
-                          <span>{role}</span>
-                          <span className="font-mono text-emerald-700">{email}</span>
-                          <span className="font-mono text-amber-700">{password}</span>
+                  <div className="pt-4 border-t border-nejah-border-blue/30">
+                    <details className="group">
+                      <summary className="text-xs font-semibold text-nejah-slate-blue hover:text-nejah-electric cursor-pointer list-none flex items-center gap-1 select-none transition-colors">
+                        <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
+                        Demo Accounts
+                      </summary>
+                      <div className="mt-3 text-xs text-nejah-slate-blue">
+                        <div className="grid grid-cols-3 gap-2 font-semibold text-foreground pb-1.5 border-b border-nejah-border-blue/30 mb-1">
+                          <span>Role</span>
+                          <span>Email</span>
+                          <span>Password</span>
                         </div>
-                      ))}
-                    </div>
-                  </details>
-                </div>
-              </form>
-            </Form>
-          </div>
-
-          <div className="mt-6 flex justify-center space-x-6 text-[11px] text-gray-500/60 font-medium">
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Privacy Policy</button>
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Terms of Service</button>
-            <button className="hover:text-emerald-400 uppercase tracking-widest transition-all">Contact Support</button>
-          </div>
-        </div>
-      </div>
+                        {demoAccounts.map(({ role, email, password }) => (
+                          <div className="grid grid-cols-3 gap-2 py-0.5 hover:bg-nejah-surface/40 rounded px-1 -mx-1 transition-colors" key={role}>
+                            <span>{role}</span>
+                            <span className="font-mono text-nejah-electric">{email}</span>
+                            <span className="font-mono text-amber-600">{password}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                </form>
+              </Form>
+            </AuthPageLayout>
     </>
-          <SilverDivider />
-          <div className="space-y-2 pt-2 text-center">
-            <p className="text-sm text-nejah-slate-blue">
-              New student?{" "}
-              <button
-                type="button"
-                onClick={() => navigate({ to: "/register" })}
-                className="font-semibold text-nejah-electric hover:underline"
-              >
-                Join our Programs
-              </button>
-            </p>
-            {isApplicationsOpen && (
-              <p className="text-sm text-nejah-slate-blue">
-                Are you a teacher?{" "}
-                <button
-                  type="button"
-                  onClick={() => navigate({ to: "/apply-as-teacher" })}
-                  className="font-semibold text-nejah-electric hover:underline"
-                >
-                  Apply as Teacher
-                </button>
-              </p>
-            )}
-          </div>
-        </form>
-      </Form>
-    </AuthPageLayout>
   );
 }

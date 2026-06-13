@@ -46,19 +46,13 @@ export class UsersController {
   }
 
   @Patch('profile')
-  updateProfile(
-    @CurrentUser() user: User,
-    @Body() updateDto: Partial<UpdateUserDto>,
-  ) {
+  updateProfile(@CurrentUser() user: User, @Body() updateDto: Partial<UpdateUserDto>) {
     return this.usersService.updateProfile(user.id, updateDto);
   }
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  changePassword(
-    @CurrentUser() user: User,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
+  changePassword(@CurrentUser() user: User, @Body() changePasswordDto: ChangePasswordDto) {
     return this.usersService.changePassword(user.id, changePasswordDto);
   }
 

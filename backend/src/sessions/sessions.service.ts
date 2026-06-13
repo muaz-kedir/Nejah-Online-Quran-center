@@ -1,7 +1,11 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SessionMeeting, SessionStatus, TeacherAttendanceStatus } from './entities/session-meeting.entity';
+import {
+  SessionMeeting,
+  SessionStatus,
+  TeacherAttendanceStatus,
+} from './entities/session-meeting.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -60,21 +64,17 @@ export class SessionService {
     ]);
 
     const recipients = [
-      ...students.map(s => s.id),
-      ...parents.map(p => p.id),
-      ...admins.map(a => a.id),
+      ...students.map((s) => s.id),
+      ...parents.map((p) => p.id),
+      ...admins.map((a) => a.id),
     ];
 
-    await this.notificationService.sendMeetingNotification(
-      savedSession.id,
-      recipients,
-      {
-        teacherName: schedule.teacher.fullName,
-        className: schedule.className,
-        meetingLink,
-        scheduledTime: schedule.startTime,
-      },
-    );
+    await this.notificationService.sendMeetingNotification(savedSession.id, recipients, {
+      teacherName: schedule.teacher.fullName,
+      className: schedule.className,
+      meetingLink,
+      scheduledTime: schedule.startTime,
+    });
 
     return savedSession;
   }

@@ -22,7 +22,10 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
       database,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: this.configService.get<string>('NODE_ENV') === 'development',
-      logging: this.configService.get<string>('NODE_ENV') === 'development' ? ['error', 'warn', 'schema'] : false,
+      logging:
+        this.configService.get<string>('NODE_ENV') === 'development'
+          ? ['error', 'warn', 'schema']
+          : false,
       autoLoadEntities: true,
       url: this.configService.get<string>('DATABASE_URL'),
       ssl: false,

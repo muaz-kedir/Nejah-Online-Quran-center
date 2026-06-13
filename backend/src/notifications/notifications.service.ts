@@ -6,7 +6,11 @@ import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
 import { ClassSession } from '../attendance/entities/class-session.entity';
-import { Notification, NotificationType, NotificationChannel } from './entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+  NotificationChannel,
+} from './entities/notification.entity';
 
 export interface NotificationPayload {
   type: 'meeting_started' | 'meeting_ended' | 'attendance_recorded' | 'class_cancelled';
@@ -49,9 +53,7 @@ export class NotificationsService {
       where: Array.from(parentIds).map((id) => ({ id })),
       relations: ['user'],
     });
-    const parentUserIds = parents
-      .filter((p) => p.user?.id)
-      .map((p) => p.user.id);
+    const parentUserIds = parents.filter((p) => p.user?.id).map((p) => p.user.id);
 
     // Get admin and superadmin users
     const admins = await this.userRepository.find({
@@ -104,9 +106,7 @@ export class NotificationsService {
       where: Array.from(parentIds).map((id) => ({ id })),
       relations: ['user'],
     });
-    const parentUserIds = parents
-      .filter((p) => p.user?.id)
-      .map((p) => p.user.id);
+    const parentUserIds = parents.filter((p) => p.user?.id).map((p) => p.user.id);
 
     const allRecipientIds = [...studentUserIds, ...parentUserIds];
 
@@ -196,7 +196,12 @@ export class NotificationsService {
   async sendMeetingNotification(
     sessionId: string,
     recipientIds: string[],
-    data: { teacherName: string; className: string; meetingLink: string; scheduledTime: string | Date },
+    data: {
+      teacherName: string;
+      className: string;
+      meetingLink: string;
+      scheduledTime: string | Date;
+    },
   ): Promise<void> {
     const notification: NotificationPayload = {
       type: 'meeting_started',

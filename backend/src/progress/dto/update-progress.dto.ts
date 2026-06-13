@@ -1,12 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsBoolean,
-  Min,
-  Max,
-  IsIn,
-} from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsBoolean, Min, Max, IsIn } from 'class-validator';
 
 export class UpdateProgressDto {
   @IsOptional()

@@ -29,8 +29,8 @@ export class ExamsService {
       throw new NotFoundException('Student not found');
     }
 
-    const teacher = createExamDto.teacherId 
-      ? await this.teachersRepository.findOne({ where: { id: createExamDto.teacherId } }) 
+    const teacher = createExamDto.teacherId
+      ? await this.teachersRepository.findOne({ where: { id: createExamDto.teacherId } })
       : null;
 
     const progress = createExamDto.progressId
@@ -127,12 +127,7 @@ export class ExamsService {
     await this.examsRepository.remove(exam);
   }
 
-  async gradeExam(
-    id: string,
-    score: number,
-    maxScore: number,
-    feedback: string,
-  ): Promise<Exam> {
+  async gradeExam(id: string, score: number, maxScore: number, feedback: string): Promise<Exam> {
     const exam = await this.findOne(id);
 
     if (exam.status !== ExamStatus.IN_PROGRESS && exam.status !== ExamStatus.SCHEDULED) {

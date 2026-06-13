@@ -1,4 +1,4 @@
-import { IsString, IsUUID } from 'class-validator';
+import { IsString, IsUUID, MinLength } from 'class-validator';
 
 export class CreateSessionNoteDto {
   @IsUUID()
@@ -8,5 +8,6 @@ export class CreateSessionNoteDto {
   teacherId: string;
 
   @IsString()
+  @MinLength(1, { message: 'Content must not be empty' })
   content: string;
 }

@@ -25,9 +25,15 @@ export class QiratService {
     });
 
     const [qaidah, quranReading, tajweed, hifz] = await Promise.all([
-      this.studentRepo.count({ where: { level: QuranLevel.QAIDA_NOORANIYA, status: 'active' as any } }),
-      this.studentRepo.count({ where: { level: QuranLevel.QURAN_READING, status: 'active' as any } }),
-      this.studentRepo.count({ where: { level: QuranLevel.TAJWEED_PROGRAM, status: 'active' as any } }),
+      this.studentRepo.count({
+        where: { level: QuranLevel.QAIDA_NOORANIYA, status: 'active' as any },
+      }),
+      this.studentRepo.count({
+        where: { level: QuranLevel.QURAN_READING, status: 'active' as any },
+      }),
+      this.studentRepo.count({
+        where: { level: QuranLevel.TAJWEED_PROGRAM, status: 'active' as any },
+      }),
       this.studentRepo.count({
         where: [
           { level: QuranLevel.HIFZ_PROGRAM, status: 'active' as any },
