@@ -8,10 +8,7 @@ import { ClassSession } from '../attendance/entities/class-session.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
 
 @Module({
-  imports: [
-    ReportsModule,
-    TypeOrmModule.forFeature([Student, ClassSession, TeacherReplacement]),
-  ],
+  imports: [ReportsModule, TypeOrmModule.forFeature([Student, ClassSession, TeacherReplacement])],
   controllers: [QiratController],
   providers: [QiratService],
   exports: [QiratService],
