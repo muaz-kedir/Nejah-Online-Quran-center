@@ -1,12 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller,   Get,
+  Param, Query, UseGuards, Request } from '@nestjs/common';
 import { ZoomService } from './zoom.service';
 import { LiveSessionService } from './live-session.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,7 +18,13 @@ export class RecordingController {
   ) {}
 
   @Get('session/:sessionId')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getSessionRecordings(@Param('sessionId') sessionId: string) {
     const session = await this.liveSessionService.findById(sessionId);
     if (session.recordingData) {
@@ -64,11 +63,7 @@ export class RecordingController {
 
     for (const integration of integrations) {
       if (integration.zoomUserId) {
-        const recordings = await this.zoomService.listRecordings(
-          integration.zoomUserId,
-          from,
-          to,
-        );
+        const recordings = await this.zoomService.listRecordings(integration.zoomUserId, from, to);
         allRecordings.push(...recordings);
       }
     }
