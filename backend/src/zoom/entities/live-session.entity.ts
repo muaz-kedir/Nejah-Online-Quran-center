@@ -68,12 +68,6 @@ export class LiveSession {
   @Column({ type: 'enum', enum: LiveSessionStatus, default: LiveSessionStatus.SCHEDULED })
   status: LiveSessionStatus;
 
-  @Column({ nullable: true })
-  recordingUrl: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  recordingData: any;
-
   @Column({ type: 'text', nullable: true })
   notes: string;
 

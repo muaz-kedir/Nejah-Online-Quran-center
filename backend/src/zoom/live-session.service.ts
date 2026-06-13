@@ -74,7 +74,21 @@ export class LiveSessionService {
     session.zoomStartUrl = meeting.zoomStartUrl;
     await this.liveSessionRepository.save(session);
 
-    return this.findById(session.id);
+    const created = await this.findById(session.id);
+    if (created.student?.userId) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          [created.student.userId],
+          'New Class Scheduled',
+          `Your class "${created.schedule?.className || 'Quran Class'}" has been scheduled for ${created.scheduledStart.toLocaleString()}. Join link: ${created.zoomJoinUrl}`,
+          { sessionId: created.id, joinUrl: created.zoomJoinUrl, scheduledStart: created.scheduledStart.toISOString() },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send session scheduled notification', err);
+      }
+    }
+
+    return created;
   }
 
   async findById(id: string): Promise<LiveSession> {
@@ -178,7 +192,21 @@ export class LiveSessionService {
       }
     }
 
-    return this.findById(id);
+    const cancelled = await this.findById(id);
+    if (cancelled.student?.userId) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          [cancelled.student.userId],
+          'Class Cancelled',
+          `Your class "${cancelled.schedule?.className || 'Quran Class'}" scheduled for ${cancelled.scheduledStart.toLocaleString()} has been cancelled.`,
+          { sessionId: id },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send cancellation notification', err);
+      }
+    }
+
+    return cancelled;
   }
 
   async start(teacherId: string, id: string): Promise<LiveSession> {
