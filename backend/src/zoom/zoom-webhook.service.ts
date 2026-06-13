@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LiveSession } from './entities/live-session.entity';
@@ -8,6 +8,8 @@ import { AttendanceStatus } from './enums/live-session-status.enum';
 import { ZoomService } from './zoom.service';
 import { SessionAttendanceService } from './session-attendance.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Student } from '../students/entities/student.entity';
+import { ProcessedWebhook } from './entities/processed-webhook.entity';
 
 @Injectable()
 export class ZoomWebhookService {
@@ -18,13 +20,31 @@ export class ZoomWebhookService {
     private readonly liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(SessionAttendance)
     private readonly attendanceRepository: Repository<SessionAttendance>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
+    @InjectRepository(ProcessedWebhook)
+    private readonly processedWebhookRepository: Repository<ProcessedWebhook>,
     private readonly zoomService: ZoomService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async handleWebhook(event: string, payload: any): Promise<void> {
+  async handleWebhook(
+    event: string,
+    payload: Record<string, unknown>,
+    eventId?: string,
+  ): Promise<void> {
     this.logger.log(`Zoom webhook received: ${event}`);
+
+    if (eventId) {
+      const alreadyProcessed = await this.processedWebhookRepository.findOne({
+        where: { eventId },
+      });
+      if (alreadyProcessed) {
+        this.logger.log(`Skipping already-processed webhook event: ${eventId}`);
+        return;
+      }
+    }
 
     switch (event) {
       case 'meeting.started':
@@ -45,10 +65,20 @@ export class ZoomWebhookService {
       default:
         this.logger.log(`Unhandled webhook event: ${event}`);
     }
+
+    if (eventId) {
+      try {
+        await this.processedWebhookRepository.save(
+          this.processedWebhookRepository.create({ eventId }),
+        );
+      } catch {
+        // duplicate key is safe to ignore
+      }
+    }
   }
 
-  private async handleMeetingStarted(payload: any): Promise<void> {
-    const zoomMeetingId = payload?.object?.id?.toString();
+  private async handleMeetingStarted(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
     if (!zoomMeetingId) {
       this.logger.warn('Meeting started webhook missing meeting ID');
       return;
@@ -64,23 +94,18 @@ export class ZoomWebhookService {
       return;
     }
 
-    if (session.status === LiveSessionStatus.SCHEDULED || session.status === LiveSessionStatus.LIVE) {
+    if (
+      session.status === LiveSessionStatus.SCHEDULED ||
+      session.status === LiveSessionStatus.LIVE
+    ) {
       session.status = LiveSessionStatus.LIVE;
       session.actualStart = new Date();
       await this.liveSessionRepository.save(session);
-
-      if (session.actualStart > session.scheduledStart) {
-        const durationMinutes = Math.round(
-          (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
-        );
-        session.durationMinutes = durationMinutes;
-        await this.liveSessionRepository.save(session);
-      }
     }
   }
 
-  private async handleMeetingEnded(payload: any): Promise<void> {
-    const zoomMeetingId = payload?.object?.id?.toString();
+  private async handleMeetingEnded(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
     if (!zoomMeetingId) {
       this.logger.warn('Meeting ended webhook missing meeting ID');
       return;
@@ -88,7 +113,6 @@ export class ZoomWebhookService {
 
     const session = await this.liveSessionRepository.findOne({
       where: { zoomMeetingId },
-      relations: ['attendances'],
     });
 
     if (!session) {
@@ -141,12 +165,12 @@ export class ZoomWebhookService {
       if (integration?.zoomUserId) {
         const recordings = await this.zoomService.getRecordings(zoomMeetingId);
         if (recordings.length > 0) {
-          const recordingData = recordings.map((r: any) => ({
+          const recordingData = recordings.map((r: Record<string, unknown>) => ({
             id: r.id,
-            url: r.play_url || r.download_url,
+            url: (r as any).play_url || (r as any).download_url,
             duration: r.duration,
-            size: r.file_size,
-            type: r.recording_type,
+            size: (r as any).file_size,
+            type: (r as any).recording_type,
           }));
 
           session.recordingData = recordingData;
@@ -166,42 +190,39 @@ export class ZoomWebhookService {
     }
   }
 
-  private async handleParticipantJoined(payload: any): Promise<void> {
-    const zoomMeetingId = payload?.object?.id?.toString();
-    const participant = payload?.object?.participant;
-    const zoomUserId = participant?.userid || participant?.id;
-
-    if (!zoomMeetingId || !zoomUserId) {
+  private async handleParticipantJoined(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
+    const participant = (payload?.object as any)?.participant as
+      | Record<string, unknown>
+      | undefined;
+    if (!zoomMeetingId || !participant) {
       this.logger.warn('Participant joined webhook missing data');
       return;
     }
 
     const session = await this.liveSessionRepository.findOne({
       where: { zoomMeetingId },
-      relations: ['attendances'],
     });
 
     if (!session) return;
 
-    const integration = await this.zoomService.getTeacherByZoomUserId(zoomUserId);
-    if (!integration) return;
-
-    const studentId = integration.teacherId;
+    const studentId = await this.resolveStudentFromParticipant(participant, session);
+    if (!studentId) return;
 
     try {
-      const attendance = await this.sessionAttendanceService.recordJoin(session.id, studentId);
+      await this.sessionAttendanceService.recordJoin(session.id, studentId);
       this.logger.log(`Attendance recorded for student ${studentId} in session ${session.id}`);
     } catch (err) {
       this.logger.error(`Failed to record attendance for student ${studentId}`, err);
     }
   }
 
-  private async handleParticipantLeft(payload: any): Promise<void> {
-    const zoomMeetingId = payload?.object?.id?.toString();
-    const participant = payload?.object?.participant;
-    const zoomUserId = participant?.userid || participant?.id;
-
-    if (!zoomMeetingId || !zoomUserId) {
+  private async handleParticipantLeft(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
+    const participant = (payload?.object as any)?.participant as
+      | Record<string, unknown>
+      | undefined;
+    if (!zoomMeetingId || !participant) {
       this.logger.warn('Participant left webhook missing data');
       return;
     }
@@ -212,21 +233,51 @@ export class ZoomWebhookService {
 
     if (!session) return;
 
-    const integration = await this.zoomService.getTeacherByZoomUserId(zoomUserId);
-    if (!integration) return;
-
-    const studentId = integration.teacherId;
+    const studentId = await this.resolveStudentFromParticipant(participant, session);
+    if (!studentId) return;
 
     try {
-      const attendance = await this.sessionAttendanceService.recordLeave(session.id, studentId);
+      await this.sessionAttendanceService.recordLeave(session.id, studentId);
       this.logger.log(`Leave recorded for student ${studentId} in session ${session.id}`);
     } catch (err) {
       this.logger.error(`Failed to record leave for student ${studentId}`, err);
     }
   }
 
-  private async handleRecordingCompleted(payload: any): Promise<void> {
-    const zoomMeetingId = payload?.object?.id?.toString();
+  private async resolveStudentFromParticipant(
+    participant: Record<string, unknown>,
+    session: LiveSession,
+  ): Promise<string | null> {
+    const email = (participant.email as string) || '';
+    const zoomUserId = ((participant as any).userid || participant.id) as string;
+    const name = (participant.user_name as string) || '';
+
+    if (email) {
+      const student = await this.studentRepository.findOne({
+        where: [{ email }, { zoomEmail: email }],
+      });
+      if (student) return student.id;
+    }
+
+    if (session.studentId) {
+      return session.studentId;
+    }
+
+    if (zoomUserId) {
+      const integration = await this.zoomService.getTeacherByZoomUserId(zoomUserId);
+      if (integration) {
+        return integration.teacherId;
+      }
+    }
+
+    this.logger.warn(
+      `Unable to resolve participant to student: email=${email} name=${name} zoomUserId=${zoomUserId}`,
+    );
+    return null;
+  }
+
+  private async handleRecordingCompleted(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
     if (!zoomMeetingId) {
       this.logger.warn('Recording completed webhook missing meeting ID');
       return;
@@ -244,12 +295,12 @@ export class ZoomWebhookService {
     try {
       const recordings = await this.zoomService.getRecordings(zoomMeetingId);
       if (recordings.length > 0) {
-        const recordingData = recordings.map((r: any) => ({
+        const recordingData = recordings.map((r: Record<string, unknown>) => ({
           id: r.id,
-          url: r.play_url || r.download_url,
+          url: (r as any).play_url || (r as any).download_url,
           duration: r.duration,
-          size: r.file_size,
-          type: r.recording_type,
+          size: (r as any).file_size,
+          type: (r as any).recording_type,
         }));
 
         session.recordingData = recordingData;
@@ -271,5 +322,11 @@ export class ZoomWebhookService {
     } catch (err) {
       this.logger.error('Failed to process recording completed webhook', err);
     }
+  }
+
+  private extractMeetingId(payload: Record<string, unknown>): string | null {
+    const object = payload?.object as Record<string, unknown> | undefined;
+    if (!object?.id) return null;
+    return String(object.id);
   }
 }
