@@ -1,5 +1,6 @@
 # compiled output
 dist/
+seed-log.txt
 /node_modules
 node_modules/
 # Logs

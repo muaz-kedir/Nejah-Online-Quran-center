@@ -9,8 +9,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -69,14 +67,10 @@ export class UsersService implements OnModuleInit {
   }
 
   private async seedSuperAdmin() {
-    const logFile = path.resolve(process.cwd(), 'seed-log.txt');
-    fs.appendFileSync(logFile, `[${new Date().toISOString()}] Checking super admin...\n`);
-
     const superAdminEmail = 'nejahsuperadmin@gmail.com';
     const existingAdmin = await this.findByEmail(superAdminEmail);
 
     if (!existingAdmin) {
-      fs.appendFileSync(logFile, `[${new Date().toISOString()}] Seeding Super Admin...\n`);
       try {
         const hashedPassword = await bcrypt.hash('SuperAdmin123', 10);
         const superAdmin = this.usersRepository.create({
@@ -87,30 +81,15 @@ export class UsersService implements OnModuleInit {
           isActive: true,
         });
         await this.usersRepository.save(superAdmin);
-        fs.appendFileSync(
-          logFile,
-          `[${new Date().toISOString()}] ✅ Super Admin seeded successfully!\n`,
-        );
       } catch (error) {
-        fs.appendFileSync(
-          logFile,
-          `[${new Date().toISOString()}] ❌ Error seeding Super Admin: ${error.message}\n`,
-        );
+        throw error;
       }
     } else {
-      fs.appendFileSync(
-        logFile,
-        `[${new Date().toISOString()}] Super Admin already exists. Forcing password update...\n`,
-      );
       const hashedPassword = await bcrypt.hash('SuperAdmin123', 10);
       existingAdmin.password = hashedPassword;
       existingAdmin.isActive = true;
       existingAdmin.role = UserRole.SUPER_ADMIN;
       await this.usersRepository.save(existingAdmin);
-      fs.appendFileSync(
-        logFile,
-        `[${new Date().toISOString()}] ✅ Super Admin password updated successfully!\n`,
-      );
     }
   }
 
