@@ -235,8 +235,8 @@ function ZoomSettingsPage() {
                     <span className="text-xs font-bold text-primary">4</span>
                   </div>
                   <div>
-                    <p className="font-bold text-foreground">Recording Management</p>
-                    <p className="text-nejah-slate-blue text-xs">Cloud recordings are automatically linked to sessions</p>
+                    <p className="font-bold text-foreground">Session Management</p>
+                    <p className="text-nejah-slate-blue text-xs">Sessions are tracked with attendance and duration data</p>
                   </div>
                 </div>
               </div>
