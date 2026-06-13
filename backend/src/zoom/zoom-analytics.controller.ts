@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { ZoomAnalyticsService } from './zoom-analytics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -41,7 +34,14 @@ export class ZoomAnalyticsController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getStudentAnalytics(@Param('studentId') studentId: string) {
     return this.zoomAnalyticsService.getStudentAnalytics(studentId);
   }
