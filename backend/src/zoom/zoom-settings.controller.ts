@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -36,11 +28,7 @@ export class ZoomSettingsController {
   @Roles(UserRole.TEACHER)
   async connect(@Request() req, @Body() dto: ConnectZoomDto) {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    return this.zoomService.saveTeacherIntegration(
-      teacher.id,
-      dto.zoomUserId,
-      dto.zoomEmail || '',
-    );
+    return this.zoomService.saveTeacherIntegration(teacher.id, dto.zoomUserId, dto.zoomEmail || '');
   }
 
   @Post('disconnect')
@@ -58,13 +46,13 @@ export class ZoomSettingsController {
   }
 
   @Get('all')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN)
   async getAll() {
     return this.zoomService.getAllIntegrations();
   }
 
   @Get('user/:zoomUserId')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN)
   async getZoomUser(@Param('zoomUserId') zoomUserId: string) {
     return this.zoomService.getZoomUser(zoomUserId);
   }

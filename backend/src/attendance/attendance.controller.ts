@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  UseGuards,
-  Request,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { CreateClassSessionDto } from './dto/create-class-session.dto';
 import { StartMeetingDto } from './dto/start-meeting.dto';
@@ -53,7 +44,9 @@ export class AttendanceController {
     return queryId;
   }
 
-  private async resolveTeacherIdForUser(req: { user: { id: string; role: string } }): Promise<string> {
+  private async resolveTeacherIdForUser(req: {
+    user: { id: string; role: string };
+  }): Promise<string> {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
     return teacher.id;
   }
@@ -80,7 +73,13 @@ export class AttendanceController {
   }
 
   @Post('record')
-  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async recordAttendance(@Request() req, @Body() dto: RecordStudentAttendanceDto) {
     if (req.user.role === UserRole.STUDENT) {
       dto.studentId = await this.resolveStudentIdForUser(req);
@@ -91,7 +90,14 @@ export class AttendanceController {
   }
 
   @Get('sessions/:id')
-  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getSession(@Param('id') id: string) {
     return this.attendanceService.getClassSessionWithAttendance(id);
   }
@@ -111,7 +117,13 @@ export class AttendanceController {
   }
 
   @Get('student/live')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getStudentLiveClass(@Request() req) {
     const studentId = await this.resolveStudentIdForUser(req);
     return this.attendanceService.getStudentLiveClass(studentId);
@@ -125,15 +137,19 @@ export class AttendanceController {
     @Query('teacherId') teacherIdQuery?: string,
   ) {
     const teacherId =
-      req.user.role === UserRole.TEACHER
-        ? await this.resolveTeacherIdForUser(req)
-        : teacherIdQuery;
+      req.user.role === UserRole.TEACHER ? await this.resolveTeacherIdForUser(req) : teacherIdQuery;
     const sessionDate = date ? new Date(date) : undefined;
     return this.attendanceService.getTeacherSessions(teacherId as string, sessionDate);
   }
 
   @Get('student/history')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getStudentHistory(@Request() req, @Query('studentId') studentIdQuery?: string) {
     const studentId = await this.resolveStudentIdForUser({
       user: req.user,
@@ -143,7 +159,13 @@ export class AttendanceController {
   }
 
   @Get('student/stats')
-  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.PARENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getStudentStats(@Request() req, @Query('studentId') studentIdQuery?: string) {
     const studentId = await this.resolveStudentIdForUser({
       user: req.user,

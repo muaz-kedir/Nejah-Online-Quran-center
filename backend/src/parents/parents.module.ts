@@ -17,11 +17,11 @@ import { UsersModule } from '../users/users.module';
   imports: [
     UsersModule,
     TypeOrmModule.forFeature([
-      Parent, 
-      Student, 
-      User, 
-      Schedule, 
-      Homework, 
+      Parent,
+      Student,
+      User,
+      Schedule,
+      Homework,
       Feedback,
       Progress,
       ProgressLog,

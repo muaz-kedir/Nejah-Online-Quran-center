@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ZoomService } from './zoom.service';
 import { LiveSessionService } from './live-session.service';
 import { SessionAttendanceService } from './session-attendance.service';
@@ -11,16 +13,20 @@ import { LiveSessionController } from './live-session.controller';
 import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
 import { ZoomSettingsController } from './zoom-settings.controller';
-import { RecordingController } from './recording.controller';
 import { ZoomAnalyticsController } from './zoom-analytics.controller';
+import { SessionAttendanceController } from './session-attendance.controller';
+import { ParentSessionController } from './parent-session.controller';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { SessionNote } from './entities/session-note.entity';
+import { ProcessedWebhook } from './entities/processed-webhook.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { Parent } from '../parents/entities/parent.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeachersModule } from '../teachers/teachers.module';
+import { EncryptionService } from '../common/encryption.service';
 
 @Module({
   imports: [
@@ -29,13 +35,21 @@ import { TeachersModule } from '../teachers/teachers.module';
       LiveSession,
       SessionAttendance,
       SessionNote,
+      ProcessedWebhook,
       Student,
       Teacher,
+      Parent,
     ]),
     HttpModule.register({
       timeout: 15000,
       maxRedirects: 3,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     NotificationsModule,
     TeachersModule,
   ],
@@ -44,16 +58,22 @@ import { TeachersModule } from '../teachers/teachers.module';
     SessionNoteController,
     ZoomWebhookController,
     ZoomSettingsController,
-    RecordingController,
     ZoomAnalyticsController,
+    SessionAttendanceController,
+    ParentSessionController,
   ],
   providers: [
+    EncryptionService,
     ZoomService,
     LiveSessionService,
     SessionAttendanceService,
     SessionNoteService,
     ZoomWebhookService,
     ZoomAnalyticsService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
   exports: [
     ZoomService,

@@ -18,14 +18,20 @@ export class PaymentTransaction {
   @Column({ nullable: true })
   studentFeeAccountId: string;
 
-  @ManyToOne(() => StudentFeeAccount, (acc) => acc.transactions, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => StudentFeeAccount, (acc) => acc.transactions, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   @JoinColumn({ name: 'studentFeeAccountId' })
   studentFeeAccount: StudentFeeAccount;
 
   @Column({ nullable: true })
   familyBillingGroupId: string;
 
-  @ManyToOne(() => FamilyBillingGroup, (grp) => grp.transactions, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => FamilyBillingGroup, (grp) => grp.transactions, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   @JoinColumn({ name: 'familyBillingGroupId' })
   familyBillingGroup: FamilyBillingGroup;
 

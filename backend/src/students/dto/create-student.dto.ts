@@ -1,4 +1,13 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  Max,
+} from 'class-validator';
 import { AgeRange, QuranLevel, StudentStatus } from '../entities/student.entity';
 import { Gender } from '../../common/enums/gender.enum';
 

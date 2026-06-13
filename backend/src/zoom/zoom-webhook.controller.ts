@@ -1,14 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Headers,
-  HttpCode,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Post, Body, Headers, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { ZoomWebhookService } from './zoom-webhook.service';
 import { ZoomService } from './zoom.service';
+import { ZoomWebhookDto } from './dto/zoom-webhook.dto';
+import { Throttle } from '@nestjs/throttler';
+import * as crypto from 'crypto';
 
 @Controller('zoom/webhook')
 export class ZoomWebhookController {
@@ -21,11 +16,12 @@ export class ZoomWebhookController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  async handleWebhook(
-    @Body() body: any,
-    @Headers('authorization') authHeader: string,
-  ) {
-    const isValid = this.zoomService.verifyWebhookSignature(body, authHeader || '');
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async handleWebhook(@Body() body: ZoomWebhookDto, @Headers('authorization') authHeader: string) {
+    const isValid = this.zoomService.verifyWebhookSignature(
+      body as unknown as Record<string, unknown>,
+      authHeader || '',
+    );
     if (!isValid) {
       this.logger.warn('Invalid webhook signature received');
       return { status: false, message: 'Invalid signature' };
@@ -35,16 +31,22 @@ export class ZoomWebhookController {
     const payload = body.payload;
 
     if (event === 'endpoint.url_validation') {
-      const plainToken = payload?.plainToken;
+      const plainToken = (payload as any)?.plainToken;
       if (plainToken) {
-        const crypto = require('crypto');
-        const hashForVerify = crypto.createHmac('sha256', this.zoomService['secretToken'] || '').update(plainToken).digest('hex');
+        const hashForVerify = crypto
+          .createHmac('sha256', (this.zoomService as any).secretToken || '')
+          .update(plainToken)
+          .digest('hex');
         return { plainToken, encryptedToken: hashForVerify };
       }
     }
 
+    const eventId = (payload as any)?.object?.id
+      ? `${event}_${(payload as any).object.id}_${(payload as any).event_ts || Date.now()}`
+      : undefined;
+
     try {
-      await this.zoomWebhookService.handleWebhook(event, payload);
+      await this.zoomWebhookService.handleWebhook(event, payload, eventId);
       return { status: true, message: 'Webhook processed' };
     } catch (error) {
       this.logger.error(`Webhook processing error: ${error.message}`, error.stack);

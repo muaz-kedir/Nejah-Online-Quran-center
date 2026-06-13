@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -11,7 +22,13 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Get('conversations')
-  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async getConversations(@Request() req) {
     return this.messagesService.getConversations(req.user.id, req.user.role as UserRole);
   }
@@ -27,15 +44,22 @@ export class MessagesController {
       req.user.id,
       otherPartyId,
       req.user.role as UserRole,
-      otherPartyRole as UserRole || UserRole.STUDENT,
+      (otherPartyRole as UserRole) || UserRole.STUDENT,
     );
   }
 
   @Post()
-  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.TEACHER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
   async sendMessage(
     @Request() req,
-    @Body() dto: {
+    @Body()
+    dto: {
       toId: string;
       toRole: UserRole;
       subject: string;

@@ -50,39 +50,59 @@ export class LiveSessionService {
   async createWithZoom(dto: CreateLiveSessionDto): Promise<LiveSession> {
     const session = await this.create(dto);
 
-    try {
-      const integration = await this.zoomIntegrationRepository.findOne({
-        where: { teacherId: dto.teacherId, connectionStatus: 'connected' },
-      });
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId: dto.teacherId, connectionStatus: 'connected' },
+    });
 
-      if (integration?.zoomUserId) {
-        const durationMinutes = Math.round(
-          (dto.scheduledEnd.getTime() - dto.scheduledStart.getTime()) / 60000,
-        );
-
-        const meeting = await this.zoomService.createMeeting(
-          integration.zoomUserId,
-          `Quran Class - ${dto.metadata?.className || 'Session'}`,
-          dto.scheduledStart,
-          durationMinutes,
-        );
-
-        session.zoomMeetingId = meeting.zoomMeetingId;
-        session.zoomJoinUrl = meeting.zoomJoinUrl;
-        session.zoomStartUrl = meeting.zoomStartUrl;
-        await this.liveSessionRepository.save(session);
-      }
-    } catch (error) {
-      this.logger.warn(`Zoom meeting creation failed for session ${session.id}: ${error.message}`);
+    if (!integration?.zoomUserId) {
+      return this.findById(session.id);
     }
 
-    return this.findById(session.id);
+    const durationMinutes = Math.round(
+      (dto.scheduledEnd.getTime() - dto.scheduledStart.getTime()) / 60000,
+    );
+
+    const meeting = await this.zoomService.createMeeting(
+      integration.zoomUserId,
+      `Quran Class - ${dto.metadata?.className || 'Session'}`,
+      dto.scheduledStart,
+      durationMinutes,
+    );
+
+    session.zoomMeetingId = meeting.zoomMeetingId;
+    session.zoomJoinUrl = meeting.zoomJoinUrl;
+    session.zoomStartUrl = meeting.zoomStartUrl;
+    await this.liveSessionRepository.save(session);
+
+    const created = await this.findById(session.id);
+    if (created.student?.userId) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          [created.student.userId],
+          'New Class Scheduled',
+          `Your class "${created.schedule?.className || 'Quran Class'}" has been scheduled for ${created.scheduledStart.toLocaleString()}. Join link: ${created.zoomJoinUrl}`,
+          { sessionId: created.id, joinUrl: created.zoomJoinUrl, scheduledStart: created.scheduledStart.toISOString() },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send session scheduled notification', err);
+      }
+    }
+
+    return created;
   }
 
   async findById(id: string): Promise<LiveSession> {
     const session = await this.liveSessionRepository.findOne({
       where: { id },
-      relations: ['teacher', 'student', 'schedule', 'attendances', 'attendances.student', 'sessionNotes', 'sessionNotes.teacher'],
+      relations: [
+        'teacher',
+        'student',
+        'schedule',
+        'attendances',
+        'attendances.student',
+        'sessionNotes',
+        'sessionNotes.teacher',
+      ],
     });
 
     if (!session) {
@@ -92,8 +112,21 @@ export class LiveSessionService {
     return session;
   }
 
-  async findAll(query: QueryLiveSessionDto) {
-    const { teacherId, studentId, status, page = 1, limit = 20, sortBy = 'scheduledStart', sortOrder = 'DESC', startDate, endDate } = query;
+  async findAll(query: QueryLiveSessionDto): Promise<{
+    data: LiveSession[];
+    meta: { total: number; page: number; limit: number; totalPages: number };
+  }> {
+    const {
+      teacherId,
+      studentId,
+      status,
+      page = 1,
+      limit = 20,
+      sortBy = 'scheduledStart',
+      sortOrder = 'DESC',
+      startDate,
+      endDate,
+    } = query;
 
     const where: FindOptionsWhere<LiveSession> = {};
 
@@ -153,11 +186,27 @@ export class LiveSessionService {
       try {
         await this.zoomService.deleteMeeting(session.zoomMeetingId);
       } catch (error) {
-        this.logger.warn(`Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`);
+        this.logger.warn(
+          `Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`,
+        );
       }
     }
 
-    return this.findById(id);
+    const cancelled = await this.findById(id);
+    if (cancelled.student?.userId) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          [cancelled.student.userId],
+          'Class Cancelled',
+          `Your class "${cancelled.schedule?.className || 'Quran Class'}" scheduled for ${cancelled.scheduledStart.toLocaleString()} has been cancelled.`,
+          { sessionId: id },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send cancellation notification', err);
+      }
+    }
+
+    return cancelled;
   }
 
   async start(teacherId: string, id: string): Promise<LiveSession> {
@@ -177,13 +226,6 @@ export class LiveSessionService {
 
     session.status = LiveSessionStatus.LIVE;
     session.actualStart = new Date();
-
-    if (session.actualStart > session.scheduledStart) {
-      const durationMinutes = Math.round(
-        (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
-      );
-      session.durationMinutes = durationMinutes;
-    }
 
     await this.liveSessionRepository.save(session);
 
@@ -271,11 +313,25 @@ export class LiveSessionService {
     });
   }
 
-  async getTeacherSessions(teacherId: string, page = 1, limit = 20): Promise<any> {
+  async getTeacherSessions(
+    teacherId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    data: LiveSession[];
+    meta: { total: number; page: number; limit: number; totalPages: number };
+  }> {
     return this.findAll({ teacherId, page, limit } as QueryLiveSessionDto);
   }
 
-  async getStudentSessions(studentId: string, page = 1, limit = 20): Promise<any> {
+  async getStudentSessions(
+    studentId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{
+    data: LiveSession[];
+    meta: { total: number; page: number; limit: number; totalPages: number };
+  }> {
     return this.findAll({ studentId, page, limit } as QueryLiveSessionDto);
   }
 
@@ -295,9 +351,10 @@ export class LiveSessionService {
       await this.zoomService.updateMeeting(session.zoomMeetingId, {
         topic: className ? `Quran Class - ${className}` : undefined,
         startTime,
-        durationMinutes: startTime && endTime
-          ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
-          : undefined,
+        durationMinutes:
+          startTime && endTime
+            ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
+            : undefined,
       });
 
       if (startTime) session.scheduledStart = startTime;
@@ -307,7 +364,9 @@ export class LiveSessionService {
       }
       await this.liveSessionRepository.save(session);
     } catch (error) {
-      this.logger.warn(`Failed to update Zoom meeting for schedule ${scheduleId}: ${error.message}`);
+      this.logger.warn(
+        `Failed to update Zoom meeting for schedule ${scheduleId}: ${error.message}`,
+      );
     }
   }
 
@@ -321,7 +380,9 @@ export class LiveSessionService {
     try {
       await this.zoomService.deleteMeeting(session.zoomMeetingId);
     } catch (error) {
-      this.logger.warn(`Failed to delete Zoom meeting for schedule ${scheduleId}: ${error.message}`);
+      this.logger.warn(
+        `Failed to delete Zoom meeting for schedule ${scheduleId}: ${error.message}`,
+      );
     }
 
     await this.liveSessionRepository.delete(session.id);
@@ -354,12 +415,26 @@ export class LiveSessionService {
     });
   }
 
-  async getSessionStats(): Promise<any> {
+  async getSessionStats(): Promise<{
+    total: number;
+    completed: number;
+    cancelled: number;
+    live: number;
+    scheduled: number;
+  }> {
     const total = await this.liveSessionRepository.count();
-    const completed = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.COMPLETED } });
-    const cancelled = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.CANCELLED } });
-    const live = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.LIVE } });
-    const scheduled = await this.liveSessionRepository.count({ where: { status: LiveSessionStatus.SCHEDULED } });
+    const completed = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.COMPLETED },
+    });
+    const cancelled = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.CANCELLED },
+    });
+    const live = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.LIVE },
+    });
+    const scheduled = await this.liveSessionRepository.count({
+      where: { status: LiveSessionStatus.SCHEDULED },
+    });
 
     return { total, completed, cancelled, live, scheduled };
   }

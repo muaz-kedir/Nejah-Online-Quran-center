@@ -35,9 +35,7 @@ if (!existsSync(UPLOAD_DIR)) {
 
 @Controller('teacher-applications')
 export class TeacherApplicationsController {
-  constructor(
-    private readonly applicationsService: TeacherApplicationsService,
-  ) {}
+  constructor(private readonly applicationsService: TeacherApplicationsService) {}
 
   // ══════════════════════════════════════════════════════════════════
   // PUBLIC ENDPOINTS (no authentication required)
@@ -66,19 +64,9 @@ export class TeacherApplicationsController {
       }),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
       fileFilter: (_req, file, cb) => {
-        const allowed = [
-          'application/pdf',
-          'image/jpeg',
-          'image/jpg',
-          'image/png',
-        ];
+        const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
         if (!allowed.includes(file.mimetype)) {
-          cb(
-            new BadRequestException(
-              'Only PDF, JPG and PNG files are allowed',
-            ),
-            false,
-          );
+          cb(new BadRequestException('Only PDF, JPG and PNG files are allowed'), false);
           return;
         }
         cb(null, true);
@@ -98,9 +86,7 @@ export class TeacherApplicationsController {
     @Query('applicationNumber') applicationNumber: string,
   ) {
     if (!email || !applicationNumber) {
-      throw new BadRequestException(
-        'Both email and application number are required',
-      );
+      throw new BadRequestException('Both email and application number are required');
     }
     return this.applicationsService.trackApplication(email, applicationNumber);
   }
@@ -140,11 +126,7 @@ export class TeacherApplicationsController {
   @Patch(':id/review')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  review(
-    @Param('id') id: string,
-    @Body() dto: ReviewTeacherApplicationDto,
-    @Req() req: any,
-  ) {
+  review(@Param('id') id: string, @Body() dto: ReviewTeacherApplicationDto, @Req() req: any) {
     const reviewerId = req.user?.id || 'unknown';
     return this.applicationsService.review(id, dto, reviewerId);
   }

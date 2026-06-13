@@ -6,7 +6,10 @@ import { Parent } from '../parents/entities/parent.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { ClassSession, SessionStatus } from '../attendance/entities/class-session.entity';
-import { StudentAttendance, StudentAttendanceStatus } from '../attendance/entities/student-attendance.entity';
+import {
+  StudentAttendance,
+  StudentAttendanceStatus,
+} from '../attendance/entities/student-attendance.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { ProgressLog } from '../progress/entities/progress-log.entity';
@@ -228,12 +231,17 @@ export class ReportsService {
 
     // Homework stats
     const totalHomework = await this.homeworkRepository.count();
-    const completedHomework = await this.homeworkRepository.count({ where: { status: HomeworkStatus.COMPLETED } });
-    const homeworkCompletionRate = totalHomework > 0 ? (completedHomework / totalHomework) * 100 : 0;
+    const completedHomework = await this.homeworkRepository.count({
+      where: { status: HomeworkStatus.COMPLETED },
+    });
+    const homeworkCompletionRate =
+      totalHomework > 0 ? (completedHomework / totalHomework) * 100 : 0;
 
     // Exam stats
     const totalExams = await this.examsRepository.count();
-    const completedExams = await this.examsRepository.count({ where: { status: ExamStatus.COMPLETED } });
+    const completedExams = await this.examsRepository.count({
+      where: { status: ExamStatus.COMPLETED },
+    });
 
     return {
       totalStudents,
@@ -266,24 +274,22 @@ export class ReportsService {
     hifz: ['Hifz Program', "Hifz Muraja'a"],
   };
 
-  async getStudentPerformance(
-    filters: {
-      learningProgram?: string;
-      status?: string;
-      teacherId?: string;
-      country?: string;
-      search?: string;
-      dateRange?: DateRangeFilter;
-      page?: number;
-      limit?: number;
-    }
-  ): Promise<{ data: StudentPerformanceReport[]; meta: any }> {
+  async getStudentPerformance(filters: {
+    learningProgram?: string;
+    status?: string;
+    teacherId?: string;
+    country?: string;
+    search?: string;
+    dateRange?: DateRangeFilter;
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: StudentPerformanceReport[]; meta: any }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
 
     // Build query with filters
     const where: any = {};
-    
+
     if (filters.status) {
       where.status = filters.status;
     }
@@ -297,8 +303,9 @@ export class ReportsService {
     }
 
     if (filters.learningProgram) {
-      const levels =
-        ReportsService.TRACK_TO_LEVELS[filters.learningProgram] || [filters.learningProgram];
+      const levels = ReportsService.TRACK_TO_LEVELS[filters.learningProgram] || [
+        filters.learningProgram,
+      ];
       where.level = In(levels);
     }
 
@@ -336,12 +343,13 @@ export class ReportsService {
       // Get homework stats
       const [totalHomework, completedHomework] = await Promise.all([
         this.homeworkRepository.count({ where: { studentId: student.id } }),
-        this.homeworkRepository.count({ where: { studentId: student.id, status: HomeworkStatus.COMPLETED } }),
+        this.homeworkRepository.count({
+          where: { studentId: student.id, status: HomeworkStatus.COMPLETED },
+        }),
       ]);
 
-      const homeworkCompletionRate = totalHomework > 0 
-        ? ((completedHomework / totalHomework) * 100).toFixed(2) 
-        : '0';
+      const homeworkCompletionRate =
+        totalHomework > 0 ? ((completedHomework / totalHomework) * 100).toFixed(2) : '0';
 
       performanceReports.push({
         studentId: student.id,
@@ -389,10 +397,18 @@ export class ReportsService {
     });
 
     const total = attendances.length;
-    const present = attendances.filter(a => a.attendanceStatus === StudentAttendanceStatus.PRESENT).length;
-    const late = attendances.filter(a => a.attendanceStatus === StudentAttendanceStatus.LATE).length;
-    const absent = attendances.filter(a => a.attendanceStatus === StudentAttendanceStatus.ABSENT).length;
-    const leftEarly = attendances.filter(a => a.attendanceStatus === StudentAttendanceStatus.LEFT_EARLY).length;
+    const present = attendances.filter(
+      (a) => a.attendanceStatus === StudentAttendanceStatus.PRESENT,
+    ).length;
+    const late = attendances.filter(
+      (a) => a.attendanceStatus === StudentAttendanceStatus.LATE,
+    ).length;
+    const absent = attendances.filter(
+      (a) => a.attendanceStatus === StudentAttendanceStatus.ABSENT,
+    ).length;
+    const leftEarly = attendances.filter(
+      (a) => a.attendanceStatus === StudentAttendanceStatus.LEFT_EARLY,
+    ).length;
 
     const rate = total > 0 ? ((present + late) / total) * 100 : 0;
 
@@ -420,8 +436,9 @@ export class ReportsService {
       return { avgProgress: 0, tracks: [], currentTopic: '—' };
     }
 
-    const avgProgress = progresses.reduce((sum, p) => sum + (p.progressPercentage || 0), 0) / progresses.length;
-    const tracks = [...new Set(progresses.map(p => p.learningTrack).filter(Boolean))];
+    const avgProgress =
+      progresses.reduce((sum, p) => sum + (p.progressPercentage || 0), 0) / progresses.length;
+    const tracks = [...new Set(progresses.map((p) => p.learningTrack).filter(Boolean))];
     const latest = progresses[0];
     const currentTopic = latest.currentTopicId || latest.lastStudiedSurah || '—';
 
@@ -436,20 +453,18 @@ export class ReportsService {
   // 3. Teacher Activity Data
   // ────────────────────────────────────────────────────────────────────────────────
 
-  async getTeacherActivity(
-    filters: {
-      dateRange?: DateRangeFilter;
-      status?: string;
-      country?: string;
-      page?: number;
-      limit?: number;
-    }
-  ): Promise<{ data: TeacherActivityReport[]; meta: any }> {
+  async getTeacherActivity(filters: {
+    dateRange?: DateRangeFilter;
+    status?: string;
+    country?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: TeacherActivityReport[]; meta: any }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
 
     const where: any = {};
-    
+
     if (filters.status) {
       where.status = filters.status;
     }
@@ -474,8 +489,11 @@ export class ReportsService {
       });
 
       const totalClasses = classes.length;
-      const totalStudentsAssigned = classes.reduce((sum, c) => sum + (c.totalStudentsAssigned || 0), 0);
-      
+      const totalStudentsAssigned = classes.reduce(
+        (sum, c) => sum + (c.totalStudentsAssigned || 0),
+        0,
+      );
+
       // Calculate teacher attendance
       let presentCount = 0;
       let lateCount = 0;
@@ -535,7 +553,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getAttendanceAnalytics(
-    filters: DateRangeFilter & { teacherId?: string; studentId?: string }
+    filters: DateRangeFilter & { teacherId?: string; studentId?: string },
   ): Promise<AttendanceAnalytics> {
     const where: any = {};
 
@@ -557,8 +575,11 @@ export class ReportsService {
     });
 
     const totalSessions = sessions.length;
-    const totalStudentsAssigned = sessions.reduce((sum, s) => sum + (s.totalStudentsAssigned || 0), 0);
-    
+    const totalStudentsAssigned = sessions.reduce(
+      (sum, s) => sum + (s.totalStudentsAssigned || 0),
+      0,
+    );
+
     // Count attendance by status
     let presentCount = 0;
     let lateCount = 0;
@@ -602,9 +623,8 @@ export class ReportsService {
     }
 
     const totalAttended = presentCount + lateCount + absentCount + leftEarlyCount;
-    const overallAttendanceRate = totalStudentsAssigned > 0 
-      ? ((totalAttended / totalStudentsAssigned) * 100).toFixed(2) 
-      : '0';
+    const overallAttendanceRate =
+      totalStudentsAssigned > 0 ? ((totalAttended / totalStudentsAssigned) * 100).toFixed(2) : '0';
 
     return {
       totalSessions,
@@ -623,9 +643,10 @@ export class ReportsService {
   // 5. Academic Progress by Learning Track
   // ────────────────────────────────────────────────────────────────────────────────
 
-  async getProgressAnalytics(
-    filters: { learningProgram?: string; status?: string }
-  ): Promise<ProgressAnalytics[]> {
+  async getProgressAnalytics(filters: {
+    learningProgram?: string;
+    status?: string;
+  }): Promise<ProgressAnalytics[]> {
     const where: any = {};
 
     if (filters.learningProgram) {
@@ -638,17 +659,20 @@ export class ReportsService {
     });
 
     // Group by learning track
-    const trackStats: Record<string, {
-      totalStudents: number;
-      progressSum: number;
-      completedTopics: number;
-      totalTopics: number;
-      progressDistribution: Record<string, number>;
-    }> = {};
+    const trackStats: Record<
+      string,
+      {
+        totalStudents: number;
+        progressSum: number;
+        completedTopics: number;
+        totalTopics: number;
+        progressDistribution: Record<string, number>;
+      }
+    > = {};
 
     for (const progress of progresses) {
       const track = progress.learningTrack || 'unknown';
-      
+
       if (!trackStats[track]) {
         trackStats[track] = {
           totalStudents: 0,
@@ -677,7 +701,7 @@ export class ReportsService {
 
       // Categorize by rank
       const rank = progress.rank?.toLowerCase() || 'beginner';
-      trackStats[track].progressDistribution[rank] = 
+      trackStats[track].progressDistribution[rank] =
         (trackStats[track].progressDistribution[rank] || 0) + 1;
     }
 
@@ -685,9 +709,10 @@ export class ReportsService {
     return Object.entries(trackStats).map(([track, stats]) => ({
       learningTrack: track,
       totalStudents: stats.totalStudents,
-      avgProgressPercentage: stats.totalStudents > 0 
-        ? parseFloat((stats.progressSum / stats.totalStudents).toFixed(2)) 
-        : 0,
+      avgProgressPercentage:
+        stats.totalStudents > 0
+          ? parseFloat((stats.progressSum / stats.totalStudents).toFixed(2))
+          : 0,
       completedTopics: stats.completedTopics,
       totalTopics: stats.totalTopics || 1,
       progressDistribution: stats.progressDistribution,
@@ -715,7 +740,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getRegistrationReports(
-    filters: DateRangeFilter & { country?: string; level?: string }
+    filters: DateRangeFilter & { country?: string; level?: string },
   ): Promise<RegistrationReport[]> {
     const where: any = {};
 
@@ -740,7 +765,7 @@ export class ReportsService {
 
     for (const student of students) {
       const date = student.createdAt.toISOString().split('T')[0];
-      
+
       if (!dailyStats[date]) {
         dailyStats[date] = {
           date,
@@ -766,8 +791,8 @@ export class ReportsService {
       dailyStats[date].byCountry[country] = (dailyStats[date].byCountry[country] || 0) + 1;
     }
 
-    return Object.values(dailyStats).sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
+    return Object.values(dailyStats).sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
   }
 
@@ -776,7 +801,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getParentActivityReports(
-    filters: DateRangeFilter & { country?: string }
+    filters: DateRangeFilter & { country?: string },
   ): Promise<ParentActivityReport[]> {
     const where: any = {};
 
@@ -823,7 +848,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getHomeworkReports(
-    filters: DateRangeFilter & { difficulty?: string; status?: string }
+    filters: DateRangeFilter & { difficulty?: string; status?: string },
   ): Promise<HomeworkReport> {
     const where: any = {};
 
@@ -848,8 +873,8 @@ export class ReportsService {
     });
 
     const totalHomework = homeworkList.length;
-    const completed = homeworkList.filter(h => h.status === HomeworkStatus.COMPLETED).length;
-    const pending = homeworkList.filter(h => h.status === HomeworkStatus.PENDING).length;
+    const completed = homeworkList.filter((h) => h.status === HomeworkStatus.COMPLETED).length;
+    const pending = homeworkList.filter((h) => h.status === HomeworkStatus.PENDING).length;
 
     // Count by difficulty
     const byDifficulty: Record<string, number> = {};
@@ -869,7 +894,11 @@ export class ReportsService {
     let totalCompletionTime = 0;
     let completedCount = 0;
     for (const homework of homeworkList) {
-      if (homework.status === HomeworkStatus.COMPLETED && homework.updatedAt && homework.createdAt) {
+      if (
+        homework.status === HomeworkStatus.COMPLETED &&
+        homework.updatedAt &&
+        homework.createdAt
+      ) {
         const diffTime = homework.updatedAt.getTime() - homework.createdAt.getTime();
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
         totalCompletionTime += diffDays;
@@ -877,9 +906,8 @@ export class ReportsService {
       }
     }
 
-    const averageCompletionTime = completedCount > 0 
-      ? parseFloat((totalCompletionTime / completedCount).toFixed(2)) 
-      : 0;
+    const averageCompletionTime =
+      completedCount > 0 ? parseFloat((totalCompletionTime / completedCount).toFixed(2)) : 0;
 
     return {
       totalHomework,
@@ -896,7 +924,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getExamReports(
-    filters: DateRangeFilter & { status?: string; learningTrack?: string }
+    filters: DateRangeFilter & { status?: string; learningTrack?: string },
   ): Promise<ExamReport> {
     const where: any = {};
 
@@ -918,21 +946,18 @@ export class ReportsService {
     });
 
     const totalExams = exams.length;
-    const totalStudentsTaken = [...new Set(exams.map(e => e.studentId))].length;
-    
+    const totalStudentsTaken = [...new Set(exams.map((e) => e.studentId))].length;
+
     // Calculate scores
-    const scores = exams.map(e => e.score || 0);
-    const averageScore = totalExams > 0 
-      ? parseFloat((scores.reduce((a, b) => a + b, 0) / totalExams).toFixed(2)) 
-      : 0;
+    const scores = exams.map((e) => e.score || 0);
+    const averageScore =
+      totalExams > 0 ? parseFloat((scores.reduce((a, b) => a + b, 0) / totalExams).toFixed(2)) : 0;
     const highestScore = scores.length > 0 ? Math.max(...scores) : 0;
     const lowestScore = scores.length > 0 ? Math.min(...scores) : 0;
 
     // Pass rate (assuming 50% is passing)
-    const passedExams = scores.filter(s => s >= 50).length;
-    const passRate = totalExams > 0 
-      ? ((passedExams / totalExams) * 100).toFixed(2) 
-      : '0';
+    const passedExams = scores.filter((s) => s >= 50).length;
+    const passRate = totalExams > 0 ? ((passedExams / totalExams) * 100).toFixed(2) : '0';
 
     // By learning track
     const byLearningTrack: Record<string, number> = {};
@@ -965,7 +990,7 @@ export class ReportsService {
   // ────────────────────────────────────────────────────────────────────────────────
 
   async getTeacherReplacementReports(
-    filters: DateRangeFilter & { status?: string; reason?: string }
+    filters: DateRangeFilter & { status?: string; reason?: string },
   ): Promise<TeacherReplacementReport> {
     const where: any = {};
 
@@ -988,7 +1013,7 @@ export class ReportsService {
     });
 
     const totalReplacements = replacements.length;
-    
+
     // Count by status
     const byStatus: Record<string, number> = {};
     for (const replacement of replacements) {

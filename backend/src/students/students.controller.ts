@@ -38,7 +38,13 @@ export class StudentsController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.PARENT,
+  )
   async findAll(@Request() req, @Query() queryDto: QueryStudentDto) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -66,7 +72,13 @@ export class StudentsController {
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.PARENT,
+  )
   async findOne(@Request() req, @Param('id') id: string) {
     const student = await this.studentsService.findOne(id);
     if (req.user.role === UserRole.TEACHER) {
@@ -88,18 +100,15 @@ export class StudentsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   changeStatus(
     @Request() req,
-    @Param('id') id: string, 
-    @Body() body: { status: string; reason: string; notes: string }
+    @Param('id') id: string,
+    @Body() body: { status: string; reason: string; notes: string },
   ) {
     return this.studentsService.changeStatus(id, body.status, body.reason, body.notes, req.user.id);
   }
 
   @Post(':id/reset-password')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  async resetPassword(
-    @Param('id') id: string,
-    @Body('newPassword') newPassword: string,
-  ) {
+  async resetPassword(@Param('id') id: string, @Body('newPassword') newPassword: string) {
     if (!newPassword || newPassword.length < 6) {
       throw new BadRequestException('Password must be at least 6 characters');
     }

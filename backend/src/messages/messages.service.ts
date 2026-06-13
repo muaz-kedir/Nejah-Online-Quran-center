@@ -41,7 +41,7 @@ export class MessagesService {
       const otherPartyRole = msg.fromId === userId ? msg.toRole : msg.fromRole;
 
       const key = `${otherPartyRole}-${otherPartyId}`;
-      
+
       if (!conversations.has(key)) {
         const otherParty = await this.getOtherPartyInfo(otherPartyRole, otherPartyId);
         conversations.set(key, {
@@ -64,7 +64,12 @@ export class MessagesService {
     return Array.from(conversations.values());
   }
 
-  async getMessages(fromId: string, toId: string, fromRole: UserRole, toRole: UserRole): Promise<Message[]> {
+  async getMessages(
+    fromId: string,
+    toId: string,
+    fromRole: UserRole,
+    toRole: UserRole,
+  ): Promise<Message[]> {
     const messages = await this.messagesRepository.find({
       where: [
         { fromId, fromRole, toId, toRole },
@@ -74,7 +79,7 @@ export class MessagesService {
     });
 
     // Mark as read
-    const unreadMessages = messages.filter(m => !m.isRead);
+    const unreadMessages = messages.filter((m) => !m.isRead);
     for (const msg of unreadMessages) {
       msg.isRead = true;
       msg.readAt = new Date();
@@ -95,14 +100,22 @@ export class MessagesService {
   ): Promise<Message> {
     // Validate that student can only message teacher/admin
     if (fromRole === UserRole.STUDENT) {
-      if (toRole !== UserRole.TEACHER && toRole !== UserRole.ADMIN && toRole !== UserRole.SUPER_ADMIN) {
+      if (
+        toRole !== UserRole.TEACHER &&
+        toRole !== UserRole.ADMIN &&
+        toRole !== UserRole.SUPER_ADMIN
+      ) {
         throw new BadRequestException('Students can only message teachers or administrators');
       }
     }
 
     // Validate that teacher can only message students/admin
     if (fromRole === UserRole.TEACHER) {
-      if (toRole !== UserRole.STUDENT && toRole !== UserRole.ADMIN && toRole !== UserRole.SUPER_ADMIN) {
+      if (
+        toRole !== UserRole.STUDENT &&
+        toRole !== UserRole.ADMIN &&
+        toRole !== UserRole.SUPER_ADMIN
+      ) {
         throw new BadRequestException('Teachers can only message students or administrators');
       }
     }
@@ -131,7 +144,8 @@ export class MessagesService {
   }
 
   async markAllAsRead(userId: string, userRole: UserRole): Promise<void> {
-    await this.messagesRepository.createQueryBuilder()
+    await this.messagesRepository
+      .createQueryBuilder()
       .update(Message)
       .set({ isRead: true, readAt: new Date() })
       .where('toId = :userId AND toRole = :userRole AND isRead = false', { userId, userRole })
@@ -186,7 +200,11 @@ export class MessagesService {
     }
   }
 
-  async getStudentConversation(partnerId: string, partnerRole: UserRole, studentId: string): Promise<Message[]> {
+  async getStudentConversation(
+    partnerId: string,
+    partnerRole: UserRole,
+    studentId: string,
+  ): Promise<Message[]> {
     return this.getMessages(studentId, partnerId, UserRole.STUDENT, partnerRole);
   }
 

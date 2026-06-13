@@ -21,6 +21,7 @@ import { TeacherReplacementsModule } from './teacher-replacements/teacher-replac
 import { ReportsModule } from './reports/reports.module';
 import { FinanceModule } from './finance/finance.module';
 import { QiratModule } from './qirat/qirat.module';
+import { ZoomModule } from './zoom/zoom.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -36,7 +37,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get('DATABASE_URL');
-        
+
         // Prefer DATABASE_URL if available
         if (databaseUrl) {
           return {
@@ -50,7 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
             },
           };
         }
-        
+
         // Fallback to individual credentials
         return {
           type: 'postgres',
@@ -89,6 +90,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ReportsModule,
     FinanceModule,
     QiratModule,
+    ZoomModule,
     ScheduleModule.forRoot(),
   ],
 })

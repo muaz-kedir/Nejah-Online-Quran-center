@@ -104,8 +104,12 @@ export class StudentPortalService {
     const homeworkOverdue = homeworkAssignments.filter(
       (h) => h.status === HomeworkStatus.PENDING && h.dueDate && new Date(h.dueDate) < now,
     ).length;
-    const homeworkCompleted = homeworkAssignments.filter((h) => h.status === HomeworkStatus.COMPLETED).length;
-    const homeworkPendingCount = homeworkAssignments.filter((h) => h.status === HomeworkStatus.PENDING).length;
+    const homeworkCompleted = homeworkAssignments.filter(
+      (h) => h.status === HomeworkStatus.COMPLETED,
+    ).length;
+    const homeworkPendingCount = homeworkAssignments.filter(
+      (h) => h.status === HomeworkStatus.PENDING,
+    ).length;
     const homeworkTotal = homeworkAssignments.length;
     const homeworkCompletionRate =
       homeworkTotal > 0 ? Math.round((homeworkCompleted / homeworkTotal) * 100) : 0;
@@ -139,7 +143,10 @@ export class StudentPortalService {
       ? {
           id: nextTodaySchedule.id,
           name: nextTodaySchedule.className || 'Quran Class',
-          teacher: (nextTodaySchedule as any).teacher?.fullName || effectiveTeacherEntity?.fullName || 'Assigned Teacher',
+          teacher:
+            (nextTodaySchedule as any).teacher?.fullName ||
+            effectiveTeacherEntity?.fullName ||
+            'Assigned Teacher',
           teacherId: (nextTodaySchedule as any).teacherId || effectiveTeacher.effectiveTeacherId,
           dayOfWeek: nextTodaySchedule.dayOfWeek,
           startTime: nextTodaySchedule.startTimeString,
@@ -178,7 +185,11 @@ export class StudentPortalService {
 
     const weeklyAttendance = last7Days.map((day) => {
       const record = attendances.find((a) => new Date(a.date).toISOString().split('T')[0] === day);
-      return { date: day, present: record ? record.isPresent : false, session: record ? 'Quran Class' : null };
+      return {
+        date: day,
+        present: record ? record.isPresent : false,
+        session: record ? 'Quran Class' : null,
+      };
     });
 
     const attendanceRate =
@@ -194,7 +205,8 @@ export class StudentPortalService {
       .map((h, i) => ({
         id: h.id,
         title: h.title,
-        description: h.description || `Due ${h.dueDate ? new Date(h.dueDate).toLocaleDateString() : 'soon'}`,
+        description:
+          h.description || `Due ${h.dueDate ? new Date(h.dueDate).toLocaleDateString() : 'soon'}`,
         dueDate: h.dueDate
           ? new Date(h.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           : 'Soon',
@@ -230,7 +242,8 @@ export class StudentPortalService {
               name: activeReplacement?.replacementTeacher?.fullName,
               startDate: activeReplacement?.startDate,
               endDate: activeReplacement?.endDate,
-              originalTeacher: activeReplacement?.originalTeacher?.fullName || student.teacher?.fullName,
+              originalTeacher:
+                activeReplacement?.originalTeacher?.fullName || student.teacher?.fullName,
             }
           : null,
         attendanceRate,
@@ -263,7 +276,9 @@ export class StudentPortalService {
         ayahs: progressRecord?.ayahsCount || 0,
         weeksActive: progressRecord?.weeksActive || 0,
         juzCompleted: Math.floor(surahsCount / 4),
-        currentJuz: progressRecord?.lastStudiedSurah ? `Juz ${Math.ceil(surahsCount / 4) || 1}` : '-',
+        currentJuz: progressRecord?.lastStudiedSurah
+          ? `Juz ${Math.ceil(surahsCount / 4) || 1}`
+          : '-',
       },
       attendance: {
         totalClasses: sessionStats.total || attendances.length,
@@ -285,9 +300,7 @@ export class StudentPortalService {
         : null,
       todaysLesson: {
         surah: progressRecord?.lastStudiedSurah || pendingHomework?.title || '—',
-        ayahRange: progressRecord?.lastStudiedAyah
-          ? `Ayah ${progressRecord.lastStudiedAyah}`
-          : '—',
+        ayahRange: progressRecord?.lastStudiedAyah ? `Ayah ${progressRecord.lastStudiedAyah}` : '—',
         revision: latestFeedback?.content?.slice(0, 120) || 'Complete your daily revision.',
         homework: pendingHomework
           ? { title: pendingHomework.title, dueDate: pendingHomework.dueDate }
@@ -336,7 +349,8 @@ export class StudentPortalService {
       schedule: schedules.map((s) => ({
         id: s.id,
         day: s.dayOfWeek || '',
-        time: s.startTimeString && s.endTimeString ? `${s.startTimeString} - ${s.endTimeString}` : '',
+        time:
+          s.startTimeString && s.endTimeString ? `${s.startTimeString} - ${s.endTimeString}` : '',
         subject: s.className || 'Quran Class',
         teacher: student.teacher?.fullName || 'Assigned Teacher',
         meetingLink: s.meetingLink,
@@ -361,7 +375,9 @@ export class StudentPortalService {
 
     const current = schedules
       .filter((s) => s.status === 'active' && s.dayOfWeek === today)
-      .map((s) => this.mapSchedule(s, student, liveClass?.scheduleId === s.id ? 'live' : 'scheduled'));
+      .map((s) =>
+        this.mapSchedule(s, student, liveClass?.scheduleId === s.id ? 'live' : 'scheduled'),
+      );
 
     const upcoming = schedules
       .filter((s) => s.status === 'active')
@@ -444,7 +460,9 @@ export class StudentPortalService {
         log.surahName,
         log.lastStudiedPage ? `Page ${log.lastStudiedPage}` : null,
         ayahRange,
-        log.memorizationStatus ? `Memorization: ${log.memorizationStatus.replace(/_/g, ' ')}` : null,
+        log.memorizationStatus
+          ? `Memorization: ${log.memorizationStatus.replace(/_/g, ' ')}`
+          : null,
         log.revisionStatus ? `Revision: ${log.revisionStatus.replace(/_/g, ' ')}` : null,
         log.notes || null,
       ].filter(Boolean);

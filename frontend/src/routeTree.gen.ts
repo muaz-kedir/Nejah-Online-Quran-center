@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
 import { Route as TeachersRouteImport } from './routes/teachers'
+import { Route as Teacher_zoomRouteImport } from './routes/teacher_zoom'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
 import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
 import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
@@ -32,9 +34,12 @@ import { Route as Qirat_dashboardRouteImport } from './routes/qirat_dashboard'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ParentsRouteImport } from './routes/parents'
+import { Route as Parent_sessionsRouteImport } from './routes/parent_sessions'
+import { Route as Parent_notificationsRouteImport } from './routes/parent_notifications'
 import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LiveSessionsRouteImport } from './routes/live-sessions'
 import { Route as HomeworkRouteImport } from './routes/homework'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as Finance_teacherPaymentsRouteImport } from './routes/finance_teacher-payments'
@@ -61,9 +66,16 @@ import { Route as StudentNotificationsRouteImport } from './routes/student_.noti
 import { Route as StudentMessagesRouteImport } from './routes/student_.messages'
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
+import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
+import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
+const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
+  id: '/zoom-settings',
+  path: '/zoom-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -77,6 +89,11 @@ const TrackApplicationRoute = TrackApplicationRouteImport.update({
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
   path: '/teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_zoomRoute = Teacher_zoomRouteImport.update({
+  id: '/teacher_zoom',
+  path: '/teacher_zoom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Teacher_studentsRoute = Teacher_studentsRouteImport.update({
@@ -179,6 +196,16 @@ const ParentsRoute = ParentsRouteImport.update({
   path: '/parents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Parent_sessionsRoute = Parent_sessionsRouteImport.update({
+  id: '/parent_sessions',
+  path: '/parent_sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Parent_notificationsRoute = Parent_notificationsRouteImport.update({
+  id: '/parent_notifications',
+  path: '/parent_notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
   id: '/parent_dashboard',
   path: '/parent_dashboard',
@@ -192,6 +219,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveSessionsRoute = LiveSessionsRouteImport.update({
+  id: '/live-sessions',
+  path: '/live-sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeworkRoute = HomeworkRouteImport.update({
@@ -325,6 +357,16 @@ const StudentClassesRoute = StudentClassesRouteImport.update({
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LiveSessionsIdRoute = LiveSessionsIdRouteImport.update({
+  id: '/live-sessions_/$id',
+  path: '/live-sessions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => LiveSessionsRoute,
+} as any)
 const ClassSessionIdRoute = ClassSessionIdRouteImport.update({
   id: '/class-session_/$id',
   path: '/class-session/$id',
@@ -353,9 +395,12 @@ export interface FileRoutesByFullPath {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
+  '/parent_notifications': typeof Parent_notificationsRoute
+  '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -376,10 +421,14 @@ export interface FileRoutesByFullPath {
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
+  '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
+  '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -409,9 +458,12 @@ export interface FileRoutesByTo {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
+  '/parent_notifications': typeof Parent_notificationsRoute
+  '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -432,10 +484,14 @@ export interface FileRoutesByTo {
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
+  '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
+  '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -466,9 +522,12 @@ export interface FileRoutesById {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
+  '/parent_notifications': typeof Parent_notificationsRoute
+  '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -489,10 +548,14 @@ export interface FileRoutesById {
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
   '/teacher_students': typeof Teacher_studentsRoute
+  '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
+  '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions_/$id': typeof LiveSessionsIdRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/homework': typeof StudentHomeworkRoute
   '/student_/messages': typeof StudentMessagesRoute
@@ -524,9 +587,12 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/messages'
     | '/parent_dashboard'
+    | '/parent_notifications'
+    | '/parent_sessions'
     | '/parents'
     | '/profile'
     | '/progress'
@@ -547,10 +613,14 @@ export interface FileRouteTypes {
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
+    | '/teacher_zoom'
     | '/teachers'
     | '/track-application'
     | '/users'
+    | '/zoom-settings'
     | '/class-session/$id'
+    | '/live-sessions/analytics'
+    | '/live-sessions/$id'
     | '/student/classes'
     | '/student/homework'
     | '/student/messages'
@@ -580,9 +650,12 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/messages'
     | '/parent_dashboard'
+    | '/parent_notifications'
+    | '/parent_sessions'
     | '/parents'
     | '/profile'
     | '/progress'
@@ -603,10 +676,14 @@ export interface FileRouteTypes {
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
+    | '/teacher_zoom'
     | '/teachers'
     | '/track-application'
     | '/users'
+    | '/zoom-settings'
     | '/class-session/$id'
+    | '/live-sessions/analytics'
+    | '/live-sessions/$id'
     | '/student/classes'
     | '/student/homework'
     | '/student/messages'
@@ -636,9 +713,12 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/messages'
     | '/parent_dashboard'
+    | '/parent_notifications'
+    | '/parent_sessions'
     | '/parents'
     | '/profile'
     | '/progress'
@@ -659,10 +739,14 @@ export interface FileRouteTypes {
     | '/teacher_profile'
     | '/teacher_schedule'
     | '/teacher_students'
+    | '/teacher_zoom'
     | '/teachers'
     | '/track-application'
     | '/users'
+    | '/zoom-settings'
     | '/class-session_/$id'
+    | '/live-sessions/analytics'
+    | '/live-sessions_/$id'
     | '/student_/classes'
     | '/student_/homework'
     | '/student_/messages'
@@ -693,9 +777,12 @@ export interface RootRouteChildren {
   Finance_teacherPaymentsRoute: typeof Finance_teacherPaymentsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeworkRoute: typeof HomeworkRoute
+  LiveSessionsRoute: typeof LiveSessionsRouteWithChildren
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   Parent_dashboardRoute: typeof Parent_dashboardRoute
+  Parent_notificationsRoute: typeof Parent_notificationsRoute
+  Parent_sessionsRoute: typeof Parent_sessionsRoute
   ParentsRoute: typeof ParentsRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
@@ -716,10 +803,13 @@ export interface RootRouteChildren {
   Teacher_profileRoute: typeof Teacher_profileRoute
   Teacher_scheduleRoute: typeof Teacher_scheduleRoute
   Teacher_studentsRoute: typeof Teacher_studentsRoute
+  Teacher_zoomRoute: typeof Teacher_zoomRoute
   TeachersRoute: typeof TeachersRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
+  ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
+  LiveSessionsIdRoute: typeof LiveSessionsIdRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
   StudentMessagesRoute: typeof StudentMessagesRoute
@@ -734,6 +824,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/zoom-settings': {
+      id: '/zoom-settings'
+      path: '/zoom-settings'
+      fullPath: '/zoom-settings'
+      preLoaderRoute: typeof ZoomSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/users': {
       id: '/users'
       path: '/users'
@@ -753,6 +850,13 @@ declare module '@tanstack/react-router' {
       path: '/teachers'
       fullPath: '/teachers'
       preLoaderRoute: typeof TeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_zoom': {
+      id: '/teacher_zoom'
+      path: '/teacher_zoom'
+      fullPath: '/teacher_zoom'
+      preLoaderRoute: typeof Teacher_zoomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher_students': {
@@ -895,6 +999,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent_sessions': {
+      id: '/parent_sessions'
+      path: '/parent_sessions'
+      fullPath: '/parent_sessions'
+      preLoaderRoute: typeof Parent_sessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent_notifications': {
+      id: '/parent_notifications'
+      path: '/parent_notifications'
+      fullPath: '/parent_notifications'
+      preLoaderRoute: typeof Parent_notificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parent_dashboard': {
       id: '/parent_dashboard'
       path: '/parent_dashboard'
@@ -914,6 +1032,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-sessions': {
+      id: '/live-sessions'
+      path: '/live-sessions'
+      fullPath: '/live-sessions'
+      preLoaderRoute: typeof LiveSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/homework': {
@@ -1098,6 +1223,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live-sessions_/$id': {
+      id: '/live-sessions_/$id'
+      path: '/live-sessions/$id'
+      fullPath: '/live-sessions/$id'
+      preLoaderRoute: typeof LiveSessionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-sessions/analytics': {
+      id: '/live-sessions/analytics'
+      path: '/analytics'
+      fullPath: '/live-sessions/analytics'
+      preLoaderRoute: typeof LiveSessionsAnalyticsRouteImport
+      parentRoute: typeof LiveSessionsRoute
+    }
     '/class-session_/$id': {
       id: '/class-session_/$id'
       path: '/class-session/$id'
@@ -1114,6 +1253,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface LiveSessionsRouteChildren {
+  LiveSessionsAnalyticsRoute: typeof LiveSessionsAnalyticsRoute
+}
+
+const LiveSessionsRouteChildren: LiveSessionsRouteChildren = {
+  LiveSessionsAnalyticsRoute: LiveSessionsAnalyticsRoute,
+}
+
+const LiveSessionsRouteWithChildren = LiveSessionsRoute._addFileChildren(
+  LiveSessionsRouteChildren,
+)
 
 interface TeachersIdRouteChildren {
   TeachersIdScheduleDayRoute: typeof TeachersIdScheduleDayRoute
@@ -1144,9 +1295,12 @@ const rootRouteChildren: RootRouteChildren = {
   Finance_teacherPaymentsRoute: Finance_teacherPaymentsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeworkRoute: HomeworkRoute,
+  LiveSessionsRoute: LiveSessionsRouteWithChildren,
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   Parent_dashboardRoute: Parent_dashboardRoute,
+  Parent_notificationsRoute: Parent_notificationsRoute,
+  Parent_sessionsRoute: Parent_sessionsRoute,
   ParentsRoute: ParentsRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
@@ -1167,10 +1321,13 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_profileRoute: Teacher_profileRoute,
   Teacher_scheduleRoute: Teacher_scheduleRoute,
   Teacher_studentsRoute: Teacher_studentsRoute,
+  Teacher_zoomRoute: Teacher_zoomRoute,
   TeachersRoute: TeachersRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
+  ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
+  LiveSessionsIdRoute: LiveSessionsIdRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
   StudentMessagesRoute: StudentMessagesRoute,

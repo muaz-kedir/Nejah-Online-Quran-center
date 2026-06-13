@@ -1,4 +1,11 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -165,7 +172,10 @@ export class TeachersService {
     if (schedule.teacherId === teacherId) {
       return schedule;
     }
-    const canTeach = await this.replacementsService.canTeacherTeachStudent(teacherId, schedule.studentId);
+    const canTeach = await this.replacementsService.canTeacherTeachStudent(
+      teacherId,
+      schedule.studentId,
+    );
     if (!canTeach) {
       throw new ForbiddenException('You do not have access to this schedule');
     }
@@ -198,7 +208,7 @@ export class TeachersService {
       if (updateTeacherDto.email) userUpdate.email = updateTeacherDto.email;
       if (updateTeacherDto.phoneNumber) userUpdate.phone = updateTeacherDto.phoneNumber;
       if (updateTeacherDto.avatarUrl) userUpdate.avatar = updateTeacherDto.avatarUrl; // Update avatar profile sync
-      
+
       await this.usersService.updateProfile(user.id, userUpdate);
     }
 
@@ -253,7 +263,7 @@ export class TeachersService {
     });
 
     const totalAttendance = students.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0);
-    const avgAttendance = students.length > 0 ? (totalAttendance / students.length) : 95.0;
+    const avgAttendance = students.length > 0 ? totalAttendance / students.length : 95.0;
 
     return {
       totalStudents,
@@ -277,14 +287,15 @@ export class TeachersService {
     const studentIds = teacher.students?.map((s) => s.id) || [];
 
     // Per-student progress
-    const progressRecords = studentIds.length > 0
-      ? await this.progressRepository
-          .createQueryBuilder('p')
-          .leftJoinAndSelect('p.student', 'student')
-          .where('p.studentId IN (:...studentIds)', { studentIds })
-          .orderBy('p.updatedAt', 'DESC')
-          .getMany()
-      : [];
+    const progressRecords =
+      studentIds.length > 0
+        ? await this.progressRepository
+            .createQueryBuilder('p')
+            .leftJoinAndSelect('p.student', 'student')
+            .where('p.studentId IN (:...studentIds)', { studentIds })
+            .orderBy('p.updatedAt', 'DESC')
+            .getMany()
+        : [];
 
     // Compute live teaching hours from schedules
     const schedules = teacher.schedules || [];
@@ -293,14 +304,17 @@ export class TeachersService {
       if (schedule.startTimeString && schedule.endTimeString) {
         const [sh, sm] = schedule.startTimeString.split(':').map(Number);
         const [eh, em] = schedule.endTimeString.split(':').map(Number);
-        const diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+        const diffMinutes = eh * 60 + em - (sh * 60 + sm);
         if (diffMinutes > 0) totalWeeklyHours += diffMinutes / 60;
       }
     }
 
     // Topics derived from teachingTopics field or from student progress
     const topics = teacher.teachingTopics
-      ? teacher.teachingTopics.split(',').map((t) => t.trim()).filter(Boolean)
+      ? teacher.teachingTopics
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
       : [];
 
     return {
@@ -340,7 +354,7 @@ export class TeachersService {
     // Get today's schedules
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }); // e.g., "Monday"
     const todaySchedules = await this.schedulesRepository.find({
-      where: { 
+      where: {
         teacherId,
         status: 'active',
         dayOfWeek: today,
@@ -363,18 +377,20 @@ export class TeachersService {
     });
 
     // Calculate average attendance
-    const totalAttendanceRate = students.length > 0
-      ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
-      : 0;
+    const totalAttendanceRate =
+      students.length > 0
+        ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
+        : 0;
 
     const homeworkPending = await this.homeworkRepository.count({
       where: { student: { teacherId }, status: 'Pending' as any },
     });
 
     // Calculate average progress
-    const totalProgressRate = students.length > 0
-      ? students.reduce((sum, s) => sum + (Number(s.progressRate) || 0), 0) / students.length
-      : 0;
+    const totalProgressRate =
+      students.length > 0
+        ? students.reduce((sum, s) => sum + (Number(s.progressRate) || 0), 0) / students.length
+        : 0;
 
     // Get notification count
     const notificationCount = students.length * 2; // Estimate
@@ -402,7 +418,7 @@ export class TeachersService {
       },
       temporaryStudents: await this.replacementsService.getTemporaryStudentsForTeacher(teacherId),
       reassignedAwayStudents: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
-      todaySchedules: todaySchedules.map(s => ({
+      todaySchedules: todaySchedules.map((s) => ({
         id: s.id,
         studentName: s.student?.fullName || 'Unknown',
         quranLevel: s.student?.level || 'N/A',
@@ -411,7 +427,7 @@ export class TeachersService {
         status: s.status || 'active',
         meetingLink: s.meetingLink,
       })),
-      upcomingSchedules: upcomingSchedules.slice(0, 5).map(s => ({
+      upcomingSchedules: upcomingSchedules.slice(0, 5).map((s) => ({
         id: s.id,
         studentName: s.student?.fullName || 'Unknown',
         quranLevel: s.student?.level || 'N/A',
@@ -420,7 +436,7 @@ export class TeachersService {
         endTime: s.endTimeString || 'N/A',
         status: s.status || 'active',
       })),
-      students: students.map(s => ({
+      students: students.map((s) => ({
         id: s.id,
         fullName: s.fullName,
         gender: s.gender,
@@ -435,7 +451,8 @@ export class TeachersService {
 
   // Get teacher's students list (permanent + temporary assignments)
   async getTeacherStudents(teacherId: string, page = 1, limit = 10) {
-    const temporaryAssignments = await this.replacementsService.getTemporaryStudentsForTeacher(teacherId);
+    const temporaryAssignments =
+      await this.replacementsService.getTemporaryStudentsForTeacher(teacherId);
     const tempStudentIds = temporaryAssignments.map((r) => r.studentId);
 
     const qb = this.studentsRepository
@@ -443,7 +460,9 @@ export class TeachersService {
       .leftJoinAndSelect('student.user', 'user')
       .where('(student.teacherId = :teacherId OR student.id IN (:...tempStudentIds))', {
         teacherId,
-        tempStudentIds: tempStudentIds.length ? tempStudentIds : ['00000000-0000-0000-0000-000000000000'],
+        tempStudentIds: tempStudentIds.length
+          ? tempStudentIds
+          : ['00000000-0000-0000-0000-000000000000'],
       })
       .skip((page - 1) * limit)
       .take(limit)
@@ -472,7 +491,7 @@ export class TeachersService {
       relations: ['student'],
     });
 
-    return schedules.map(s => ({
+    return schedules.map((s) => ({
       id: s.id,
       studentName: s.student?.fullName || 'Unknown',
       dayOfWeek: s.dayOfWeek,

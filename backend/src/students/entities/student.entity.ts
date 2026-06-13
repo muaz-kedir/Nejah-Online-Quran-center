@@ -19,7 +19,7 @@ export enum QuranLevel {
   QURAN_READING = 'Quran Reading',
   HIFZ_PROGRAM = 'Hifz Program',
   TAJWEED_PROGRAM = 'Tajweed Program',
-  HIFZ_MURAJAA = 'Hifz Muraja\'a',
+  HIFZ_MURAJAA = "Hifz Muraja'a",
 }
 
 export enum AgeRange {
@@ -84,6 +84,9 @@ export class Student {
 
   @Column({ unique: true })
   email: string;
+
+  @Column({ nullable: true })
+  zoomEmail: string;
 
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;

@@ -48,7 +48,14 @@ export class HomeworkController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT, UserRole.PARENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.PARENT,
+  )
   async findByStudent(@Request() req, @Param('studentId') studentId: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -58,7 +65,13 @@ export class HomeworkController {
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.STUDENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+  )
   async updateStatus(
     @Request() req,
     @Param('id') id: string,

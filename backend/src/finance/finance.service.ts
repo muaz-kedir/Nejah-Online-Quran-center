@@ -41,7 +41,8 @@ export class FinanceService {
     @InjectRepository(StudentFeeAccount) private feeRepo: Repository<StudentFeeAccount>,
     @InjectRepository(PaymentTransaction) private txRepo: Repository<PaymentTransaction>,
     @InjectRepository(FamilyBillingGroup) private familyRepo: Repository<FamilyBillingGroup>,
-    @InjectRepository(FamilyBillingMember) private familyMemberRepo: Repository<FamilyBillingMember>,
+    @InjectRepository(FamilyBillingMember)
+    private familyMemberRepo: Repository<FamilyBillingMember>,
     @InjectRepository(TeacherPayrollRecord) private payrollRepo: Repository<TeacherPayrollRecord>,
     @InjectRepository(TeacherEarningDetail) private earningRepo: Repository<TeacherEarningDetail>,
     @InjectRepository(Student) private studentRepo: Repository<Student>,
@@ -101,7 +102,10 @@ export class FinanceService {
     return parseFloat(String(val ?? 0)) || 0;
   }
 
-  async calculateStudentFee(studentId: string, billingMonth?: string): Promise<Partial<StudentFeeAccount>> {
+  async calculateStudentFee(
+    studentId: string,
+    billingMonth?: string,
+  ): Promise<Partial<StudentFeeAccount>> {
     const month = billingMonth || this.getCurrentBillingMonth();
     const student = await this.studentRepo.findOne({ where: { id: studentId } });
     if (!student) throw new NotFoundException('Student not found');
@@ -121,9 +125,8 @@ export class FinanceService {
     }
 
     const existing = await this.feeRepo.findOne({ where: { studentId, billingMonth: month } });
-    const sessionRate = existing?.sessionRate != null
-      ? this.toNumber(existing.sessionRate)
-      : DEFAULT_SESSION_RATE;
+    const sessionRate =
+      existing?.sessionRate != null ? this.toNumber(existing.sessionRate) : DEFAULT_SESSION_RATE;
 
     const monthlyFee = sessionRate * monthlySessions;
     const dueDate = existing?.dueDate || fmtDate(addDaysDate(parseDateStr(`${month}-01`), 14));
@@ -152,7 +155,9 @@ export class FinanceService {
     let synced = 0;
     for (const student of students) {
       const calc = await this.calculateStudentFee(student.id, month);
-      let account = await this.feeRepo.findOne({ where: { studentId: student.id, billingMonth: month } });
+      let account = await this.feeRepo.findOne({
+        where: { studentId: student.id, billingMonth: month },
+      });
 
       if (!account) {
         account = this.feeRepo.create({
@@ -167,9 +172,16 @@ export class FinanceService {
         Object.assign(account, calc);
       }
 
-      const effectiveFee = this.toNumber(account.monthlyFee) - this.toNumber(account.discountAmount) - this.toNumber(account.scholarshipAmount);
+      const effectiveFee =
+        this.toNumber(account.monthlyFee) -
+        this.toNumber(account.discountAmount) -
+        this.toNumber(account.scholarshipAmount);
       account.remainingBalance = Math.max(effectiveFee - this.toNumber(account.amountPaid), 0);
-      account.status = this.resolvePaymentStatus(this.toNumber(account.amountPaid), effectiveFee, account.dueDate);
+      account.status = this.resolvePaymentStatus(
+        this.toNumber(account.amountPaid),
+        effectiveFee,
+        account.dueDate,
+      );
       await this.feeRepo.save(account);
       synced++;
     }
@@ -189,14 +201,17 @@ export class FinanceService {
     const families = await this.familyRepo.find({ where: { billingMonth: month } });
     const payrolls = await this.payrollRepo.find({ where: { billingMonth: month } });
 
-    const totalMonthlyRevenue = accounts.reduce((s, a) => s + this.toNumber(a.monthlyFee), 0)
-      + families.filter((f) => f.isBundled).reduce((s, f) => s + this.toNumber(f.monthlyTotal), 0);
+    const totalMonthlyRevenue =
+      accounts.reduce((s, a) => s + this.toNumber(a.monthlyFee), 0) +
+      families.filter((f) => f.isBundled).reduce((s, f) => s + this.toNumber(f.monthlyTotal), 0);
 
-    const totalCollected = accounts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0)
-      + families.reduce((s, f) => s + this.toNumber(f.amountPaid), 0);
+    const totalCollected =
+      accounts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0) +
+      families.reduce((s, f) => s + this.toNumber(f.amountPaid), 0);
 
-    const totalOutstanding = accounts.reduce((s, a) => s + this.toNumber(a.remainingBalance), 0)
-      + families.reduce((s, f) => s + this.toNumber(f.remainingBalance), 0);
+    const totalOutstanding =
+      accounts.reduce((s, a) => s + this.toNumber(a.remainingBalance), 0) +
+      families.reduce((s, f) => s + this.toNumber(f.remainingBalance), 0);
 
     const activePayingStudents = accounts.filter(
       (a) => a.status === PaymentStatus.PAID || a.status === PaymentStatus.PARTIAL,
@@ -210,14 +225,25 @@ export class FinanceService {
 
     const totalTeacherPayroll = payrolls.reduce((s, p) => s + this.toNumber(p.totalEarnings), 0);
 
-    const paymentsDueThisWeek = accounts.filter(
-      (a) => a.dueDate && a.dueDate >= today && a.dueDate <= weekEnd && a.status !== PaymentStatus.PAID,
-    ).length + families.filter(
-      (f) => f.dueDate && f.dueDate >= today && f.dueDate <= weekEnd && f.status !== PaymentStatus.PAID,
-    ).length;
+    const paymentsDueThisWeek =
+      accounts.filter(
+        (a) =>
+          a.dueDate &&
+          a.dueDate >= today &&
+          a.dueDate <= weekEnd &&
+          a.status !== PaymentStatus.PAID,
+      ).length +
+      families.filter(
+        (f) =>
+          f.dueDate &&
+          f.dueDate >= today &&
+          f.dueDate <= weekEnd &&
+          f.status !== PaymentStatus.PAID,
+      ).length;
 
-    const overduePayments = accounts.filter((a) => a.status === PaymentStatus.OVERDUE).length
-      + families.filter((f) => f.status === PaymentStatus.OVERDUE).length;
+    const overduePayments =
+      accounts.filter((a) => a.status === PaymentStatus.OVERDUE).length +
+      families.filter((f) => f.status === PaymentStatus.OVERDUE).length;
 
     const monthTransactions = await this.txRepo.find({
       where: {
@@ -246,7 +272,12 @@ export class FinanceService {
     };
   }
 
-  private mapStudentPaymentRow(account: StudentFeeAccount, student?: Student, parent?: Parent, teacher?: Teacher) {
+  private mapStudentPaymentRow(
+    account: StudentFeeAccount,
+    student?: Student,
+    parent?: Parent,
+    teacher?: Teacher,
+  ) {
     return {
       id: account.id,
       studentId: account.studentId,
@@ -283,8 +314,10 @@ export class FinanceService {
     if (query.studentId) qb.andWhere('fee.studentId = :studentId', { studentId: query.studentId });
     if (query.parentId) qb.andWhere('fee.parentId = :parentId', { parentId: query.parentId });
     if (query.teacherId) qb.andWhere('fee.teacherId = :teacherId', { teacherId: query.teacherId });
-    if (query.country) qb.andWhere('student.country ILIKE :country', { country: `%${query.country}%` });
-    if (query.learningProgram) qb.andWhere('fee.program ILIKE :program', { program: `%${query.learningProgram}%` });
+    if (query.country)
+      qb.andWhere('student.country ILIKE :country', { country: `%${query.country}%` });
+    if (query.learningProgram)
+      qb.andWhere('fee.program ILIKE :program', { program: `%${query.learningProgram}%` });
     if (query.search) {
       qb.andWhere('(student.fullName ILIKE :search OR parent.fullName ILIKE :search)', {
         search: `%${query.search}%`,
@@ -368,9 +401,16 @@ export class FinanceService {
       account.amountPaid = this.toNumber(account.amountPaid) + dto.amount;
     }
 
-    const effectiveFee = this.toNumber(account.monthlyFee) - this.toNumber(account.discountAmount) - this.toNumber(account.scholarshipAmount);
+    const effectiveFee =
+      this.toNumber(account.monthlyFee) -
+      this.toNumber(account.discountAmount) -
+      this.toNumber(account.scholarshipAmount);
     account.remainingBalance = Math.max(effectiveFee - this.toNumber(account.amountPaid), 0);
-    account.status = this.resolvePaymentStatus(this.toNumber(account.amountPaid), effectiveFee, account.dueDate);
+    account.status = this.resolvePaymentStatus(
+      this.toNumber(account.amountPaid),
+      effectiveFee,
+      account.dueDate,
+    );
     await this.feeRepo.save(account);
 
     return this.getStudentPaymentDetail(id);
@@ -388,13 +428,20 @@ export class FinanceService {
     }
     if (dto.dueDate) account.dueDate = dto.dueDate;
 
-    const effectiveFee = this.toNumber(account.monthlyFee) - this.toNumber(account.discountAmount) - this.toNumber(account.scholarshipAmount);
+    const effectiveFee =
+      this.toNumber(account.monthlyFee) -
+      this.toNumber(account.discountAmount) -
+      this.toNumber(account.scholarshipAmount);
     account.remainingBalance = Math.max(effectiveFee - this.toNumber(account.amountPaid), 0);
 
     if (dto.status) {
       account.status = dto.status;
     } else {
-      account.status = this.resolvePaymentStatus(this.toNumber(account.amountPaid), effectiveFee, account.dueDate);
+      account.status = this.resolvePaymentStatus(
+        this.toNumber(account.amountPaid),
+        effectiveFee,
+        account.dueDate,
+      );
     }
 
     await this.feeRepo.save(account);
@@ -452,8 +499,10 @@ export class FinanceService {
       .leftJoinAndSelect('members.student', 'student')
       .where('fam.billingMonth = :month', { month });
 
-    if (query.parentId) bundledQb.andWhere('fam.parentId = :parentId', { parentId: query.parentId });
-    if (query.paymentStatus) bundledQb.andWhere('fam.status = :status', { status: query.paymentStatus });
+    if (query.parentId)
+      bundledQb.andWhere('fam.parentId = :parentId', { parentId: query.parentId });
+    if (query.paymentStatus)
+      bundledQb.andWhere('fam.status = :status', { status: query.paymentStatus });
     if (query.search) {
       bundledQb.andWhere('parent.fullName ILIKE :search', { search: `%${query.search}%` });
     }
@@ -591,9 +640,16 @@ export class FinanceService {
       group.amountPaid = this.toNumber(group.amountPaid) + dto.amount;
     }
 
-    const effectiveFee = this.toNumber(group.monthlyTotal) - this.toNumber(group.discountAmount) - this.toNumber(group.scholarshipAmount);
+    const effectiveFee =
+      this.toNumber(group.monthlyTotal) -
+      this.toNumber(group.discountAmount) -
+      this.toNumber(group.scholarshipAmount);
     group.remainingBalance = Math.max(effectiveFee - this.toNumber(group.amountPaid), 0);
-    group.status = this.resolvePaymentStatus(this.toNumber(group.amountPaid), effectiveFee, group.dueDate);
+    group.status = this.resolvePaymentStatus(
+      this.toNumber(group.amountPaid),
+      effectiveFee,
+      group.dueDate,
+    );
     await this.familyRepo.save(group);
 
     return this.getFamilyPaymentDetail(id);
@@ -621,13 +677,13 @@ export class FinanceService {
       .getMany();
 
     const replacements = await this.replacementRepo.find({
-      where: [
-        { originalTeacherId: teacherId },
-        { replacementTeacherId: teacherId },
-      ],
+      where: [{ originalTeacherId: teacherId }, { replacementTeacherId: teacherId }],
     });
 
-    const studentEarnings = new Map<string, { sessions: number; earnings: number; isReplacement: boolean; replacementId?: string }>();
+    const studentEarnings = new Map<
+      string,
+      { sessions: number; earnings: number; isReplacement: boolean; replacementId?: string }
+    >();
 
     for (const session of sessions) {
       const attendances = session.studentAttendances || [];
@@ -635,9 +691,10 @@ export class FinanceService {
         const sid = att.studentId;
         if (!sid) continue;
 
-        const sessionDateStr = typeof session.sessionDate === 'string'
-          ? session.sessionDate
-          : fmtDate(new Date(session.sessionDate));
+        const sessionDateStr =
+          typeof session.sessionDate === 'string'
+            ? session.sessionDate
+            : fmtDate(new Date(session.sessionDate));
         const replacement = replacements.find(
           (r) =>
             r.studentId === sid &&
@@ -647,7 +704,12 @@ export class FinanceService {
         );
 
         const key = `${sid}-${replacement?.id || 'regular'}`;
-        const existing = studentEarnings.get(key) || { sessions: 0, earnings: 0, isReplacement: !!replacement, replacementId: replacement?.id };
+        const existing = studentEarnings.get(key) || {
+          sessions: 0,
+          earnings: 0,
+          isReplacement: !!replacement,
+          replacementId: replacement?.id,
+        };
         existing.sessions += 1;
         existing.earnings += sessionRate;
         studentEarnings.set(key, existing);
@@ -655,14 +717,20 @@ export class FinanceService {
 
       if (attendances.length === 0) {
         const key = `unassigned-regular`;
-        const existing = studentEarnings.get(key) || { sessions: 0, earnings: 0, isReplacement: false };
+        const existing = studentEarnings.get(key) || {
+          sessions: 0,
+          earnings: 0,
+          isReplacement: false,
+        };
         existing.sessions += 1;
         existing.earnings += sessionRate;
         studentEarnings.set(key, existing);
       }
     }
 
-    const assignedStudents = await this.studentRepo.count({ where: { teacherId, status: StudentStatus.ACTIVE } });
+    const assignedStudents = await this.studentRepo.count({
+      where: { teacherId, status: StudentStatus.ACTIVE },
+    });
     const details = Array.from(studentEarnings.entries()).map(([key, val]) => {
       const studentId = key.split('-')[0] !== 'unassigned' ? key.split('-')[0] : null;
       return {
@@ -704,18 +772,27 @@ export class FinanceService {
     const page = query.page || 1;
     const limit = query.limit || 20;
 
-    const qb = this.teacherRepo.createQueryBuilder('teacher').where('teacher.status = :status', { status: 'active' });
-    if (query.search) qb.andWhere('teacher.fullName ILIKE :search', { search: `%${query.search}%` });
+    const qb = this.teacherRepo
+      .createQueryBuilder('teacher')
+      .where('teacher.status = :status', { status: 'active' });
+    if (query.search)
+      qb.andWhere('teacher.fullName ILIKE :search', { search: `%${query.search}%` });
     if (query.teacherId) qb.andWhere('teacher.id = :teacherId', { teacherId: query.teacherId });
-    if (query.country) qb.andWhere('teacher.country ILIKE :country', { country: `%${query.country}%` });
+    if (query.country)
+      qb.andWhere('teacher.country ILIKE :country', { country: `%${query.country}%` });
 
     const total = await qb.getCount();
-    const teachers = await qb.skip((page - 1) * limit).take(limit).getMany();
+    const teachers = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
 
     const data = await Promise.all(
       teachers.map(async (t) => {
         const calc = await this.calculateTeacherEarnings(t.id, month);
-        const payroll = await this.payrollRepo.findOne({ where: { teacherId: t.id, billingMonth: month } });
+        const payroll = await this.payrollRepo.findOne({
+          where: { teacherId: t.id, billingMonth: month },
+        });
         return {
           teacherId: t.id,
           teacherName: t.fullName,
@@ -779,7 +856,9 @@ export class FinanceService {
 
     for (const teacher of teachers) {
       const calc = await this.calculateTeacherEarnings(teacher.id, month);
-      let record = await this.payrollRepo.findOne({ where: { teacherId: teacher.id, billingMonth: month } });
+      let record = await this.payrollRepo.findOne({
+        where: { teacherId: teacher.id, billingMonth: month },
+      });
 
       if (!record) {
         record = this.payrollRepo.create({
@@ -869,26 +948,44 @@ export class FinanceService {
       .filter((t) => t.transactionDate.startsWith(yearKey))
       .reduce((s, t) => s + this.toNumber(t.amount), 0);
 
-    const outstandingTrend = accounts.reduce((acc, a) => {
-      const m = a.billingMonth;
-      acc[m] = (acc[m] || 0) + this.toNumber(a.remainingBalance);
-      return acc;
-    }, {} as Record<string, number>);
+    const outstandingTrend = accounts.reduce(
+      (acc, a) => {
+        const m = a.billingMonth;
+        acc[m] = (acc[m] || 0) + this.toNumber(a.remainingBalance);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    const payrollTrend = payrolls.reduce((acc, p) => {
-      acc[p.billingMonth] = (acc[p.billingMonth] || 0) + this.toNumber(p.totalEarnings);
-      return acc;
-    }, {} as Record<string, number>);
+    const payrollTrend = payrolls.reduce(
+      (acc, p) => {
+        acc[p.billingMonth] = (acc[p.billingMonth] || 0) + this.toNumber(p.totalEarnings);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       dailyRevenue: +dailyRevenue.toFixed(2),
       weeklyRevenue: +weeklyRevenue.toFixed(2),
       monthlyRevenue: +monthlyRevenue.toFixed(2),
       annualRevenue: +annualRevenue.toFixed(2),
-      revenueTrends: Array.from(monthlyMap.entries()).map(([month, revenue]) => ({ month, revenue: +revenue.toFixed(2) })),
-      collectionTrends: Array.from(dailyMap.entries()).map(([date, collected]) => ({ date, collected: +collected.toFixed(2) })),
-      outstandingTrends: Object.entries(outstandingTrend).map(([month, outstanding]) => ({ month, outstanding: +outstanding.toFixed(2) })),
-      payrollTrends: Object.entries(payrollTrend).map(([month, payroll]) => ({ month, payroll: +payroll.toFixed(2) })),
+      revenueTrends: Array.from(monthlyMap.entries()).map(([month, revenue]) => ({
+        month,
+        revenue: +revenue.toFixed(2),
+      })),
+      collectionTrends: Array.from(dailyMap.entries()).map(([date, collected]) => ({
+        date,
+        collected: +collected.toFixed(2),
+      })),
+      outstandingTrends: Object.entries(outstandingTrend).map(([month, outstanding]) => ({
+        month,
+        outstanding: +outstanding.toFixed(2),
+      })),
+      payrollTrends: Object.entries(payrollTrend).map(([month, payroll]) => ({
+        month,
+        payroll: +payroll.toFixed(2),
+      })),
     };
   }
 
@@ -898,18 +995,31 @@ export class FinanceService {
 
     switch (type) {
       case 'parent-payments': {
-        const families = await this.getFamilyPayments({ ...query, billingMonth: month, limit: 1000 });
+        const families = await this.getFamilyPayments({
+          ...query,
+          billingMonth: month,
+          limit: 1000,
+        });
         const paid = families.data.filter((f: any) => f.status === PaymentStatus.PAID);
-        const unpaid = families.data.filter((f: any) => f.status === PaymentStatus.UNPAID || f.status === PaymentStatus.PARTIAL);
+        const unpaid = families.data.filter(
+          (f: any) => f.status === PaymentStatus.UNPAID || f.status === PaymentStatus.PARTIAL,
+        );
         return {
           paidFamilies: paid.length,
           unpaidFamilies: unpaid.length,
-          outstandingBalances: unpaid.reduce((s: number, f: any) => s + (f.remainingBalance || f.monthlyTotal || 0), 0),
+          outstandingBalances: unpaid.reduce(
+            (s: number, f: any) => s + (f.remainingBalance || f.monthlyTotal || 0),
+            0,
+          ),
           details: families.data,
         };
       }
       case 'student-payments': {
-        const students = await this.getStudentPayments({ ...query, billingMonth: month, limit: 1000 });
+        const students = await this.getStudentPayments({
+          ...query,
+          billingMonth: month,
+          limit: 1000,
+        });
         return {
           paidStudents: students.data.filter((s) => s.status === PaymentStatus.PAID).length,
           unpaidStudents: students.data.filter((s) => s.status === PaymentStatus.UNPAID).length,
@@ -918,7 +1028,11 @@ export class FinanceService {
         };
       }
       case 'teacher-payroll': {
-        const teachers = await this.getTeacherPayments({ ...query, billingMonth: month, limit: 1000 });
+        const teachers = await this.getTeacherPayments({
+          ...query,
+          billingMonth: month,
+          limit: 1000,
+        });
         const payrolls = await this.payrollRepo.find({ where: { billingMonth: month } });
         return {
           teacherEarnings: teachers.data.reduce((s, t) => s + t.earnings, 0),
