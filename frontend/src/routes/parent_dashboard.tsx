@@ -133,11 +133,11 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
   const [lang, setLang] = useState('English');
   
   return (
-    <div className="h-24 flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full ml-72 max-w-[calc(100%-288px)] border-b border-border shadow-sm">
-      <div className="flex items-center gap-6">
+    <div className="h-24 flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
+      <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
           <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
           
-          <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border">
+          <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
             <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -483,7 +483,7 @@ function ParentDashboard() {
         {/* Topbar */}
         <Topbar parent={data?.parent} onTabChange={setActiveTab} />
 
-        <main className="p-12 space-y-12 max-w-7xl w-full mx-auto">
+        <main className="p-12 space-y-12 w-full">
           
           {/* ================================================================ */}
           {/* TAB: DASHBOARD OVERVIEW */}
