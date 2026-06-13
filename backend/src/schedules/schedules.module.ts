@@ -20,4 +20,3 @@ import { ZoomModule } from '../zoom/zoom.module';
   exports: [SchedulesService, TypeOrmModule],
 })
 export class SchedulesModule {}
-
