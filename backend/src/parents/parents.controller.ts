@@ -38,13 +38,25 @@ export class ParentsController {
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.PARENT,
+  )
   findOne(@Param('id') id: string) {
     return this.parentsService.findOne(id);
   }
 
   @Get(':id/students')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER, UserRole.PARENT)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.QIRAT_MANAGER,
+    UserRole.TEACHER,
+    UserRole.PARENT,
+  )
   getParentStudents(@Param('id') id: string) {
     return this.parentsService.getParentStudents(id);
   }

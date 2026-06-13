@@ -45,41 +45,49 @@ export class ParentDashboardController {
     });
 
     if (!parent) {
-      return { 
+      return {
         message: 'Parent profile not found',
         parent: { name: 'Ahmed', email: req.user.email },
-        stats: { totalChildren: 0, activeClasses: 0, attendanceRate: "0", memorizationProgress: "0", pendingHomework: 0, upcomingExams: 0 },
+        stats: {
+          totalChildren: 0,
+          activeClasses: 0,
+          attendanceRate: '0',
+          memorizationProgress: '0',
+          pendingHomework: 0,
+          upcomingExams: 0,
+        },
         children: [],
         activities: [],
-        schedules: []
+        schedules: [],
       };
     }
 
-    const studentIds = parent.students?.map(s => s.id) || [];
+    const studentIds = parent.students?.map((s) => s.id) || [];
 
     // 2. Summary Stats
     const totalChildren = studentIds.length;
     let activeClasses = 0;
     let pendingHomework = 0;
-    let upcomingExams = 0;
+    const upcomingExams = 0;
 
     if (totalChildren > 0) {
       activeClasses = await this.schedulesRepository.count({
-        where: { studentId: In(studentIds) }
+        where: { studentId: In(studentIds) },
       });
 
       pendingHomework = await this.homeworkRepository.count({
-        where: { studentId: In(studentIds), status: 'Pending' as any }
+        where: { studentId: In(studentIds), status: 'Pending' as any },
       });
     }
-    
+
     // Calculate aggregate attendance and progress for children
-    const avgAttendance = totalChildren > 0
-      ? parent.students.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / totalChildren
-      : 0;
+    const avgAttendance =
+      totalChildren > 0
+        ? parent.students.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) / totalChildren
+        : 0;
 
     let progressByStudent: Record<string, Progress> = {};
-    let logsByStudent: Record<string, ProgressLog[]> = {};
+    const logsByStudent: Record<string, ProgressLog[]> = {};
     if (totalChildren > 0) {
       const progressRecords = await this.progressRepository.find({
         where: { studentId: In(studentIds) },
@@ -104,39 +112,44 @@ export class ParentDashboardController {
         }
       }
     }
-    
-    const avgProgress = totalChildren > 0 && Object.keys(progressByStudent).length > 0
-      ? Object.values(progressByStudent).reduce((acc, p) => acc + (p.progressPercentage || 0), 0) / totalChildren
-      : totalChildren > 0
-        ? parent.students.reduce((acc, s) => acc + Number(s.progressRate || 0), 0) / totalChildren
-        : 0;
+
+    const avgProgress =
+      totalChildren > 0 && Object.keys(progressByStudent).length > 0
+        ? Object.values(progressByStudent).reduce(
+            (acc, p) => acc + (p.progressPercentage || 0),
+            0,
+          ) / totalChildren
+        : totalChildren > 0
+          ? parent.students.reduce((acc, s) => acc + Number(s.progressRate || 0), 0) / totalChildren
+          : 0;
 
     // 3. Child Progress Overviews
-    const children = parent.students?.map(s => {
-      const prog = progressByStudent[s.id];
-      const memorization = prog?.progressPercentage ?? Number(s.progressRate || 0);
-      return {
-        id: s.id,
-        name: s.fullName,
-        photo: s.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.fullName}`,
-        level: s.level || 'Juz 30 (Amma)',
-        teacher: s.teacher?.fullName || 'Sheikh Abdullah',
-        attendance: Number(s.attendanceRate || 99),
-        memorization,
-        currentSurah: prog?.lastStudiedSurah || 'Not started',
-        currentAyah: prog?.lastStudiedAyah || 0,
-        currentPage: prog?.lastStudiedPage || 0,
-        status: s.status?.toUpperCase() || 'ACTIVE',
-        recentLogs: (logsByStudent[s.id] || []).map((log) => ({
-          id: log.id,
-          surahName: log.surahName,
-          lastStudiedPage: log.lastStudiedPage,
-          lastStudiedAyah: log.lastStudiedAyah,
-          teacherName: log.teacher?.fullName || 'Teacher',
-          date: log.createdAt,
-        })),
-      };
-    }) || [];
+    const children =
+      parent.students?.map((s) => {
+        const prog = progressByStudent[s.id];
+        const memorization = prog?.progressPercentage ?? Number(s.progressRate || 0);
+        return {
+          id: s.id,
+          name: s.fullName,
+          photo: s.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${s.fullName}`,
+          level: s.level || 'Juz 30 (Amma)',
+          teacher: s.teacher?.fullName || 'Sheikh Abdullah',
+          attendance: Number(s.attendanceRate || 99),
+          memorization,
+          currentSurah: prog?.lastStudiedSurah || 'Not started',
+          currentAyah: prog?.lastStudiedAyah || 0,
+          currentPage: prog?.lastStudiedPage || 0,
+          status: s.status?.toUpperCase() || 'ACTIVE',
+          recentLogs: (logsByStudent[s.id] || []).map((log) => ({
+            id: log.id,
+            surahName: log.surahName,
+            lastStudiedPage: log.lastStudiedPage,
+            lastStudiedAyah: log.lastStudiedAyah,
+            teacherName: log.teacher?.fullName || 'Teacher',
+            date: log.createdAt,
+          })),
+        };
+      }) || [];
 
     // 4. Recent Activities & Detailed Feedbacks
     let activities = [];
@@ -145,10 +158,10 @@ export class ParentDashboardController {
       const recentFeedback = await this.feedbackRepository.find({
         where: { studentId: In(studentIds) },
         order: { createdAt: 'DESC' },
-        relations: ['teacher', 'student']
+        relations: ['teacher', 'student'],
       });
 
-      activities = recentFeedback.slice(0, 5).map(f => ({
+      activities = recentFeedback.slice(0, 5).map((f) => ({
         id: f.id,
         type: 'Message',
         title: 'New Message',
@@ -156,7 +169,7 @@ export class ParentDashboardController {
         date: f.createdAt,
       }));
 
-      feedbacks = recentFeedback.map(f => ({
+      feedbacks = recentFeedback.map((f) => ({
         id: f.id,
         content: f.content,
         createdAt: f.createdAt,
@@ -174,7 +187,7 @@ export class ParentDashboardController {
           title: 'Exam Result Posted',
           content: `Lina scored 95% in Arabic Basics`,
           date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        }
+        },
       ];
     }
 
@@ -183,10 +196,10 @@ export class ParentDashboardController {
     if (totalChildren > 0) {
       const allSchedules = await this.schedulesRepository.find({
         where: { studentId: In(studentIds) },
-        relations: ['teacher', 'student']
+        relations: ['teacher', 'student'],
       });
 
-      schedules = allSchedules.map(sc => ({
+      schedules = allSchedules.map((sc) => ({
         id: sc.id,
         studentId: sc.studentId,
         childName: sc.student?.fullName || 'Child',
@@ -195,16 +208,41 @@ export class ParentDashboardController {
         dayOfWeek: sc.dayOfWeek,
         startTimeString: sc.startTimeString,
         endTimeString: sc.endTimeString,
-        time: sc.startTimeString && sc.endTimeString ? `${sc.startTimeString} - ${sc.endTimeString}` : '04:30 PM',
+        time:
+          sc.startTimeString && sc.endTimeString
+            ? `${sc.startTimeString} - ${sc.endTimeString}`
+            : '04:30 PM',
         meetingLink: sc.meetingLink,
-        status: sc.status
+        status: sc.status,
       }));
     }
 
     if (schedules.length === 0) {
       schedules = [
-        { id: '1', studentId: studentIds[0] || '1', childName: children[0]?.name || 'Zaid', className: 'Hifz Class', teacher: 'Sheikh Abdullah', time: '04:30 PM', dayOfWeek: 'Monday', startTimeString: '16:30', endTimeString: '17:30', status: 'active' },
-        { id: '2', studentId: studentIds[1] || '2', childName: children[1]?.name || 'Lina', className: 'Qaida Class', teacher: 'Ustadha Maryam', time: '05:30 PM', dayOfWeek: 'Tuesday', startTimeString: '17:30', endTimeString: '18:30', status: 'active' }
+        {
+          id: '1',
+          studentId: studentIds[0] || '1',
+          childName: children[0]?.name || 'Zaid',
+          className: 'Hifz Class',
+          teacher: 'Sheikh Abdullah',
+          time: '04:30 PM',
+          dayOfWeek: 'Monday',
+          startTimeString: '16:30',
+          endTimeString: '17:30',
+          status: 'active',
+        },
+        {
+          id: '2',
+          studentId: studentIds[1] || '2',
+          childName: children[1]?.name || 'Lina',
+          className: 'Qaida Class',
+          teacher: 'Ustadha Maryam',
+          time: '05:30 PM',
+          dayOfWeek: 'Tuesday',
+          startTimeString: '17:30',
+          endTimeString: '18:30',
+          status: 'active',
+        },
       ];
     }
 
@@ -216,7 +254,7 @@ export class ParentDashboardController {
         order: { dueDate: 'DESC' },
         relations: ['student'],
       });
-      homeworkList = allHomework.map(h => ({
+      homeworkList = allHomework.map((h) => ({
         id: h.id,
         title: h.title,
         description: h.description,
@@ -233,7 +271,7 @@ export class ParentDashboardController {
         id: parent.id,
         name: parent.fullName,
         email: parent.email,
-        photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + parent.fullName,
+        photo: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + parent.fullName,
       },
       stats: {
         totalChildren,
@@ -241,13 +279,13 @@ export class ParentDashboardController {
         attendanceRate: avgAttendance.toFixed(1),
         memorizationProgress: avgProgress.toFixed(0),
         pendingHomework: pendingHomework,
-        upcomingExams: 1
+        upcomingExams: 1,
       },
       children,
       activities,
       schedules,
       homework: homeworkList,
-      feedbacks
+      feedbacks,
     };
   }
 }
