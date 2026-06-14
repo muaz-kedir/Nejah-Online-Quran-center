@@ -1,3 +1,4 @@
+import { redirect } from '@tanstack/react-router';
 import { API_BASE, api, apiHeaders, apiUrl } from '@/lib/api';
 
 export { API_BASE, api, apiHeaders, apiUrl };
@@ -7,12 +8,10 @@ export function requireStudentAuth() {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('userRole');
   if (!token) {
-    window.location.href = '/login';
-    throw new Error('Not authenticated');
+    throw redirect({ to: '/login' });
   }
   if (role !== 'student') {
-    window.location.href = '/dashboard';
-    throw new Error('Access denied');
+    throw redirect({ to: '/dashboard' });
   }
 }
 
