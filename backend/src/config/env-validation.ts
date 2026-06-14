@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 
 const REQUIRED_ZOOM_VARS = ['ZOOM_ACCOUNT_ID', 'ZOOM_CLIENT_ID', 'ZOOM_CLIENT_SECRET'];
 
-const RECOMMENDED_VARS = ['ZOOM_SECRET_TOKEN', 'ENCRYPTION_KEY'];
+const RECOMMENDED_VARS = ['ZOOM_SECRET_TOKEN', 'ENCRYPTION_KEY', 'EXCHANGE_RATE_API_KEY'];
 
 export function validateEnvironment(logger: Logger): void {
   const missing: string[] = [];
