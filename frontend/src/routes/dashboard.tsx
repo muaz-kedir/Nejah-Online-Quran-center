@@ -13,23 +13,6 @@ import { requireAuth } from '@/lib/auth';
 function DashboardContent() {
   const { t } = useApp();
   const [userName, setUserName] = useState('Administrator');
-  const [activeStudents, setActiveStudents] = useState<number | null>(null);
-
-  useEffect(() => {
-    const fetchActiveStudents = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:3000/api/students?limit=1', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setActiveStudents(data.meta?.total || 0);
-      } catch (error) {
-        console.error('Failed to fetch active students:', error);
-      }
-    };
-    fetchActiveStudents();
-  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -42,7 +25,7 @@ function DashboardContent() {
       <PageHeader
         eyebrow={t.managementOverview}
         title={`Assalamu Alaikum, ${userName}`}
-        description={`Welcome back to the Nejah command center. Your institution currently serves ${activeStudents !== null ? activeStudents.toLocaleString() : '...'} active seekers of knowledge.`}
+        description="Welcome back to the Nejah command center."
       />
 
       <DashboardCards />
