@@ -22,6 +22,10 @@ import { ReportsModule } from './reports/reports.module';
 import { FinanceModule } from './finance/finance.module';
 import { QiratModule } from './qirat/qirat.module';
 import { ZoomModule } from './zoom/zoom.module';
+import { WebsocketModule } from './websocket/websocket.module';
+import { LearningGoalsModule } from './learning-goals/learning-goals.module';
+import { FeeConfigModule } from './fee-config/fee-config.module';
+import { CurrencyModule } from './currency/currency.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -91,6 +95,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     FinanceModule,
     QiratModule,
     ZoomModule,
+    WebsocketModule,
+    LearningGoalsModule,
+    FeeConfigModule,
+    CurrencyModule,
     ScheduleModule.forRoot(),
   ],
 })
