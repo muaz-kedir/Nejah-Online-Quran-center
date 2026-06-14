@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Student } from '../students/entities/student.entity';
@@ -6,6 +6,7 @@ import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
 import { ClassSession } from '../attendance/entities/class-session.entity';
+import { AppGateway } from '../websocket/websocket.gateway';
 import {
   Notification,
   NotificationType,
@@ -31,6 +32,8 @@ export class NotificationsService {
     private userRepository: Repository<User>,
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+    @Inject(forwardRef(() => AppGateway))
+    private appGateway: AppGateway,
   ) {}
 
   async notifyMeetingStarted(session: ClassSession, assignedStudentIds: string[]): Promise<void> {
@@ -177,19 +180,34 @@ export class NotificationsService {
 
     if (payload.recipientIds && payload.recipientIds.length > 0) {
       const uniqueRecipientIds = Array.from(new Set(payload.recipientIds));
-      const notificationsToSave = uniqueRecipientIds.map((userId) => {
-        return this.notificationRepository.create({
-          userId,
-          type: NotificationType.IN_APP,
-          channel,
-          title: payload.title,
-          content: payload.message,
-          dataJson: payload.data,
-          isRead: false,
-          sentAt: new Date(),
+      const saved = await this.notificationRepository.save(
+        uniqueRecipientIds.map((userId) =>
+          this.notificationRepository.create({
+            userId,
+            type: NotificationType.IN_APP,
+            channel,
+            title: payload.title,
+            content: payload.message,
+            dataJson: payload.data,
+            isRead: false,
+            sentAt: new Date(),
+          }),
+        ),
+      );
+
+      // Emit real-time WebSocket event for each recipient
+      for (const notif of saved) {
+        this.appGateway.emitToUser(notif.userId, 'notification:new', {
+          id: notif.id,
+          channel: notif.channel,
+          title: notif.title,
+          content: notif.content,
+          data: notif.dataJson,
+          isRead: notif.isRead,
+          sentAt: notif.sentAt,
+          createdAt: notif.createdAt,
         });
-      });
-      await this.notificationRepository.save(notificationsToSave);
+      }
     }
   }
 
@@ -236,6 +254,19 @@ export class NotificationsService {
       notification.isRead = true;
       await this.notificationRepository.save(notification);
     }
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    return this.notificationRepository.count({
+      where: { userId, isRead: false },
+    });
+  }
+
+  async markAllAsRead(userId: string): Promise<void> {
+    await this.notificationRepository.update(
+      { userId, isRead: false },
+      { isRead: true },
+    );
   }
 
   async sendCustomNotifications(
