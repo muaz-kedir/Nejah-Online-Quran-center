@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { 
   Search, 
   Bell, 
@@ -1463,12 +1463,10 @@ export const Route = createFileRoute('/parent_dashboard')({
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('userRole');
       if (!token) {
-        window.location.href = '/login';
-        throw new Error('Not authenticated');
+        throw redirect({ to: '/login' });
       }
       if (role !== 'parent') {
-        window.location.href = '/dashboard';
-        throw new Error('Access denied: Parent role required');
+        throw redirect({ to: '/dashboard' });
       }
     }
   },
