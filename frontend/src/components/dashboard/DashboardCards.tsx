@@ -14,20 +14,24 @@ export const DashboardCards = memo(function DashboardCards() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const base = 'http://localhost:3000/api';
 
-        const studentsRes = await fetch('http://localhost:3000/api/students?limit=1', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const studentsData = await studentsRes.json();
+        const [studentsRes, teachersRes] = await Promise.all([
+          fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
+          fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
+        ]);
+
+        const [studentsData, teachersData] = await Promise.all([
+          studentsRes.json(),
+          teachersRes.json(),
+        ]);
+
         const totalStudents = studentsData.meta?.total || 0;
-
-        const teachersRes = await fetch('http://localhost:3000/api/teachers?limit=1', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const teachersData = await teachersRes.json();
         const totalTeachers = teachersData.meta?.total || 0;
 
         setStats({
@@ -37,6 +41,7 @@ export const DashboardCards = memo(function DashboardCards() {
           attendanceRate: 94.5,
         });
       } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('Failed to fetch stats:', error);
       } finally {
         setLoading(false);
@@ -44,6 +49,7 @@ export const DashboardCards = memo(function DashboardCards() {
     };
 
     fetchStats();
+    return () => controller.abort();
   }, []);
 
   const display = (v: string | number) => (loading ? '...' : v);
