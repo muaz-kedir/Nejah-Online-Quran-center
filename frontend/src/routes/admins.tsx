@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/ui/role-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Shield, Wallet, BookOpen, Mail, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,7 +28,7 @@ function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loadin
         </div>
         <div>
           <h3 className="font-semibold text-foreground">{user.name}</h3>
-          <Badge variant="outline" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+          <RoleBadge role={user.role} variant="pill" />
         </div>
       </div>
       <div className="space-y-2 text-sm text-nejah-slate-blue">

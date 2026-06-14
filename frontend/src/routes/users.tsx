@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/ui/role-badge';
 import { AddUserModal } from '@/components/users/AddUserModal';
 import { EditUserModal } from '@/components/users/EditUserModal';
 import { DeleteUserModal } from '@/components/users/DeleteUserModal';
@@ -106,17 +106,6 @@ function UsersPage() {
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    const colors: Record<string, string> = {
-      super_admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-      admin: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-      teacher: 'bg-primary/10 text-nejah-electric border-nejah-electric/20',
-      student: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-      parent: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    };
-    return colors[role] || 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
-  };
-
   return (
     <DashboardLayout>
       <AmbientSection className="admin-page">
@@ -201,9 +190,7 @@ function UsersPage() {
                     <TableCell className="font-medium text-foreground">{user.name}</TableCell>
                     <TableCell className="text-nejah-slate-blue">{user.email}</TableCell>
                     <TableCell>
-                      <Badge className={getRoleBadgeColor(user.role) + ' text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none'}>
-                        {user.role.replace('_', ' ').toUpperCase()}
-                      </Badge>
+                      <RoleBadge role={user.role} />
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? 'default' : 'secondary'}>

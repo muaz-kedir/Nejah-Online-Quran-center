@@ -11,6 +11,7 @@ import { requireAuth } from '@/lib/auth';
 import { API_BASE } from '@/lib/api';
 import { User, Key, Save, Loader2, Camera } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import { RoleBadge } from '@/components/ui/role-badge';
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -177,9 +178,7 @@ function ProfilePage() {
                 </div>
                 <h2 className="mt-4 text-xl font-bold text-foreground">{profile?.name}</h2>
                 <p className="text-muted-foreground">{profile?.email}</p>
-                <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-nejah-sapphire uppercase tracking-wider">
-                  {profile?.role?.replace('_', ' ')}
-                </div>
+                {profile?.role && <div className="mt-2"><RoleBadge role={profile.role} variant="pill" /></div>}
               </div>
             </CardContent>
           </Card>
