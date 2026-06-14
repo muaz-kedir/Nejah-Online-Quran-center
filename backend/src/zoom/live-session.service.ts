@@ -28,7 +28,13 @@ export class LiveSessionService {
   ) {}
 
   async create(dto: CreateLiveSessionDto): Promise<LiveSession> {
-    if (dto.scheduledStart >= dto.scheduledEnd) {
+    const scheduledEnd = dto.scheduledEnd || new Date(dto.scheduledStart.getTime() + 60 * 60 * 1000);
+
+    if (!dto.teacherId) {
+      throw new BadRequestException('teacherId is required');
+    }
+
+    if (dto.scheduledStart >= scheduledEnd) {
       throw new BadRequestException('Scheduled start must be before scheduled end');
     }
 
@@ -37,7 +43,7 @@ export class LiveSessionService {
       studentId: dto.studentId,
       scheduleId: dto.scheduleId,
       scheduledStart: dto.scheduledStart,
-      scheduledEnd: dto.scheduledEnd,
+      scheduledEnd,
       status: dto.status || LiveSessionStatus.SCHEDULED,
       notes: dto.notes,
       metadata: dto.metadata,
@@ -58,8 +64,9 @@ export class LiveSessionService {
       return this.findById(session.id);
     }
 
+    const endTime = dto.scheduledEnd || new Date(dto.scheduledStart.getTime() + 60 * 60 * 1000);
     const durationMinutes = Math.round(
-      (dto.scheduledEnd.getTime() - dto.scheduledStart.getTime()) / 60000,
+      (endTime.getTime() - dto.scheduledStart.getTime()) / 60000,
     );
 
     const meeting = await this.zoomService.createMeeting(
@@ -159,10 +166,10 @@ export class LiveSessionService {
   async update(id: string, dto: UpdateLiveSessionDto): Promise<LiveSession> {
     const session = await this.findById(id);
 
+    const scheduledEnd = dto.scheduledEnd || session.scheduledEnd;
     if (dto.scheduledStart || dto.scheduledEnd) {
       const start = dto.scheduledStart || session.scheduledStart;
-      const end = dto.scheduledEnd || session.scheduledEnd;
-      if (start >= end) {
+      if (start >= scheduledEnd) {
         throw new BadRequestException('Scheduled start must be before scheduled end');
       }
     }
@@ -230,17 +237,25 @@ export class LiveSessionService {
     await this.liveSessionRepository.save(session);
 
     const fullSession = await this.findById(id);
-    const studentIds = fullSession.attendances?.map((a) => a.studentId) || [];
+    const attendanceIds = fullSession.attendances?.map((a) => a.studentId) || [];
+    const studentUserId = fullSession.student?.userId;
+    const recipientIds: string[] = [];
+    if (studentUserId) recipientIds.push(studentUserId);
+    for (const sid of attendanceIds) {
+      if (!recipientIds.includes(sid)) recipientIds.push(sid);
+    }
 
-    try {
-      await this.notificationsService.sendCustomNotifications(
-        studentIds,
-        `Class Started: ${fullSession.schedule?.className || 'Quran Class'}`,
-        `Your class has started. Click to join.`,
-        { sessionId: id, meetingLink: session.zoomJoinUrl },
-      );
-    } catch (err) {
-      this.logger.error('Failed to send meeting started notifications', err);
+    if (recipientIds.length > 0) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          recipientIds,
+          `Class Started: ${fullSession.schedule?.className || 'Quran Class'}`,
+          `Your class has started. Click to join.`,
+          { sessionId: id, meetingLink: session.zoomJoinUrl },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send meeting started notifications', err);
+      }
     }
 
     return fullSession;
@@ -315,24 +330,32 @@ export class LiveSessionService {
 
   async getTeacherSessions(
     teacherId: string,
-    page = 1,
-    limit = 20,
+    page?: number,
+    limit?: number,
   ): Promise<{
     data: LiveSession[];
     meta: { total: number; page: number; limit: number; totalPages: number };
   }> {
-    return this.findAll({ teacherId, page, limit } as QueryLiveSessionDto);
+    return this.findAll({
+      teacherId,
+      page: Number(page) || 1,
+      limit: Number(limit) || 20,
+    } as QueryLiveSessionDto);
   }
 
   async getStudentSessions(
     studentId: string,
-    page = 1,
-    limit = 20,
+    page?: number,
+    limit?: number,
   ): Promise<{
     data: LiveSession[];
     meta: { total: number; page: number; limit: number; totalPages: number };
   }> {
-    return this.findAll({ studentId, page, limit } as QueryLiveSessionDto);
+    return this.findAll({
+      studentId,
+      page: Number(page) || 1,
+      limit: Number(limit) || 20,
+    } as QueryLiveSessionDto);
   }
 
   async updateZoomMeeting(

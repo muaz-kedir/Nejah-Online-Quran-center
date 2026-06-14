@@ -3,8 +3,9 @@ import { Type } from 'class-transformer';
 import { LiveSessionStatus } from '../enums/live-session-status.enum';
 
 export class CreateLiveSessionDto {
+  @IsOptional()
   @IsUUID()
-  teacherId: string;
+  teacherId?: string;
 
   @IsOptional()
   @IsUUID()
@@ -18,9 +19,10 @@ export class CreateLiveSessionDto {
   @Type(() => Date)
   scheduledStart: Date;
 
+  @IsOptional()
   @IsDate()
   @Type(() => Date)
-  scheduledEnd: Date;
+  scheduledEnd?: Date;
 
   @IsOptional()
   @IsEnum(LiveSessionStatus)
