@@ -10,11 +10,11 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
   const location = useLocation();
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
   const [mobileOpen, setMobileOpen] = useState(isOpen);
-  const [userRole, setUserRole] = useState('student');
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole') || 'student';
+      const role = localStorage.getItem('userRole');
       setUserRole(role);
     }
   }, []);
@@ -34,7 +34,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
 
   const toggleCollapse = useCallback(() => setSidebarCollapsed(!sidebarCollapsed), [sidebarCollapsed, setSidebarCollapsed]);
 
-  const menuItems = menuByRole[userRole] || menuByRole.student;
+  const menuItems = userRole ? (menuByRole[userRole] || menuByRole.student) : [];
 
   const menuLabels: Record<string, string> = {
     Dashboard: t.dashboard,
@@ -126,6 +126,17 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-4">
+          {!userRole && (
+            <div className="space-y-3 px-3">
+              {[1,2,3,4,5].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-5 w-5 rounded-lg bg-nejah-slate-blue/10 animate-pulse" />
+                  {!sidebarCollapsed && <div className="h-3 flex-1 rounded-md bg-nejah-slate-blue/10 animate-pulse" />}
+                </div>
+              ))}
+            </div>
+          )}
+          {userRole && (
           <ul className="space-y-0.5">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -142,7 +153,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
                       sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
                       isActive
                         ? 'nav-item-active text-foreground'
-                        : 'text-nejah-slate-blue nav-item-hover hover:text-foreground',
+                        : 'text-foreground/60 nav-item-hover hover:text-foreground',
                     )}
                   >
                     {isActive && (
@@ -152,7 +163,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
                     <Icon
                       className={cn(
                         'h-5 w-5 flex-shrink-0 transition-transform duration-200',
-                        isActive ? 'text-nejah-electric' : 'text-nejah-slate-blue group-hover:text-foreground',
+                        isActive ? 'text-nejah-electric' : 'text-foreground/50 group-hover:text-foreground',
                         !sidebarCollapsed && 'group-hover:scale-110',
                       )}
                     />
@@ -181,6 +192,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
               );
             })}
           </ul>
+          )}
         </nav>
 
         <SilverDivider />
