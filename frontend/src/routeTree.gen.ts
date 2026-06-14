@@ -50,7 +50,9 @@ import { Route as Finance_reportsRouteImport } from './routes/finance_reports'
 import { Route as Finance_notificationsRouteImport } from './routes/finance_notifications'
 import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
 import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
+import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as Currency_settingsRouteImport } from './routes/currency_settings'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -276,9 +278,19 @@ const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
   path: '/finance_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Fee_settingsRoute = Fee_settingsRouteImport.update({
+  id: '/fee_settings',
+  path: '/fee_settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Currency_settingsRoute = Currency_settingsRouteImport.update({
+  id: '/currency_settings',
+  path: '/currency_settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttendanceRoute = AttendanceRouteImport.update({
@@ -384,7 +396,9 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
@@ -447,7 +461,9 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
@@ -511,7 +527,9 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
@@ -576,7 +594,9 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/currency_settings'
     | '/dashboard'
+    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
     | '/finance_notifications'
@@ -639,7 +659,9 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/currency_settings'
     | '/dashboard'
+    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
     | '/finance_notifications'
@@ -702,7 +724,9 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/currency_settings'
     | '/dashboard'
+    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
     | '/finance_notifications'
@@ -766,7 +790,9 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
   AttendanceRoute: typeof AttendanceRoute
+  Currency_settingsRoute: typeof Currency_settingsRoute
   DashboardRoute: typeof DashboardRoute
+  Fee_settingsRoute: typeof Fee_settingsRoute
   Finance_dashboardRoute: typeof Finance_dashboardRoute
   Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
   Finance_notificationsRoute: typeof Finance_notificationsRoute
@@ -1111,11 +1137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Finance_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fee_settings': {
+      id: '/fee_settings'
+      path: '/fee_settings'
+      fullPath: '/fee_settings'
+      preLoaderRoute: typeof Fee_settingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/currency_settings': {
+      id: '/currency_settings'
+      path: '/currency_settings'
+      fullPath: '/currency_settings'
+      preLoaderRoute: typeof Currency_settingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attendance': {
@@ -1284,7 +1324,9 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
   AttendanceRoute: AttendanceRoute,
+  Currency_settingsRoute: Currency_settingsRoute,
   DashboardRoute: DashboardRoute,
+  Fee_settingsRoute: Fee_settingsRoute,
   Finance_dashboardRoute: Finance_dashboardRoute,
   Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
   Finance_notificationsRoute: Finance_notificationsRoute,

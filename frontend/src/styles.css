@@ -76,7 +76,7 @@
   --secondary-foreground: #0b355b;
 
   --muted: #e6f0fa;
-  --muted-foreground: #91a7bc;
+  --muted-foreground: #5A7288;
 
   --accent: #0b355b;
   --accent-foreground: #ffffff;
@@ -89,6 +89,8 @@
   --border: rgba(28, 61, 90, 0.25);
   --input: rgba(28, 61, 90, 0.25);
   --ring: #0f62ac;
+
+  --color-nejah-slate-blue: #5A7288;
 }
 
 .dark {
@@ -122,6 +124,8 @@
   --border: #1c3d5a;
   --input: #1c3d5a;
   --ring: #0091ff;
+
+  --color-nejah-slate-blue: #91a7bc;
 }
 
 @layer base {
@@ -213,7 +217,7 @@
   }
 
   .nav-item-active {
-    @apply bg-gradient-to-r from-nejah-electric/15 to-transparent text-nejah-white-tint;
+    @apply bg-gradient-to-r from-nejah-electric/15 to-transparent;
   }
 
   .nav-item-hover {
