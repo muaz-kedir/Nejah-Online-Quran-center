@@ -17,7 +17,13 @@ export default defineConfig({
       dedupe: ["react", "react-dom", "react/jsx-runtime"],
     },
     optimizeDeps: {
-      include: ["react", "react-dom", "react/jsx-runtime"],
+      include: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "@tanstack/react-start",
+        "@tanstack/react-start/plugin",
+      ],
     },
   },
 });

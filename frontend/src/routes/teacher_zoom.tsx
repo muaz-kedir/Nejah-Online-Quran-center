@@ -58,8 +58,7 @@ function TeacherZoomPage() {
   const [scheduling, setScheduling] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     studentId: "",
-    scheduledStart: "",
-    scheduledEnd: "",
+    scheduledStart: new Date().toISOString().slice(0, 16),
     notes: "",
   });
 
@@ -77,24 +76,24 @@ function TeacherZoomPage() {
   };
 
   const handleScheduleSession = async () => {
-    if (!scheduleForm.studentId || !scheduleForm.scheduledStart || !scheduleForm.scheduledEnd) {
-      toast.error("Please fill all required fields");
+    if (!scheduleForm.studentId || !scheduleForm.scheduledStart) {
+      toast.error("Please select a student and start time");
       return;
     }
     setScheduling(true);
     try {
+      const startDate = new Date(scheduleForm.scheduledStart);
       await api("/live-sessions/with-zoom", {
         method: "POST",
         body: JSON.stringify({
           studentId: scheduleForm.studentId,
-          scheduledStart: new Date(scheduleForm.scheduledStart).toISOString(),
-          scheduledEnd: new Date(scheduleForm.scheduledEnd).toISOString(),
+          scheduledStart: startDate.toISOString(),
           notes: scheduleForm.notes || undefined,
         }),
       });
       toast.success("Session scheduled! Zoom meeting created and student notified.");
       setShowScheduleModal(false);
-      setScheduleForm({ studentId: "", scheduledStart: "", scheduledEnd: "", notes: "" });
+      setScheduleForm({ studentId: "", scheduledStart: new Date().toISOString().slice(0, 16), notes: "" });
       fetchAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to schedule session");
@@ -486,33 +485,32 @@ function TeacherZoomPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    Start Date & Time <span className="text-red-500">*</span>
-                  </Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Start Date & Time <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-2 items-center">
                   <input
                     type="datetime-local"
                     value={scheduleForm.scheduledStart}
                     onChange={(e) =>
                       setScheduleForm({ ...scheduleForm, scheduledStart: e.target.value })
                     }
-                    className="w-full h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
+                    className="flex-1 h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    End Date & Time <span className="text-red-500">*</span>
-                  </Label>
-                  <input
-                    type="datetime-local"
-                    value={scheduleForm.scheduledEnd}
-                    onChange={(e) =>
-                      setScheduleForm({ ...scheduleForm, scheduledEnd: e.target.value })
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setScheduleForm({ ...scheduleForm, scheduledStart: new Date().toISOString().slice(0, 16) })
                     }
-                    className="w-full h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
-                  />
+                    className="h-12 px-4 rounded-xl text-xs font-bold bg-muted hover:bg-muted/80 transition-colors border border-border dark:border-white/10"
+                  >
+                    Now
+                  </button>
                 </div>
+                <p className="text-[10px] text-nejah-slate-blue font-medium mt-1">
+                  Session duration is auto-set to 60 minutes. Ends when you click "End Session".
+                </p>
               </div>
 
               <div className="space-y-2">

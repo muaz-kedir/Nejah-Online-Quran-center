@@ -3,12 +3,16 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
-import { ChevronLeft, User, Mail, BookOpen, ClipboardList, TrendingUp } from 'lucide-react';
+import { ChevronLeft, User, Mail, BookOpen, ClipboardList, TrendingUp, Video, Loader2, Sparkles, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TeacherStudentHomeworkPanel } from '@/components/teachers/TeacherStudentHomeworkPanel';
 import { TeacherStudentProgressPanel } from '@/components/teachers/TeacherStudentProgressPanel';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 type TabValue = 'overview' | 'homework' | 'progress';
 
@@ -45,6 +49,33 @@ function TeacherStudentDetailContent() {
   const [error, setError] = useState<string | null>(null);
 
   const activeTab: TabValue = tab || 'overview';
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [sessionStart, setSessionStart] = useState(new Date().toISOString().slice(0, 16));
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [schedulingSession, setSchedulingSession] = useState(false);
+
+  const handleScheduleSession = async () => {
+    setSchedulingSession(true);
+    try {
+      const startDate = new Date(sessionStart);
+      await api('/live-sessions/with-zoom', {
+        method: 'POST',
+        body: JSON.stringify({
+          studentId,
+          scheduledStart: startDate.toISOString(),
+          notes: sessionNotes || undefined,
+        }),
+      });
+      toast.success('Zoom session created! Student has been notified.');
+      setShowSessionModal(false);
+      setSessionNotes('');
+      setSessionStart(new Date().toISOString().slice(0, 16));
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create session');
+    } finally {
+      setSchedulingSession(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -182,13 +213,39 @@ function TeacherStudentDetailContent() {
         </div>
 
         {activeTab === 'overview' && (
-          <div
-            role="tabpanel"
-            className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6"
-          >
-            <h2 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Student Profile
-            </h2>
+          <div className="space-y-6">
+            <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+                  <Video className="h-5 w-5 text-primary" /> Quick Actions
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowSessionModal(true)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-nejah-sapphire/10 to-nejah-azure/5 dark:from-nejah-sapphire/20 dark:to-nejah-azure/10 border border-nejah-sapphire/20 hover:border-nejah-sapphire/40 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
+                    <Video className="h-5 w-5 text-nejah-sapphire" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-nejah-sapphire">Start a Zoom Session</p>
+                    <p className="text-[10px] text-nejah-slate-blue font-medium">
+                      Schedule a live session — student will be notified in real-time
+                    </p>
+                  </div>
+                </div>
+                <Sparkles className="h-5 w-5 text-nejah-sapphire opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+
+            <div
+              role="tabpanel"
+              className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6"
+            >
+              <h2 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" /> Student Profile
+              </h2>
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Full Name</dt>
@@ -235,6 +292,7 @@ function TeacherStudentDetailContent() {
               )}
             </dl>
           </div>
+          </div>
         )}
 
         {activeTab === 'homework' && (
@@ -249,6 +307,101 @@ function TeacherStudentDetailContent() {
           </div>
         )}
       </div>
+
+      {/* Schedule Zoom Session Modal */}
+      {showSessionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-border dark:border-white/5"
+          >
+            <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
+              <div>
+                <h3 className="text-xl font-bold font-serif">Start Zoom Session</h3>
+                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
+                  A Zoom meeting will be created and {student?.fullName || 'the student'} will be notified.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSessionModal(false)}
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-8 py-6 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Student
+                </Label>
+                <div className="h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium flex items-center">
+                  {student?.fullName || studentId}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Start Date & Time <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="datetime-local"
+                    value={sessionStart}
+                    onChange={(e) => setSessionStart(e.target.value)}
+                    className="flex-1 h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSessionStart(new Date().toISOString().slice(0, 16))}
+                    className="h-12 px-4 rounded-xl text-xs font-bold bg-muted hover:bg-muted/80 transition-colors border border-border dark:border-white/10"
+                  >
+                    Now
+                  </button>
+                </div>
+                <p className="text-[10px] text-nejah-slate-blue font-medium mt-1">
+                  Duration is auto-set to 60 minutes. Ends when you click "End Session".
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Notes (optional)
+                </Label>
+                <Textarea
+                  placeholder="Focus area, surah revision, etc."
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                  className="rounded-xl border-border dark:border-white/10 text-sm"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-8 pb-8 border-t border-border dark:border-white/5 pt-6">
+              <button
+                onClick={() => setShowSessionModal(false)}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+              >
+                Cancel
+              </button>
+              <Button
+                onClick={handleScheduleSession}
+                disabled={schedulingSession}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white gap-2"
+              >
+                {schedulingSession ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {schedulingSession ? 'Creating...' : 'Create & Notify Student'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
