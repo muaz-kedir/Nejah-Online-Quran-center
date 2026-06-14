@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
@@ -9,6 +9,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -36,6 +52,9 @@ import {
   Eye,
   MessageSquareText,
   Info,
+  Play,
+  Send,
+  Monitor,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -58,8 +77,19 @@ function SessionDetails() {
   const [session, setSession] = useState<any>(null);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [notes, setNotes] = useState<any[]>([]);
+  const [recordings, setRecordings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [starting, setStarting] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [noteVisibility, setNoteVisibility] = useState('teacher_only');
+  const [savingNote, setSavingNote] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState('');
+  const [recordingTitle, setRecordingTitle] = useState('');
+  const [savingRecording, setSavingRecording] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -68,18 +98,101 @@ function SessionDetails() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [sessionData, attendanceData, notesData] = await Promise.all([
+      const [sessionData, attendanceData, notesData, recordingsData] = await Promise.all([
         api<any>(`/live-sessions/${id}`),
         api<any[]>(`/session-attendance/session/${id}`).catch(() => []),
         api<any[]>(`/session-notes/session/${id}`).catch(() => []),
+        api<any[]>(`/live-sessions/${id}/recordings`).catch(() => []),
       ]);
       setSession(sessionData);
-      setAttendance(Array.isArray(attendanceData) ? attendanceData : attendanceData?.data || []);
-      setNotes(Array.isArray(notesData) ? notesData : notesData?.data || []);
+      setAttendance(Array.isArray(attendanceData) ? attendanceData : []);
+      setNotes(Array.isArray(notesData) ? notesData : []);
+      setRecordings(Array.isArray(recordingsData) ? recordingsData : []);
     } catch {
       toast.error('Failed to load session details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartSession = async () => {
+    setStarting(true);
+    try {
+      const res = await api<any>(`/live-sessions/${id}/start`, { method: 'POST' });
+      toast.success('Session started!');
+      if (res?.zoomJoinUrl) window.open(res.zoomJoinUrl, '_blank');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to start session');
+    } finally { setStarting(false); }
+  };
+
+  const handleEndSession = async () => {
+    setEnding(true);
+    try {
+      await api(`/live-sessions/${id}/end`, { method: 'POST' });
+      toast.success('Session completed');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to end session');
+    } finally { setEnding(false); }
+  };
+
+  const handleCancelSession = async () => {
+    setCancelling(true);
+    try {
+      await api(`/live-sessions/${id}/cancel`, { method: 'POST' });
+      toast.success('Session cancelled');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to cancel session');
+    } finally { setCancelling(false); }
+  };
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    setSavingNote(true);
+    try {
+      await api(`/session-notes/session/${id}`, {
+        method: 'POST',
+        body: JSON.stringify({ note: newNote, visibility: noteVisibility }),
+      });
+      toast.success('Note added');
+      setNewNote('');
+      setNoteVisibility('teacher_only');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add note');
+    } finally { setSavingNote(false); }
+  };
+
+  const handleAddRecording = async () => {
+    if (!recordingUrl.trim()) return;
+    setSavingRecording(true);
+    try {
+      await api(`/live-sessions/${id}/recordings`, {
+        method: 'POST',
+        body: JSON.stringify({ url: recordingUrl, title: recordingTitle || undefined }),
+      });
+      toast.success('Recording added');
+      setRecordingUrl('');
+      setRecordingTitle('');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add recording');
+    } finally { setSavingRecording(false); }
+  };
+
+  const handleMarkAttendance = async (studentId: string, status: string) => {
+    try {
+      await api(`/live-sessions/${id}/attendees`, {
+        method: 'POST',
+        body: JSON.stringify({ studentId, attendanceStatus: status }),
+      });
+      toast.success('Attendance updated');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update attendance');
     }
   };
 
@@ -162,11 +275,38 @@ function SessionDetails() {
             </h1>
           </div>
         </div>
-        {session.zoomJoinUrl && (
-          <Button onClick={() => window.open(session.zoomJoinUrl, '_blank')} className="rounded-xl gap-2" variant="outline">
-            <ExternalLink className="h-4 w-4" /> Join Session
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {session.status === 'SCHEDULED' && (
+            <Button onClick={handleStartSession} disabled={starting} className="rounded-xl gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white">
+              {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              Start Session
+            </Button>
+          )}
+          {session.status === 'LIVE' && (
+            <>
+              {session.zoomJoinUrl && (
+                <Button onClick={() => window.open(session.zoomJoinUrl, '_blank')} className="rounded-xl gap-2 bg-red-500 hover:bg-red-600 text-white">
+                  <ExternalLink className="h-4 w-4" /> Join Live
+                </Button>
+              )}
+              <Button onClick={handleEndSession} disabled={ending} className="rounded-xl gap-2 bg-green-600 hover:bg-green-700 text-white">
+                {ending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                End Session
+              </Button>
+            </>
+          )}
+          {session.status === 'SCHEDULED' && (
+            <Button onClick={() => setShowCancelDialog(true)} variant="outline" className="rounded-xl gap-2 text-red-600 border-red-200 hover:border-red-300 dark:border-red-900/30">
+              <XCircle className="h-4 w-4" />
+              Cancel
+            </Button>
+          )}
+          {session.zoomJoinUrl && session.status !== 'LIVE' && (
+            <Button onClick={() => window.open(session.zoomJoinUrl, '_blank')} className="rounded-xl gap-2" variant="outline">
+              <ExternalLink className="h-4 w-4" /> Join Session
+            </Button>
+          )}
+        </div>
       </div>
 
       <motion.div
@@ -200,6 +340,7 @@ function SessionDetails() {
                 { value: 'overview', icon: Info, label: 'Overview' },
                 { value: 'attendance', icon: ClipboardList, label: 'Attendance', count: attendance.length },
                 { value: 'notes', icon: MessageSquareText, label: 'Notes', count: notes.length },
+                { value: 'recordings', icon: Monitor, label: 'Recordings', count: recordings.length },
                 { value: 'analytics', icon: BarChart3, label: 'Analytics' },
                 { value: 'metadata', icon: FileText, label: 'Metadata' },
               ].map((tab) => (
@@ -344,6 +485,7 @@ function SessionDetails() {
                   <Users className="h-6 w-6 text-nejah-slate-blue" />
                 </div>
                 <p className="text-sm font-bold text-nejah-slate-blue">No attendance records</p>
+                <p className="text-xs text-nejah-slate-blue mt-1">Records appear when students join the session or are marked manually</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -372,27 +514,39 @@ function SessionDetails() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <Badge
+                    <div className="flex items-center gap-4">
+                      <Select
+                        value={record.attendanceStatus}
+                        onValueChange={(val) => {
+                          const studentId = record.studentId || record.student?.id;
+                          if (studentId) handleMarkAttendance(studentId, val);
+                        }}
+                      >
+                        <SelectTrigger
                           className={cn(
-                            'text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border-none',
+                            'h-7 w-[100px] rounded-lg text-[9px] font-black uppercase tracking-widest border-none',
                             record.attendanceStatus === 'PRESENT' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                             record.attendanceStatus === 'LATE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
                             record.attendanceStatus === 'LEFT_EARLY' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                             'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
                           )}
                         >
-                          {record.attendanceStatus}
-                        </Badge>
-                      </div>
-                      <div className="text-right min-w-[80px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl min-w-[120px]">
+                          <SelectItem value="PRESENT" className="text-xs text-green-600">Present</SelectItem>
+                          <SelectItem value="LATE" className="text-xs text-amber-600">Late</SelectItem>
+                          <SelectItem value="LEFT_EARLY" className="text-xs text-blue-600">Left Early</SelectItem>
+                          <SelectItem value="ABSENT" className="text-xs text-red-600">Absent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="text-right min-w-[70px]">
                         <p className="text-[10px] font-bold tabular-nums">
                           {record.durationMinutes ? `${record.durationMinutes}m` : '—'}
                         </p>
                         <p className="text-[8px] text-nejah-slate-blue uppercase tracking-wider font-medium">Duration</p>
                       </div>
-                      <div className="text-right min-w-[80px]">
+                      <div className="text-right min-w-[70px]">
                         <p className="text-[10px] font-bold tabular-nums">
                           {record.joinTime
                             ? new Date(record.joinTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -408,10 +562,43 @@ function SessionDetails() {
           </TabsContent>
 
           <TabsContent value="notes" className="p-6 space-y-6">
-            <h3 className="text-sm font-bold flex items-center gap-2">
-              <MessageSquareText className="h-4 w-4 text-nejah-electric" />
-              Teacher Notes ({notes.length})
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <MessageSquareText className="h-4 w-4 text-nejah-electric" />
+                Teacher Notes ({notes.length})
+              </h3>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-background/50 border border-border dark:border-white/5 space-y-3">
+              <h4 className="text-xs font-bold text-nejah-slate-blue uppercase tracking-wider">Add Note</h4>
+              <Textarea
+                placeholder="Write a note about this session..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                className="min-h-[80px] text-sm rounded-xl border-border bg-background"
+              />
+              <div className="flex items-center justify-between">
+                <Select value={noteVisibility} onValueChange={setNoteVisibility}>
+                  <SelectTrigger className="w-[160px] h-9 text-xs rounded-xl">
+                    <SelectValue placeholder="Visibility" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="teacher_only" className="text-xs">Teacher Only</SelectItem>
+                    <SelectItem value="admin" className="text-xs">Admin Only</SelectItem>
+                    <SelectItem value="all" className="text-xs">All Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleAddNote}
+                  disabled={savingNote || !newNote.trim()}
+                  className="rounded-xl h-9 gap-1.5 text-xs font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white"
+                >
+                  {savingNote ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Add Note
+                </Button>
+              </div>
+            </div>
+
             {notes.length === 0 ? (
               <div className="py-12 text-center">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
@@ -449,6 +636,83 @@ function SessionDetails() {
                       )}
                     </div>
                     <p className="text-sm text-foreground/80 leading-relaxed">{note.note}</p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="recordings" className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-nejah-electric" />
+                Session Recordings ({recordings.length})
+              </h3>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-background/50 border border-border dark:border-white/5 space-y-3">
+              <h4 className="text-xs font-bold text-nejah-slate-blue uppercase tracking-wider">Add Recording</h4>
+              <div className="flex gap-3">
+                <Input
+                  placeholder="Recording URL..."
+                  value={recordingUrl}
+                  onChange={(e) => setRecordingUrl(e.target.value)}
+                  className="flex-1 text-sm rounded-xl border-border bg-background h-9"
+                />
+                <Input
+                  placeholder="Title (optional)"
+                  value={recordingTitle}
+                  onChange={(e) => setRecordingTitle(e.target.value)}
+                  className="w-48 text-sm rounded-xl border-border bg-background h-9"
+                />
+                <Button
+                  onClick={handleAddRecording}
+                  disabled={savingRecording || !recordingUrl.trim()}
+                  className="rounded-xl h-9 gap-1.5 text-xs font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white"
+                >
+                  {savingRecording ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {recordings.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Monitor className="h-6 w-6 text-nejah-slate-blue" />
+                </div>
+                <p className="text-sm font-bold text-nejah-slate-blue">No recordings yet</p>
+                <p className="text-xs text-nejah-slate-blue mt-1">Add session recordings after the class ends</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {recordings.map((rec: any, idx: number) => (
+                  <motion.div
+                    key={rec.id || idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5 hover:bg-muted/50 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Monitor className="h-4 w-4 text-nejah-electric" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold">{rec.title || 'Untitled Recording'}</p>
+                        <p className="text-[9px] text-nejah-slate-blue tabular-nums">
+                          {rec.createdAt ? new Date(rec.createdAt).toLocaleString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => window.open(rec.url, '_blank')}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg h-8 text-[10px] font-bold gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" /> View
+                    </Button>
                   </motion.div>
                 ))}
               </div>
@@ -569,6 +833,32 @@ function SessionDetails() {
           </TabsContent>
         </Tabs>
       </GlassPanel>
+      <Dialog open={showCancelDialog} onOpenChange={(o) => !o && setShowCancelDialog(false)}>
+        <DialogContent className="sm:max-w-[400px] dark:bg-nejah-surface dark:border-white/5 rounded-[2rem] p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Cancel Session
+            </DialogTitle>
+            <DialogDescription className="text-xs text-nejah-slate-blue">
+              This will cancel the session and notify all participants. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)} className="flex-1 rounded-xl">
+              Keep Session
+            </Button>
+            <Button
+              onClick={async () => { await handleCancelSession(); setShowCancelDialog(false); }}
+              disabled={cancelling}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl gap-2"
+            >
+              {cancelling && <Loader2 className="h-4 w-4 animate-spin" />}
+              Cancel Session
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
