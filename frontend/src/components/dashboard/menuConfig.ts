@@ -21,6 +21,8 @@ import {
   LineChart,
   Receipt,
   CheckCircle,
+  Video,
+  VideoOff,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -42,11 +44,14 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
+    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
+    { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
   admin: [
@@ -56,18 +61,12 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
     { label: 'Attendance', icon: UserCheck, path: '/attendance' },
+    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'Settings', icon: Settings, path: '/settings' },
-  ],
-  teacher: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
-    { label: 'Students', icon: Users, path: '/teacher_students' },
-    { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
-    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
-    { label: 'Profile', icon: UserCircle, path: '/teacher_profile' },
-    { label: 'Settings', icon: Settings, path: '/teacher_settings' },
   ],
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/student_dashboard' },
@@ -79,9 +78,11 @@ export const menuByRole: Record<string, MenuItem[]> = {
   ],
   parent: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/parent_dashboard' },
+    { label: 'Sessions', icon: Video, path: '/parent_sessions' },
   ],
   qirat_manager: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/qirat_dashboard' },
+    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
