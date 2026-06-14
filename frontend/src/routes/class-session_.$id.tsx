@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Clock,
   Video,
@@ -13,21 +13,25 @@ import {
   Sparkles,
   Info,
   ExternalLink,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { requireAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
-import { getLinkedStudentId } from '@/lib/student-portal';
+  Timer,
+  BarChart3,
+  ClipboardList,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { requireAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+import { getLinkedStudentId } from "@/lib/student-portal";
 
-export const Route = createFileRoute('/class-session_/$id')({
+export const Route = createFileRoute("/class-session_/$id")({
   component: ClassSessionPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager', 'teacher', 'student']),
+  beforeLoad: () => requireAuth(["admin", "super_admin", "qirat_manager", "teacher", "student"]),
 });
 
 function ClassSessionPage() {
@@ -39,42 +43,46 @@ function ClassSessionPage() {
 }
 
 function ClassSessionContent() {
+  const navigate = useNavigate();
   const { id } = Route.useParams();
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [meetingLink, setMeetingLink] = useState('');
+  const [meetingLink, setMeetingLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userRole, setUserRole] = useState('student');
-  const [studentId, setStudentId] = useState('');
+  const [userRole, setUserRole] = useState("student");
+  const [studentId, setStudentId] = useState("");
 
-  const fetchSessionDetails = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-    try {
-      const data = await api<any>(`/attendance/sessions/${id}`);
-      setSession(data);
-      if (data.meetingLink) {
-        setMeetingLink(data.meetingLink);
+  const fetchSessionDetails = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true);
+      try {
+        const data = await api<any>(`/attendance/sessions/${id}`);
+        setSession(data);
+        if (data.meetingLink) {
+          setMeetingLink(data.meetingLink);
+        }
+      } catch {
+        toast.error("Failed to load session details");
+      } finally {
+        if (showLoading) setLoading(false);
       }
-    } catch {
-      toast.error('Failed to load session details');
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, [id]);
+    },
+    [id],
+  );
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    setUserRole(localStorage.getItem('userRole') || 'student');
+    setUserRole(localStorage.getItem("userRole") || "student");
 
-    if (localStorage.getItem('userRole') === 'student') {
+    if (localStorage.getItem("userRole") === "student") {
       getLinkedStudentId()
         .then((id) => {
           if (id) setStudentId(id);
         })
-        .catch((err) => console.error('Failed to get student profile', err));
+        .catch((err) => console.error("Failed to get student profile", err));
     }
 
     fetchSessionDetails();
@@ -92,18 +100,18 @@ function ClassSessionContent() {
 
   const handleStartMeeting = async () => {
     if (!meetingLink.trim()) {
-      toast.error('Please enter a valid Zoom or Google Meet link');
+      toast.error("Please enter a valid Zoom or Google Meet link");
       return;
     }
-    if (!meetingLink.startsWith('http://') && !meetingLink.startsWith('https://')) {
-      toast.error('Link must start with http:// or https://');
+    if (!meetingLink.startsWith("http://") && !meetingLink.startsWith("https://")) {
+      toast.error("Link must start with http:// or https://");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await api('/attendance/sessions/start-meeting', {
-        method: 'POST',
+      await api("/attendance/sessions/start-meeting", {
+        method: "POST",
         body: JSON.stringify({
           classSessionId: id,
           meetingLink: meetingLink.trim(),
@@ -112,12 +120,12 @@ function ClassSessionContent() {
       const studentCount = session?.studentAttendances?.length || 0;
       toast.success(
         studentCount > 1
-          ? 'Online session is now LIVE! Notifications sent to all assigned students & parents.'
-          : 'Online session is now LIVE! Notifications sent to students & parents.',
+          ? "Online session is now LIVE! Notifications sent to all assigned students & parents."
+          : "Online session is now LIVE! Notifications sent to students & parents.",
       );
       fetchSessionDetails();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to start meeting');
+      toast.error(err.message || "Failed to start meeting");
     } finally {
       setIsSubmitting(false);
     }
@@ -126,20 +134,20 @@ function ClassSessionContent() {
   const handleEndMeeting = async () => {
     setIsSubmitting(true);
     try {
-      await api('/attendance/sessions/end', {
-        method: 'POST',
+      await api("/attendance/sessions/end", {
+        method: "POST",
         body: JSON.stringify({
           classSessionId: id,
-          notes: 'Class session completed successfully.',
+          notes: "Class session completed successfully.",
         }),
       });
-      toast.success('Class session ended and final attendance saved.');
+      toast.success("Class session ended and final attendance saved.");
       fetchSessionDetails();
       setTimeout(() => {
-        window.location.href = userRole === 'teacher' ? '/teacher_dashboard' : '/dashboard';
+        navigate({ to: userRole === "teacher" ? "/teacher_dashboard" : "/dashboard" });
       }, 1500);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to end meeting');
+      toast.error(err.message || "Failed to end meeting");
     } finally {
       setIsSubmitting(false);
     }
@@ -148,52 +156,52 @@ function ClassSessionContent() {
   const handleJoinMeeting = async () => {
     setIsSubmitting(true);
     let resolvedStudentId = studentId;
-    if (userRole === 'student' && !resolvedStudentId) {
-      resolvedStudentId = (await getLinkedStudentId()) || '';
+    if (userRole === "student" && !resolvedStudentId) {
+      resolvedStudentId = (await getLinkedStudentId()) || "";
       if (resolvedStudentId) setStudentId(resolvedStudentId);
     }
 
     try {
-      await api('/attendance/record', {
-        method: 'POST',
+      await api("/attendance/record", {
+        method: "POST",
         body: JSON.stringify({
           classSessionId: id,
           ...(resolvedStudentId ? { studentId: resolvedStudentId } : {}),
-          action: 'join',
+          action: "join",
         }),
       });
-      toast.success('Your attendance has been automatically recorded as PRESENT/LATE!');
-      window.open(meetingLink, '_blank');
+      toast.success("Your attendance has been automatically recorded as PRESENT/LATE!");
+      window.open(meetingLink, "_blank");
       fetchSessionDetails(false);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to record joining log. Connecting to class anyway...');
-      window.open(meetingLink, '_blank');
+      toast.error(err.message || "Failed to record joining log. Connecting to class anyway...");
+      window.open(meetingLink, "_blank");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleLeaveMeeting = async () => {
-    const resolvedStudentId = studentId || (await getLinkedStudentId()) || '';
+    const resolvedStudentId = studentId || (await getLinkedStudentId()) || "";
     if (!resolvedStudentId) {
-      window.location.href = '/student_dashboard';
+      navigate({ to: "/student_dashboard" });
       return;
     }
 
     try {
-      await api('/attendance/record', {
-        method: 'POST',
+      await api("/attendance/record", {
+        method: "POST",
         body: JSON.stringify({
           classSessionId: id,
-          action: 'leave',
+          action: "leave",
         }),
       });
-      toast.success('Left session. Redirecting to dashboard...');
+      toast.success("Left session. Redirecting to dashboard...");
     } catch {
       // still redirect
     } finally {
       setTimeout(() => {
-        window.location.href = '/student_dashboard';
+        navigate({ to: "/student_dashboard" });
       }, 500);
     }
   };
@@ -203,7 +211,9 @@ function ClassSessionContent() {
       <div className="glass-panel flex h-[70vh] items-center justify-center bg-card dark:bg-nejah-surface rounded-[32px] border border-border dark:border-white/5 shadow-sm">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nejah-electric mx-auto" />
-          <p className="text-sm font-bold text-nejah-slate-blue font-serif">Connecting to Quranic Classroom...</p>
+          <p className="text-sm font-bold text-nejah-slate-blue font-serif">
+            Connecting to Quranic Classroom...
+          </p>
         </div>
       </div>
     );
@@ -220,9 +230,7 @@ function ClassSessionContent() {
           The requested class session ID does not exist or has been deleted.
         </p>
         <Button
-          onClick={() => {
-            window.location.href = '/dashboard';
-          }}
+          onClick={() => navigate({ to: "/dashboard" })}
           className="bg-nejah-sapphire hover:bg-background text-white rounded-xl"
         >
           Return to Dashboard
@@ -233,13 +241,13 @@ function ClassSessionContent() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'LIVE':
+      case "LIVE":
         return (
           <Badge className="bg-red-500 text-white animate-pulse border-none px-3.5 py-1 text-[10px] font-black tracking-widest uppercase">
             LIVE NOW
           </Badge>
         );
-      case 'COMPLETED':
+      case "COMPLETED":
         return (
           <Badge className="bg-muted text-nejah-slate-blue dark:bg-nejah-surface dark:text-nejah-slate-blue border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
             COMPLETED
@@ -262,9 +270,9 @@ function ClassSessionContent() {
         <button
           type="button"
           onClick={() => {
-            if (userRole === 'teacher') window.location.href = '/teacher_dashboard';
-            else if (userRole === 'student') window.location.href = '/student_dashboard';
-            else window.location.href = '/dashboard';
+            if (userRole === "teacher") navigate({ to: "/teacher_dashboard" });
+            else if (userRole === "student") navigate({ to: "/student_dashboard" });
+            else navigate({ to: "/dashboard" });
           }}
           className="flex items-center gap-1.5 text-xs font-black text-nejah-slate-blue hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
         >
@@ -295,10 +303,10 @@ function ClassSessionContent() {
               <Calendar className="h-4 w-4 text-amber-400" />
               <span>
                 {new Date(session.sessionDate).toLocaleDateString(undefined, {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </span>
             </p>
@@ -313,7 +321,7 @@ function ClassSessionContent() {
               {session.scheduledStartTime} - {session.scheduledEndTime}
             </div>
             <div className="text-[10px] text-nejah-electric/70 font-bold uppercase">
-              Teacher: {session.teacher?.fullName || 'Assigned Instructor'}
+              Teacher: {session.teacher?.fullName || "Assigned Instructor"}
             </div>
           </div>
         </div>
@@ -321,7 +329,7 @@ function ClassSessionContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
-          {session.status === 'SCHEDULED' && (
+          {session.status === "SCHEDULED" && (
             <Card className="glass-panel rounded-[2.5rem] border-border dark:border-white/5 shadow-sm p-8 bg-card dark:bg-nejah-surface">
               <CardHeader className="p-0 mb-6">
                 <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4">
@@ -335,13 +343,14 @@ function ClassSessionContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 space-y-6">
-                {userRole === 'teacher' ? (
+                {userRole === "teacher" ? (
                   <div className="space-y-4">
                     <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
-                      To initialize this class session, paste your Google Meet or Zoom invite link below
-                      and click &quot;Start Meeting&quot;. This will automatically notify the assigned
-                      {(session.studentAttendances?.length || 0) > 1 ? ' students' : ' student'}, their
-                      parents, and admins.
+                      To initialize this class session, paste your Google Meet or Zoom invite link
+                      below and click &quot;Start Meeting&quot;. This will automatically notify the
+                      assigned
+                      {(session.studentAttendances?.length || 0) > 1 ? " students" : " student"},
+                      their parents, and admins.
                     </p>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest ml-1">
@@ -360,7 +369,7 @@ function ClassSessionContent() {
                       className="w-full h-12 bg-nejah-sapphire hover:bg-background text-white rounded-xl text-sm font-extrabold gap-2 shadow-lg"
                     >
                       <Sparkles className="h-4 w-4 text-amber-400" />
-                      {isSubmitting ? 'Initializing Meeting...' : 'Start Meeting & Mark Present'}
+                      {isSubmitting ? "Initializing Meeting..." : "Start Meeting & Mark Present"}
                     </Button>
                   </div>
                 ) : (
@@ -371,9 +380,9 @@ function ClassSessionContent() {
                         Waiting for Instructor
                       </h4>
                       <p className="text-xs text-amber-800/80 dark:text-nejah-slate-blue leading-relaxed">
-                        Assalamu Alaikum. This Quran class session is scheduled but the meeting has not
-                        been started yet. You will see a &quot;Join Meeting&quot; option here as soon as
-                        your teacher launches the class. Keep this tab open.
+                        Assalamu Alaikum. This Quran class session is scheduled but the meeting has
+                        not been started yet. You will see a &quot;Join Meeting&quot; option here as
+                        soon as your teacher launches the class. Keep this tab open.
                       </p>
                     </div>
                   </div>
@@ -382,7 +391,7 @@ function ClassSessionContent() {
             </Card>
           )}
 
-          {session.status === 'LIVE' && (
+          {session.status === "LIVE" && (
             <Card className="glass-panel rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-gradient-to-br from-nejah-sapphire to-nejah-surface text-white p-8 relative">
               <div className="absolute right-4 bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl pointer-events-none" />
               <CardContent className="p-0 space-y-6 flex flex-col items-center text-center">
@@ -402,7 +411,7 @@ function ClassSessionContent() {
                   </p>
                 </div>
 
-                {userRole === 'teacher' ? (
+                {userRole === "teacher" ? (
                   <div className="w-full pt-4 space-y-4">
                     <div className="flex gap-2 w-full max-w-md mx-auto">
                       <Input
@@ -411,7 +420,7 @@ function ClassSessionContent() {
                         className="h-11 bg-white/10 border-white/10 text-white text-xs text-center rounded-xl"
                       />
                       <Button
-                        onClick={() => window.open(meetingLink, '_blank')}
+                        onClick={() => window.open(meetingLink, "_blank")}
                         className="h-11 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl shrink-0 px-4"
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -425,7 +434,7 @@ function ClassSessionContent() {
                         className="bg-red-650 hover:bg-red-750 text-white border-none rounded-xl px-8 h-12 text-sm font-extrabold gap-2 shadow-xl"
                       >
                         <LogOut className="h-4 w-4" />
-                        {isSubmitting ? 'Ending Meeting...' : 'End Class & Save Attendance'}
+                        {isSubmitting ? "Ending Meeting..." : "End Class & Save Attendance"}
                       </Button>
                     </div>
                   </div>
@@ -441,17 +450,17 @@ function ClassSessionContent() {
                             <p className="text-sm font-bold">{myAttendance.attendanceStatus}</p>
                           </div>
                           <span className="text-[10px] text-foreground/80 tabular-nums">
-                            Joined:{' '}
+                            Joined:{" "}
                             {new Date(myAttendance.joinTime).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
+                              hour: "2-digit",
+                              minute: "2-digit",
                             })}
                           </span>
                         </div>
 
                         <div className="flex gap-3">
                           <Button
-                            onClick={() => window.open(meetingLink, '_blank')}
+                            onClick={() => window.open(meetingLink, "_blank")}
                             className="flex-1 h-12 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" /> Re-Join Call
@@ -479,33 +488,82 @@ function ClassSessionContent() {
             </Card>
           )}
 
-          {session.status === 'COMPLETED' && (
+          {session.status === "COMPLETED" && (
             <Card className="glass-panel rounded-[2.5rem] border-border dark:border-white/5 shadow-sm p-8 bg-card dark:bg-nejah-surface">
-              <CardContent className="p-0 space-y-8 text-center">
-                <div className="w-16 h-16 bg-primary/10 dark:bg-nejah-sapphire/20 text-nejah-electric dark:text-nejah-electric rounded-[1.5rem] flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="h-8 w-8" />
-                </div>
-
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold font-serif text-foreground dark:text-foreground">
+              <CardContent className="p-0 space-y-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-primary/10 dark:bg-nejah-sapphire/20 text-nejah-electric dark:text-nejah-electric rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="h-8 w-8" />
+                  </div>
+                  <h2 className="text-2xl font-bold font-serif text-foreground">
                     Session Completed
                   </h2>
-                  <p className="text-sm text-nejah-slate-blue leading-relaxed max-w-sm mx-auto">
-                    All attendance metrics, participation times, and notes have been logged and synced
-                    to parent & admin portals.
+                  <p className="text-sm text-nejah-slate-blue mt-1">
+                    Class has ended. See the summary below.
                   </p>
                 </div>
 
-                <Button
-                  onClick={() => {
-                    if (userRole === 'teacher') window.location.href = '/teacher_dashboard';
-                    else if (userRole === 'student') window.location.href = '/student_dashboard';
-                    else window.location.href = '/dashboard';
-                  }}
-                  className="bg-nejah-sapphire hover:bg-background text-white rounded-xl h-11 px-8 font-bold"
-                >
-                  Go Back to Dashboard
-                </Button>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-background/50 rounded-2xl p-4 text-center">
+                    <Timer className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
+                    <p className="text-2xl font-bold font-mono">
+                      {session.totalDuration || session.durationMinutes || "—"}
+                    </p>
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                      Duration (min)
+                    </p>
+                  </div>
+                  <div className="bg-background/50 rounded-2xl p-4 text-center">
+                    <Users className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
+                    <p className="text-2xl font-bold font-mono">
+                      {session.totalStudentsPresent || 0}
+                    </p>
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                      Present
+                    </p>
+                  </div>
+                  <div className="bg-background/50 rounded-2xl p-4 text-center">
+                    <BarChart3 className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
+                    <p className="text-2xl font-bold font-mono">{session.totalStudentsLate || 0}</p>
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                      Late
+                    </p>
+                  </div>
+                  <div className="bg-background/50 rounded-2xl p-4 text-center">
+                    <ClipboardList className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
+                    <p className="text-2xl font-bold font-mono">{session.notes || "—"}</p>
+                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                      Notes
+                    </p>
+                  </div>
+                </div>
+
+                {session.actualStartTime && (
+                  <div className="bg-background/30 rounded-2xl p-4 text-sm">
+                    <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-wider mb-2">
+                      Timeline
+                    </p>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span>Started: {new Date(session.actualStartTime).toLocaleTimeString()}</span>
+                      {session.actualEndTime && (
+                        <span>Ended: {new Date(session.actualEndTime).toLocaleTimeString()}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-center">
+                  <Button
+                    onClick={() => {
+                      if (userRole === "teacher") navigate({ to: "/teacher_dashboard" });
+                      else if (userRole === "student") navigate({ to: "/student_dashboard" });
+                      else navigate({ to: "/dashboard" });
+                    }}
+                    className="bg-nejah-sapphire hover:bg-background text-white rounded-xl h-11 px-8 font-bold"
+                  >
+                    Go Back to Dashboard
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -536,22 +594,22 @@ function ClassSessionContent() {
                     <div
                       key={record.id}
                       className={cn(
-                        'p-4 rounded-2xl border flex items-center justify-between transition-colors',
+                        "p-4 rounded-2xl border flex items-center justify-between transition-colors",
                         isJoined
-                          ? 'bg-primary/5 border-nejah-electric/15'
-                          : 'bg-background/50 border-border dark:bg-nejah-surface/20 dark:border-white/5',
+                          ? "bg-primary/5 border-nejah-electric/15"
+                          : "bg-background/50 border-border dark:bg-nejah-surface/20 dark:border-white/5",
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-xs shrink-0">
-                          {student.fullName?.charAt(0) || 'S'}
+                          {student.fullName?.charAt(0) || "S"}
                         </div>
                         <div>
                           <p className="text-xs font-bold text-foreground dark:text-foreground">
                             {student.fullName}
                           </p>
                           <p className="text-[9px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest mt-0.5">
-                            ID: {student.studentCode || 'N/A'}
+                            ID: {student.studentCode || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -559,14 +617,14 @@ function ClassSessionContent() {
                       <div className="text-right">
                         <Badge
                           className={cn(
-                            'text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border-none',
-                            record.attendanceStatus === 'PRESENT'
-                              ? 'bg-primary/15 text-nejah-electric'
-                              : record.attendanceStatus === 'LATE'
-                                ? 'bg-amber-100 text-amber-700'
-                                : record.attendanceStatus === 'LEFT_EARLY'
-                                  ? 'bg-blue-150 text-blue-700'
-                                  : 'bg-red-50 text-red-600',
+                            "text-[8px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full border-none",
+                            record.attendanceStatus === "PRESENT"
+                              ? "bg-primary/15 text-nejah-electric"
+                              : record.attendanceStatus === "LATE"
+                                ? "bg-amber-100 text-amber-700"
+                                : record.attendanceStatus === "LEFT_EARLY"
+                                  ? "bg-blue-150 text-blue-700"
+                                  : "bg-red-50 text-red-600",
                           )}
                         >
                           {record.attendanceStatus}
