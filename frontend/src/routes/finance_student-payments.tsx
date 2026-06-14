@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, Loader2 } from 'lucide-react';
+import { Download, Eye, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/finance_student-payments')({
@@ -30,6 +30,17 @@ function StudentPaymentsPage() {
   const [payAmount, setPayAmount] = useState('');
   const [payType, setPayType] = useState('payment');
   const [submitting, setSubmitting] = useState(false);
+  const [convertTarget, setConvertTarget] = useState('USD');
+  const [convertResult, setConvertResult] = useState<{ from: string; to: string; rate: number } | null>(null);
+
+  const convertCurrency = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/currency/convert?from=ETB&to=${convertTarget}&amount=1`, {
+        headers: authHeaders(),
+      });
+      if (res.ok) setConvertResult(await res.json());
+    } catch {}
+  };
 
   const load = async () => {
     try {
@@ -120,6 +131,29 @@ function StudentPaymentsPage() {
             <Download className="mr-2 h-4 w-4" /> PDF
           </Button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-background/50 border border-border mb-4">
+        <span className="text-sm text-muted-foreground">Currency Converter:</span>
+        <select
+          value={convertTarget}
+          onChange={(e) => setConvertTarget(e.target.value)}
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="SAR">SAR</option>
+          <option value="AED">AED</option>
+        </select>
+        <Button variant="outline" size="sm" onClick={convertCurrency}>
+          <RefreshCw className="h-4 w-4 mr-1" /> Get Rate
+        </Button>
+        {convertResult && (
+          <span className="text-sm text-foreground font-medium">
+            1 {convertResult.from} = {convertResult.rate.toFixed(6)} {convertResult.to}
+          </span>
+        )}
       </div>
 
       <div className="glass-panel overflow-hidden rounded-2xl">
