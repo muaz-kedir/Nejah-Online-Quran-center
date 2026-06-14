@@ -25,6 +25,7 @@ import {
   Percent,
   GraduationCap,
   RefreshCw,
+  Filter,
 } from 'lucide-react';
 
 export const Route = createFileRoute('/parent_sessions')({
@@ -36,6 +37,7 @@ function ParentSessionsPage() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedChild, setSelectedChild] = useState<string>('all');
 
   useEffect(() => { fetchSessions(); }, []);
 
@@ -51,26 +53,41 @@ function ParentSessionsPage() {
     }
   };
 
+  const children = useMemo(() => {
+    const map = new Map();
+    sessions.forEach((s: any) => {
+      if (s.student?.id) map.set(s.student.id, s.student);
+    });
+    return Array.from(map.values());
+  }, [sessions]);
+
+  const filteredSessions = useMemo(
+    () => selectedChild === 'all' ? sessions : sessions.filter((s: any) => s.student?.id === selectedChild),
+    [sessions, selectedChild],
+  );
+
   const upcomingSessions = useMemo(
-    () => sessions.filter((s) => s.status === 'SCHEDULED' || s.status === 'LIVE'),
-    [sessions],
+    () => filteredSessions.filter((s) => s.status === 'SCHEDULED' || s.status === 'LIVE'),
+    [filteredSessions],
   );
   const completedSessions = useMemo(
-    () => sessions.filter((s) => s.status === 'COMPLETED'),
-    [sessions],
+    () => filteredSessions.filter((s) => s.status === 'COMPLETED'),
+    [filteredSessions],
   );
 
   const presentCount = useMemo(
-    () => sessions.reduce((acc, s) => acc + (s.attendances?.filter((a: any) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE').length || 0), 0),
-    [sessions],
+    () => filteredSessions.reduce((acc, s) => acc + (s.attendances?.filter((a: any) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE').length || 0), 0),
+    [filteredSessions],
   );
   const totalAttendance = useMemo(
-    () => sessions.reduce((acc, s) => acc + (s.attendances?.length || 0), 0),
-    [sessions],
+    () => filteredSessions.reduce((acc, s) => acc + (s.attendances?.length || 0), 0),
+    [filteredSessions],
   );
 
+  const activeSessions = useMemo(() => sessions.filter((s) => s.status === 'LIVE').length, [sessions]);
+
   const kpiCards = [
-    { label: 'Total Sessions', value: sessions.length, icon: <Video className="h-5 w-5" />, sub: `${upcomingSessions.length} upcoming` },
+    { label: 'Total Sessions', value: filteredSessions.length, icon: <Video className="h-5 w-5" />, sub: `${upcomingSessions.length} upcoming` },
     { label: 'Upcoming Classes', value: upcomingSessions.length, icon: <Calendar className="h-5 w-5" />, highlight: upcomingSessions.length > 0 },
     { label: 'Attendance Rate', value: totalAttendance > 0 ? `${Math.round((presentCount / totalAttendance) * 100)}%` : '—', icon: <Percent className="h-5 w-5" />, progress: totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0 },
     { label: 'Completed', value: completedSessions.length, icon: <CheckCircle2 className="h-5 w-5" /> },
@@ -149,13 +166,35 @@ function ParentSessionsPage() {
       <div className="space-y-8 pb-12">
         <PageHeader
           eyebrow="Parent Portal"
-          title="My Children's Sessions"
-          description="View all Zoom sessions, attendance records, and class details for your children."
+          title={`My Children's Sessions${activeSessions > 0 ? ' 🔴' : ''}`}
+          description={`View all Zoom sessions, attendance records, and class details for your children${activeSessions > 0 ? `. ${activeSessions} session${activeSessions > 1 ? 's are' : ' is'} live now!` : '.'}`}
           actions={
-            <Button onClick={fetchSessions} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
-              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-3">
+              {children.length > 1 && (
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <select
+                    value={selectedChild}
+                    onChange={(e) => setSelectedChild(e.target.value)}
+                    className="h-11 pl-9 pr-4 rounded-xl bg-background border border-border dark:border-white/5 text-xs font-bold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-nejah-electric/30"
+                  >
+                    <option value="all">All Children ({sessions.length} sessions)</option>
+                    {children.map((child: any) => {
+                      const count = sessions.filter((s: any) => s.student?.id === child.id).length;
+                      return (
+                        <option key={child.id} value={child.id}>
+                          {child.fullName} ({count} sessions)
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+              <Button onClick={fetchSessions} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
+                <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+                Refresh
+              </Button>
+            </div>
           }
         />
 
@@ -178,7 +217,7 @@ function ParentSessionsPage() {
         <Tabs defaultValue="all">
           <TabsList className="rounded-2xl bg-background/50 p-1 border border-border dark:border-white/5">
             <TabsTrigger value="all" className="rounded-xl data-[state=active]:bg-nejah-sapphire data-[state=active]:text-white text-xs font-bold gap-2">
-              <Video className="h-4 w-4" /> All Sessions ({sessions.length})
+              <Video className="h-4 w-4" /> All Sessions ({filteredSessions.length})
             </TabsTrigger>
             <TabsTrigger value="upcoming" className="rounded-xl data-[state=active]:bg-nejah-sapphire data-[state=active]:text-white text-xs font-bold gap-2">
               <Calendar className="h-4 w-4" /> Upcoming ({upcomingSessions.length})
@@ -192,7 +231,7 @@ function ParentSessionsPage() {
             <TabsContent key={tab} value={tab} className="mt-6">
               {loading ? (
                 <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
-              ) : sessions.length === 0 ? (
+              ) : filteredSessions.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                     <Video className="h-8 w-8 text-nejah-slate-blue" />
@@ -217,7 +256,7 @@ function ParentSessionsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(tab === 'all' ? sessions : tab === 'upcoming' ? upcomingSessions : completedSessions).map((session: any) => (
+                        {(tab === 'all' ? filteredSessions : tab === 'upcoming' ? upcomingSessions : completedSessions).map((session: any) => (
                           <SessionRow key={session.id} session={session} />
                         ))}
                       </tbody>
@@ -229,7 +268,7 @@ function ParentSessionsPage() {
           ))}
         </Tabs>
 
-        {!loading && sessions.length > 0 && (
+        {!loading && filteredSessions.length > 0 && (
           <Card className="rounded-[2rem] border-border dark:border-white/5">
             <CardHeader>
               <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -237,7 +276,7 @@ function ParentSessionsPage() {
                 Attendance Summary
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-6 rounded-2xl bg-green-50 dark:bg-green-950/20">
                   <p className="text-3xl font-bold font-mono text-green-600">{presentCount}</p>
@@ -252,6 +291,49 @@ function ParentSessionsPage() {
                   <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">Attendance Rate</p>
                 </div>
               </div>
+
+              {children.length > 1 && selectedChild === 'all' && (
+                <div className="border-t border-border dark:border-white/5 pt-6">
+                  <h4 className="text-xs font-bold text-nejah-slate-blue uppercase tracking-wider mb-4">Per-Child Breakdown</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {children.map((child: any) => {
+                      const childSessions = sessions.filter((s: any) => s.student?.id === child.id);
+                      const childPresent = childSessions.reduce(
+                        (acc, s) => acc + (s.attendances?.filter((a: any) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE').length || 0), 0
+                      );
+                      const childTotal = childSessions.reduce((acc, s) => acc + (s.attendances?.length || 0), 0);
+                      const rate = childTotal > 0 ? Math.round((childPresent / childTotal) * 100) : 0;
+                      return (
+                        <div key={child.id} className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-7 h-7 rounded-full bg-nejah-sapphire/10 flex items-center justify-center text-[10px] font-bold text-nejah-sapphire dark:text-nejah-electric">
+                              {child.fullName?.charAt(0) || '?'}
+                            </div>
+                            <p className="text-xs font-bold">{child.fullName}</p>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                            <div>
+                              <p className="font-bold text-green-600">{childPresent}</p>
+                              <p className="text-nejah-slate-blue uppercase tracking-wider">Present</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-red-600">{childTotal - childPresent}</p>
+                              <p className="text-nejah-slate-blue uppercase tracking-wider">Absent</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-nejah-electric">{rate}%</p>
+                              <p className="text-nejah-slate-blue uppercase tracking-wider">Rate</p>
+                            </div>
+                          </div>
+                          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-nejah-electric rounded-full" style={{ width: `${rate}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
