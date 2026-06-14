@@ -1,3 +1,5 @@
+import { redirect } from '@tanstack/react-router';
+
 const ROLE_DASHBOARDS: Record<string, string> = {
   teacher: '/teacher_dashboard',
   student: '/student_dashboard',
@@ -17,17 +19,14 @@ export function requireAuth(allowedRoles?: string[]) {
   const role = localStorage.getItem('userRole');
 
   if (!token) {
-    window.location.href = '/login';
-    throw new Error('Not authenticated');
+    throw redirect({ to: '/login' });
   }
 
   if (!role) {
-    window.location.href = '/login';
-    throw new Error('No role found');
+    throw redirect({ to: '/login' });
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    window.location.href = ROLE_DASHBOARDS[role] || '/login';
-    throw new Error('Access denied');
+    throw redirect({ to: ROLE_DASHBOARDS[role] || '/login' });
   }
 }
