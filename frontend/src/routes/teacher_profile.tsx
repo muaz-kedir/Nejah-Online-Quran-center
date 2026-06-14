@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { User, Mail, Phone, MapPin, GraduationCap, Clock, Calendar, ChevronRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,26 +53,26 @@ function TeacherProfilePage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <TeacherLayout>
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nejah-border-blue"></div>
         </div>
-      </DashboardLayout>
+      </TeacherLayout>
     );
   }
 
   if (!teacher) {
     return (
-      <DashboardLayout>
+      <TeacherLayout>
         <div className="text-center py-12">
           <p className="text-muted-foreground dark:text-muted-foreground">Teacher profile not found</p>
         </div>
-      </DashboardLayout>
+      </TeacherLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -247,7 +247,7 @@ function TeacherProfilePage() {
         }}
         teacher={teacher}
       />
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }
 

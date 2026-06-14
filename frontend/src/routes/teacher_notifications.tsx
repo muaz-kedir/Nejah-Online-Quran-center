@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { Bell, AlertCircle, CheckCircle, MessageSquare, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -81,7 +81,7 @@ function TeacherNotificationsPage() {
   }, []);
 
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -181,6 +181,6 @@ function TeacherNotificationsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }

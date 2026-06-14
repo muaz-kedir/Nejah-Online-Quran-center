@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { ChevronLeft, User, Mail, BookOpen, ClipboardList, TrendingUp } from 'lucide-react';
@@ -30,9 +30,9 @@ export const Route = createFileRoute('/teacher_students_/$studentId')({
 
 function TeacherStudentDetailPage() {
   return (
-    <DashboardLayout>
+    <TeacherLayout>
       <TeacherStudentDetailContent />
-    </DashboardLayout>
+    </TeacherLayout>
   );
 }
 
