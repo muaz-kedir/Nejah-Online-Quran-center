@@ -140,12 +140,46 @@ export class TeachersService {
     return teacher;
   }
 
-  /** Resolve Teacher entity from authenticated User id (JWT `req.user.id`). */
+  /** Resolve Teacher entity from authenticated User id (JWT `req.user.id`).
+   *  First tries lookups by userId → email → finds any existing Teacher record
+   *  before auto-creating. This prevents UUID mismatch between assignment
+   *  (which uses the Teacher's id) and dashboard (which resolves via userId). */
   async resolveAuthenticatedTeacher(userId: string): Promise<Teacher> {
     if (!userId) {
       throw new ForbiddenException('Authentication required');
     }
-    return this.findByUserId(userId);
+
+    const user = await this.usersService.findOne(userId).catch(() => null);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.role !== UserRole.TEACHER) {
+      throw new ForbiddenException('User is not a teacher');
+    }
+
+    // 1. Look up by userId (primary)
+    let teacher = await this.teachersRepository.findOne({ where: { userId } });
+    if (teacher) return teacher;
+
+    // 2. Fallback: look up by email (handles case where userId wasn't linked)
+    if (user.email) {
+      teacher = await this.teachersRepository.findOne({ where: { email: user.email } });
+      if (teacher) {
+        teacher.userId = user.id;
+        return this.teachersRepository.save(teacher);
+      }
+    }
+
+    // 3. Auto-create only if absolutely no Teacher record exists
+    teacher = this.teachersRepository.create({
+      userId: user.id,
+      fullName: user.name,
+      email: user.email,
+      phoneNumber: user.phone || '',
+      specialization: 'Quran',
+      qualification: 'Auto-created from user account',
+    });
+    return this.teachersRepository.save(teacher);
   }
 
   async assertStudentBelongsToTeacher(teacherId: string, studentId: string): Promise<Student> {
@@ -239,12 +273,11 @@ export class TeachersService {
   async assignStudents(teacherId: string, studentIds: string[]): Promise<Teacher> {
     const teacher = await this.findOne(teacherId);
 
-    // Clear previous assignments for these specific students first
     if (studentIds && studentIds.length > 0) {
       await this.studentsRepository
         .createQueryBuilder()
         .update(Student)
-        .set({ teacherId: teacher.id })
+        .set({ teacherId: teacher.id, isAssigned: true })
         .whereInIds(studentIds)
         .execute();
     }
