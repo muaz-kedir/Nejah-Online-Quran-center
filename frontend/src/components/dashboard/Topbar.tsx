@@ -13,6 +13,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { getRoleLabel } from '@/components/ui/role-badge';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -60,17 +61,6 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
   const handleLogout = () => {
     localStorage.clear();
     navigate({ to: '/login' });
-  };
-
-  const getRoleLabel = (role: string) => {
-    const labels: Record<string, string> = {
-      super_admin: 'Super Administrator',
-      admin: 'Administrator',
-      teacher: 'Teacher',
-      student: 'Student',
-      parent: 'Parent',
-    };
-    return labels[role] || role;
   };
 
   const iconBtn = cn(
@@ -171,7 +161,7 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
             >
               <div className="flex flex-col items-end">
                 <span className="text-sm font-medium leading-tight text-foreground">{userName}</span>
-                <span className="text-[10px] uppercase tracking-wide text-nejah-slate-blue">
+                <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
                   {getRoleLabel(userRole)}
                 </span>
               </div>
