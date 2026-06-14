@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info, Search, X } from "lucide-react";
+import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info, Search, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Country, City } from "country-state-city";
 
@@ -130,6 +130,8 @@ function RegisterPage() {
   const [duplicateParent, setDuplicateParent] = useState<any>(null);
   const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
   const [allowDuplicateCreate, setAllowDuplicateCreate] = useState(false);
+  const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
+  const togglePassword = (field: string) => setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
 
   const watchParentEmail = form.watch("parent.email");
   const watchParentPhone = form.watch("parent.phoneNumber");
@@ -822,7 +824,10 @@ function RegisterPage() {
                                     <FormControl>
                                       <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input className="pl-9" type="password" {...field} />
+                                        <Input className="pl-9 pr-9" type={showPassword['student.password'] ? "text" : "password"} {...field} />
+                                        <button type="button" onClick={() => togglePassword('student.password')} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors">
+                                          {showPassword['student.password'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                       </div>
                                     </FormControl>
                                     <p className="text-xs text-nejah-slate-blue mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
@@ -839,7 +844,10 @@ function RegisterPage() {
                                     <FormControl>
                                       <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input className="pl-9" type="password" {...field} />
+                                        <Input className="pl-9 pr-9" type={showPassword['student.confirmPassword'] ? "text" : "password"} {...field} />
+                                        <button type="button" onClick={() => togglePassword('student.confirmPassword')} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors">
+                                          {showPassword['student.confirmPassword'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                       </div>
                                     </FormControl>
                                     <FormMessage />
@@ -1278,7 +1286,10 @@ function RegisterPage() {
                                     <FormControl>
                                       <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input className="pl-9" type="password" {...field} />
+                                        <Input className="pl-9 pr-9" type={showPassword['parent.password'] ? "text" : "password"} {...field} />
+                                        <button type="button" onClick={() => togglePassword('parent.password')} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors">
+                                          {showPassword['parent.password'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                       </div>
                                     </FormControl>
                                     <FormMessage />
@@ -1294,7 +1305,10 @@ function RegisterPage() {
                                     <FormControl>
                                       <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input className="pl-9" type="password" {...field} />
+                                        <Input className="pl-9 pr-9" type={showPassword['parent.confirmPassword'] ? "text" : "password"} {...field} />
+                                        <button type="button" onClick={() => togglePassword('parent.confirmPassword')} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors">
+                                          {showPassword['parent.confirmPassword'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                       </div>
                                     </FormControl>
                                     <FormMessage />
