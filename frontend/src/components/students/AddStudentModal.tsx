@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, User, Phone, Mail, Users, X, Check } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, Users, X, Check, Eye, EyeOff, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
@@ -28,12 +28,23 @@ interface Teacher {
   specialization?: string;
 }
 
+interface LearningGoal {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface Parent {
   id: string;
   fullName: string;
   email: string;
   phoneNumber: string;
   students: { id: string; fullName: string }[];
+}
+
+interface FeeInfo {
+  amount: number;
+  currency: string;
 }
 
 interface AddStudentModalProps {
@@ -49,7 +60,13 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
   const [parentResults, setParentResults] = useState<Parent[]>([]);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const [useExistingParent, setUseExistingParent] = useState(false);
-  
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+
+  const [learningGoals, setLearningGoals] = useState<LearningGoal[]>([]);
+  const [selectedGoalId, setSelectedGoalId] = useState<string>('');
+  const [customGoalText, setCustomGoalText] = useState('');
+  const [suggestedFee, setSuggestedFee] = useState<FeeInfo | null>(null);
+  const [showCustomGoal, setShowCustomGoal] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     gender: 'Male',
@@ -68,13 +85,43 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
     parentId: '',
   });
 
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const togglePassword = (field: string) => setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+
+  const API_BASE = 'http://localhost:3000/api';
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE}/learning-goals`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setLearningGoals(data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedGoalId && formData.familyCountry) {
+      const token = localStorage.getItem('token');
+      fetch(`${API_BASE}/fee-config/lookup?goalId=${selectedGoalId}&country=${encodeURIComponent(formData.familyCountry)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => setSuggestedFee(data ? { amount: Number(data.amount), currency: data.currency } : null))
+        .catch(() => setSuggestedFee(null));
+    } else {
+      setSuggestedFee(null);
+    }
+  }, [selectedGoalId, formData.familyCountry]);
+
   // Search for existing parent
   const searchParent = async () => {
     setSearchingParent(true);
     try {
       const token = localStorage.getItem('token');
-      const searchQuery = formData.familyName || formData.familyPhone || '';
-      const url = `http://localhost:3000/api/parents/search?search=${encodeURIComponent(searchQuery)}`;
+      const query = parentSearchQuery.trim();
+      if (!query) { setParentResults([]); return; }
+      const url = `${API_BASE}/parents/search?search=${encodeURIComponent(query)}`;
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -152,7 +199,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
         body.parentId = selectedParent.id;
       }
 
-      const response = await fetch('http://localhost:3000/api/students', {
+      const response = await fetch(`${API_BASE}/students`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,6 +233,14 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
         confirmPassword: '',
         parentId: '',
       });
+      setSelectedGoalId('');
+      setCustomGoalText('');
+      setShowCustomGoal(false);
+      setSuggestedFee(null);
+      setSelectedParent(null);
+      setParentResults([]);
+      setUseExistingParent(false);
+      setParentSearchQuery('');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -297,38 +352,86 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="password" className="dark:text-muted-foreground">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Min. 6 characters"
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPasswords['password'] ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Min. 6 characters"
+                      className="pr-9 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                    />
+                    <button type="button" onClick={() => togglePassword('password')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPasswords['password'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="confirmPassword" className="dark:text-muted-foreground">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    placeholder="Re-enter password"
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showPasswords['confirmPassword'] ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      placeholder="Re-enter password"
+                      className="pr-9 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                    />
+                    <button type="button" onClick={() => togglePassword('confirmPassword')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPasswords['confirmPassword'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="grid gap-2">
               <Label className="dark:text-muted-foreground">Learning Goals</Label>
-              <Textarea
-                value={formData.learningGoals}
-                onChange={(e) => setFormData({ ...formData, learningGoals: e.target.value })}
-                className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                placeholder="e.g. Memorize Juz 30, improve Tajweed..."
-                rows={2}
-              />
+              <Select
+                value={selectedGoalId}
+                onValueChange={(v) => {
+                  setSelectedGoalId(v);
+                  const goal = learningGoals.find(g => g.id === v);
+                  if (goal?.name === 'Custom') {
+                    setShowCustomGoal(true);
+                    setFormData({ ...formData, learningGoals: '' });
+                  } else {
+                    setShowCustomGoal(false);
+                    setFormData({ ...formData, learningGoals: goal?.name || '' });
+                  }
+                }}
+              >
+                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                  <SelectValue placeholder="Select a learning goal..." />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                  {learningGoals.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {showCustomGoal && (
+                <Textarea
+                  value={customGoalText}
+                  onChange={(e) => {
+                    setCustomGoalText(e.target.value);
+                    setFormData({ ...formData, learningGoals: e.target.value });
+                  }}
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground mt-2"
+                  placeholder="Describe the custom learning goal..."
+                  rows={2}
+                />
+              )}
+
+              {suggestedFee && (
+                <div className="flex items-center gap-2 mt-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
+                  <DollarSign className="h-5 w-5 text-nejah-electric" />
+                  <span className="text-sm font-medium text-foreground">
+                    Suggested monthly fee: <strong>{suggestedFee.amount.toLocaleString()} {suggestedFee.currency}</strong>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-border dark:border-nejah-border-blue pt-4">
@@ -408,8 +511,8 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                     <Input
                       id="parentSearchName"
                       placeholder="Search by parent name or phone..."
-                      value={formData.familyName || formData.familyPhone || ''}
-                      onChange={(e) => setFormData({ ...formData, familyName: e.target.value, familyPhone: '' })}
+                      value={parentSearchQuery}
+                      onChange={(e) => setParentSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           searchParent();
