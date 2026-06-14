@@ -73,6 +73,8 @@ function LiveSessionsPage() {
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
   const userRole = useRef('');
 
   useEffect(() => {
@@ -139,6 +141,33 @@ function LiveSessionsPage() {
         s.schedule?.className?.toLowerCase().includes(q),
     );
   }, [sessions, search]);
+
+  const handleStartSession = async (id: string) => {
+    setStartingId(id);
+    try {
+      const res = await api<any>(`/live-sessions/${id}/start`, { method: 'POST' });
+      toast.success('Session started!');
+      if (res?.zoomJoinUrl) window.open(res.zoomJoinUrl, '_blank');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to start session');
+    } finally {
+      setStartingId(null);
+    }
+  };
+
+  const handleEndSession = async (id: string) => {
+    setCompletingId(id);
+    try {
+      await api(`/live-sessions/${id}/end`, { method: 'POST' });
+      toast.success('Session completed');
+      fetchAll();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to end session');
+    } finally {
+      setCompletingId(null);
+    }
+  };
 
   const handleCancelSession = async (id: string) => {
     setCancelling(true);
@@ -479,6 +508,24 @@ function LiveSessionsPage() {
                               {s.zoomJoinUrl && (
                                 <DropdownMenuItem onClick={() => window.open(s.zoomJoinUrl, '_blank')}>
                                   <ExternalLink className="h-4 w-4 mr-2" /> Join Session
+                                </DropdownMenuItem>
+                              )}
+                              {s.status === 'SCHEDULED' && (
+                                <DropdownMenuItem
+                                  disabled={startingId === s.id}
+                                  onClick={(e) => { e.stopPropagation(); handleStartSession(s.id); }}
+                                >
+                                  {startingId === s.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+                                  Start Session
+                                </DropdownMenuItem>
+                              )}
+                              {s.status === 'LIVE' && (
+                                <DropdownMenuItem
+                                  disabled={completingId === s.id}
+                                  onClick={(e) => { e.stopPropagation(); handleEndSession(s.id); }}
+                                >
+                                  {completingId === s.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                                  End Session
                                 </DropdownMenuItem>
                               )}
                               {s.status !== 'COMPLETED' && s.status !== 'CANCELLED' && (
