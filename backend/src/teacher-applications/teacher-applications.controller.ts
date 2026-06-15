@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import type { File } from 'multer';
 import { extname, join } from 'path';
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync } from 'fs';
@@ -74,7 +73,7 @@ export class TeacherApplicationsController {
       },
     }),
   )
-  uploadDocument(@UploadedFile() file: File) {
+  uploadDocument(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
