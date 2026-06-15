@@ -21,9 +21,14 @@ export class LearningGoalsService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    const count = await this.repo.count();
-    if (count === 0) {
-      await this.repo.save(DEFAULT_GOALS.map(g => this.repo.create(g)));
+    try {
+      const count = await this.repo.count();
+      if (count === 0) {
+        await this.repo.save(DEFAULT_GOALS.map(g => this.repo.create(g)));
+      }
+    } catch (error) {
+      // Log but don't crash - tables might not exist yet (need to run migrations first)
+      console.warn('Could not seed learning goals. Run migrations first:', error.message);
     }
   }
 
