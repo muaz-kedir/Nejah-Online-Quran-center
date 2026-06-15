@@ -24,8 +24,13 @@ export class UsersService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.seedSuperAdmin();
-    await this.seedDemoAccounts();
+    try {
+      await this.seedSuperAdmin();
+      await this.seedDemoAccounts();
+    } catch (error) {
+      // Log but don't crash - tables might not exist yet (need to run migrations first)
+      console.warn('Could not seed initial data. Run migrations first:', error.message);
+    }
   }
 
   private async seedDemoAccounts() {
@@ -66,7 +71,7 @@ export class UsersService implements OnModuleInit {
     }
   }
 
-  private async seedSuperAdmin() {
+  async seedSuperAdmin() {
     const superAdminEmail = 'nejahsuperadmin@gmail.com';
     const existingAdmin = await this.findByEmail(superAdminEmail);
 
