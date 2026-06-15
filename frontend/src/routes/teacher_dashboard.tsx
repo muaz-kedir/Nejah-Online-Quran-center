@@ -274,6 +274,7 @@ function TeacherDashboard() {
   const [notes, setNotes] = useState<any[]>([]);
   const [todaySessions, setTodaySessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [endingSessionId, setEndingSessionId] = useState<string | null>(null);
   const [noteModal, setNoteModal] = useState<{ open: boolean; note: any }>({
     open: false,
     note: null,
@@ -299,21 +300,86 @@ function TeacherDashboard() {
     return `${diff} days ago`;
   };
 
-  // ── Launch session
-  const handleLaunchSession = async (scheduleId: string) => {
+  // ── Launch / start session via live-sessions
+  const handleStartSession = async (session: any, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!session.liveSessionId) {
+      toast.error("Session not ready yet. Please wait a moment and refresh.");
+      return;
+    }
     try {
-      const response = await fetch(`${API}/attendance/sessions/by-schedule-today/${scheduleId}`, {
+      if (session.sessionStatus !== "LIVE") {
+        const startRes = await fetch(`${API}/live-sessions/${session.liveSessionId}/start`, {
+          method: "POST",
+          headers: authHeaders(),
+        });
+        if (!startRes.ok) {
+          const err = await startRes.json().catch(() => ({}));
+          throw new Error(err.message || "Failed to start session");
+        }
+      }
+      window.location.href = `/classroom/${session.liveSessionId}`;
+    } catch (e: any) {
+      toast.error(e.message || "Failed to start session");
+    }
+  };
+
+  const handleOpenSession = async (scheduleId: string) => {
+    try {
+      const response = await fetch(`${API}/live-sessions/for-schedule-today/${scheduleId}`, {
         headers: authHeaders(),
       });
       if (response.ok) {
-        const session = await response.json();
-        window.location.href = `/class-session/${session.id}`;
+        const liveSession = await response.json();
+        if (liveSession?.id) {
+          window.location.href = `/classroom/${liveSession.id}`;
+        } else {
+          toast.error("No session scheduled for today");
+        }
       } else {
         const err = await response.json();
-        toast.error(err.message || "Failed to initialize session");
+        toast.error(err.message || "Failed to load session");
       }
     } catch {
-      toast.error("Network error launching classroom");
+      toast.error("Network error loading classroom");
+    }
+  };
+
+  const loadTodaySessions = async () => {
+    try {
+      const sessRes = await fetch(`${API}/teacher/dashboard/today-sessions`, {
+        headers: authHeaders(),
+      });
+      if (sessRes.ok) setTodaySessions(await sessRes.json());
+    } catch {
+      console.error("Failed to refresh today sessions");
+    }
+  };
+
+  const handleEndSession = async (session: any, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!session.liveSessionId) {
+      toast.error("Session not ready yet.");
+      return;
+    }
+    if (!confirm("End this live session for all students?")) return;
+
+    setEndingSessionId(session.liveSessionId);
+    try {
+      const res = await fetch(`${API}/live-sessions/${session.liveSessionId}/end`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to end session");
+      }
+      toast.success("Session ended successfully");
+      await loadTodaySessions();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to end session");
+    } finally {
+      setEndingSessionId(null);
     }
   };
 
@@ -346,7 +412,7 @@ function TeacherDashboard() {
       }
     };
     load();
-    const iv = setInterval(() => setTodaySessions((p) => [...p]), 60000);
+    const iv = setInterval(loadTodaySessions, 60000);
     return () => clearInterval(iv);
   }, []);
 
@@ -823,75 +889,93 @@ function TeacherDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {todaySessions.map((session: any) => {
-                  const dynamicStatus = getSessionStatus(session.startTime, session.endTime);
-                  const isGroup = !!session.isGroupSession;
+                  const isLive = session.sessionPhase === "live" || session.sessionStatus === "LIVE";
+                  const isReady = session.sessionPhase === "ready" || isLive;
+                  const isCompleted = session.sessionPhase === "completed";
 
                   return (
                     <div
                       key={session.scheduleId}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleLaunchSession(session.scheduleId)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleLaunchSession(session.scheduleId);
-                        }
-                      }}
-                      className="glass-panel bg-card dark:bg-nejah-surface rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-border dark:border-white/5 cursor-pointer hover:shadow-md hover:border-nejah-electric/15 transition-all"
+                      className="glass-panel bg-card dark:bg-nejah-surface rounded-[40px] p-10 overflow-hidden relative group shadow-sm border border-border dark:border-white/5 hover:shadow-md hover:border-nejah-electric/15 transition-all"
                     >
-                      <div className="flex items-center gap-3 mb-8">
+                      <div className="flex items-center gap-3 mb-4">
                         <Clock className="h-5 w-5 text-amber-500" />
                         <span className="text-sm font-bold text-foreground">
                           {session.startTime} - {session.endTime}
                         </span>
                       </div>
+
+                      {!isCompleted && session.countdownMinutes !== null && !isLive && (
+                        <p className="text-xs font-bold text-nejah-electric uppercase tracking-wider mb-4">
+                          Starts in: {session.countdownMinutes} minute
+                          {session.countdownMinutes !== 1 ? "s" : ""}
+                        </p>
+                      )}
+
                       <h4 className="text-4xl font-extrabold text-foreground font-serif mb-2 line-clamp-1">
                         {session.title}
                       </h4>
-                      <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-semibold mb-10">
+                      <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-semibold mb-6">
                         {session.sessionType}
                       </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {isGroup && session.students?.length > 1 ? (
-                            <div className="flex -space-x-2 shrink-0">
-                              {session.students.slice(0, 3).map((s: any, i: number) => (
-                                <div
-                                  key={s.id}
-                                  className="w-9 h-9 rounded-full bg-nejah-sapphire flex items-center justify-center text-[10px] font-bold text-white border-2 border-white"
-                                  style={{ zIndex: 3 - i }}
-                                >
-                                  {s.fullName?.charAt(0) || "S"}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-nejah-sapphire flex items-center justify-center text-[10px] font-bold text-white border-2 border-white shrink-0">
-                              {session.studentAvatar}
-                            </div>
+                      <p className="text-xs font-bold text-foreground mb-8">{session.studentName}</p>
+
+                      <div className="flex items-center justify-between gap-4">
+                        <Badge
+                          className={cn(
+                            "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
+                            isCompleted
+                              ? "bg-muted dark:bg-background text-muted-foreground"
+                              : isLive
+                                ? "bg-red-50 text-red-600 animate-pulse"
+                                : isReady
+                                  ? "bg-primary/10 text-nejah-electric"
+                                  : "bg-blue-50 text-blue-600",
                           )}
-                          <span className="text-xs font-bold text-foreground line-clamp-2">
-                            {session.studentName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                          <Badge
-                            className={cn(
-                              "border-none font-bold text-[9px] uppercase tracking-wider px-3 py-1",
-                              dynamicStatus === "COMPLETED"
-                                ? "bg-muted dark:bg-background text-muted-foreground dark:text-nejah-slate-blue"
-                                : dynamicStatus === "LIVE NOW"
-                                  ? "bg-red-50 text-red-600 animate-pulse"
-                                  : "bg-primary/10 text-nejah-electric",
+                        >
+                          {isLive
+                            ? "LIVE NOW"
+                            : isCompleted
+                              ? "COMPLETED"
+                              : isReady
+                                ? "READY"
+                                : "UPCOMING"}
+                        </Badge>
+
+                        {!isCompleted && (isLive || isReady) && (
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              className="rounded-xl font-bold uppercase tracking-wider text-[10px]"
+                              onClick={(e) => handleStartSession(session, e)}
+                            >
+                              {isLive ? "Enter Classroom" : "Start Session"}
+                            </Button>
+                            {isLive && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-xl font-bold uppercase tracking-wider text-[10px] border-red-200 text-red-600 hover:bg-red-50"
+                                disabled={endingSessionId === session.liveSessionId}
+                                onClick={(e) => handleEndSession(session, e)}
+                              >
+                                {endingSessionId === session.liveSessionId
+                                  ? "Ending..."
+                                  : "End Session"}
+                              </Button>
                             )}
+                          </div>
+                        )}
+
+                        {!isLive && !isReady && !isCompleted && (
+                          <button
+                            type="button"
+                            className="text-sm font-extrabold text-nejah-electric hover:underline"
+                            onClick={() => handleOpenSession(session.scheduleId)}
                           >
-                            {dynamicStatus}
-                          </Badge>
-                          <span className="text-sm font-extrabold text-nejah-electric group-hover:underline">
-                            Open Quran View
-                          </span>
-                        </div>
+                            View Details
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

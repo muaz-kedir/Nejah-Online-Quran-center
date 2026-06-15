@@ -57,12 +57,7 @@ export function useSocket(callbacks?: SocketCallbacks) {
       if (!isSamePage) {
         const handleClick = () => {
           if (notif.data?.sessionId) {
-            const role = localStorage.getItem("userRole");
-            if (role === "student") {
-              window.location.href = `/class-session/${notif.data.sessionId}`;
-            } else {
-              window.location.href = `/live-sessions/${notif.data.sessionId}`;
-            }
+            window.location.href = `/classroom/${notif.data.sessionId}`;
           }
         };
 

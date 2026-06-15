@@ -13,6 +13,7 @@ import { Progress } from '../progress/entities/progress.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
+import { ZoomModule } from '../zoom/zoom.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TeacherReplacementsModule } from '../teacher-replacements/teacher-repla
     UsersModule,
     NotificationsModule,
     forwardRef(() => TeacherReplacementsModule),
+    forwardRef(() => ZoomModule),
   ],
   controllers: [TeachersController, TeacherDashboardController],
   providers: [TeachersService],

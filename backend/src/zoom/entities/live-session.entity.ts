@@ -50,6 +50,15 @@ export class LiveSession {
   @Column({ nullable: true })
   zoomStartUrl: string;
 
+  @Column({ nullable: true })
+  zoomPassword: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  teacherJoinTime: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  teacherLeaveTime: Date;
+
   @Column({ type: 'timestamp' })
   scheduledStart: Date;
 

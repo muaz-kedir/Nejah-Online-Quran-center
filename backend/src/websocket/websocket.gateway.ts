@@ -6,11 +6,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
+import { Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 
-interface AuthenticatedSocket extends Socket {
+type AuthenticatedSocket = Socket & {
   userId?: string;
   userRole?: string;
 }
