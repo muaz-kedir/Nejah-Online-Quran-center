@@ -24,6 +24,9 @@ import { TeacherNote } from './entities/teacher-note.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { TeachersService } from './teachers.service';
 import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
+import { LiveSessionService } from '../zoom/live-session.service';
+import { ScheduleSessionGeneratorService } from '../zoom/schedule-session-generator.service';
+import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 
 @Controller('teacher/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -42,6 +45,8 @@ export class TeacherDashboardController {
     private progressRepository: Repository<Progress>,
     private teachersService: TeachersService,
     private replacementsService: TeacherReplacementsService,
+    private liveSessionService: LiveSessionService,
+    private scheduleSessionGenerator: ScheduleSessionGeneratorService,
   ) {}
 
   private async requireTeacher(req: { user: { id: string } }): Promise<Teacher> {
@@ -165,47 +170,70 @@ export class TeacherDashboardController {
       relations: ['student', 'scheduleStudents', 'scheduleStudents.student'],
     });
 
-    return sessions.map((s) => {
-      const groupStudents = (s.scheduleStudents || [])
-        .map((ss) => ss.student)
-        .filter(Boolean)
-        .map((student) => ({
-          id: student.id,
-          fullName: student.fullName,
-          level: student.level,
-        }));
+    const results = await Promise.all(
+      sessions.map(async (s) => {
+        const groupStudents = (s.scheduleStudents || [])
+          .map((ss) => ss.student)
+          .filter(Boolean)
+          .map((student) => ({
+            id: student.id,
+            fullName: student.fullName,
+            level: student.level,
+          }));
 
-      const isGroupSession = !!s.isGroupSession;
-      const studentCount = isGroupSession ? groupStudents.length : 1;
+        const isGroupSession = !!s.isGroupSession;
+        const studentCount = isGroupSession ? groupStudents.length : 1;
 
-      return {
-        scheduleId: s.id,
-        title: s.className || 'Quran Class',
-        isGroupSession,
-        studentCount,
-        students: isGroupSession
-          ? groupStudents
-          : s.student
-            ? [{ id: s.student.id, fullName: s.student.fullName, level: s.student.level }]
-            : [],
-        studentName: isGroupSession
-          ? `Group · ${studentCount} students`
-          : s.student?.fullName || 'Unknown Student',
-        studentAvatar: isGroupSession
-          ? 'G'
-          : s.student?.fullName
-            ? s.student.fullName.charAt(0)
-            : 'U',
-        sessionType: isGroupSession ? 'Group Session' : s.classType || '1:1 Session',
-        startTime: s.startTimeString,
-        endTime: s.endTimeString,
-        meetingLink: s.meetingLink,
-        status: s.status,
-        level: isGroupSession
-          ? groupStudents[0]?.level || 'Beginner'
-          : s.student?.level || 'Beginner',
-      };
-    });
+        const liveSession = await this.scheduleSessionGenerator.getTodaySessionForSchedule(s.id);
+        const now = new Date();
+        const scheduledStart = liveSession?.scheduledStart ? new Date(liveSession.scheduledStart) : null;
+        const msUntilStart = scheduledStart ? scheduledStart.getTime() - now.getTime() : null;
+
+        let sessionPhase: 'upcoming' | 'ready' | 'live' | 'completed' = 'upcoming';
+        if (liveSession?.status === LiveSessionStatus.LIVE) {
+          sessionPhase = 'live';
+        } else if (liveSession?.status === LiveSessionStatus.COMPLETED) {
+          sessionPhase = 'completed';
+        } else if (msUntilStart !== null && msUntilStart <= 15 * 60 * 1000) {
+          sessionPhase = 'ready';
+        }
+
+        return {
+          scheduleId: s.id,
+          liveSessionId: liveSession?.id || null,
+          sessionStatus: liveSession?.status || null,
+          sessionPhase,
+          countdownMinutes: msUntilStart !== null ? Math.max(0, Math.ceil(msUntilStart / 60000)) : null,
+          scheduledStart: liveSession?.scheduledStart || null,
+          title: s.className || 'Quran Class',
+          isGroupSession,
+          studentCount,
+          students: isGroupSession
+            ? groupStudents
+            : s.student
+              ? [{ id: s.student.id, fullName: s.student.fullName, level: s.student.level }]
+              : [],
+          studentName: isGroupSession
+            ? `Group · ${studentCount} students`
+            : s.student?.fullName || 'Unknown Student',
+          studentAvatar: isGroupSession
+            ? 'G'
+            : s.student?.fullName
+              ? s.student.fullName.charAt(0)
+              : 'U',
+          sessionType: isGroupSession ? 'Group Session' : s.classType || '1:1 Session',
+          startTime: s.startTimeString,
+          endTime: s.endTimeString,
+          meetingLink: liveSession?.zoomJoinUrl || s.meetingLink,
+          status: s.status,
+          level: isGroupSession
+            ? groupStudents[0]?.level || 'Beginner'
+            : s.student?.level || 'Beginner',
+        };
+      }),
+    );
+
+    return results.filter((s) => s.sessionPhase !== 'completed');
   }
 
   @Get('notes')

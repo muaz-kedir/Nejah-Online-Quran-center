@@ -23,6 +23,7 @@ import { ResourcesModule } from '../resources/resources.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 import { ParentsModule } from '../parents/parents.module';
+import { ZoomModule } from '../zoom/zoom.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ParentsModule } from '../parents/parents.module';
     AttendanceModule,
     TeacherReplacementsModule,
     ParentsModule,
+    ZoomModule,
     TypeOrmModule.forFeature([
       Student,
       Parent,

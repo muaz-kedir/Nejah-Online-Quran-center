@@ -120,6 +120,7 @@ export class ZoomWebhookService {
 
     session.status = LiveSessionStatus.COMPLETED;
     session.actualEnd = new Date();
+    session.teacherLeaveTime = session.teacherLeaveTime || new Date();
 
     if (session.actualStart) {
       const durationMs = session.actualEnd.getTime() - session.actualStart.getTime();
@@ -132,16 +133,29 @@ export class ZoomWebhookService {
       where: { sessionId: session.id },
     });
 
+    const scheduledDuration = session.scheduledStart && session.scheduledEnd
+      ? Math.max(
+          1,
+          Math.round(
+            (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
+          ),
+        )
+      : 60;
+
     for (const attendance of attendances) {
       if (!attendance.joinTime) {
         attendance.attendanceStatus = AttendanceStatus.ABSENT;
-      } else if (!attendance.leaveTime) {
-        attendance.leaveTime = session.actualEnd;
-        if (attendance.joinTime) {
-          attendance.duration = Math.floor(
-            (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
-          );
+      } else {
+        if (!attendance.leaveTime) {
+          attendance.leaveTime = session.actualEnd;
         }
+        attendance.duration = Math.floor(
+          (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
+        );
+        attendance.attendanceStatus = this.sessionAttendanceService.calculateAttendanceStatus(
+          attendance.duration,
+          scheduledDuration,
+        );
       }
     }
     await this.attendanceRepository.save(attendances);

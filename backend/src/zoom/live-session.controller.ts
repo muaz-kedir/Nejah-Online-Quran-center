@@ -25,6 +25,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
 import { Parent } from '../parents/entities/parent.entity';
 import { Student } from '../students/entities/student.entity';
+import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
 
 @Controller('live-sessions')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,6 +34,7 @@ export class LiveSessionController {
     private readonly liveSessionService: LiveSessionService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly teachersService: TeachersService,
+    private readonly scheduleSessionGenerator: ScheduleSessionGeneratorService,
     @InjectRepository(Parent)
     private readonly parentRepository: Repository<Parent>,
     @InjectRepository(Student)
@@ -154,6 +156,69 @@ export class LiveSessionController {
     return this.liveSessionService.getStudentSessions(studentId, page, limit);
   }
 
+  @Get('for-schedule-today/:scheduleId')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getSessionForScheduleToday(@Request() req, @Param('scheduleId') scheduleId: string) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      await this.teachersService.assertScheduleBelongsToTeacher(teacher.id, scheduleId);
+    }
+    return this.scheduleSessionGenerator.getTodaySessionForSchedule(scheduleId);
+  }
+
+  @Get('student-live/:studentId')
+  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async getStudentLiveSession(@Request() req, @Param('studentId') studentId: string) {
+    if (req.user.role === UserRole.STUDENT) {
+      const student = await this.studentRepository.findOne({
+        where: { id: studentId, userId: req.user.id },
+      });
+      if (!student) throw new ForbiddenException('You can only view your own sessions');
+    }
+    const live = await this.liveSessionService.getStudentActiveLiveSession(studentId);
+    const upcoming = await this.liveSessionService.getStudentUpcomingTodaySession(studentId);
+    return { live, upcoming };
+  }
+
+  @Post(':id/join')
+  @Roles(UserRole.TEACHER, UserRole.STUDENT)
+  async joinSession(@Param('id') id: string, @Request() req) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      return this.liveSessionService.joinSession(id, {
+        teacherId: teacher.id,
+        isTeacher: true,
+      });
+    }
+
+    const student = await this.studentRepository.findOne({ where: { userId: req.user.id } });
+    if (!student) throw new ForbiddenException('Student profile not found');
+    return this.liveSessionService.joinSession(id, { studentId: student.id, isTeacher: false });
+  }
+
+  @Get(':id/classroom')
+  @Roles(UserRole.TEACHER, UserRole.STUDENT)
+  async getClassroomAccess(@Param('id') id: string, @Request() req) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      return this.liveSessionService.getClassroomAccess(id, {
+        teacherId: teacher.id,
+        isTeacher: true,
+        userName: teacher.fullName,
+        userEmail: teacher.email,
+      });
+    }
+
+    const student = await this.studentRepository.findOne({ where: { userId: req.user.id } });
+    if (!student) throw new ForbiddenException('Student profile not found');
+    return this.liveSessionService.getClassroomAccess(id, {
+      studentId: student.id,
+      isTeacher: false,
+      userName: student.fullName,
+      userEmail: student.email || student.zoomEmail,
+    });
+  }
+
   @Get(':id')
   @Roles(
     UserRole.TEACHER,
@@ -185,7 +250,24 @@ export class LiveSessionController {
 
   @Post(':id/complete')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async complete(@Param('id') id: string) {
+  async complete(@Param('id') id: string, @Request() req) {
+    return this.endSession(id, req);
+  }
+
+  @Post(':id/end')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async end(@Param('id') id: string, @Request() req) {
+    return this.endSession(id, req);
+  }
+
+  private async endSession(id: string, req: { user: { id: string; role: UserRole } }) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      const session = await this.liveSessionService.findById(id);
+      if (session.teacherId !== teacher.id) {
+        throw new ForbiddenException('You are not assigned to this session');
+      }
+    }
     return this.liveSessionService.complete(id);
   }
 

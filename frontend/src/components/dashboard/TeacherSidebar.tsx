@@ -1,12 +1,13 @@
 import { memo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Users, Calendar, Bell, User, LogOut, Video } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Bell, User, LogOut, Video, Settings } from 'lucide-react';
 
 const menuItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
   { label: 'Students', icon: Users, path: '/teacher_students' },
   { label: 'Zoom Sessions', icon: Video, path: '/teacher_zoom' },
+  { label: 'Zoom Settings', icon: Settings, path: '/zoom-settings' },
   { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
   { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
   { label: 'Profile', icon: User, path: '/teacher_profile' },

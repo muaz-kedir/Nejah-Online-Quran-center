@@ -14,6 +14,9 @@ import { ClassSession, SessionStatus } from '../attendance/entities/class-sessio
 import { ResourcesService } from '../resources/resources.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
+import { LiveSessionService } from '../zoom/live-session.service';
+import { SessionAttendanceService } from '../zoom/session-attendance.service';
+import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 import { resolveLearningTrack } from '../common/constants/learning-curricula';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -44,6 +47,8 @@ export class StudentPortalService {
     private resourcesService: ResourcesService,
     private attendanceService: AttendanceService,
     private replacementsService: TeacherReplacementsService,
+    private liveSessionService: LiveSessionService,
+    private sessionAttendanceService: SessionAttendanceService,
   ) {}
 
   async resolveStudent(userId: string): Promise<Student> {
@@ -86,7 +91,7 @@ export class StudentPortalService {
 
     const progressRecord = await this.findCurrentProgress(student);
     const attendances = await this.attendanceRepository.find({ where: { studentId } });
-    const sessionStats = await this.attendanceService.getAttendanceStats(studentId);
+    const sessionStats = await this.sessionAttendanceService.getAttendanceStats(studentId);
 
     const effectiveTeacher = await this.replacementsService.getEffectiveTeacher(studentId);
     const schedules = await this.replacementsService.getEffectiveSchedulesForStudent(studentId);
@@ -134,7 +139,8 @@ export class StudentPortalService {
       where: { userId, isRead: false },
     });
 
-    const liveClass = await this.attendanceService.getStudentLiveClass(studentId);
+    const liveSession = await this.liveSessionService.getStudentActiveLiveSession(studentId);
+    const upcomingSession = await this.liveSessionService.getStudentUpcomingTodaySession(studentId);
 
     const nextTodaySchedule = todaySchedules[0] || schedules[0];
     const effectiveTeacherEntity = activeReplacement?.replacementTeacher || student.teacher;
@@ -155,9 +161,9 @@ export class StudentPortalService {
             nextTodaySchedule.startTimeString && nextTodaySchedule.endTimeString
               ? `${nextTodaySchedule.startTimeString} - ${nextTodaySchedule.endTimeString}`
               : 'Scheduled',
-          meetingLink: liveClass?.meetingLink || nextTodaySchedule.meetingLink,
-          status: liveClass ? 'live' : 'scheduled',
-          sessionId: liveClass?.id || null,
+          meetingLink: liveSession?.zoomJoinUrl || nextTodaySchedule.meetingLink,
+          status: liveSession ? 'live' : upcomingSession ? 'scheduled' : 'scheduled',
+          sessionId: liveSession?.id || upcomingSession?.id || null,
         }
       : null;
 
@@ -171,9 +177,9 @@ export class StudentPortalService {
         startTime: activeReplacement.startTimeString,
         endTime: activeReplacement.endTimeString,
         time: `${activeReplacement.startTimeString} - ${activeReplacement.endTimeString}`,
-        meetingLink: liveClass?.meetingLink || activeReplacement.meetingLink,
-        status: liveClass ? 'live' : 'scheduled',
-        sessionId: liveClass?.id || activeReplacement.classSessionId || null,
+        meetingLink: liveSession?.zoomJoinUrl || activeReplacement.meetingLink,
+        status: liveSession ? 'live' : 'scheduled',
+        sessionId: liveSession?.id || activeReplacement.classSessionId || null,
       };
     }
 
@@ -290,14 +296,33 @@ export class StudentPortalService {
         weekly: weeklyAttendance,
       },
       upcomingClass,
-      liveClass: liveClass
+      liveClass: liveSession
         ? {
-            id: liveClass.id,
-            classTitle: liveClass.classTitle,
-            meetingLink: liveClass.meetingLink,
-            teacher: liveClass.teacher ? { fullName: liveClass.teacher.fullName } : null,
+            id: liveSession.id,
+            classTitle:
+              liveSession.metadata?.className ||
+              liveSession.schedule?.className ||
+              'Quran Class',
+            meetingLink: liveSession.zoomJoinUrl,
+            status: liveSession.status,
+            scheduledStart: liveSession.scheduledStart,
+            teacher: liveSession.teacher ? { fullName: liveSession.teacher.fullName } : null,
           }
-        : null,
+        : upcomingSession?.status === LiveSessionStatus.LIVE
+          ? {
+              id: upcomingSession.id,
+              classTitle:
+                upcomingSession.metadata?.className ||
+                upcomingSession.schedule?.className ||
+                'Quran Class',
+              meetingLink: upcomingSession.zoomJoinUrl,
+              status: upcomingSession.status,
+              scheduledStart: upcomingSession.scheduledStart,
+              teacher: upcomingSession.teacher
+                ? { fullName: upcomingSession.teacher.fullName }
+                : null,
+            }
+          : null,
       todaysLesson: {
         surah: progressRecord?.lastStudiedSurah || pendingHomework?.title || '—',
         ayahRange: progressRecord?.lastStudiedAyah ? `Ayah ${progressRecord.lastStudiedAyah}` : '—',
@@ -371,12 +396,17 @@ export class StudentPortalService {
       take: 30,
     });
 
-    const liveClass = await this.attendanceService.getStudentLiveClass(student.id);
+    const liveSession = await this.liveSessionService.getStudentActiveLiveSession(student.id);
+    const upcomingSession = await this.liveSessionService.getStudentUpcomingTodaySession(student.id);
 
     const current = schedules
       .filter((s) => s.status === 'active' && s.dayOfWeek === today)
       .map((s) =>
-        this.mapSchedule(s, student, liveClass?.scheduleId === s.id ? 'live' : 'scheduled'),
+        this.mapSchedule(
+          s,
+          student,
+          liveSession?.scheduleId === s.id ? 'live' : 'scheduled',
+        ),
       );
 
     const upcoming = schedules
@@ -396,7 +426,7 @@ export class StudentPortalService {
         attendanceStatus: h.attendanceStatus,
       }));
 
-    return { current, upcoming, previous, liveClass };
+    return { current, upcoming, previous, liveClass: liveSession || upcomingSession };
   }
 
   private mapSchedule(s: Schedule, student: Student, status: string) {

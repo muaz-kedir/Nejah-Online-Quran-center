@@ -17,10 +17,15 @@ export class ZoomWebhookController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async handleWebhook(@Body() body: ZoomWebhookDto, @Headers('authorization') authHeader: string) {
+  async handleWebhook(@Body() body: ZoomWebhookDto, @Headers() headers: Record<string, string>) {
+    const signature =
+      headers['x-zm-signature'] || headers['authorization'] || '';
+    const timestamp = headers['x-zm-request-timestamp'];
+
     const isValid = this.zoomService.verifyWebhookSignature(
       body as unknown as Record<string, unknown>,
-      authHeader || '',
+      signature,
+      timestamp,
     );
     if (!isValid) {
       this.logger.warn('Invalid webhook signature received');
