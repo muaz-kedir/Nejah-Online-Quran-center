@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Video, Loader2, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react";
@@ -9,7 +10,7 @@ import {
   type ClassroomJoinConfig,
 } from "@/components/classroom/ZoomEmbeddedMeeting";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
 const authHeaders = () => ({
   "Content-Type": "application/json",

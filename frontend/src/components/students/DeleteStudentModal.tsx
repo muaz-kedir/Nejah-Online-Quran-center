@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState } from 'react';
 import {
   AlertDialog,
@@ -34,7 +35,7 @@ export function DeleteStudentModal({
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/students/${studentId}`, {
+      const response = await fetch(`${API_BASE}/students/${studentId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

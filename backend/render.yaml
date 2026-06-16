@@ -25,9 +25,9 @@ services:
       - key: JWT_EXPIRATION
         value: 7d
       - key: FRONTEND_URL
-        value: https://your-app.vercel.app # Update after Vercel deployment
+        value: https://nejah-online-quran-center.vercel.app
       - key: CORS_ORIGINS
-        value: https://your-app.vercel.app # Update after Vercel deployment
+        value: http://localhost:8080,https://nejah-online-quran-center.vercel.app
 
 databases:
   - name: nejah-db

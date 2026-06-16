@@ -7,8 +7,11 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
+// Nitro preset "vercel" produces the serverless bundle Vercel expects.
 export default defineConfig({
+  nitro: {
+    preset: "vercel",
+  },
   tanstackStart: {
     server: { entry: "server" },
   },

@@ -1,3 +1,4 @@
+import { API_BASE, apiAssetUrl } from "@/lib/api";
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Dialog,
@@ -24,7 +25,7 @@ import { Country, City } from 'country-state-city';
 import { getCountryIsoByName } from '@/lib/geo-data';
 import { buildUpdateTeacherPayload } from '@/lib/teacher-payload';
 
-const API = 'http://localhost:3000/api';
+const API = API_BASE;
 
 interface EditTeacherModalProps {
   open: boolean;
@@ -183,7 +184,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
             >
               {formData.avatarUrl ? (
                 <img
-                  src={`http://localhost:3000${formData.avatarUrl}`}
+                  src={apiAssetUrl(formData.avatarUrl)}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />

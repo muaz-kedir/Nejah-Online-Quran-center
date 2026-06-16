@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -45,7 +46,7 @@ export function AddUserModal({ open, onClose, onSuccess, defaultRole = 'student'
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users', {
+      const response = await fetch('${API_BASE}/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { 
@@ -383,7 +384,7 @@ function ParentDashboard() {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/api/parent/dashboard', {
+        const response = await fetch('${API_BASE}/parent/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
@@ -411,10 +412,10 @@ function ParentDashboard() {
       try {
         const token = localStorage.getItem('token');
         const [historyRes, statsRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/attendance/student/history?studentId=${selectedChildId}`, {
+          fetch(`${API_BASE}/attendance/student/history?studentId=${selectedChildId}`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          fetch(`http://localhost:3000/api/attendance/student/stats?studentId=${selectedChildId}`, {
+          fetch(`${API_BASE}/attendance/student/stats?studentId=${selectedChildId}`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);

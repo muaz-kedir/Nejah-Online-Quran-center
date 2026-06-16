@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -25,7 +26,7 @@ function FinanceSettingsPage() {
     try {
       const token = localStorage.getItem('token');
       const userId = localStorage.getItem('userId');
-      const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
+      const res = await fetch(`${API_BASE}/users/${userId}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
@@ -44,7 +45,7 @@ function FinanceSettingsPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3000/api/users/change-password', {
+      const res = await fetch('${API_BASE}/users/change-password', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword: newPassword }),

@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { RefreshCw, Trash2, Globe, Database } from 'lucide-react';
 
-const API = 'http://localhost:3000/api';
+const API = API_BASE;
 
 interface CurrencyRate {
   id: string;

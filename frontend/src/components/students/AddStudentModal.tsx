@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -87,8 +88,6 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const togglePassword = (field: string) => setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
-
-  const API_BASE = 'http://localhost:3000/api';
 
   useEffect(() => {
     const token = localStorage.getItem('token');

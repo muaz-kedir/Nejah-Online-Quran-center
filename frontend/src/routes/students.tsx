@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -110,7 +111,7 @@ function StudentsPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3000/api/students/stats', {
+      const res = await fetch('${API_BASE}/students/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -123,7 +124,7 @@ function StudentsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = `http://localhost:3000/api/students?page=${meta.page}&limit=${meta.limit}`;
+      let url = `${API_BASE}/students?page=${meta.page}&limit=${meta.limit}`;
       if (search) url += `&search=${search}`;
       if (level !== 'all') url += `&level=${level}`;
       if (teacherId !== 'all') url += `&teacherId=${teacherId}`;
@@ -157,7 +158,7 @@ function StudentsPage() {
   const fetchTeachers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/teachers', {
+      const response = await fetch('${API_BASE}/teachers', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -176,7 +177,7 @@ function StudentsPage() {
   const fetchParents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/parents', {
+      const response = await fetch('${API_BASE}/parents', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { Country, City } from 'country-state-city';
 import { getCountryIsoByName } from '@/lib/geo-data';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
-import { API_BASE, formatApiError } from '@/lib/api';
+import { API_BASE, apiAssetUrl, formatApiError } from '@/lib/api';
 
 interface AddTeacherModalProps {
   open: boolean;
@@ -315,7 +315,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
             >
               {formData.avatarUrl ? (
                 <img
-                  src={`http://localhost:3000${formData.avatarUrl}`}
+                  src={apiAssetUrl(formData.avatarUrl)}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />

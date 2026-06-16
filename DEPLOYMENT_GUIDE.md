@@ -68,12 +68,12 @@ This guide covers deploying the backend to Render and the frontend to Vercel.
    PORT=3000
    
    # Database (use Internal Database URL from Step 2)
-   DATABASE_HOST=<your-db-host>
+   DATABASE_HOST=dpg-d8o4lfbsq97s73f5tidg-a
    DATABASE_PORT=5432
-   DATABASE_USERNAME=<your-db-user>
-   DATABASE_PASSWORD=<your-db-password>
-   DATABASE_NAME=nejah_quran_center
-   DATABASE_URL=<your-internal-database-url>
+   DATABASE_USERNAME=nejah_db_user
+   DATABASE_PASSWORD=kIKYguf84ZmP4EGNgXsf1bOoDqWDhKuy
+   DATABASE_NAME=nejah_db
+   DATABASE_URL=postgresql://nejah_db_user:kIKYguf84ZmP4EGNgXsf1bOoDqWDhKuy@dpg-d8o4lfbsq97s73f5tidg-a/nejah_db
    
    # JWT Secret (generate a strong secret)
    JWT_SECRET=<generate-a-strong-random-secret-at-least-32-chars>

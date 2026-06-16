@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -35,7 +36,7 @@ import { Plus, Search, ClipboardList, Clock, User, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 
-const API = 'http://localhost:3000/api';
+const API = API_BASE;
 
 export const Route = createFileRoute('/homework')({
   component: HomeworkPage,

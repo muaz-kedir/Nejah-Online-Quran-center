@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
@@ -7,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { toast } from 'sonner';
-
-const API_BASE = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/teacher_profile')({
   component: TeacherProfilePage,

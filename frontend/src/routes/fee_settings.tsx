@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, DollarSign } from 'lucide-react';
 
-const API = 'http://localhost:3000/api';
+const API = API_BASE;
 
 interface LearningGoal { id: string; name: string; }
 interface FeeConfig {

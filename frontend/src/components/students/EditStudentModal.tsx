@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -108,7 +109,7 @@ export function EditStudentModal({ open, onClose, onSuccess, student, teachers }
       if (!body.familyCountry) delete body.familyCountry;
       if (!body.learningGoals) delete body.learningGoals;
 
-      const response = await fetch(`http://localhost:3000/api/students/${student.id}`, {
+      const response = await fetch(`${API_BASE}/students/${student.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

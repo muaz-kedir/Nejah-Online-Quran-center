@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useRef } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
@@ -28,7 +29,7 @@ import { toast } from "sonner";
 import { TemporaryReplacementClassCard } from "@/components/teachers/TemporaryReplacementClassCard";
 import { TeacherSidebar } from "@/components/dashboard/TeacherSidebar";
 
-const API = "http://localhost:3000/api";
+const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
 const authHeaders = () => ({
   "Content-Type": "application/json",

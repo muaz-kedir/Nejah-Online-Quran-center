@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -46,10 +47,10 @@ export function ProgressDetailsModal({ open, onClose, studentId, studentName }: 
     try {
       const token = localStorage.getItem('token');
       const [progressRes, logsRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/progress/student/${studentId}`, {
+        fetch(`${API_BASE}/progress/student/${studentId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`http://localhost:3000/api/progress/student/${studentId}/logs`, {
+        fetch(`${API_BASE}/progress/student/${studentId}/logs`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

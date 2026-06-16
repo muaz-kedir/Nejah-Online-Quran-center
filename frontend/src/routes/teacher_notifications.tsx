@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
@@ -6,8 +7,6 @@ import { Bell, AlertCircle, CheckCircle, MessageSquare, Info } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-const API_BASE = 'http://localhost:3000/api';
 
 export const Route = createFileRoute('/teacher_notifications')({
   component: TeacherNotificationsPage,

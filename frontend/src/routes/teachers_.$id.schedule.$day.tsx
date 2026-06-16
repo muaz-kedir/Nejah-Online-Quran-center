@@ -83,7 +83,7 @@ function TeacherDailySchedulePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/schedules/${confirmDeleteScheduleId}`, {
+      const response = await fetch(`${API_BASE}/schedules/${confirmDeleteScheduleId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

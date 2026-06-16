@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useCallback, memo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -151,8 +152,6 @@ function TeachersPage() {
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
   const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
-
-  const API_BASE = 'http://localhost:3000/api';
 
   const fetchTeachers = async () => {
     setLoading(true);

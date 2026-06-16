@@ -6,10 +6,10 @@ node_modules
 dist/
 dist
 
-# Environment variables
+# Environment variables (keep .env.production — public Vite URLs only)
 .env
 .env.local
-.env.production
+.env*.local
 .dev.vars
 
 # Logs
@@ -36,6 +36,7 @@ lerna-debug.log*
 # Build tools
 .wrangler/
 .tanstack/
+.vercel/
 .cursor/
 .kilocode/
 

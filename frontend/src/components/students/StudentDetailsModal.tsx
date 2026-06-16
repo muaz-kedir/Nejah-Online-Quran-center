@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
   const handleOpenClassSession = async (scheduleId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/attendance/sessions/by-schedule-today/${scheduleId}`, {
+      const response = await fetch(`${API_BASE}/attendance/sessions/by-schedule-today/${scheduleId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

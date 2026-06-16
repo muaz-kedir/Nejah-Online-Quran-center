@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { memo, useState, useEffect } from 'react';
 import { Users, GraduationCap, BookOpen, TrendingUp } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -19,7 +20,7 @@ export const DashboardCards = memo(function DashboardCards() {
       try {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
-        const base = 'http://localhost:3000/api';
+        const base = API_BASE;
 
         const [studentsRes, teachersRes] = await Promise.all([
           fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),

@@ -1,9 +1,10 @@
+import { API_ORIGIN, apiAssetUrl } from "@/lib/api";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:3000";
+const WS_URL = import.meta.env.VITE_WS_URL || API_ORIGIN;
 
 type NotificationData = {
   id: string;

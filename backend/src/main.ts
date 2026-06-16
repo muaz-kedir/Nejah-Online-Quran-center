@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { validateEnvironment } from './config/env-validation';
+import { isAllowedCorsOrigin } from './config/cors-origins';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -31,17 +32,9 @@ async function bootstrap() {
   // CORS configuration - Allow all localhost origins in development
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, curl)
       if (!origin) return callback(null, true);
 
-      // In development, allow all localhost origins
-      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-        return callback(null, true);
-      }
-
-      // Check configured origin
-      const configuredOrigin = configService.get('CORS_ORIGIN');
-      if (configuredOrigin && origin === configuredOrigin) {
+      if (isAllowedCorsOrigin(origin, configService)) {
         return callback(null, true);
       }
 

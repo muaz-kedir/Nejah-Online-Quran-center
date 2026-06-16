@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -23,7 +24,7 @@ function QiratSettingsPage() {
     try {
       const token = localStorage.getItem('token');
       const userId = localStorage.getItem('userId');
-      const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
+      const res = await fetch(`${API_BASE}/users/${userId}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),

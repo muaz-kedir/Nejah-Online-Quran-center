@@ -1,5 +1,19 @@
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+/** Backend origin without the `/api` suffix — used for uploaded assets and WebSockets. */
+export const API_ORIGIN =
+  import.meta.env.VITE_WS_URL?.replace(/\/$/, '') ||
+  API_BASE.replace(/\/api\/?$/, '') ||
+  'http://localhost:3000';
+
+export const WS_URL = import.meta.env.VITE_WS_URL || API_ORIGIN;
+
+export function apiAssetUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `${API_ORIGIN}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 export function apiHeaders() {
   const token = localStorage.getItem('token');
   return {

@@ -104,7 +104,7 @@ function TeacherProfilePage() {
   const fetchUnassignedStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/students/unassigned', {
+      const response = await fetch('${API_BASE}/students/unassigned', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -163,7 +163,7 @@ function TeacherProfilePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/teachers/${id}/assign-students`, {
+      const response = await fetch(`${API_BASE}/teachers/${id}/assign-students`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ function TeacherProfilePage() {
     setUnassigningId(studentId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/students/assignments/unassign', {
+      const response = await fetch('${API_BASE}/students/assignments/unassign', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ function TeacherProfilePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/schedules/${confirmDeleteScheduleId}`, {
+      const response = await fetch(`${API_BASE}/schedules/${confirmDeleteScheduleId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

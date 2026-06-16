@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -58,7 +59,7 @@ function AdminAttendancePage() {
       const token = localStorage.getItem('token');
       
       // 1. Fetch live sessions
-      const liveRes = await fetch('http://localhost:3000/api/attendance/live-classes', {
+      const liveRes = await fetch('${API_BASE}/attendance/live-classes', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (liveRes.ok) {
@@ -87,8 +88,8 @@ function AdminAttendancePage() {
       // - GET todays-sessions
       // Ah! We don't have a generic endpoint to list all sessions. But we have GET /api/attendance/todays-sessions!
       // Let's fetch todays-sessions (which returns sessions for today). We can also write a backend method to list all sessions for admins.
-      // Let's hit GET http://localhost:3000/api/attendance/todays-sessions to show today's checklist, and we can also fetch all sessions.
-      const sessionsRes = await fetch('http://localhost:3000/api/attendance/todays-sessions', {
+      // Let's hit GET ${API_BASE}/attendance/todays-sessions to show today's checklist, and we can also fetch all sessions.
+      const sessionsRes = await fetch('${API_BASE}/attendance/todays-sessions', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (sessionsRes.ok) {
@@ -120,7 +121,7 @@ function AdminAttendancePage() {
   const handleRowClick = async (sessionId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3000/api/attendance/sessions/${sessionId}`, {
+      const res = await fetch(`${API_BASE}/attendance/sessions/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
