@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -237,7 +237,7 @@ function ParentsPage() {
       if (search) params.append('search', search);
       if (statusFilter !== 'all') params.append('status', statusFilter);
 
-      const response = await fetch(`${API_BASE}/parents?${params}`, {
+      const response = await fetch(apiUrl(`/parents?${params}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const res = await response.json();
@@ -267,7 +267,7 @@ function ParentsPage() {
 
       // Compute stats from all parents
       try {
-        const allRes = await fetch(`${API_BASE}/parents?limit=1000`, {
+        const allRes = await fetch(apiUrl(`/parents?limit=1000`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         const allData = await allRes.json();

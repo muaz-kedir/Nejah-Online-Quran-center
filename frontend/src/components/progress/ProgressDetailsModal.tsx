@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -47,10 +47,10 @@ export function ProgressDetailsModal({ open, onClose, studentId, studentName }: 
     try {
       const token = localStorage.getItem('token');
       const [progressRes, logsRes] = await Promise.all([
-        fetch(`${API_BASE}/progress/student/${studentId}`, {
+        fetch(apiUrl(`/progress/student/${studentId}`), {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${API_BASE}/progress/student/${studentId}/logs`, {
+        fetch(apiUrl(`/progress/student/${studentId}/logs`), {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

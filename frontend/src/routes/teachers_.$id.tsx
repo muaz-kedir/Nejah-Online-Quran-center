@@ -40,7 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { api, API_BASE } from '@/lib/api';
+import { api, API_BASE, apiUrl } from "@/lib/api";
 import {
   getSchedulesForDay,
   getTodayDayName,
@@ -88,7 +88,7 @@ function TeacherProfilePage() {
     if (!teacher) setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/${id}?t=${Date.now()}`, {
+      const response = await fetch(apiUrl(`/teachers/${id}?t=${Date.now()}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error();
@@ -104,7 +104,7 @@ function TeacherProfilePage() {
   const fetchUnassignedStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/students/unassigned`, {
+      const response = await fetch(apiUrl(`/students/unassigned`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -163,7 +163,7 @@ function TeacherProfilePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/${id}/assign-students`, {
+      const response = await fetch(apiUrl(`/teachers/${id}/assign-students`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ function TeacherProfilePage() {
     setUnassigningId(studentId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/students/assignments/unassign`, {
+      const response = await fetch(apiUrl(`/students/assignments/unassign`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ function TeacherProfilePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/schedules/${confirmDeleteScheduleId}`, {
+      const response = await fetch(apiUrl(`/schedules/${confirmDeleteScheduleId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

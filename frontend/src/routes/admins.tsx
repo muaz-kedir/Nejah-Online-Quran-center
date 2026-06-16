@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -59,7 +59,7 @@ function AdminsPage() {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams({ limit: '100', role: tab });
       if (search) params.append('search', search);
-      const res = await fetch(`${API_BASE}/users?${params}`, {
+      const res = await fetch(apiUrl(`/users?${params}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch');

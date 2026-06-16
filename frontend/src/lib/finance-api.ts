@@ -1,5 +1,5 @@
-import { API_BASE } from "@/lib/api";
-const API = `${API_BASE}/finance`;
+import { API_BASE, apiUrl } from "@/lib/api";
+const API = apiUrl(`/finance`);
 
 export function authHeaders(): Record<string, string> {
   const token = localStorage.getItem('token');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -91,7 +91,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${API_BASE}/learning-goals`, {
+    fetch(apiUrl(`/learning-goals`), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.ok ? res.json() : [])
@@ -102,7 +102,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
   useEffect(() => {
     if (selectedGoalId && formData.familyCountry) {
       const token = localStorage.getItem('token');
-      fetch(`${API_BASE}/fee-config/lookup?goalId=${selectedGoalId}&country=${encodeURIComponent(formData.familyCountry)}`, {
+      fetch(apiUrl(`/fee-config/lookup?goalId=${selectedGoalId}&country=${encodeURIComponent(formData.familyCountry)}`), {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => res.ok ? res.json() : null)
@@ -120,7 +120,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
       const token = localStorage.getItem('token');
       const query = parentSearchQuery.trim();
       if (!query) { setParentResults([]); return; }
-      const url = `${API_BASE}/parents/search?search=${encodeURIComponent(query)}`;
+      const url = apiUrl(`/parents/search?search=${encodeURIComponent(query)}`);
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -198,7 +198,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
         body.parentId = selectedParent.id;
       }
 
-      const response = await fetch(`${API_BASE}/students`, {
+      const response = await fetch(apiUrl(`/students`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

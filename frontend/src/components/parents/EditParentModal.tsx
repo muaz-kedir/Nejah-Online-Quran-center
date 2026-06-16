@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ export function EditParentModal({ parent, open, onClose, onSuccess }: EditParent
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/parents/${parent.id}`, {
+      const response = await fetch(apiUrl(`/parents/${parent.id}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

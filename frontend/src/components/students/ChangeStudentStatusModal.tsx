@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { API_BASE, apiHeaders } from '@/lib/api';
+import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
 import { Loader2 } from 'lucide-react';
 
 interface ChangeStudentStatusModalProps {
@@ -45,7 +45,7 @@ export function ChangeStudentStatusModal({
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/students/${studentId}/status`, {
+      const res = await fetch(apiUrl(`/students/${studentId}/status`), {
         method: 'PATCH',
         headers: apiHeaders(),
         body: JSON.stringify({ status, reason, notes }),

@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
@@ -55,8 +55,8 @@ function TeacherNotificationsPage() {
       const role = localStorage.getItem('userRole') || 'teacher';
       const isTeacher = role === 'teacher';
       const url = isTeacher
-        ? `${API_BASE}/teachers/notifications`
-        : `${API_BASE}/notifications`;
+        ? apiUrl(`/teachers/notifications`)
+        : apiUrl(`/notifications`);
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },

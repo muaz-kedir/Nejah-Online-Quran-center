@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 import { User, Key, Save, Loader2, Camera } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { RoleBadge } from '@/components/ui/role-badge';
@@ -41,13 +41,13 @@ function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/users/profile`, {
+      const res = await fetch(apiUrl(`/users/profile`), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (!res.ok) {
         // Fallback to /auth/profile if users/profile doesn't work for non-admin roles
-        const authRes = await fetch(`${API_BASE}/auth/profile`, {
+        const authRes = await fetch(apiUrl(`/auth/profile`), {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!authRes.ok) throw new Error('Failed to fetch profile');
@@ -73,7 +73,7 @@ function ProfilePage() {
     setSavingDetails(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/users/profile`, {
+      const res = await fetch(apiUrl(`/users/profile`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ function ProfilePage() {
     setSavingPassword(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/users/change-password`, {
+      const res = await fetch(apiUrl(`/users/change-password`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

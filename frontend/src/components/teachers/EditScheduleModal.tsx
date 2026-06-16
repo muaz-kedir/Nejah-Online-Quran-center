@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -126,8 +126,8 @@ export function EditScheduleModal({
     try {
       const token = localStorage.getItem('token');
       const url = schedule
-        ? `${API_BASE}/schedules/${schedule.id}`
-        : `${API_BASE}/schedules`;
+        ? apiUrl(`/schedules/${schedule.id}`)
+        : apiUrl(`/schedules`);
 
       const payload =
         sessionMode === 'group'

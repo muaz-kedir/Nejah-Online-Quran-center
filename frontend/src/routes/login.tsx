@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
@@ -53,7 +53,7 @@ function LoginPage() {
   const [quickLoginRole, setQuickLoginRole] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/teacher-applications/settings`)
+    fetch(apiUrl(`/teacher-applications/settings`))
       .then(res => res.json())
       .then(data => setIsApplicationsOpen(data.isApplicationsOpen))
       .catch(() => {});
@@ -85,7 +85,7 @@ function LoginPage() {
 
       let response: Response;
       try {
-        response = await fetch(`${API_BASE}/auth/login`, {
+        response = await fetch(apiUrl(`/auth/login`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(loginData),

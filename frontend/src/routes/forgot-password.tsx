@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -43,7 +43,7 @@ function ForgotPasswordPage() {
   async function onSubmit(values: ForgotPasswordValues) {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+      const response = await fetch(apiUrl(`/auth/forgot-password`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -43,7 +43,7 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
     const fetchStudents = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE}/students?limit=5`, {
+        const response = await fetch(apiUrl(`/students?limit=5`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();

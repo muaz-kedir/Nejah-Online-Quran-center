@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -157,7 +157,7 @@ function TeachersPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = `${API_BASE}/teachers?page=${meta.page}&limit=${meta.limit}`;
+      let url = apiUrl(`/teachers?page=${meta.page}&limit=${meta.limit}`);
       if (search) url += `&search=${search}`;
       if (status !== 'all') url += `&status=${status}`;
 
@@ -182,7 +182,7 @@ function TeachersPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/stats`, {
+      const response = await fetch(apiUrl(`/teachers/stats`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {

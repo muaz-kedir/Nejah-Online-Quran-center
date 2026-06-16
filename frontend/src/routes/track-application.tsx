@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 
 const trackSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -54,7 +54,7 @@ function TrackApplicationPage() {
         email: values.email,
         applicationNumber: values.applicationNumber,
       });
-      const res = await fetch(`${API_BASE}/teacher-applications/track?${params}`);
+      const res = await fetch(apiUrl(`/teacher-applications/track?${params}`));
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Application not found');

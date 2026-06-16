@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState } from 'react';
 import {
   Dialog,
@@ -28,7 +28,7 @@ export function DeleteParentModal({ open, onClose, onSuccess, parentId, parentNa
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/parents/${parentId}`, {
+      const response = await fetch(apiUrl(`/parents/${parentId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

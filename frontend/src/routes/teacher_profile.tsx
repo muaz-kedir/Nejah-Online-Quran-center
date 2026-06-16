@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
@@ -23,7 +23,7 @@ function TeacherProfilePage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/dashboard`, {
+      const response = await fetch(apiUrl(`/teachers/dashboard`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       

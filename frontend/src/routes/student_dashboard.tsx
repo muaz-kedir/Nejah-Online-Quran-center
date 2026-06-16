@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare } from "lucide-react";
@@ -105,7 +105,7 @@ function StudentDashboard() {
     setChangingPw(true);
     try {
       const res = await fetch(
-        `${API_BASE}/users/change-password`,
+        apiUrl(`/users/change-password`),
         {
           method: "POST",
           headers: apiHeaders(),
@@ -125,7 +125,7 @@ function StudentDashboard() {
 
   const saveProfile = async () => {
     try {
-      await fetch(`${API_BASE}/users/profile`, {
+      await fetch(apiUrl(`/users/profile`), {
         method: "PATCH",
         headers: apiHeaders(),
         body: JSON.stringify({ phone: profileForm.phone, email: profileForm.email }),
@@ -165,7 +165,7 @@ function StudentDashboard() {
     const sessionId = data?.liveClass?.id || data?.upcomingClass?.sessionId;
     if (data?.liveClass?.status === "LIVE" && sessionId) {
       try {
-        await fetch(`${API_BASE}/live-sessions/${sessionId}/join`, {
+        await fetch(apiUrl(`/live-sessions/${sessionId}/join`), {
           method: "POST",
           headers: apiHeaders(),
         });

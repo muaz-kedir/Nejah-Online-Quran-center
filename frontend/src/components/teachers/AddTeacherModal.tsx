@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { Country, City } from 'country-state-city';
 import { getCountryIsoByName } from '@/lib/geo-data';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
-import { API_BASE, apiAssetUrl, formatApiError } from '@/lib/api';
+import { API_BASE, apiAssetUrl, formatApiError, apiUrl } from "@/lib/api";
 
 interface AddTeacherModalProps {
   open: boolean;
@@ -111,7 +111,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
       const form = new FormData();
       form.append('file', file);
 
-      const response = await fetch(`${API_BASE}/uploads`, {
+      const response = await fetch(apiUrl(`/uploads`), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: form,
@@ -220,7 +220,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
         throw new Error('Full name, email, and password are required.');
       }
 
-      const response = await fetch(`${API_BASE}/teachers`, {
+      const response = await fetch(apiUrl(`/teachers`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

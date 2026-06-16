@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
-import { API_BASE, apiHeaders } from '@/lib/api';
+import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
 
 interface ApplicationDetail {
   id: string;
@@ -76,7 +76,7 @@ function ApplicationDetailContent() {
   const fetchApplication = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/teacher-applications/${id}`, { headers: apiHeaders() });
+      const res = await fetch(apiUrl(`/teacher-applications/${id}`), { headers: apiHeaders() });
       if (!res.ok) throw new Error('Failed to fetch application');
       const data = await res.json();
       setApp(data);
@@ -93,7 +93,7 @@ function ApplicationDetailContent() {
   const handleReview = async (action: string, extra: Record<string, string> = {}) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/teacher-applications/${id}/review`, {
+      const res = await fetch(apiUrl(`/teacher-applications/${id}/review`), {
         method: 'PATCH',
         headers: apiHeaders(),
         body: JSON.stringify({ action, adminNotes, ...extra }),

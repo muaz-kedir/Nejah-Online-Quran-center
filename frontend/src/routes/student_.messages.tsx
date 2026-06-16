@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { MessageSquare, Send } from 'lucide-react';
@@ -21,7 +22,7 @@ function StudentMessages() {
 
   const loadMessages = async (otherId: string) => {
     const res = await fetch(
-      `${API_BASE}/messages/conversations/${otherId}?role=teacher`,
+      apiUrl(`/messages/conversations/${otherId}?role=teacher`),
       { headers: apiHeaders() },
     );
     if (res.ok) {

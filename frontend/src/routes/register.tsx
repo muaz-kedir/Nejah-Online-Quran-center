@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -169,7 +169,7 @@ function RegisterPage() {
     }
     setSearchingParent(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/parent-lookup`, {
+      const response = await fetch(apiUrl(`/auth/parent-lookup`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -207,7 +207,7 @@ function RegisterPage() {
   // so the conflict shows on the right field instead of a 409 at the very end.
   const verifyStudentEmail = async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE}/auth/check-email`, {
+      const response = await fetch(apiUrl(`/auth/check-email`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.getValues("student.email") }),
@@ -326,7 +326,7 @@ function RegisterPage() {
     if (!allowDuplicateCreate) {
       setIsLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/auth/parent-duplicate-check`, {
+        const response = await fetch(apiUrl(`/auth/parent-duplicate-check`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -386,7 +386,7 @@ function RegisterPage() {
         submissionValues.parent = undefined;
       }
 
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetch(apiUrl(`/auth/register`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionValues),

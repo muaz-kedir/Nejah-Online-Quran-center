@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Search, UserCheck, GraduationCap } from 'lucide-react';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 
 interface AssignStudentModalProps {
   open: boolean;
@@ -55,13 +55,13 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
     try {
       const token = localStorage.getItem('token');
 
-      const tRes = await fetch(`${API_BASE}/teachers?limit=100`, {
+      const tRes = await fetch(apiUrl(`/teachers?limit=100`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const tData = await tRes.json();
       setTeachers(Array.isArray(tData) ? tData : tData.data || []);
 
-      const sRes = await fetch(`${API_BASE}/students/assignments/unassigned`, {
+      const sRes = await fetch(apiUrl(`/students/assignments/unassigned`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const sData = await sRes.json();
@@ -82,7 +82,7 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/students/assignments/assign`, {
+      const response = await fetch(apiUrl(`/students/assignments/assign`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

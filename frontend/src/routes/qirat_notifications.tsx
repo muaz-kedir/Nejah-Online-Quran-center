@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useEffect, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -16,7 +16,7 @@ function QiratNotificationsPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${API_BASE}/notifications`, {
+    fetch(apiUrl(`/notifications`), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
