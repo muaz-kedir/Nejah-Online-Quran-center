@@ -22,7 +22,7 @@ export default defineConfig({
         "react-dom",
         "react/jsx-runtime",
         "@tanstack/react-start",
-        "@tanstack/react-start/plugin",
+        "@tanstack/react-start/plugin/vite",
       ],
     },
   },
