@@ -1,10 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build:vercel",
-  "devCommand": "npm run dev",
-  "env": {
-    "VITE_API_URL": "https://nejah-online-quran-center.onrender.com/api",
-    "VITE_WS_URL": "https://nejah-online-quran-center.onrender.com"
-  }
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/.output/public",
+  "installCommand": "cd frontend && npm install",
+  "framework": null
 }
