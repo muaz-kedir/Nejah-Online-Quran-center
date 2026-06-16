@@ -41,7 +41,7 @@ function TeacherPaymentsPage() {
   const generatePayroll = async () => {
     setGenerating(true);
     try {
-      const res = await fetch('${API_BASE}/finance/teacher-payments/generate-payroll', {
+      const res = await fetch(`${API_BASE}/finance/teacher-payments/generate-payroll`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({}),

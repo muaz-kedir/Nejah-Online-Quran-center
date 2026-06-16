@@ -46,7 +46,7 @@ export function AddUserModal({ open, onClose, onSuccess, defaultRole = 'student'
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/users', {
+      const response = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

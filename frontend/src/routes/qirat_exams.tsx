@@ -22,7 +22,7 @@ function QiratExamsPage() {
     const load = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('${API_BASE}/exams', {
+        const res = await fetch(`${API_BASE}/exams`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to load exams');

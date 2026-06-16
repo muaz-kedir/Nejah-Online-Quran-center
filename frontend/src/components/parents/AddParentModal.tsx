@@ -51,7 +51,7 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/parents', {
+      const response = await fetch(`${API_BASE}/parents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

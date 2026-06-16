@@ -111,7 +111,7 @@ function StudentsPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('${API_BASE}/students/stats', {
+      const res = await fetch(`${API_BASE}/students/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -158,7 +158,7 @@ function StudentsPage() {
   const fetchTeachers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/teachers', {
+      const response = await fetch(`${API_BASE}/teachers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -177,7 +177,7 @@ function StudentsPage() {
   const fetchParents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/parents', {
+      const response = await fetch(`${API_BASE}/parents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

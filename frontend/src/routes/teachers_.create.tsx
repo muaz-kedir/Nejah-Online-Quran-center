@@ -345,7 +345,7 @@ function AddTeacherPage() {
       
       const payload = buildCreateTeacherPayload(formData, { otherStates });
 
-      const response = await fetch('${API_BASE}/teachers', {
+      const response = await fetch(`${API_BASE}/teachers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

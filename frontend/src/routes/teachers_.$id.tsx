@@ -104,7 +104,7 @@ function TeacherProfilePage() {
   const fetchUnassignedStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/students/unassigned', {
+      const response = await fetch(`${API_BASE}/students/unassigned`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -202,7 +202,7 @@ function TeacherProfilePage() {
     setUnassigningId(studentId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('${API_BASE}/students/assignments/unassign', {
+      const response = await fetch(`${API_BASE}/students/assignments/unassign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

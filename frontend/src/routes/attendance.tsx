@@ -59,7 +59,7 @@ function AdminAttendancePage() {
       const token = localStorage.getItem('token');
       
       // 1. Fetch live sessions
-      const liveRes = await fetch('${API_BASE}/attendance/live-classes', {
+      const liveRes = await fetch(`${API_BASE}/attendance/live-classes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (liveRes.ok) {
@@ -89,7 +89,7 @@ function AdminAttendancePage() {
       // Ah! We don't have a generic endpoint to list all sessions. But we have GET /api/attendance/todays-sessions!
       // Let's fetch todays-sessions (which returns sessions for today). We can also write a backend method to list all sessions for admins.
       // Let's hit GET ${API_BASE}/attendance/todays-sessions to show today's checklist, and we can also fetch all sessions.
-      const sessionsRes = await fetch('${API_BASE}/attendance/todays-sessions', {
+      const sessionsRes = await fetch(`${API_BASE}/attendance/todays-sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (sessionsRes.ok) {

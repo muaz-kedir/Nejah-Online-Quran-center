@@ -24,7 +24,7 @@ function QiratDashboardPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('${API_BASE}/qirat/dashboard', {
+      const res = await fetch(`${API_BASE}/qirat/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to load dashboard');

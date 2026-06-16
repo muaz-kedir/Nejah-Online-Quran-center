@@ -384,7 +384,7 @@ function ParentDashboard() {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('${API_BASE}/parent/dashboard', {
+        const response = await fetch(`${API_BASE}/parent/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {

@@ -267,7 +267,7 @@ function ParentsPage() {
 
       // Compute stats from all parents
       try {
-        const allRes = await fetch('${API_BASE}/parents?limit=1000', {
+        const allRes = await fetch(`${API_BASE}/parents?limit=1000`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const allData = await allRes.json();

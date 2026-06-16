@@ -16,7 +16,7 @@ function QiratNotificationsPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch('${API_BASE}/notifications', {
+    fetch(`${API_BASE}/notifications`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())

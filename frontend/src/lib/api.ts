@@ -1,12 +1,28 @@
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const PRODUCTION_API_BASE = 'https://nejah-online-quran-center.onrender.com/api';
+const PRODUCTION_WS_ORIGIN = 'https://nejah-online-quran-center.onrender.com';
+const LOCAL_API_BASE = 'http://localhost:3000/api';
+const LOCAL_WS_ORIGIN = 'http://localhost:3000';
+
+function resolveEnvUrl(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== 'undefined') {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+const isProd = import.meta.env.PROD;
+const defaultApi = isProd ? PRODUCTION_API_BASE : LOCAL_API_BASE;
+const defaultWs = isProd ? PRODUCTION_WS_ORIGIN : LOCAL_WS_ORIGIN;
+
+export const API_BASE = resolveEnvUrl(import.meta.env.VITE_API_URL, defaultApi);
 
 /** Backend origin without the `/api` suffix — used for uploaded assets and WebSockets. */
-export const API_ORIGIN =
-  import.meta.env.VITE_WS_URL?.replace(/\/$/, '') ||
-  API_BASE.replace(/\/api\/?$/, '') ||
-  'http://localhost:3000';
+export const API_ORIGIN = resolveEnvUrl(import.meta.env.VITE_WS_URL, defaultWs).replace(/\/$/, '');
 
-export const WS_URL = import.meta.env.VITE_WS_URL || API_ORIGIN;
+export const WS_URL = resolveEnvUrl(import.meta.env.VITE_WS_URL, API_ORIGIN);
 
 export function apiAssetUrl(path: string | null | undefined): string {
   if (!path) return '';

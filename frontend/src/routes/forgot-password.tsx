@@ -26,6 +26,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export const Route = createFileRoute("/forgot-password")({
+  ssr: false,
   component: ForgotPasswordPage,
 });
 
@@ -42,7 +43,7 @@ function ForgotPasswordPage() {
   async function onSubmit(values: ForgotPasswordValues) {
     setIsLoading(true);
     try {
-      const response = await fetch("${API_BASE}/auth/forgot-password", {
+      const response = await fetch(`${API_BASE}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
