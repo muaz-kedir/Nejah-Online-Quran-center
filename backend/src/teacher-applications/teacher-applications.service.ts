@@ -29,12 +29,17 @@ export class TeacherApplicationsService {
   // ── Settings ──────────────────────────────────────────────────────
 
   async getSettings(): Promise<TeacherApplicationSettings> {
-    let settings = await this.settingsRepository.findOne({ where: { id: 1 } });
-    if (!settings) {
-      settings = this.settingsRepository.create({ id: 1, isApplicationsOpen: false });
-      await this.settingsRepository.save(settings);
+    try {
+      let settings = await this.settingsRepository.findOne({ where: { id: 1 } });
+      if (!settings) {
+        settings = this.settingsRepository.create({ id: 1, isApplicationsOpen: false });
+        await this.settingsRepository.save(settings);
+      }
+      return settings;
+    } catch (error) {
+      console.error('[TeacherApplicationsService] getSettings failed:', error);
+      return { id: 1, isApplicationsOpen: false } as TeacherApplicationSettings;
     }
-    return settings;
   }
 
   async toggleApplicationsOpen(isOpen: boolean): Promise<TeacherApplicationSettings> {

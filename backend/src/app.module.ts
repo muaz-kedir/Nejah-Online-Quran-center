@@ -27,6 +27,9 @@ import { LearningGoalsModule } from './learning-goals/learning-goals.module';
 import { FeeConfigModule } from './fee-config/fee-config.module';
 import { CurrencyModule } from './currency/currency.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HealthModule } from './health/health.module';
+import { DatabaseModule } from './database/database.module';
+import { createTypeOrmOptions } from './database/typeorm.config';
 
 @Module({
   imports: [
@@ -39,37 +42,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const databaseUrl = configService.get('DATABASE_URL');
-
-        // Prefer DATABASE_URL if available
-        if (databaseUrl) {
-          return {
-            type: 'postgres',
-            url: databaseUrl,
-            entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get('NODE_ENV') === 'development',
-            logging: ['error'],
-            ssl: {
-              rejectUnauthorized: false,
-            },
-          };
-        }
-
-        // Fallback to individual credentials
-        return {
-          type: 'postgres',
-          host: configService.get('DB_HOST'),
-          port: configService.get('DB_PORT'),
-          username: configService.get('DB_USERNAME'),
-          password: configService.get('DB_PASSWORD'),
-          database: configService.get('DB_NAME') || configService.get('DB_DATABASE'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get('NODE_ENV') === 'development',
-          logging: ['error'],
-          ssl: false,
-        };
-      },
+      useFactory: (configService: ConfigService) => createTypeOrmOptions(configService),
       inject: [ConfigService],
     }),
 
@@ -100,6 +73,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     FeeConfigModule,
     CurrencyModule,
     ScheduleModule.forRoot(),
+    HealthModule,
+    DatabaseModule,
   ],
 })
 export class AppModule {}

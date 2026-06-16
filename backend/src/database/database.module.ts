@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DatabaseConfigService } from './database-config.service';
+import { UsersModule } from '../users/users.module';
+import { LearningGoalsModule } from '../learning-goals/learning-goals.module';
+import { DatabaseBootstrapService } from './database-bootstrap.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRootAsync({
-      useClass: DatabaseConfigService,
-    }),
-  ],
-  providers: [DatabaseConfigService],
-  exports: [DatabaseConfigService],
+  imports: [UsersModule, LearningGoalsModule],
+  providers: [DatabaseBootstrapService],
 })
 export class DatabaseModule {}

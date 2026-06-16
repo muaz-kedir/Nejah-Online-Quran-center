@@ -4,7 +4,6 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
@@ -17,20 +16,15 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
-export class UsersService implements OnModuleInit {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
 
-  async onModuleInit() {
-    try {
-      await this.seedSuperAdmin();
-      await this.seedDemoAccounts();
-    } catch (error) {
-      // Log but don't crash - tables might not exist yet (need to run migrations first)
-      console.warn('Could not seed initial data. Run migrations first:', error.message);
-    }
+  async ensureInitialUsers(): Promise<void> {
+    await this.seedSuperAdmin();
+    await this.seedDemoAccounts();
   }
 
   private async seedDemoAccounts() {

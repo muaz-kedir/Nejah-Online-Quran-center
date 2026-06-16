@@ -3,9 +3,10 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -168,77 +169,86 @@ export class AuthService {
     const { email: identifier, password } = loginDto;
     console.log(`[AuthService] Attempting login for: ${identifier}`);
 
-    let user = await this.usersService.findByEmail(identifier);
+    try {
+      let user = await this.usersService.findByEmail(identifier);
 
-    if (!user) {
-      const student = await this.studentsRepository.findOne({
-        where: [{ email: identifier }, { familyPhone: identifier }],
-        relations: ['user'],
-      });
+      if (!user) {
+        const student = await this.studentsRepository.findOne({
+          where: [{ email: identifier }, { familyPhone: identifier }],
+          relations: ['user'],
+        });
 
-      if (student?.userId) {
-        try {
-          user = await this.usersService.findOne(student.userId);
-        } catch {
-          throw new UnauthorizedException('Invalid credentials');
+        if (student?.userId) {
+          try {
+            user = await this.usersService.findOne(student.userId);
+          } catch {
+            throw new UnauthorizedException('Invalid credentials');
+          }
         }
       }
-    }
 
-    if (!user) {
-      console.log(`[AuthService] User not found: ${identifier}`);
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    console.log(
-      `[AuthService] User found. ID: ${user.id}, Role: ${user.role}, IsActive: ${user.isActive}`,
-    );
-    if (!user.password) {
-      console.error(
-        `[AuthService] CRITICAL: Password field is missing on user object from database!`,
-      );
-    }
-
-    console.log(`[AuthService] Stored Hash: ${user.password}`);
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(`[AuthService] Password valid: ${isPasswordValid}`);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is inactive');
-    }
-
-    const payload = { sub: user.id, email: user.email, role: user.role };
-
-    const userResponse: {
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-      studentId?: string;
-    } = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
-
-    if (user.role === UserRole.STUDENT) {
-      const student = await this.studentsRepository.findOne({
-        where: { userId: user.id },
-      });
-      if (student) {
-        userResponse.studentId = student.id;
+      if (!user) {
+        console.log(`[AuthService] User not found: ${identifier}`);
+        throw new UnauthorizedException('Invalid credentials');
       }
-    }
 
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: userResponse,
-    };
+      if (!user.password) {
+        console.error(`[AuthService] User ${user.id} has no password hash stored`);
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log(`[AuthService] Password valid: ${isPasswordValid}`);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (!user.isActive) {
+        throw new UnauthorizedException('Account is inactive');
+      }
+
+      const payload = { sub: user.id, email: user.email, role: user.role };
+
+      const userResponse: {
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        studentId?: string;
+      } = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      };
+
+      if (user.role === UserRole.STUDENT) {
+        const student = await this.studentsRepository.findOne({
+          where: { userId: user.id },
+        });
+        if (student) {
+          userResponse.studentId = student.id;
+        }
+      }
+
+      return {
+        access_token: this.jwtService.sign(payload),
+        user: userResponse,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      if (error instanceof QueryFailedError) {
+        console.error('[AuthService] Database error during login:', error.message);
+        throw new ServiceUnavailableException(
+          'Database is still initializing. Wait a moment and try again.',
+        );
+      }
+      console.error('[AuthService] Login failed:', error);
+      throw error;
+    }
   }
 
   private roleLabel(role: UserRole): string {

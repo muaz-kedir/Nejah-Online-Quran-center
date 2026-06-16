@@ -33,6 +33,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   component: LoginPage,
 });
 
@@ -95,12 +96,15 @@ function LoginPage() {
         );
       }
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         const errorMessage = Array.isArray(data.message)
           ? data.message.join(", ")
-          : data.message || "Login failed";
+          : data.message ||
+            (response.status >= 500
+              ? "Server error — the API may still be starting or the database is not ready. Wait a minute and try again."
+              : "Login failed");
         throw new Error(errorMessage);
       }
 
