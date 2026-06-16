@@ -24,5 +24,14 @@ export default defineConfig({
     resolve: {
       dedupe: ["react", "react-dom", "react/jsx-runtime"],
     },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "@tanstack/react-start",
+        "@tanstack/react-start/plugin/vite",
+      ],
+    },
   },
 });
