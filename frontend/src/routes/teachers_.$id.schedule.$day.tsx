@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 import { requireAuth } from '@/lib/auth';
-import { api, API_BASE } from '@/lib/api';
+import { api, API_BASE, apiUrl } from "@/lib/api";
 import {
   getSchedulesForDay,
   normalizeDayOfWeek,
@@ -43,7 +43,7 @@ function TeacherDailySchedulePage() {
   const fetchTeacher = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/${id}?t=${Date.now()}`, {
+      const response = await fetch(apiUrl(`/teachers/${id}?t=${Date.now()}`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error();
@@ -83,7 +83,7 @@ function TeacherDailySchedulePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/schedules/${confirmDeleteScheduleId}`, {
+      const response = await fetch(apiUrl(`/schedules/${confirmDeleteScheduleId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

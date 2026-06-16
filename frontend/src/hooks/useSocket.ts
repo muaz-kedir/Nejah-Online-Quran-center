@@ -1,9 +1,8 @@
+import { WS_URL } from "@/lib/api";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-
-const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:3000";
 
 type NotificationData = {
   id: string;
@@ -57,12 +56,7 @@ export function useSocket(callbacks?: SocketCallbacks) {
       if (!isSamePage) {
         const handleClick = () => {
           if (notif.data?.sessionId) {
-            const role = localStorage.getItem("userRole");
-            if (role === "student") {
-              window.location.href = `/class-session/${notif.data.sessionId}`;
-            } else {
-              window.location.href = `/live-sessions/${notif.data.sessionId}`;
-            }
+            window.location.href = `/classroom/${notif.data.sessionId}`;
           }
         };
 

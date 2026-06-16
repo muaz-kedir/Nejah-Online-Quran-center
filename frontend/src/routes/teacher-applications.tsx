@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
-import { API_BASE, apiHeaders } from '@/lib/api';
+import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
 
 interface Application {
   id: string;
@@ -66,7 +66,7 @@ function TeacherApplicationsContent() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/teacher-applications/settings`);
+      const res = await fetch(apiUrl(`/teacher-applications/settings`));
       if (res.ok) {
         const data = await res.json();
         setIsApplicationsOpen(data.isApplicationsOpen);
@@ -78,7 +78,7 @@ function TeacherApplicationsContent() {
     setIsToggling(true);
     try {
       const newState = !isApplicationsOpen;
-      const res = await fetch(`${API_BASE}/teacher-applications/settings/toggle`, {
+      const res = await fetch(apiUrl(`/teacher-applications/settings/toggle`), {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ isApplicationsOpen: newState }),
@@ -100,7 +100,7 @@ function TeacherApplicationsContent() {
       if (search) params.set('search', search);
       if (statusFilter !== 'all') params.set('status', statusFilter);
 
-      const res = await fetch(`${API_BASE}/teacher-applications?${params}`, { headers: apiHeaders() });
+      const res = await fetch(apiUrl(`/teacher-applications?${params}`), { headers: apiHeaders() });
       if (!res.ok) throw new Error('Failed to fetch applications');
       const data = await res.json();
       setApplications(data.data);
@@ -114,7 +114,7 @@ function TeacherApplicationsContent() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/teacher-applications/stats`, { headers: apiHeaders() });
+      const res = await fetch(apiUrl(`/teacher-applications/stats`), { headers: apiHeaders() });
       if (res.ok) {
         const data = await res.json();
         setStats(data);

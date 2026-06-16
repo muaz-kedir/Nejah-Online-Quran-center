@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState } from 'react';
 import {
   Dialog,
@@ -50,7 +51,7 @@ export function AddParentModal({ open, onClose, onSuccess }: AddParentModalProps
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/parents', {
+      const response = await fetch(apiUrl(`/parents`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

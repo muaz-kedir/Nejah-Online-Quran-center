@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -60,7 +61,7 @@ export function EditUserModal({ open, onClose, user, onSuccess }: EditUserModalP
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
+      const response = await fetch(apiUrl(`/users/${user.id}`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

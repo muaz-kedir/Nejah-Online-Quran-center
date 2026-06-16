@@ -4,7 +4,6 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
@@ -17,13 +16,13 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
-export class UsersService implements OnModuleInit {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
 
-  async onModuleInit() {
+  async ensureInitialUsers(): Promise<void> {
     await this.seedSuperAdmin();
     await this.seedDemoAccounts();
   }
@@ -66,7 +65,7 @@ export class UsersService implements OnModuleInit {
     }
   }
 
-  private async seedSuperAdmin() {
+  async seedSuperAdmin() {
     const superAdminEmail = 'nejahsuperadmin@gmail.com';
     const existingAdmin = await this.findByEmail(superAdminEmail);
 

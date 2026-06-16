@@ -24,7 +24,12 @@ export class CurrencyService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    await this.refreshRates();
+    try {
+      await this.refreshRates();
+    } catch (error) {
+      // Log but don't crash - tables might not exist yet or API might be unavailable
+      this.logger.warn('Could not refresh currency rates on startup:', error.message);
+    }
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_6AM)

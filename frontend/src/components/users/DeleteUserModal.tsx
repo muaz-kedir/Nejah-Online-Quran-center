@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState } from 'react';
 import {
   Dialog,
@@ -33,7 +34,7 @@ export function DeleteUserModal({ open, onClose, user, onSuccess }: DeleteUserMo
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
+      const response = await fetch(apiUrl(`/users/${user.id}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

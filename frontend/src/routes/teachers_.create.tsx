@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -344,7 +345,7 @@ function AddTeacherPage() {
       
       const payload = buildCreateTeacherPayload(formData, { otherStates });
 
-      const response = await fetch('http://localhost:3000/api/teachers', {
+      const response = await fetch(apiUrl(`/teachers`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -11,7 +11,9 @@
     "preview": "npm run preview --prefix frontend",
     "lint": "npm run lint --prefix frontend",
     "format": "npm run format --prefix frontend",
-    "install:frontend": "npm install --prefix frontend"
+    "install:frontend": "npm install --prefix frontend",
+    "deploy:vercel": "vercel",
+    "deploy:vercel:prod": "vercel --prod"
   },
   "keywords": [
     "quran",

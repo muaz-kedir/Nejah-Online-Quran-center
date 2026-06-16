@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useEffect, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -35,7 +36,7 @@ function StudentPaymentsPage() {
 
   const convertCurrency = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/currency/convert?from=ETB&to=${convertTarget}&amount=1`, {
+      const res = await fetch(apiUrl(`/currency/convert?from=ETB&to=${convertTarget}&amount=1`), {
         headers: authHeaders(),
       });
       if (res.ok) setConvertResult(await res.json());
@@ -72,7 +73,7 @@ function StudentPaymentsPage() {
     if (!detail || !payAmount) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/finance/student-payments/${detail.id}/transactions`, {
+      const res = await fetch(apiUrl(`/finance/student-payments/${detail.id}/transactions`), {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ amount: parseFloat(payAmount), type: payType }),
@@ -92,7 +93,7 @@ function StudentPaymentsPage() {
   const markStatus = async (status: string) => {
     if (!detail) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/finance/student-payments/${detail.id}`, {
+      const res = await fetch(apiUrl(`/finance/student-payments/${detail.id}`), {
         method: 'PATCH',
         headers: authHeaders(),
         body: JSON.stringify({ status }),

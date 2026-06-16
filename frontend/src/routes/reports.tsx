@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
@@ -57,7 +58,7 @@ export const Route = createFileRoute('/reports')({
   beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
 });
 
-const API = 'http://localhost:3000/api';
+const API = API_BASE;
 const CHART_COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#65a30d'];
 
 const TRACK_LABELS: Record<string, string> = {

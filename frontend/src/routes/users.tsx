@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -64,7 +65,7 @@ function UsersPage() {
       if (roleFilter !== 'all') params.append('role', roleFilter);
       if (statusFilter !== 'all') params.append('isActive', statusFilter);
 
-      const response = await fetch(`http://localhost:3000/api/users?${params}`, {
+      const response = await fetch(apiUrl(`/users?${params}`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,7 +90,7 @@ function UsersPage() {
   const handleToggleStatus = async (userId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/users/${userId}/toggle-status`, {
+      const response = await fetch(apiUrl(`/users/${userId}/toggle-status`), {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -6,7 +6,7 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, MapPin, Wifi } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 import {
   DAYS_OF_WEEK,
   getSchedulesForDay,
@@ -29,7 +29,7 @@ function TeacherSchedulePage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/teachers/schedule`, {
+      const response = await fetch(apiUrl(`/teachers/schedule`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       

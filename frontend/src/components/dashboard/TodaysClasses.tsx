@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/AppContext';
 import { GlassPanel, PanelHeader } from './design-system';
-import { API_BASE, apiHeaders } from '@/lib/api';
+import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
 
 interface ClassSession {
   id: string;
@@ -29,7 +29,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch(`${API_BASE}/schedules`, {
+        const response = await fetch(apiUrl(`/schedules`), {
           headers: apiHeaders(),
         });
         if (!response.ok) throw new Error('Failed to fetch schedules');

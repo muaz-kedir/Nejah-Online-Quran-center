@@ -69,13 +69,31 @@ export class SessionAttendanceService {
 
     if (attendance.joinTime) {
       attendance.duration = Math.floor((now.getTime() - attendance.joinTime.getTime()) / 60000);
-    }
-
-    if (attendance.joinTime && now < session.scheduledEnd) {
-      attendance.attendanceStatus = AttendanceStatus.LEFT_EARLY;
+      const scheduledDuration = this.getScheduledDurationMinutes(session);
+      attendance.attendanceStatus = this.calculateAttendanceStatus(
+        attendance.duration,
+        scheduledDuration,
+      );
     }
 
     return this.attendanceRepository.save(attendance);
+  }
+
+  /** 80%+ = Present, 50–79% = Late, <50% = Absent */
+  calculateAttendanceStatus(attendedMinutes: number, scheduledMinutes: number): AttendanceStatus {
+    if (scheduledMinutes <= 0) return AttendanceStatus.PRESENT;
+    const ratio = attendedMinutes / scheduledMinutes;
+    if (ratio >= 0.8) return AttendanceStatus.PRESENT;
+    if (ratio >= 0.5) return AttendanceStatus.LATE;
+    return AttendanceStatus.ABSENT;
+  }
+
+  private getScheduledDurationMinutes(session: LiveSession): number {
+    if (!session.scheduledStart || !session.scheduledEnd) return 60;
+    return Math.max(
+      1,
+      Math.round((session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000),
+    );
   }
 
   async markAbsent(sessionId: string, studentId: string): Promise<SessionAttendance> {

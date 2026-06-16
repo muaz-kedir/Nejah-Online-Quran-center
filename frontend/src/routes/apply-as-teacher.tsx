@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, apiUrl } from "@/lib/api";
 
 // ─── Constants ───────────────────────────────────────────────────
 const LANGUAGES = ['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French'];
@@ -97,7 +97,7 @@ function ApplyAsTeacherPage() {
   const [isApplicationsOpen, setIsApplicationsOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/teacher-applications/settings`)
+    fetch(apiUrl(`/teacher-applications/settings`))
       .then(res => res.json())
       .then(data => setIsApplicationsOpen(data.isApplicationsOpen))
       .catch(() => setIsApplicationsOpen(true)); // Default to open if error
@@ -127,7 +127,7 @@ function ApplyAsTeacherPage() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(`${API_BASE}/teacher-applications/upload`, {
+      const res = await fetch(apiUrl(`/teacher-applications/upload`), {
         method: 'POST',
         body: fd,
       });
@@ -224,7 +224,7 @@ function ApplyAsTeacherPage() {
         cvResumeUrl: documents.cvResume?.url,
       };
 
-      const res = await fetch(`${API_BASE}/teacher-applications`, {
+      const res = await fetch(apiUrl(`/teacher-applications`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

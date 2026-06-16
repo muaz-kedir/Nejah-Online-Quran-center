@@ -1,4 +1,4 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LearningGoal } from './entities/learning-goal.entity';
@@ -14,16 +14,16 @@ const DEFAULT_GOALS = [
 ];
 
 @Injectable()
-export class LearningGoalsService implements OnApplicationBootstrap {
+export class LearningGoalsService {
   constructor(
     @InjectRepository(LearningGoal)
     private readonly repo: Repository<LearningGoal>,
   ) {}
 
-  async onApplicationBootstrap() {
+  async ensureSeedData(): Promise<void> {
     const count = await this.repo.count();
     if (count === 0) {
-      await this.repo.save(DEFAULT_GOALS.map(g => this.repo.create(g)));
+      await this.repo.save(DEFAULT_GOALS.map((g) => this.repo.create(g)));
     }
   }
 

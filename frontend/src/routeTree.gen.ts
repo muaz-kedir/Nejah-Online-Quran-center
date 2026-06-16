@@ -51,6 +51,7 @@ import { Route as Finance_notificationsRouteImport } from './routes/finance_noti
 import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
 import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
 import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
+import { Route as DebugUserRouteImport } from './routes/debug-user'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as Currency_settingsRouteImport } from './routes/currency_settings'
 import { Route as AttendanceRouteImport } from './routes/attendance'
@@ -67,9 +68,11 @@ import { Route as StudentProgressRouteImport } from './routes/student_.progress'
 import { Route as StudentNotificationsRouteImport } from './routes/student_.notifications'
 import { Route as StudentMessagesRouteImport } from './routes/student_.messages'
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
+import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
 import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
 import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
+import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$sessionId'
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
@@ -283,6 +286,11 @@ const Fee_settingsRoute = Fee_settingsRouteImport.update({
   path: '/fee_settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebugUserRoute = DebugUserRouteImport.update({
+  id: '/debug-user',
+  path: '/debug-user',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -364,6 +372,11 @@ const StudentHomeworkRoute = StudentHomeworkRouteImport.update({
   path: '/student/homework',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentEvaluationsRoute = StudentEvaluationsRouteImport.update({
+  id: '/student_/evaluations',
+  path: '/student/evaluations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentClassesRoute = StudentClassesRouteImport.update({
   id: '/student_/classes',
   path: '/student/classes',
@@ -378,6 +391,11 @@ const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => LiveSessionsRoute,
+} as any)
+const ClassroomSessionIdRoute = ClassroomSessionIdRouteImport.update({
+  id: '/classroom_/$sessionId',
+  path: '/classroom/$sessionId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ClassSessionIdRoute = ClassSessionIdRouteImport.update({
   id: '/class-session_/$id',
@@ -398,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AttendanceRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -441,9 +460,11 @@ export interface FileRoutesByFullPath {
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
+  '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
+  '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/messages': typeof StudentMessagesRoute
   '/student/notifications': typeof StudentNotificationsRoute
@@ -463,6 +484,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AttendanceRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -506,9 +528,11 @@ export interface FileRoutesByTo {
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
+  '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
+  '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/messages': typeof StudentMessagesRoute
   '/student/notifications': typeof StudentNotificationsRoute
@@ -529,6 +553,7 @@ export interface FileRoutesById {
   '/attendance': typeof AttendanceRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
+  '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -572,9 +597,11 @@ export interface FileRoutesById {
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
+  '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions_/$id': typeof LiveSessionsIdRoute
   '/student_/classes': typeof StudentClassesRoute
+  '/student_/evaluations': typeof StudentEvaluationsRoute
   '/student_/homework': typeof StudentHomeworkRoute
   '/student_/messages': typeof StudentMessagesRoute
   '/student_/notifications': typeof StudentNotificationsRoute
@@ -596,6 +623,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/currency_settings'
     | '/dashboard'
+    | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
@@ -639,9 +667,11 @@ export interface FileRouteTypes {
     | '/users'
     | '/zoom-settings'
     | '/class-session/$id'
+    | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/student/classes'
+    | '/student/evaluations'
     | '/student/homework'
     | '/student/messages'
     | '/student/notifications'
@@ -661,6 +691,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/currency_settings'
     | '/dashboard'
+    | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
@@ -704,9 +735,11 @@ export interface FileRouteTypes {
     | '/users'
     | '/zoom-settings'
     | '/class-session/$id'
+    | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/student/classes'
+    | '/student/evaluations'
     | '/student/homework'
     | '/student/messages'
     | '/student/notifications'
@@ -726,6 +759,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/currency_settings'
     | '/dashboard'
+    | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_family-payments'
@@ -769,9 +803,11 @@ export interface FileRouteTypes {
     | '/users'
     | '/zoom-settings'
     | '/class-session_/$id'
+    | '/classroom_/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions_/$id'
     | '/student_/classes'
+    | '/student_/evaluations'
     | '/student_/homework'
     | '/student_/messages'
     | '/student_/notifications'
@@ -792,6 +828,7 @@ export interface RootRouteChildren {
   AttendanceRoute: typeof AttendanceRoute
   Currency_settingsRoute: typeof Currency_settingsRoute
   DashboardRoute: typeof DashboardRoute
+  DebugUserRoute: typeof DebugUserRoute
   Fee_settingsRoute: typeof Fee_settingsRoute
   Finance_dashboardRoute: typeof Finance_dashboardRoute
   Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
@@ -835,8 +872,10 @@ export interface RootRouteChildren {
   UsersRoute: typeof UsersRoute
   ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
+  ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
   LiveSessionsIdRoute: typeof LiveSessionsIdRoute
   StudentClassesRoute: typeof StudentClassesRoute
+  StudentEvaluationsRoute: typeof StudentEvaluationsRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
   StudentMessagesRoute: typeof StudentMessagesRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
@@ -1144,6 +1183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Fee_settingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/debug-user': {
+      id: '/debug-user'
+      path: '/debug-user'
+      fullPath: '/debug-user'
+      preLoaderRoute: typeof DebugUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -1256,6 +1302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentHomeworkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student_/evaluations': {
+      id: '/student_/evaluations'
+      path: '/student/evaluations'
+      fullPath: '/student/evaluations'
+      preLoaderRoute: typeof StudentEvaluationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student_/classes': {
       id: '/student_/classes'
       path: '/student/classes'
@@ -1276,6 +1329,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/live-sessions/analytics'
       preLoaderRoute: typeof LiveSessionsAnalyticsRouteImport
       parentRoute: typeof LiveSessionsRoute
+    }
+    '/classroom_/$sessionId': {
+      id: '/classroom_/$sessionId'
+      path: '/classroom/$sessionId'
+      fullPath: '/classroom/$sessionId'
+      preLoaderRoute: typeof ClassroomSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/class-session_/$id': {
       id: '/class-session_/$id'
@@ -1326,6 +1386,7 @@ const rootRouteChildren: RootRouteChildren = {
   AttendanceRoute: AttendanceRoute,
   Currency_settingsRoute: Currency_settingsRoute,
   DashboardRoute: DashboardRoute,
+  DebugUserRoute: DebugUserRoute,
   Fee_settingsRoute: Fee_settingsRoute,
   Finance_dashboardRoute: Finance_dashboardRoute,
   Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
@@ -1369,8 +1430,10 @@ const rootRouteChildren: RootRouteChildren = {
   UsersRoute: UsersRoute,
   ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
+  ClassroomSessionIdRoute: ClassroomSessionIdRoute,
   LiveSessionsIdRoute: LiveSessionsIdRoute,
   StudentClassesRoute: StudentClassesRoute,
+  StudentEvaluationsRoute: StudentEvaluationsRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
   StudentMessagesRoute: StudentMessagesRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Calendar, Clock, User, BookOpen, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, apiUrl } from "@/lib/api";
 import { cn } from '@/lib/utils';
 import {
   DAYS_OF_WEEK,
@@ -49,7 +49,7 @@ function SchedulesPage() {
           if (schedule.teacherId) {
             try {
               const token = localStorage.getItem('token');
-              const response = await fetch(`http://localhost:3000/api/teachers/${schedule.teacherId}`, {
+              const response = await fetch(apiUrl(`/teachers/${schedule.teacherId}`), {
                 headers: { Authorization: `Bearer ${token}` },
               });
               if (response.ok) {
@@ -269,7 +269,7 @@ function SchedulesPage() {
                 if (schedule.teacherId) {
                   try {
                     const token = localStorage.getItem('token');
-                    const response = await fetch(`http://localhost:3000/api/teachers/${schedule.teacherId}`, {
+                    const response = await fetch(apiUrl(`/teachers/${schedule.teacherId}`), {
                       headers: { Authorization: `Bearer ${token}` },
                     });
                     if (response.ok) {

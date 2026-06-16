@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { APP_GUARD } from '@nestjs/core';
@@ -26,6 +26,10 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeachersModule } from '../teachers/teachers.module';
+import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
+import { ScheduleSessionsCron } from './schedule-sessions.cron';
+import { Schedule } from '../schedules/entities/schedule.entity';
+import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
 import { EncryptionService } from '../common/encryption.service';
 
 @Module({
@@ -39,6 +43,8 @@ import { EncryptionService } from '../common/encryption.service';
       Student,
       Teacher,
       Parent,
+      Schedule,
+      ScheduleStudent,
     ]),
     HttpModule.register({
       timeout: 15000,
@@ -51,7 +57,7 @@ import { EncryptionService } from '../common/encryption.service';
       },
     ]),
     NotificationsModule,
-    TeachersModule,
+    forwardRef(() => TeachersModule),
   ],
   controllers: [
     LiveSessionController,
@@ -70,6 +76,8 @@ import { EncryptionService } from '../common/encryption.service';
     SessionNoteService,
     ZoomWebhookService,
     ZoomAnalyticsService,
+    ScheduleSessionGeneratorService,
+    ScheduleSessionsCron,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
@@ -81,6 +89,7 @@ import { EncryptionService } from '../common/encryption.service';
     SessionAttendanceService,
     ZoomWebhookService,
     ZoomAnalyticsService,
+    ScheduleSessionGeneratorService,
   ],
 })
 export class ZoomModule {}

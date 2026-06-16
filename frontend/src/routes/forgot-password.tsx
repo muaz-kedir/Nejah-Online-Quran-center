@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -25,6 +26,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export const Route = createFileRoute("/forgot-password")({
+  ssr: false,
   component: ForgotPasswordPage,
 });
 
@@ -41,7 +43,7 @@ function ForgotPasswordPage() {
   async function onSubmit(values: ForgotPasswordValues) {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/auth/forgot-password", {
+      const response = await fetch(apiUrl(`/auth/forgot-password`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

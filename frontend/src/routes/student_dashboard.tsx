@@ -1,3 +1,4 @@
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare } from "lucide-react";
@@ -85,7 +86,7 @@ function StudentDashboard() {
           action: {
             label: "Join Now",
             onClick: () =>
-              navigate({ to: "/class-session/$id", params: { id: notif.data.sessionId! } }),
+              navigate({ to: "/classroom/$sessionId", params: { sessionId: notif.data.sessionId! } }),
           },
         });
       }
@@ -104,7 +105,7 @@ function StudentDashboard() {
     setChangingPw(true);
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/users/change-password`,
+        apiUrl(`/users/change-password`),
         {
           method: "POST",
           headers: apiHeaders(),
@@ -124,7 +125,7 @@ function StudentDashboard() {
 
   const saveProfile = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000/api"}/users/profile`, {
+      await fetch(apiUrl(`/users/profile`), {
         method: "PATCH",
         headers: apiHeaders(),
         body: JSON.stringify({ phone: profileForm.phone, email: profileForm.email }),
@@ -160,9 +161,20 @@ function StudentDashboard() {
       })
     : "—";
 
-  const joinClass = () => {
-    if (data?.liveClass?.id) {
-      window.location.href = `/class-session/${data.liveClass.id}`;
+  const joinClass = async () => {
+    const sessionId = data?.liveClass?.id || data?.upcomingClass?.sessionId;
+    if (data?.liveClass?.status === "LIVE" && sessionId) {
+      try {
+        await fetch(apiUrl(`/live-sessions/${sessionId}/join`), {
+          method: "POST",
+          headers: apiHeaders(),
+        });
+      } catch {
+        /* join may fail if already joined */
+      }
+      navigate({ to: "/classroom/$sessionId", params: { sessionId } });
+    } else if (sessionId) {
+      toast.info("Your teacher has not started the session yet.");
     } else if (data?.upcomingClass?.meetingLink) {
       window.open(data.upcomingClass.meetingLink, "_blank");
     } else {
@@ -324,11 +336,27 @@ function StudentDashboard() {
 
           <div className="space-y-6">
             <div className="glass-panel bg-nejah-sapphire text-white">
-              <Badge className="bg-white/10 text-foreground border-none mb-3">Upcoming Class</Badge>
-              {data?.liveClass ? (
+              {data?.liveClass?.status === "LIVE" ? (
+                <Badge className="bg-red-500/30 text-red-100 border-none mb-3 animate-pulse">
+                  Live Class Available
+                </Badge>
+              ) : (
+                <Badge className="bg-white/10 text-foreground border-none mb-3">Upcoming Class</Badge>
+              )}
+              {data?.liveClass?.status === "LIVE" ? (
                 <>
                   <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
-                  <p className="text-nejah-electric/70 text-sm mb-4">Live now</p>
+                  <p className="text-nejah-electric/70 text-sm mb-1">
+                    Teacher: {data.liveClass.teacher?.fullName || displayTeacher}
+                  </p>
+                  <p className="text-sm font-bold text-nejah-electric">
+                    {data.liveClass.scheduledStart
+                      ? new Date(data.liveClass.scheduledStart).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : data?.upcomingClass?.time}
+                  </p>
                 </>
               ) : data?.upcomingClass ? (
                 <>
@@ -345,7 +373,8 @@ function StudentDashboard() {
               )}
               <div className="flex flex-col gap-2 mt-4">
                 <Button className="bg-white text-nejah-surface" onClick={joinClass}>
-                  <Play className="h-4 w-4 mr-2" /> Join Class
+                  <Play className="h-4 w-4 mr-2" />
+                  {data?.liveClass?.status === "LIVE" ? "Join Session" : "Join Class"}
                 </Button>
                 <Button
                   variant="outline"

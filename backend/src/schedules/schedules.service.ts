@@ -15,8 +15,8 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
+import { ScheduleSessionGeneratorService } from '../zoom/schedule-session-generator.service';
 import { LiveSessionService } from '../zoom/live-session.service';
-import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 
 @Injectable()
 export class SchedulesService {
@@ -31,6 +31,8 @@ export class SchedulesService {
     private studentsRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private teachersRepository: Repository<Teacher>,
+    @Inject(forwardRef(() => ScheduleSessionGeneratorService))
+    private scheduleSessionGenerator: ScheduleSessionGeneratorService,
     @Inject(forwardRef(() => LiveSessionService))
     private liveSessionService: LiveSessionService,
   ) {}
@@ -136,25 +138,10 @@ export class SchedulesService {
     }
 
     try {
-      const nextDate = this.getNextDayOfWeekDate(dayOfWeek);
-      const [startHour, startMin] = startTimeString.split(':').map(Number);
-      const [endHour, endMin] = endTimeString.split(':').map(Number);
-      const scheduledStart = new Date(nextDate);
-      scheduledStart.setHours(startHour, startMin, 0, 0);
-      const scheduledEnd = new Date(nextDate);
-      scheduledEnd.setHours(endHour, endMin, 0, 0);
-
-      await this.liveSessionService.createWithZoom({
-        teacherId,
-        studentId: isGroupSession ? null : data.studentId,
-        scheduleId: saved.id,
-        scheduledStart,
-        scheduledEnd,
-        metadata: { className: data.className || 'Quran Class', dayOfWeek },
-      });
+      await this.scheduleSessionGenerator.generateUpcomingSessions(7);
     } catch (error) {
       this.logger.warn(
-        `Zoom meeting auto-creation failed for schedule ${saved.id}: ${error.message}`,
+        `Session generation failed for new schedule ${saved.id}: ${error.message}`,
       );
     }
 
@@ -253,28 +240,14 @@ export class SchedulesService {
     const updated = await this.schedulesRepository.save(schedule);
 
     try {
-      const startString = updateData.startTimeString || schedule.startTimeString;
-      const endString = updateData.endTimeString || schedule.endTimeString;
-      const day = updateData.dayOfWeek || schedule.dayOfWeek;
-
-      if (startString && endString) {
-        const nextDate = this.getNextDayOfWeekDate(day);
-        const [startHour, startMin] = startString.split(':').map(Number);
-        const [endHour, endMin] = endString.split(':').map(Number);
-        const newStart = new Date(nextDate);
-        newStart.setHours(startHour, startMin, 0, 0);
-        const newEnd = new Date(nextDate);
-        newEnd.setHours(endHour, endMin, 0, 0);
-
-        await this.liveSessionService.updateZoomMeeting(
-          schedule.id,
-          newStart,
-          newEnd,
-          rest.className,
-        );
-      }
+      await this.liveSessionService.updateScheduledSessionsForSchedule(schedule.id, {
+        startTimeString: updateData.startTimeString || schedule.startTimeString,
+        endTimeString: updateData.endTimeString || schedule.endTimeString,
+        className: rest.className || schedule.className,
+      });
+      await this.scheduleSessionGenerator.generateUpcomingSessions(7);
     } catch (error) {
-      this.logger.warn(`Zoom meeting update failed for schedule ${schedule.id}: ${error.message}`);
+      this.logger.warn(`Session update failed for schedule ${schedule.id}: ${error.message}`);
     }
 
     return this.findOne(schedule.id);
@@ -305,9 +278,9 @@ export class SchedulesService {
     if (!schedule) throw new NotFoundException('Schedule not found');
 
     try {
-      await this.liveSessionService.deleteZoomMeeting(id);
+      await this.liveSessionService.cancelFutureScheduledSessions(id);
     } catch (error) {
-      this.logger.warn(`Zoom meeting deletion failed for schedule ${id}: ${error.message}`);
+      this.logger.warn(`Future session cancellation failed for schedule ${id}: ${error.message}`);
     }
 
     return this.schedulesRepository.remove(schedule);

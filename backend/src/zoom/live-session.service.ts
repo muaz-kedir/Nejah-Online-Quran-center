@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Repository, FindOptionsWhere, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { LiveSession } from './entities/live-session.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { AttendanceStatus } from './enums/live-session-status.enum';
@@ -11,6 +11,7 @@ import { QueryLiveSessionDto } from './dto/query-live-session.dto';
 import { ZoomService } from './zoom.service';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { SessionAttendanceService } from './session-attendance.service';
 
 @Injectable()
 export class LiveSessionService {
@@ -25,6 +26,7 @@ export class LiveSessionService {
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
     private readonly zoomService: ZoomService,
     private readonly notificationsService: NotificationsService,
+    private readonly sessionAttendanceService: SessionAttendanceService,
   ) {}
 
   async create(dto: CreateLiveSessionDto): Promise<LiveSession> {
@@ -70,7 +72,7 @@ export class LiveSessionService {
     );
 
     const meeting = await this.zoomService.createMeeting(
-      integration.zoomUserId,
+      await this.resolveTeacherZoomHost(integration),
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
@@ -79,6 +81,7 @@ export class LiveSessionService {
     session.zoomMeetingId = meeting.zoomMeetingId;
     session.zoomJoinUrl = meeting.zoomJoinUrl;
     session.zoomStartUrl = meeting.zoomStartUrl;
+    session.zoomPassword = meeting.zoomPassword || null;
     await this.liveSessionRepository.save(session);
 
     const created = await this.findById(session.id);
@@ -105,6 +108,7 @@ export class LiveSessionService {
         'teacher',
         'student',
         'schedule',
+        'schedule.scheduleStudents',
         'attendances',
         'attendances.student',
         'sessionNotes',
@@ -231,27 +235,26 @@ export class LiveSessionService {
       throw new BadRequestException('Cannot start a cancelled session');
     }
 
+    if (!session.zoomMeetingId) {
+      await this.ensureZoomMeeting(session);
+    }
+
     session.status = LiveSessionStatus.LIVE;
-    session.actualStart = new Date();
+    session.actualStart = session.actualStart || new Date();
+    session.teacherJoinTime = session.teacherJoinTime || new Date();
 
     await this.liveSessionRepository.save(session);
 
     const fullSession = await this.findById(id);
-    const attendanceIds = fullSession.attendances?.map((a) => a.studentId) || [];
-    const studentUserId = fullSession.student?.userId;
-    const recipientIds: string[] = [];
-    if (studentUserId) recipientIds.push(studentUserId);
-    for (const sid of attendanceIds) {
-      if (!recipientIds.includes(sid)) recipientIds.push(sid);
-    }
+    const recipientUserIds = await this.getSessionStudentUserIds(fullSession);
 
-    if (recipientIds.length > 0) {
+    if (recipientUserIds.length > 0) {
       try {
         await this.notificationsService.sendCustomNotifications(
-          recipientIds,
+          recipientUserIds,
           `Class Started: ${fullSession.schedule?.className || 'Quran Class'}`,
           `Your class has started. Click to join.`,
-          { sessionId: id, meetingLink: session.zoomJoinUrl },
+          { sessionId: id, channel: 'MEETING_STARTED' },
         );
       } catch (err) {
         this.logger.error('Failed to send meeting started notifications', err);
@@ -259,6 +262,288 @@ export class LiveSessionService {
     }
 
     return fullSession;
+  }
+
+  async joinSession(
+    sessionId: string,
+    options: { studentId?: string; teacherId?: string; isTeacher?: boolean },
+  ): Promise<LiveSession> {
+    const session = await this.findById(sessionId);
+
+    if (session.status !== LiveSessionStatus.LIVE && session.status !== LiveSessionStatus.SCHEDULED) {
+      throw new BadRequestException('Session is not available to join');
+    }
+
+    if (options.isTeacher) {
+      if (session.teacherId !== options.teacherId) {
+        throw new ForbiddenException('You are not assigned to this session');
+      }
+      if (!session.zoomMeetingId) {
+        await this.ensureZoomMeeting(session);
+      }
+      if (session.status === LiveSessionStatus.SCHEDULED) {
+        session.status = LiveSessionStatus.LIVE;
+        session.actualStart = session.actualStart || new Date();
+      }
+      session.teacherJoinTime = session.teacherJoinTime || new Date();
+      await this.liveSessionRepository.save(session);
+      return this.findById(sessionId);
+    }
+
+    if (!options.studentId) {
+      throw new BadRequestException('Student ID required');
+    }
+
+    const allowed = await this.studentBelongsToSession(session, options.studentId);
+    if (!allowed) {
+      throw new ForbiddenException('You are not enrolled in this session');
+    }
+
+    if (session.status !== LiveSessionStatus.LIVE) {
+      throw new BadRequestException('The teacher has not started this session yet');
+    }
+
+    await this.sessionAttendanceService.recordJoin(sessionId, options.studentId);
+    return this.findById(sessionId);
+  }
+
+  async getClassroomAccess(
+    sessionId: string,
+    options: {
+      studentId?: string;
+      teacherId?: string;
+      isTeacher?: boolean;
+      userName: string;
+      userEmail?: string;
+    },
+  ): Promise<{
+    session: LiveSession;
+    joinUrl: string | null;
+    startUrl: string | null;
+    sdkSignature: string | null;
+    clientId: string | null;
+    meetingNumber: string | null;
+    password: string | null;
+    role: 0 | 1;
+    userName: string;
+    userEmail: string;
+    zak: string | null;
+    sdkEnabled: boolean;
+  }> {
+    const session = await this.findById(sessionId);
+
+    if (options.isTeacher) {
+      if (session.teacherId !== options.teacherId) {
+        throw new ForbiddenException('You are not assigned to this session');
+      }
+    } else if (options.studentId) {
+      const allowed = await this.studentBelongsToSession(session, options.studentId);
+      if (!allowed) {
+        throw new ForbiddenException('You are not enrolled in this session');
+      }
+    } else {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const role: 0 | 1 = options.isTeacher ? 1 : 0;
+    const meetingNumber = session.zoomMeetingId
+      ? String(session.zoomMeetingId).replace(/\D/g, '')
+      : null;
+    const sdkConfigured = this.zoomService.isPlatformConfigured();
+
+    let sdkSignature: string | null = null;
+    if (meetingNumber && sdkConfigured) {
+      sdkSignature = this.zoomService.generateMeetingSdkSignature(meetingNumber, role);
+    }
+
+    let zak: string | null = null;
+    if (options.isTeacher && options.teacherId) {
+      const integration = await this.zoomIntegrationRepository.findOne({
+        where: { teacherId: options.teacherId, connectionStatus: 'connected' },
+      });
+      if (integration?.zoomUserId) {
+        zak = await this.zoomService.getUserZakToken(integration.zoomUserId);
+      }
+    }
+
+    return {
+      session,
+      joinUrl: session.zoomJoinUrl,
+      startUrl: session.zoomStartUrl,
+      sdkSignature,
+      clientId: sdkConfigured ? this.zoomService.getOAuthClientId() : null,
+      meetingNumber,
+      password: session.zoomPassword || '',
+      role,
+      userName: options.userName,
+      userEmail: options.userEmail || '',
+      zak,
+      sdkEnabled: !!(sdkConfigured && sdkSignature && meetingNumber),
+    };
+  }
+
+  async getStudentActiveLiveSession(studentId: string): Promise<LiveSession | null> {
+    const liveSessions = await this.liveSessionRepository.find({
+      where: { status: LiveSessionStatus.LIVE },
+      relations: ['teacher', 'student', 'schedule', 'schedule.scheduleStudents'],
+      order: { actualStart: 'DESC' },
+    });
+
+    for (const session of liveSessions) {
+      if (await this.studentBelongsToSession(session, studentId)) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  async getStudentUpcomingTodaySession(studentId: string): Promise<LiveSession | null> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sessions = await this.liveSessionRepository.find({
+      where: {
+        status: In([LiveSessionStatus.SCHEDULED, LiveSessionStatus.LIVE]),
+        scheduledStart: Between(today, tomorrow),
+      },
+      relations: ['teacher', 'student', 'schedule', 'schedule.scheduleStudents'],
+      order: { scheduledStart: 'ASC' },
+    });
+
+    for (const session of sessions) {
+      if (await this.studentBelongsToSession(session, studentId)) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  async updateScheduledSessionsForSchedule(
+    scheduleId: string,
+    data: { startTimeString: string; endTimeString: string; className?: string },
+  ): Promise<void> {
+    const now = new Date();
+    const sessions = await this.liveSessionRepository.find({
+      where: {
+        scheduleId,
+        status: LiveSessionStatus.SCHEDULED,
+        scheduledStart: MoreThanOrEqual(now),
+      },
+    });
+
+    for (const session of sessions) {
+      const date = new Date(session.scheduledStart);
+      const [startHour, startMin] = data.startTimeString.split(':').map(Number);
+      const [endHour, endMin] = data.endTimeString.split(':').map(Number);
+      session.scheduledStart = new Date(date);
+      session.scheduledStart.setHours(startHour, startMin, 0, 0);
+      session.scheduledEnd = new Date(date);
+      session.scheduledEnd.setHours(endHour, endMin, 0, 0);
+      if (data.className) {
+        session.metadata = { ...(session.metadata || {}), className: data.className };
+      }
+      await this.liveSessionRepository.save(session);
+    }
+  }
+
+  async cancelFutureScheduledSessions(scheduleId: string): Promise<void> {
+    const now = new Date();
+    const sessions = await this.liveSessionRepository.find({
+      where: {
+        scheduleId,
+        status: LiveSessionStatus.SCHEDULED,
+        scheduledStart: MoreThanOrEqual(now),
+      },
+    });
+
+    for (const session of sessions) {
+      if (session.zoomMeetingId) {
+        try {
+          await this.zoomService.deleteMeeting(session.zoomMeetingId);
+        } catch (error) {
+          this.logger.warn(`Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`);
+        }
+      }
+      session.status = LiveSessionStatus.CANCELLED;
+      await this.liveSessionRepository.save(session);
+    }
+  }
+
+  private async resolveTeacherZoomHost(
+    integration: ZoomIntegration,
+    session?: LiveSession,
+  ): Promise<string> {
+    const resolved = await this.zoomService.resolveZoomUser(
+      integration.zoomUserId,
+      integration.zoomEmail || session?.teacher?.email || undefined,
+    );
+
+    if (
+      resolved.id !== integration.zoomUserId ||
+      (resolved.email && resolved.email !== integration.zoomEmail)
+    ) {
+      integration.zoomUserId = resolved.id;
+      integration.zoomEmail = resolved.email || integration.zoomEmail;
+      await this.zoomIntegrationRepository.save(integration);
+    }
+
+    return resolved.id;
+  }
+
+  private async ensureZoomMeeting(session: LiveSession): Promise<void> {
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+    });
+
+    if (!integration?.zoomUserId) {
+      throw new BadRequestException(
+        'Teacher Zoom account is not connected. Connect Zoom in settings before starting.',
+      );
+    }
+
+    const durationMinutes = Math.round(
+      (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
+    );
+
+    const meeting = await this.zoomService.createMeeting(
+      await this.resolveTeacherZoomHost(integration, session),
+      `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
+      session.scheduledStart,
+      durationMinutes || 60,
+    );
+
+    session.zoomMeetingId = meeting.zoomMeetingId;
+    session.zoomJoinUrl = meeting.zoomJoinUrl;
+    session.zoomStartUrl = meeting.zoomStartUrl;
+    session.zoomPassword = meeting.zoomPassword || null;
+    await this.liveSessionRepository.save(session);
+  }
+
+  private async studentBelongsToSession(session: LiveSession, studentId: string): Promise<boolean> {
+    if (session.studentId === studentId) return true;
+    if (session.schedule?.scheduleStudents?.some((ss) => ss.studentId === studentId)) return true;
+    if (session.scheduleId && !session.schedule?.scheduleStudents) {
+      const attendances = await this.attendanceRepository.find({
+        where: { sessionId: session.id, studentId },
+      });
+      return attendances.length > 0;
+    }
+    return false;
+  }
+
+  private async getSessionStudentUserIds(session: LiveSession): Promise<string[]> {
+    const userIds: string[] = [];
+    if (session.student?.userId) userIds.push(session.student.userId);
+
+    const attendances = session.attendances || [];
+    for (const att of attendances) {
+      if (att.student?.userId && !userIds.includes(att.student.userId)) {
+        userIds.push(att.student.userId);
+      }
+    }
+    return userIds;
   }
 
   async complete(id: string): Promise<LiveSession> {
@@ -270,6 +555,7 @@ export class LiveSessionService {
 
     session.status = LiveSessionStatus.COMPLETED;
     session.actualEnd = new Date();
+    session.teacherLeaveTime = session.teacherLeaveTime || new Date();
 
     if (session.actualStart) {
       const durationMs = session.actualEnd.getTime() - session.actualStart.getTime();
@@ -280,18 +566,25 @@ export class LiveSessionService {
 
     const attendances = await this.attendanceRepository.find({
       where: { sessionId: id },
+      relations: ['session'],
     });
+
+    const scheduledDuration = this.getScheduledDurationMinutes(session);
 
     for (const attendance of attendances) {
       if (!attendance.joinTime) {
         attendance.attendanceStatus = AttendanceStatus.ABSENT;
-      } else if (!attendance.leaveTime) {
-        attendance.leaveTime = session.actualEnd;
-        if (attendance.joinTime) {
-          attendance.duration = Math.floor(
-            (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
-          );
+      } else {
+        if (!attendance.leaveTime) {
+          attendance.leaveTime = session.actualEnd;
         }
+        attendance.duration = Math.floor(
+          (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
+        );
+        attendance.attendanceStatus = this.sessionAttendanceService.calculateAttendanceStatus(
+          attendance.duration,
+          scheduledDuration,
+        );
       }
     }
     await this.attendanceRepository.save(attendances);
@@ -460,5 +753,13 @@ export class LiveSessionService {
     });
 
     return { total, completed, cancelled, live, scheduled };
+  }
+
+  private getScheduledDurationMinutes(session: LiveSession): number {
+    if (!session.scheduledStart || !session.scheduledEnd) return 60;
+    return Math.max(
+      1,
+      Math.round((session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000),
+    );
   }
 }
