@@ -29,6 +29,7 @@ import { CurrencyModule } from './currency/currency.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
+import { SessionsModule } from './sessions/sessions.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
 
 @Module({
@@ -53,6 +54,7 @@ import { createTypeOrmOptions } from './database/typeorm.config';
     TeachersModule,
     ParentsModule,
     AttendanceModule,
+    SessionsModule,
     SchedulesModule,
     HomeworkModule,
     ProgressModule,

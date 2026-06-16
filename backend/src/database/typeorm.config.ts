@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { ALL_ENTITIES } from './entities';
 
 export function shouldSynchronizeSchema(configService: ConfigService): boolean {
   if (configService.get<string>('DB_SYNC') === 'false') {
@@ -21,7 +22,8 @@ export function createTypeOrmOptions(configService: ConfigService): TypeOrmModul
   const synchronize = shouldSynchronizeSchema(configService);
   const databaseUrl = configService.get<string>('DATABASE_URL');
 
-  const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging'> = {
+  const shared: Pick<TypeOrmModuleOptions, 'entities' | 'autoLoadEntities' | 'synchronize' | 'logging'> = {
+    entities: ALL_ENTITIES,
     autoLoadEntities: true,
     synchronize,
     logging: synchronize ? ['error', 'schema'] : ['error'],
