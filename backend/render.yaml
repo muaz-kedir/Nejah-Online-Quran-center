@@ -30,6 +30,9 @@ services:
         value: https://nejah-online-quran-center.vercel.app
       - key: CORS_ORIGINS
         value: http://localhost:8080,https://nejah-online-quran-center.vercel.app
+      - key: ENCRYPTION_KEY
+        generateValue: true
+        sync: false
 
 databases:
   - name: nejah-db

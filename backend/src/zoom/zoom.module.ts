@@ -17,6 +17,7 @@ import { ZoomAnalyticsController } from './zoom-analytics.controller';
 import { SessionAttendanceController } from './session-attendance.controller';
 import { ParentSessionController } from './parent-session.controller';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
+import { ZoomPlatformConfig } from './entities/zoom-platform-config.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { SessionNote } from './entities/session-note.entity';
@@ -36,6 +37,7 @@ import { EncryptionService } from '../common/encryption.service';
   imports: [
     TypeOrmModule.forFeature([
       ZoomIntegration,
+      ZoomPlatformConfig,
       LiveSession,
       SessionAttendance,
       SessionNote,

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -56,9 +57,19 @@ type TeacherIntegration = {
   connectedAt?: string;
 };
 
+type PlatformConfigStatus = {
+  configured: boolean;
+  source: 'env' | 'database' | 'none';
+  accountId: string | null;
+  clientId: string | null;
+  hasClientSecret: boolean;
+  hasSecretToken: boolean;
+};
+
 const ADMIN_ROLES = ['admin', 'super_admin'];
 
 export const Route = createFileRoute('/zoom-settings')({
+  ssr: false,
   component: ZoomSettingsPage,
   beforeLoad: () => requireAuth(['teacher', 'admin', 'super_admin']),
 });
@@ -168,6 +179,7 @@ function TeacherZoomPanel() {
 
 function AdminZoomPanel() {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [platformStatus, setPlatformStatus] = useState<PlatformConfigStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [connectTarget, setConnectTarget] = useState<TeacherZoomRow | null>(null);
@@ -181,9 +193,19 @@ function AdminZoomPanel() {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await api<AdminOverview>('/zoom-settings/overview');
+      const [data, platform] = await Promise.all([
+        api<AdminOverview>('/zoom-settings/overview'),
+        api<PlatformConfigStatus>('/zoom-settings/platform').catch(() => null),
+      ]);
+      setPlatformStatus(platform);
       if (data.teachers?.length > 0) {
-        setOverview(data);
+        setOverview({
+          ...data,
+          summary: {
+            ...data.summary,
+            platformConfigured: platform?.configured ?? data.summary?.platformConfigured ?? false,
+          },
+        });
         return;
       }
 
@@ -218,7 +240,7 @@ function AdminZoomPanel() {
           totalTeachers: teachers.length,
           connected,
           disconnected: teachers.length - connected,
-          platformConfigured: data.summary?.platformConfigured ?? true,
+          platformConfigured: platform?.configured ?? data.summary?.platformConfigured ?? false,
         },
         teachers,
       });
@@ -304,6 +326,10 @@ function AdminZoomPanel() {
 
   return (
     <>
+      <PlatformConfigCard
+        status={platformStatus}
+        onSaved={fetchOverview}
+      />
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="glass-panel rounded-2xl">
           <CardContent className="pt-6">
@@ -466,6 +492,9 @@ function AdminZoomPanel() {
               {connectTarget?.connectionStatus === 'connected' ? 'Update' : 'Connect'} Zoom —{' '}
               {connectTarget?.teacherName}
             </DialogTitle>
+            <DialogDescription>
+              Enter the teacher&apos;s licensed Zoom email or User ID from your Zoom account.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -636,6 +665,156 @@ function ZoomIntegrationCard({
   );
 }
 
+function PlatformConfigCard({
+  status,
+  onSaved,
+}: {
+  status: PlatformConfigStatus | null;
+  onSaved: () => Promise<void>;
+}) {
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
+  const isSuperAdmin = userRole === 'super_admin';
+  const [accountId, setAccountId] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [secretToken, setSecretToken] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (status?.accountId) setAccountId(status.accountId);
+    if (status?.clientId) setClientId(status.clientId);
+  }, [status?.accountId, status?.clientId]);
+
+  const handleSave = async () => {
+    if (!accountId.trim() || !clientId.trim()) {
+      toast.error('Account ID and Client ID are required');
+      return;
+    }
+    if (!clientSecret.trim() && !status?.hasClientSecret) {
+      toast.error('Client Secret is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api('/zoom-settings/platform', {
+        method: 'POST',
+        body: JSON.stringify({
+          accountId: accountId.trim(),
+          clientId: clientId.trim(),
+          ...(clientSecret.trim() ? { clientSecret: clientSecret.trim() } : {}),
+          ...(secretToken.trim() ? { secretToken: secretToken.trim() } : {}),
+        }),
+      });
+      toast.success('Zoom platform credentials saved');
+      setClientSecret('');
+      setSecretToken('');
+      await onSaved();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save Zoom credentials');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const configured = status?.configured ?? false;
+
+  return (
+    <Card className="glass-panel rounded-3xl border-border dark:border-white/5 mb-6">
+      <CardHeader>
+        <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <Video className="h-5 w-5 text-nejah-electric" />
+          Platform Configuration (Server-to-Server OAuth)
+        </CardTitle>
+        <CardDescription>
+          Required for automatic Zoom meeting creation and user verification. Credentials from
+          environment variables take precedence over values saved here.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          {configured ? (
+            <Badge className="bg-green-100 text-green-700 border-none">
+              Configured ({status?.source === 'env' ? 'environment' : 'database'})
+            </Badge>
+          ) : (
+            <Badge className="bg-red-100 text-red-700 border-none">Not configured</Badge>
+          )}
+        </div>
+
+        {!configured && (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-400">
+            Create a <strong>Server-to-Server OAuth</strong> app in the{' '}
+            <a
+              href="https://marketplace.zoom.us/develop/create"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Zoom Marketplace
+            </a>
+            , then paste Account ID, Client ID, and Client Secret below.
+          </div>
+        )}
+
+        {isSuperAdmin ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="zoomAccountId">Account ID</Label>
+              <Input
+                id="zoomAccountId"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                placeholder="From Zoom OAuth app"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zoomClientId">Client ID</Label>
+              <Input
+                id="zoomClientId"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                placeholder="From Zoom OAuth app"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zoomClientSecret">Client Secret</Label>
+              <Input
+                id="zoomClientSecret"
+                type="password"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder={status?.hasClientSecret ? '•••••••• (leave blank to keep)' : 'Required'}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zoomSecretToken">Webhook Secret Token (optional)</Label>
+              <Input
+                id="zoomSecretToken"
+                type="password"
+                value={secretToken}
+                onChange={(e) => setSecretToken(e.target.value)}
+                placeholder="For Zoom webhook verification"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Button onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Save Platform Credentials
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Only a super admin can update platform credentials. Contact your super admin or set
+            ZOOM_* variables on the backend server.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function HowItWorksCard() {
   return (
     <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 rounded-3xl shadow-sm">
@@ -665,8 +844,9 @@ function HowItWorksCard() {
         <div className="mt-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
           <p className="text-xs font-bold text-amber-800 dark:text-amber-400">Prerequisites</p>
           <p className="text-xs text-amber-700 dark:text-amber-500 mt-1">
-            Server-to-Server OAuth credentials must be set in backend environment variables. Each
-            teacher must have their Zoom User ID connected before they can start live sessions.
+            A super admin must configure Server-to-Server OAuth under Platform Configuration (or set
+            ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the backend). Each teacher
+            must connect their licensed Zoom email before starting live sessions.
           </p>
         </div>
       </CardContent>
