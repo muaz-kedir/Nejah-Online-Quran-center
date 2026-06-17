@@ -1,45 +1,149 @@
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
+import { ZoomPlatformConfig } from './entities/zoom-platform-config.entity';
 import { EncryptionService } from '../common/encryption.service';
 import * as crypto from 'crypto';
 
+const PLATFORM_CONFIG_ID = 'default';
+
 @Injectable()
-export class ZoomService {
+export class ZoomService implements OnModuleInit {
   private readonly logger = new Logger(ZoomService.name);
   private readonly baseUrl = 'https://api.zoom.us/v2';
   private cachedToken: { accessToken: string; expiresAt: number } | null = null;
+
+  private accountId = '';
+  private clientId = '';
+  private clientSecret = '';
+  private secretToken = '';
+  private credentialsSource: 'env' | 'database' | 'none' = 'none';
 
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     @InjectRepository(ZoomIntegration)
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
+    @InjectRepository(ZoomPlatformConfig)
+    private readonly platformConfigRepository: Repository<ZoomPlatformConfig>,
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  private get accountId(): string {
-    return this.configService.get<string>('ZOOM_ACCOUNT_ID');
+  async onModuleInit(): Promise<void> {
+    await this.reloadPlatformCredentials();
   }
 
-  private get clientId(): string {
-    return this.configService.get<string>('ZOOM_CLIENT_ID');
-  }
+  async reloadPlatformCredentials(): Promise<void> {
+    this.cachedToken = null;
 
-  private get clientSecret(): string {
-    return this.configService.get<string>('ZOOM_CLIENT_SECRET');
-  }
+    const envAccountId = this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() || '';
+    const envClientId = this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() || '';
+    const envClientSecret = this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() || '';
+    const envSecretToken = this.configService.get<string>('ZOOM_SECRET_TOKEN')?.trim() || '';
 
-  private get secretToken(): string {
-    return this.configService.get<string>('ZOOM_SECRET_TOKEN');
+    if (envAccountId && envClientId && envClientSecret) {
+      this.accountId = envAccountId;
+      this.clientId = envClientId;
+      this.clientSecret = envClientSecret;
+      this.secretToken = envSecretToken;
+      this.credentialsSource = 'env';
+      return;
+    }
+
+    const stored = await this.platformConfigRepository.findOne({
+      where: { id: PLATFORM_CONFIG_ID },
+    });
+
+    if (stored?.accountId && stored.clientId && stored.clientSecretEncrypted) {
+      this.accountId = stored.accountId.trim();
+      this.clientId = stored.clientId.trim();
+      this.clientSecret =
+        this.encryptionService.decrypt(stored.clientSecretEncrypted)?.trim() || '';
+      this.secretToken = stored.secretTokenEncrypted
+        ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
+        : '';
+      this.credentialsSource = this.clientSecret ? 'database' : 'none';
+      return;
+    }
+
+    this.accountId = '';
+    this.clientId = '';
+    this.clientSecret = '';
+    this.secretToken = '';
+    this.credentialsSource = 'none';
   }
 
   isPlatformConfigured(): boolean {
     return !!(this.accountId && this.clientId && this.clientSecret);
+  }
+
+  getPlatformConfigStatus(): {
+    configured: boolean;
+    source: 'env' | 'database' | 'none';
+    accountId: string | null;
+    clientId: string | null;
+    hasClientSecret: boolean;
+    hasSecretToken: boolean;
+  } {
+    return {
+      configured: this.isPlatformConfigured(),
+      source: this.credentialsSource,
+      accountId: this.accountId || null,
+      clientId: this.clientId || null,
+      hasClientSecret: !!this.clientSecret,
+      hasSecretToken: !!this.secretToken,
+    };
+  }
+
+  async savePlatformConfig(input: {
+    accountId: string;
+    clientId: string;
+    clientSecret?: string;
+    secretToken?: string;
+  }): Promise<{ configured: boolean; source: 'database' }> {
+    const accountId = input.accountId?.trim();
+    const clientId = input.clientId?.trim();
+    const clientSecret = input.clientSecret?.trim();
+
+    if (!accountId || !clientId) {
+      throw new HttpException('Account ID and Client ID are required', HttpStatus.BAD_REQUEST);
+    }
+
+    let row = await this.platformConfigRepository.findOne({ where: { id: PLATFORM_CONFIG_ID } });
+    if (!row) {
+      row = this.platformConfigRepository.create({ id: PLATFORM_CONFIG_ID });
+    }
+
+    if (!clientSecret && !row.clientSecretEncrypted) {
+      throw new HttpException('Client Secret is required', HttpStatus.BAD_REQUEST);
+    }
+
+    row.accountId = accountId;
+    row.clientId = clientId;
+    if (clientSecret) {
+      row.clientSecretEncrypted = this.encryptionService.encrypt(clientSecret);
+    }
+    if (input.secretToken !== undefined) {
+      row.secretTokenEncrypted = input.secretToken?.trim()
+        ? this.encryptionService.encrypt(input.secretToken.trim())
+        : null;
+    }
+
+    await this.platformConfigRepository.save(row);
+    await this.reloadPlatformCredentials();
+
+    if (!this.isPlatformConfigured()) {
+      throw new HttpException(
+        'Zoom credentials were saved but could not be loaded. Set ENCRYPTION_KEY in backend environment variables.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return { configured: true, source: 'database' };
   }
 
   /** OAuth Client ID — also used as Meeting SDK appKey for embedded classroom JWTs. */
@@ -231,7 +335,7 @@ export class ZoomService {
   ): Promise<{ id: string; email: string }> {
     if (!this.isPlatformConfigured()) {
       throw new HttpException(
-        'Zoom platform credentials are not configured on the server',
+        'Zoom platform credentials are not configured. A super admin must add Server-to-Server OAuth credentials under Zoom Settings → Platform Configuration, or set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET in the backend environment.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -266,8 +370,25 @@ export class ZoomService {
     zoomUserIdOrEmail: string,
     zoomEmail?: string,
   ): Promise<ZoomIntegration> {
-    const resolved = await this.resolveZoomUser(zoomUserIdOrEmail, zoomEmail);
-    return this.saveTeacherIntegration(teacherId, resolved.id, resolved.email);
+    const identifier = zoomUserIdOrEmail?.trim();
+    if (!identifier) {
+      throw new HttpException('Zoom User ID or email is required', HttpStatus.BAD_REQUEST);
+    }
+
+    if (this.isPlatformConfigured()) {
+      const resolved = await this.resolveZoomUser(identifier, zoomEmail);
+      return this.saveTeacherIntegration(teacherId, resolved.id, resolved.email);
+    }
+
+    const email = (zoomEmail || (identifier.includes('@') ? identifier : '')).trim();
+    if (!email) {
+      throw new HttpException(
+        'Zoom email is required when platform OAuth is not configured yet',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.saveTeacherIntegration(teacherId, identifier, email);
   }
 
   async createMeeting(

@@ -20,6 +20,22 @@ class ConnectZoomDto {
   zoomEmail?: string;
 }
 
+class SavePlatformConfigDto {
+  @IsString()
+  accountId: string;
+
+  @IsString()
+  clientId: string;
+
+  @IsOptional()
+  @IsString()
+  clientSecret?: string;
+
+  @IsOptional()
+  @IsString()
+  secretToken?: string;
+}
+
 function sanitizeIntegration(integration: ZoomIntegration | null) {
   if (!integration) return null;
   const { accessToken, refreshToken, ...safe } = integration;
@@ -35,6 +51,18 @@ export class ZoomSettingsController {
     @InjectRepository(Teacher)
     private readonly teachersRepository: Repository<Teacher>,
   ) {}
+
+  @Get('platform')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  getPlatformConfig() {
+    return this.zoomService.getPlatformConfigStatus();
+  }
+
+  @Post('platform')
+  @Roles(UserRole.SUPER_ADMIN)
+  savePlatformConfig(@Body() dto: SavePlatformConfigDto) {
+    return this.zoomService.savePlatformConfig(dto);
+  }
 
   @Post('connect')
   @Roles(UserRole.TEACHER)

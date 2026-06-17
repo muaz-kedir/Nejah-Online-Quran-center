@@ -36,6 +36,7 @@ import { LearningGoal } from '../learning-goals/entities/learning-goal.entity';
 import { FeeConfig } from '../fee-config/entities/fee-config.entity';
 import { CurrencyRate } from '../currency/entities/currency-rate.entity';
 import { ZoomIntegration } from '../zoom/entities/zoom-integration.entity';
+import { ZoomPlatformConfig } from '../zoom/entities/zoom-platform-config.entity';
 import { LiveSession } from '../zoom/entities/live-session.entity';
 import { SessionAttendance } from '../zoom/entities/session-attendance.entity';
 import { SessionNote } from '../zoom/entities/session-note.entity';
@@ -81,6 +82,7 @@ export const ALL_ENTITIES = [
   FeeConfig,
   CurrencyRate,
   ZoomIntegration,
+  ZoomPlatformConfig,
   LiveSession,
   SessionAttendance,
   SessionNote,
