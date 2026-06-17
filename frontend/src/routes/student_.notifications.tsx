@@ -54,7 +54,7 @@ function StudentNotificationsPage() {
 
   return (
     <StudentPortalLayout activePath={studentPaths.notifications} unreadNotifications={unread}>
-      <main className="flex-1 px-10 py-10 max-w-4xl">
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-4xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div>
             <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">

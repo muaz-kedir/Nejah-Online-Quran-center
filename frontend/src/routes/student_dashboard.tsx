@@ -1,7 +1,7 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare } from "lucide-react";
+import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare, Calendar, GraduationCap, UserCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,6 +182,8 @@ function StudentDashboard() {
     }
   };
 
+  const firstName = welcome?.studentName?.split(" ")[0] || student?.name?.split(" ")[0] || "Student";
+
   return (
     <StudentPortalLayout
       activePath={studentPaths.dashboard}
@@ -190,30 +192,41 @@ function StudentDashboard() {
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenProfile={() => setProfileOpen(true)}
     >
-      <main className="flex-1 px-10 pb-10 space-y-8">
-        <div>
-          <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">
-            Assalamu Alaikum,{" "}
-            {welcome?.studentName?.split(" ")[0] || student?.name?.split(" ")[0] || "Student"}!
-          </p>
-          <h2 className="text-3xl font-extrabold dark:text-foreground text-nejah-sapphire font-serif">
-            Your Learning Center
-          </h2>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm dark:text-nejah-slate-blue text-muted-foreground">
-            <span>
-              <strong>Level:</strong> {displayLevel}
-            </span>
-            <span>
-              <strong>Teacher:</strong> {displayTeacher}
-            </span>
-            <span>
-              <strong>Enrolled:</strong> {displayEnrolled}
-            </span>
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 pb-8 lg:pb-10">
+        {/* ─── Hero Header ─── */}
+        <div className="hero-gradient rounded-2xl lg:rounded-3xl p-6 sm:p-8 mb-6 lg:mb-8 animate-fade-in-up border border-border/30 dark:border-nejah-border-blue/20">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                  Assalamu Alaikum, {firstName}!
+                </p>
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">
+                Your Learning Center
+              </h2>
+              <div className="flex flex-wrap gap-2 sm:gap-3 mt-4">
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                  <GraduationCap className="h-3.5 w-3.5 text-nejah-electric" />
+                  {displayLevel}
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                  <UserCheck className="h-3.5 w-3.5 text-nejah-electric" />
+                  {displayTeacher}
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-nejah-electric" />
+                  {displayEnrolled}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Temporary teacher notice */}
         {student?.isTemporaryTeacher && student?.temporaryTeacher && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-sm text-amber-900 dark:text-amber-200">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-sm text-amber-900 dark:text-amber-200 mb-6 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
             <p className="font-bold mb-1">Temporary Teacher Assigned</p>
             <p>
               <strong>{student.temporaryTeacher.name}</strong> is teaching your classes from{" "}
@@ -223,235 +236,283 @@ function StudentDashboard() {
           </div>
         )}
 
+        {/* Learning Path */}
         {learningPath && (
-          <div className="glass-panel">
+          <div className="glass-card-static p-5 sm:p-6 mb-6 lg:mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             <LearningPathCard path={learningPath} />
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass-panel">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-bold dark:text-foreground text-nejah-sapphire">
-                    Current Hifz Progress
-                  </h3>
-                  <p className="text-sm dark:text-nejah-slate-blue text-muted-foreground">
-                    {progress?.currentSurah} · Ayah {progress?.currentAyah}
-                  </p>
-                </div>
-                <Badge className="bg-primary/10 text-nejah-electric border-none">
-                  {progress?.rank}
-                </Badge>
-              </div>
-              <ProgressBar value={progress?.percentage || 0} className="h-2 mb-4" />
-              <div className="grid grid-cols-3 gap-3 text-center text-sm mb-4">
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl">
-                  <p className="font-bold text-lg dark:text-foreground">
-                    {progress?.memorizedSurahs}
-                  </p>
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Surahs</p>
-                </div>
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl">
-                  <p className="font-bold text-lg dark:text-foreground">
-                    {progress?.memorizedAyahs}
-                  </p>
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Ayahs</p>
-                </div>
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl">
-                  <p className="font-bold text-lg dark:text-foreground">{progress?.completedJuz}</p>
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Juz</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate({ to: studentPaths.progress })}
-              >
-                View Full Progress <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-
-            <div className="glass-panel">
-              <h3 className="text-lg font-bold dark:text-foreground text-nejah-sapphire mb-3">
-                Today&apos;s Lesson
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl">
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">
-                    Surah
-                  </p>
-                  <p className="font-medium dark:text-foreground">{data?.todaysLesson?.surah}</p>
-                </div>
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl">
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">
-                    Ayah Range
-                  </p>
-                  <p className="font-medium dark:text-foreground">
-                    {data?.todaysLesson?.ayahRange}
-                  </p>
-                </div>
-                <div className="dark:bg-nejah-surface/50 bg-muted p-3 rounded-xl sm:col-span-2">
-                  <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground font-bold uppercase">
-                    Revision
-                  </p>
-                  <p className="font-medium dark:text-foreground">{data?.todaysLesson?.revision}</p>
-                </div>
-                {data?.todaysLesson?.homework && (
-                  <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                    <p className="text-xs text-amber-700 dark:text-amber-300 font-bold uppercase">
-                      Homework
+        {/* ─── Main Grid ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
+          {/* Left column — 2/3 */}
+          <div className="lg:col-span-2 space-y-5 lg:space-y-6">
+            {/* Hifz Progress */}
+            <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+              <div className="gradient-accent-bar" />
+              <div className="p-5 sm:p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">
+                      Current Hifz Progress
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {progress?.currentSurah ? `${progress.currentSurah} · Ayah ${progress.currentAyah}` : 'Not started yet'}
                     </p>
-                    <p className="font-medium">{data.todaysLesson.homework.title}</p>
                   </div>
-                )}
-              </div>
-            </div>
+                  <Badge className="bg-nejah-electric/10 text-nejah-electric border border-nejah-electric/20 font-semibold">
+                    {progress?.rank || 'Beginner'}
+                  </Badge>
+                </div>
 
-            {data?.recentFeedback?.length > 0 && (
-              <div className="glass-panel text-foreground">
-                <h3 className="font-bold mb-4">Recent Teacher Feedback</h3>
-                {data.recentFeedback.slice(0, 2).map((f: any) => (
+                {/* Progress bar */}
+                <div className="relative h-2.5 bg-muted dark:bg-nejah-surface rounded-full mb-5 overflow-hidden">
                   <div
-                    key={f.id}
-                    className="mb-4 last:mb-0 border-b border-white/10 pb-4 last:border-0"
-                  >
-                    <p className="text-xs text-nejah-electric/70">
-                      {f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ""}
+                    className="progress-gradient h-full transition-all duration-700 ease-out"
+                    style={{ width: `${progress?.percentage || 0}%` }}
+                  />
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  <div className="stat-card">
+                    <p className="font-bold text-xl text-foreground">
+                      {progress?.memorizedSurahs ?? 0}
                     </p>
-                    <p className="text-sm mt-1 italic">&quot;{f.summary}&quot;</p>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">Surahs</p>
                   </div>
-                ))}
+                  <div className="stat-card">
+                    <p className="font-bold text-xl text-foreground">
+                      {progress?.memorizedAyahs ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">Ayahs</p>
+                  </div>
+                  <div className="stat-card">
+                    <p className="font-bold text-xl text-foreground">
+                      {progress?.completedJuz ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">Juz</p>
+                  </div>
+                </div>
+
                 <Button
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="w-full rounded-xl border-border/60 hover:border-nejah-electric/30 hover:bg-primary/5 transition-all"
                   onClick={() => navigate({ to: studentPaths.progress })}
                 >
-                  View All Feedback
+                  View Full Progress <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
+              </div>
+            </div>
+
+            {/* Today's Lesson */}
+            <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <BookOpen className="h-5 w-5 text-nejah-electric" />
+                  <h3 className="text-lg font-bold text-foreground">
+                    Today&apos;s Lesson
+                  </h3>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
+                      Surah
+                    </p>
+                    <p className="font-semibold text-foreground">{data?.todaysLesson?.surah || '—'}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
+                      Ayah Range
+                    </p>
+                    <p className="font-semibold text-foreground">
+                      {data?.todaysLesson?.ayahRange || '—'}
+                    </p>
+                  </div>
+                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
+                      Revision
+                    </p>
+                    <p className="font-semibold text-foreground">{data?.todaysLesson?.revision || 'Complete your daily revision.'}</p>
+                  </div>
+                  {data?.todaysLesson?.homework && (
+                    <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                      <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">
+                        Homework
+                      </p>
+                      <p className="font-semibold text-amber-900 dark:text-amber-100">{data.todaysLesson.homework.title}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Feedback */}
+            {data?.recentFeedback?.length > 0 && (
+              <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+                <div className="p-5 sm:p-6">
+                  <h3 className="font-bold text-foreground mb-4">Recent Teacher Feedback</h3>
+                  {data.recentFeedback.slice(0, 2).map((f: any) => (
+                    <div
+                      key={f.id}
+                      className="mb-4 last:mb-0 border-b border-border/40 dark:border-nejah-border-blue/30 pb-4 last:border-0"
+                    >
+                      <p className="text-xs text-nejah-electric font-medium">
+                        {f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ""}
+                      </p>
+                      <p className="text-sm mt-1.5 italic text-muted-foreground">&quot;{f.summary}&quot;</p>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    className="rounded-xl border-border/60 hover:border-nejah-electric/30 hover:bg-primary/5"
+                    onClick={() => navigate({ to: studentPaths.progress })}
+                  >
+                    View All Feedback
+                  </Button>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="space-y-6">
-            <div className="glass-panel bg-nejah-sapphire text-white">
-              {data?.liveClass?.status === "LIVE" ? (
-                <Badge className="bg-red-500/30 text-red-100 border-none mb-3 animate-pulse">
-                  Live Class Available
-                </Badge>
-              ) : (
-                <Badge className="bg-white/10 text-foreground border-none mb-3">Upcoming Class</Badge>
-              )}
-              {data?.liveClass?.status === "LIVE" ? (
-                <>
-                  <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
-                  <p className="text-nejah-electric/70 text-sm mb-1">
-                    Teacher: {data.liveClass.teacher?.fullName || displayTeacher}
-                  </p>
-                  <p className="text-sm font-bold text-nejah-electric">
-                    {data.liveClass.scheduledStart
-                      ? new Date(data.liveClass.scheduledStart).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : data?.upcomingClass?.time}
-                  </p>
-                </>
-              ) : data?.upcomingClass ? (
-                <>
-                  <h3 className="text-xl font-bold">{data.upcomingClass.name}</h3>
-                  <p className="text-nejah-electric/70 text-sm">
-                    with {data.upcomingClass.teacher}
-                  </p>
-                  <p className="text-sm font-bold text-nejah-electric mt-1">
-                    {data.upcomingClass.time}
-                  </p>
-                </>
-              ) : (
-                <p className="text-nejah-slate-blue">No class scheduled</p>
-              )}
-              <div className="flex flex-col gap-2 mt-4">
-                <Button className="bg-white text-nejah-surface" onClick={joinClass}>
-                  <Play className="h-4 w-4 mr-2" />
-                  {data?.liveClass?.status === "LIVE" ? "Join Session" : "Join Class"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-white/30 text-white"
-                  onClick={() => navigate({ to: studentPaths.classes })}
-                >
-                  View Schedule
-                </Button>
+          {/* Right column — 1/3 */}
+          <div className="space-y-5 lg:space-y-6">
+            {/* Upcoming / Live Class */}
+            <div className="upcoming-class-gradient rounded-2xl text-white overflow-hidden animate-fade-in-up shadow-lg" style={{ animationDelay: '0.15s' }}>
+              <div className="p-5 sm:p-6">
+                {data?.liveClass?.status === "LIVE" ? (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="live-pulse-dot" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-red-200">Live Now</span>
+                  </div>
+                ) : (
+                  <Badge className="bg-white/15 text-white/90 border-none mb-3 text-xs font-semibold">
+                    Upcoming Class
+                  </Badge>
+                )}
+                {data?.liveClass?.status === "LIVE" ? (
+                  <>
+                    <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
+                    <p className="text-white/60 text-sm mt-1">
+                      Teacher: {data.liveClass.teacher?.fullName || displayTeacher}
+                    </p>
+                    <p className="text-sm font-bold text-nejah-electric mt-1">
+                      {data.liveClass.scheduledStart
+                        ? new Date(data.liveClass.scheduledStart).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : data?.upcomingClass?.time}
+                    </p>
+                  </>
+                ) : data?.upcomingClass ? (
+                  <>
+                    <h3 className="text-xl font-bold">{data.upcomingClass.name}</h3>
+                    <p className="text-white/60 text-sm mt-1">
+                      with {data.upcomingClass.teacher}
+                    </p>
+                    <p className="text-sm font-bold text-nejah-electric mt-1">
+                      {data.upcomingClass.time}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-white/50">No class scheduled</p>
+                )}
+                <div className="flex flex-col gap-2 mt-5">
+                  <Button
+                    className="bg-white text-nejah-sapphire hover:bg-white/90 font-semibold rounded-xl shadow-md"
+                    onClick={joinClass}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    {data?.liveClass?.status === "LIVE" ? "Join Session" : "Join Class"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-white/25 text-white hover:bg-white/10 rounded-xl"
+                    onClick={() => navigate({ to: studentPaths.classes })}
+                  >
+                    View Schedule
+                  </Button>
+                </div>
               </div>
             </div>
 
+            {/* Weekly Attendance */}
             <button
               type="button"
-              className="w-full dark:bg-nejah-surface/50 bg-muted rounded-3xl p-6 border dark:border-white/10 border-border text-left hover:border-nejah-electric/30 transition-colors"
+              className="glass-card w-full text-left p-5 sm:p-6 animate-fade-in-up"
+              style={{ animationDelay: '0.2s' }}
               onClick={() => navigate({ to: studentPaths.progress })}
             >
-              <h4 className="text-xs font-extrabold dark:text-nejah-slate-blue text-muted-foreground uppercase tracking-widest mb-3 text-center">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
                 Weekly Attendance
               </h4>
-              <div className="flex justify-between px-1 mb-3">
+              <div className="flex justify-between px-2 mb-4">
                 {attendance?.weekly?.map((day: any) => {
                   const wd = new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
                     weekday: "long",
                   });
                   const short = dayLabels[wd] || "?";
                   return (
-                    <div key={day.date} className="flex flex-col items-center gap-1">
+                    <div key={day.date} className="flex flex-col items-center gap-1.5">
                       <div
-                        className={`w-2 h-12 rounded-full ${day.present ? "bg-primary" : "dark:bg-nejah-surface bg-muted"}`}
+                        className={`w-2.5 h-12 rounded-full transition-colors ${
+                          day.present
+                            ? "bg-gradient-to-t from-primary to-nejah-electric"
+                            : "bg-muted dark:bg-nejah-surface"
+                        }`}
                       />
-                      <span className="text-[10px] font-bold dark:text-nejah-slate-blue text-muted-foreground">
+                      <span className="text-[10px] font-bold text-muted-foreground">
                         {short}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-center text-sm font-bold dark:text-foreground text-nejah-sapphire">
+              <p className="text-center text-sm font-bold text-foreground">
                 {attendance?.rate ?? 0}% · Present {attendance?.presentDays ?? 0} / Absent{" "}
                 {attendance?.absentDays ?? 0}
               </p>
             </button>
 
-            <div className="glass-panel">
+            {/* Notifications */}
+            <div className="glass-card-static p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold dark:text-foreground text-nejah-sapphire flex items-center gap-2">
-                  <Bell className="h-4 w-4" /> Notifications
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-nejah-electric" /> Notifications
                 </h3>
                 {data?.unreadNotifications > 0 && (
-                  <Badge className="bg-red-500 text-white border-none">
+                  <Badge className="bg-red-500 text-white border-none text-[10px] font-bold px-2">
                     {data.unreadNotifications}
                   </Badge>
                 )}
               </div>
               {data?.notifications?.length ? (
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2.5 text-sm">
                   {data.notifications.slice(0, 3).map((n: any) => (
                     <li
                       key={n.id}
-                      className={
+                      className={`flex items-start gap-2 ${
                         n.isRead
-                          ? "dark:text-nejah-slate-blue text-muted-foreground"
-                          : "font-medium dark:text-foreground text-foreground"
-                      }
+                          ? "text-muted-foreground"
+                          : "font-medium text-foreground"
+                      }`}
                     >
-                      {n.title}
+                      {!n.isRead && (
+                        <span className="mt-1.5 w-2 h-2 rounded-full bg-nejah-electric shrink-0" />
+                      )}
+                      <span className={n.isRead ? 'pl-4' : ''}>{n.title}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm dark:text-nejah-slate-blue text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   No notifications
                 </p>
               )}
               <Button
                 variant="link"
-                className="px-0 text-nejah-electric mt-2"
+                className="px-0 text-nejah-electric mt-3 font-semibold text-sm"
                 onClick={() => navigate({ to: studentPaths.notifications })}
               >
                 View All Notifications
@@ -461,6 +522,7 @@ function StudentDashboard() {
         </div>
       </main>
 
+      {/* ─── Settings Dialog ─── */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="rounded-3xl">
           <DialogHeader>
@@ -468,7 +530,7 @@ function StudentDashboard() {
           </DialogHeader>
           <button
             type="button"
-            className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted"
+            className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
             onClick={() => {
               setSettingsOpen(false);
               setChangePasswordOpen(true);
@@ -480,6 +542,7 @@ function StudentDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* ─── Profile Dialog ─── */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
@@ -513,36 +576,37 @@ function StudentDashboard() {
               />
             </div>
             <div className="grid grid-cols-3 gap-2 pt-2 text-center">
-              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg">
-                <p className="font-bold dark:text-foreground">
+              <div className="stat-card">
+                <p className="font-bold text-foreground">
                   {profile?.statistics?.attendancePercentage}%
                 </p>
-                <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   Attendance
                 </p>
               </div>
-              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg">
-                <p className="font-bold dark:text-foreground">
+              <div className="stat-card">
+                <p className="font-bold text-foreground">
                   {profile?.statistics?.progressPercentage}%
                 </p>
-                <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Progress</p>
+                <p className="text-xs text-muted-foreground mt-1">Progress</p>
               </div>
-              <div className="dark:bg-nejah-surface/50 bg-muted p-2 rounded-lg">
-                <p className="font-bold dark:text-foreground">
+              <div className="stat-card">
+                <p className="font-bold text-foreground">
                   {profile?.statistics?.homeworkCompletionRate}%
                 </p>
-                <p className="text-xs dark:text-nejah-slate-blue text-muted-foreground">Homework</p>
+                <p className="text-xs text-muted-foreground mt-1">Homework</p>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={saveProfile} className="bg-nejah-sapphire">
+            <Button onClick={saveProfile} className="bg-nejah-sapphire rounded-xl">
               Save Contact Info
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* ─── Change Password Dialog ─── */}
       <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
         <DialogContent className="rounded-3xl">
           <DialogHeader>
@@ -587,7 +651,7 @@ function StudentDashboard() {
             <Button
               onClick={handleChangePassword}
               disabled={changingPw}
-              className="bg-nejah-sapphire"
+              className="bg-nejah-sapphire rounded-xl"
             >
               {changingPw ? "Saving..." : "Update Password"}
             </Button>

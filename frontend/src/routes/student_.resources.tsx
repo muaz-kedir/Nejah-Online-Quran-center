@@ -50,7 +50,7 @@ function StudentResources() {
 
   return (
     <StudentPortalLayout activePath={studentPaths.resources}>
-      <main className="flex-1 px-10 py-10">
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10">
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
           <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">Learning Resources</h1>
