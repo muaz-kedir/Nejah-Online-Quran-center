@@ -9,12 +9,15 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeachersModule } from '../teachers/teachers.module';
+import { ZoomModule } from '../zoom/zoom.module';
+import { ZoomIntegration } from '../zoom/entities/zoom-integration.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ClassSession, StudentAttendance, Student, Teacher, Schedule]),
+    TypeOrmModule.forFeature([ClassSession, StudentAttendance, Student, Teacher, Schedule, ZoomIntegration]),
     NotificationsModule,
     forwardRef(() => TeachersModule),
+    forwardRef(() => ZoomModule),
   ],
   controllers: [AttendanceController],
   providers: [AttendanceService],

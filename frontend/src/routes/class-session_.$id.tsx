@@ -99,30 +99,39 @@ function ClassSessionContent() {
   }, [id, fetchSessionDetails]);
 
   const handleStartMeeting = async () => {
-    if (!meetingLink.trim()) {
-      toast.error("Please enter a valid Zoom or Google Meet link");
-      return;
-    }
-    if (!meetingLink.startsWith("http://") && !meetingLink.startsWith("https://")) {
-      toast.error("Link must start with http:// or https://");
-      return;
+    // If meeting link is empty, try auto-creating with Zoom
+    const hasLink = meetingLink.trim().length > 0;
+    
+    if (hasLink) {
+      // Validate the manual link
+      if (!meetingLink.startsWith("http://") && !meetingLink.startsWith("https://")) {
+        toast.error("Link must start with http:// or https://");
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
-      await api("/attendance/sessions/start-meeting", {
+      const response = await api("/attendance/sessions/start-meeting", {
         method: "POST",
         body: JSON.stringify({
           classSessionId: id,
-          meetingLink: meetingLink.trim(),
+          ...(hasLink ? { meetingLink: meetingLink.trim() } : {}),
         }),
       });
+      
       const studentCount = session?.studentAttendances?.length || 0;
       toast.success(
         studentCount > 1
           ? "Online session is now LIVE! Notifications sent to all assigned students & parents."
           : "Online session is now LIVE! Notifications sent to students & parents.",
       );
+      
+      // Update meeting link from response if auto-created
+      if (!hasLink && response?.meetingLink) {
+        setMeetingLink(response.meetingLink);
+      }
+      
       fetchSessionDetails();
     } catch (err: any) {
       toast.error(err.message || "Failed to start meeting");
@@ -346,18 +355,21 @@ function ClassSessionContent() {
                 {userRole === "teacher" ? (
                   <div className="space-y-4">
                     <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
-                      To initialize this class session, paste your Google Meet or Zoom invite link
-                      below and click &quot;Start Meeting&quot;. This will automatically notify the
-                      assigned
-                      {(session.studentAttendances?.length || 0) > 1 ? " students" : " student"},
-                      their parents, and admins.
+                      To initialize this class session, you can either:
+                      <br />
+                      • <strong>Auto-create a Zoom meeting</strong> (if you have Zoom connected - just click Start Meeting)
+                      <br />
+                      • <strong>Paste your own meeting link</strong> (Google Meet or Zoom) below
+                      <br />
+                      <br />
+                      Students and parents will be automatically notified when you start.
                     </p>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest ml-1">
-                        Meeting Connection URL
+                        Meeting Connection URL (Optional if Zoom is connected)
                       </label>
                       <Input
-                        placeholder="https://meet.google.com/abc-defg-hij  OR  https://zoom.us/j/..."
+                        placeholder="https://meet.google.com/abc-defg-hij  OR  https://zoom.us/j/... (or leave empty for auto-Zoom)"
                         value={meetingLink}
                         onChange={(e) => setMeetingLink(e.target.value)}
                         className="h-12 bg-background/50 border-none rounded-xl text-sm"

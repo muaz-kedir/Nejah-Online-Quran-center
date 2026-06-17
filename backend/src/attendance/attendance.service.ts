@@ -20,6 +20,8 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ZoomService } from '../zoom/zoom.service';
+import { ZoomIntegration } from '../zoom/entities/zoom-integration.entity';
 
 @Injectable()
 export class AttendanceService {
@@ -34,7 +36,10 @@ export class AttendanceService {
     private teacherRepository: Repository<Teacher>,
     @InjectRepository(Schedule)
     private scheduleRepository: Repository<Schedule>,
+    @InjectRepository(ZoomIntegration)
+    private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
     private notificationsService: NotificationsService,
+    private readonly zoomService: ZoomService,
   ) {}
 
   async createClassSession(dto: CreateClassSessionDto): Promise<ClassSession> {
@@ -171,7 +176,45 @@ export class AttendanceService {
       throw new BadRequestException('Cannot start a completed session');
     }
 
-    session.meetingLink = dto.meetingLink;
+    let meetingLink = dto.meetingLink;
+
+    // If no meeting link provided, try to auto-create Zoom meeting
+    if (!meetingLink || meetingLink.trim() === '') {
+      const integration = await this.zoomIntegrationRepository.findOne({
+        where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+      });
+
+      if (integration?.zoomUserId && this.zoomService.isPlatformConfigured()) {
+        try {
+          // Auto-create Zoom meeting
+          const now = new Date();
+          const durationMinutes = 90; // 90 minutes default
+
+          const meeting = await this.zoomService.createMeeting(
+            integration.zoomUserId,
+            session.classTitle || 'Quran Class',
+            now,
+            durationMinutes,
+          );
+
+          meetingLink = meeting.zoomJoinUrl;
+          session.meetingLink = meetingLink;
+          session.zoomMeetingId = meeting.zoomMeetingId;
+          session.zoomPassword = meeting.zoomPassword;
+        } catch (error) {
+          throw new BadRequestException(
+            'Failed to auto-create Zoom meeting. Please provide a meeting link manually or check your Zoom connection.',
+          );
+        }
+      } else {
+        throw new BadRequestException(
+          'No meeting link provided and Zoom is not connected. Please provide a meeting link or connect your Zoom account in Settings.',
+        );
+      }
+    } else {
+      session.meetingLink = meetingLink;
+    }
+
     session.status = SessionStatus.LIVE;
     const now = new Date();
     session.actualStartTime = now;
