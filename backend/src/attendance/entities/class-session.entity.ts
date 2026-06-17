@@ -60,6 +60,12 @@ export class ClassSession {
   @Column({ nullable: true })
   meetingLink: string;
 
+  @Column({ nullable: true })
+  zoomMeetingId: string;
+
+  @Column({ nullable: true })
+  zoomPassword: string;
+
   @Column({ type: 'enum', enum: TeacherAttendanceStatus, nullable: true })
   teacherAttendanceStatus: TeacherAttendanceStatus;
 

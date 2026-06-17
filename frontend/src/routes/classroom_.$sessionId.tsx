@@ -93,7 +93,11 @@ function ClassroomPage() {
     if (!classroom) return;
 
     if (!classroom.meetingNumber) {
-      toast.error("Meeting has not been created yet. Ask the teacher to start the session.");
+      if (role === "teacher") {
+        toast.error("Please start the meeting first from the Class Session page. Go to your dashboard → Today's Classes → Start Meeting.");
+      } else {
+        toast.error("Meeting has not been started yet. Please wait for the teacher to start the session.");
+      }
       return;
     }
 
