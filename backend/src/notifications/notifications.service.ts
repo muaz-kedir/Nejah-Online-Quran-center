@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { UserRole } from '../common/enums/user-role.enum';
 import { ClassSession } from '../attendance/entities/class-session.entity';
 import { AppGateway } from '../websocket/websocket.gateway';
+import { PushSubscriptionService } from './push-subscription.service';
 import {
   Notification,
   NotificationType,
@@ -36,6 +37,7 @@ export class NotificationsService {
     private notificationRepository: Repository<Notification>,
     @Inject(forwardRef(() => AppGateway))
     private appGateway: AppGateway,
+    private pushSubscriptionService: PushSubscriptionService,
   ) {}
 
   async notifyMeetingStarted(session: ClassSession, assignedStudentIds: string[]): Promise<void> {
@@ -292,6 +294,30 @@ export class NotificationsService {
         sentAt: new Date(),
       }),
     );
-    await this.notificationRepository.save(notificationsToSave);
+    const saved = await this.notificationRepository.save(notificationsToSave);
+
+    // Emit real-time WebSocket event for each recipient
+    for (const notif of saved) {
+      this.appGateway.emitToUser(notif.userId, 'notification:new', {
+        id: notif.id,
+        channel: notif.channel,
+        title: notif.title,
+        content: notif.content,
+        data: notif.dataJson,
+        isRead: notif.isRead,
+        sentAt: notif.sentAt,
+        createdAt: notif.createdAt,
+      });
+    }
+
+    // Send push notification to all recipients
+    await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
+      title,
+      body: message,
+      data,
+      icon: '/logo.png',
+      badge: '/logo.png',
+      tag: 'session-notification',
+    });
   }
 }
