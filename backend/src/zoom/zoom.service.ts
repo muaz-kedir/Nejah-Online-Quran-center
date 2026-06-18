@@ -151,6 +151,189 @@ export class ZoomService implements OnModuleInit {
     return this.clientId || null;
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  User-facing OAuth (authorization_code grant)                       */
+  /* ------------------------------------------------------------------ */
+
+  getZoomOAuthClientId(): string {
+    return (
+      this.configService.get<string>('ZOOM_OAUTH_CLIENT_ID')?.trim() ||
+      this.clientId
+    );
+  }
+
+  getZoomOAuthClientSecret(): string {
+    return (
+      this.configService.get<string>('ZOOM_OAUTH_CLIENT_SECRET')?.trim() ||
+      this.clientSecret
+    );
+  }
+
+  getZoomOAuthRedirectUri(): string {
+    return (
+      this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim() ||
+      ''
+    );
+  }
+
+  getOAuthAuthorizationUrl(state: string): string {
+    const clientId = this.getZoomOAuthClientId();
+    const redirectUri = this.getZoomOAuthRedirectUri();
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      state,
+    });
+    return `https://zoom.us/oauth/authorize?${params.toString()}`;
+  }
+
+  async exchangeAuthorizationCode(
+    code: string,
+  ): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
+    const clientId = this.getZoomOAuthClientId();
+    const clientSecret = this.getZoomOAuthClientSecret();
+    const redirectUri = this.getZoomOAuthRedirectUri();
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://zoom.us/oauth/token',
+          new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: redirectUri,
+          }),
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to exchange Zoom authorization code', error?.response?.data || error.message);
+      throw new HttpException(
+        'Failed to complete Zoom authorization. Please try again.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async refreshTeacherOAuthToken(
+    teacherId: string,
+  ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
+    const integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
+    if (!integration?.refreshToken) {
+      throw new HttpException(
+        'No Zoom refresh token available. Please reconnect your Zoom account.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const clientId = this.getZoomOAuthClientId();
+    const clientSecret = this.getZoomOAuthClientSecret();
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const refreshToken = this.encryptionService.decrypt(integration.refreshToken);
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://zoom.us/oauth/token',
+          new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+          }),
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          },
+        ),
+      );
+
+      const { access_token, refresh_token, expires_in } = response.data;
+      const expiresAt = new Date(Date.now() + expires_in * 1000);
+      const encryptedAccess = this.encryptionService.encrypt(access_token);
+      const encryptedRefresh = this.encryptionService.encrypt(refresh_token);
+
+      await this.zoomIntegrationRepository.update(teacherId, {
+        accessToken: encryptedAccess,
+        refreshToken: encryptedRefresh,
+        tokenExpiresAt: expiresAt,
+      });
+
+      return { accessToken: access_token, refreshToken: refresh_token, expiresAt };
+    } catch (error) {
+      this.logger.error('Failed to refresh Zoom OAuth token', error.message);
+      await this.disconnectTeacher(teacherId);
+      throw new HttpException(
+        'Zoom session expired. Please reconnect your Zoom account.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }
+
+  async fetchOAuthUserInfo(
+    accessToken: string,
+  ): Promise<{
+    id: string;
+    email: string;
+    displayName: string;
+    accountType: string;
+  }> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/users/me`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      );
+      const data = response.data;
+      return {
+        id: data.id,
+        email: data.email || '',
+        displayName: data.display_name || data.first_name + ' ' + data.last_name || data.email,
+        accountType: data.account_type === 1 ? 'Basic' : 'Licensed',
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch Zoom user info', error.message);
+      throw new HttpException(
+        'Failed to retrieve Zoom account information.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async saveOAuthIntegration(
+    teacherId: string,
+    userInfo: { id: string; email: string; displayName: string; accountType: string },
+    tokens: { accessToken: string; refreshToken: string; expiresAt: Date },
+  ): Promise<ZoomIntegration> {
+    const encryptedAccess = this.encryptionService.encrypt(tokens.accessToken);
+    const encryptedRefresh = this.encryptionService.encrypt(tokens.refreshToken);
+
+    let integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
+    if (!integration) {
+      integration = this.zoomIntegrationRepository.create({ teacherId });
+    }
+
+    integration.zoomUserId = userInfo.id;
+    integration.zoomEmail = userInfo.email;
+    integration.displayName = userInfo.displayName;
+    integration.accountType = userInfo.accountType;
+    integration.accessToken = encryptedAccess;
+    integration.refreshToken = encryptedRefresh;
+    integration.tokenExpiresAt = tokens.expiresAt;
+    integration.connectionStatus = 'connected';
+    integration.connectedAt = new Date();
+
+    return this.zoomIntegrationRepository.save(integration);
+  }
+
   async getAccessToken(): Promise<string> {
     if (this.cachedToken && Date.now() < this.cachedToken.expiresAt) {
       return this.cachedToken.accessToken;
