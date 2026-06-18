@@ -48,7 +48,7 @@
   --color-nejah-border-blue: #1C3D5A;
   --color-nejah-white-tint: #F0F6FC;
   --color-nejah-sky-tint: #E6F0FA;
-  --color-nejah-slate-blue: #91A7BC;
+  --color-nejah-slate-blue: #6E8AA3;
 
   --shadow-soft: 0 4px 24px -8px rgba(15, 98, 172, 0.12);
   --shadow-elevated: 0 20px 50px -20px rgba(15, 98, 172, 0.25);
@@ -76,7 +76,7 @@
   --secondary-foreground: #0b355b;
 
   --muted: #e6f0fa;
-  --muted-foreground: #5A7288;
+  --muted-foreground: #4F6D87;
 
   --accent: #0b355b;
   --accent-foreground: #ffffff;
@@ -90,7 +90,7 @@
   --input: rgba(28, 61, 90, 0.25);
   --ring: #0f62ac;
 
-  --color-nejah-slate-blue: #5A7288;
+  --color-nejah-slate-blue: #3D5973;
 }
 
 .dark {
