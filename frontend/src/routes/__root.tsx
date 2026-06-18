@@ -152,7 +152,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      {typeof window !== 'undefined' ? <Toaster richColors position="top-right" /> : null}
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }
