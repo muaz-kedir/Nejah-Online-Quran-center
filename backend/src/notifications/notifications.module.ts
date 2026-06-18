@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { Notification } from './entities/notification.entity';
+import { PushSubscription } from './entities/push-subscription.entity';
+import { PushSubscriptionService } from './push-subscription.service';
+import { PushSubscriptionController } from './push-subscription.controller';
 import { Student } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
@@ -10,11 +13,11 @@ import { WebsocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, Student, Parent, User]),
+    TypeOrmModule.forFeature([Notification, PushSubscription, Student, Parent, User]),
     forwardRef(() => WebsocketModule),
   ],
-  controllers: [NotificationsController],
-  providers: [NotificationsService],
-  exports: [NotificationsService, TypeOrmModule],
+  controllers: [NotificationsController, PushSubscriptionController],
+  providers: [NotificationsService, PushSubscriptionService],
+  exports: [NotificationsService, PushSubscriptionService, TypeOrmModule],
 })
 export class NotificationsModule {}
