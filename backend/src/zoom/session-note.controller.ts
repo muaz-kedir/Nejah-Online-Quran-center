@@ -8,6 +8,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { SessionNoteService } from './session-note.service';
 import { CreateSessionNoteDto } from './dto/create-session-note.dto';
@@ -34,6 +35,27 @@ export class SessionNoteController {
     return this.sessionNoteService.create(dto);
   }
 
+  @Post('session/:sessionId')
+  @Roles(UserRole.TEACHER)
+  async createForSession(
+    @Request() req,
+    @Param('sessionId') sessionId: string,
+    @Body() body: { content?: string; note?: string; visibility?: string; lessonSummary?: string; topicsCovered?: string; homeworkAssigned?: string; completionRemarks?: string; studentPerformance?: string },
+  ) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+    return this.sessionNoteService.create({
+      sessionId,
+      teacherId: teacher.id,
+      content: body.content || body.note || '',
+      visibility: (body.visibility as any) || undefined,
+      lessonSummary: body.lessonSummary,
+      topicsCovered: body.topicsCovered,
+      homeworkAssigned: body.homeworkAssigned,
+      completionRemarks: body.completionRemarks,
+      studentPerformance: body.studentPerformance,
+    });
+  }
+
   @Get('session/:sessionId')
   @Roles(
     UserRole.TEACHER,
@@ -43,8 +65,9 @@ export class SessionNoteController {
     UserRole.SUPER_ADMIN,
     UserRole.QIRAT_MANAGER,
   )
-  async findBySession(@Param('sessionId') sessionId: string) {
-    return this.sessionNoteService.findBySession(sessionId);
+  async findBySession(@Request() req, @Param('sessionId') sessionId: string) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id).catch(() => null);
+    return this.sessionNoteService.findBySession(sessionId, teacher?.id);
   }
 
   @Patch(':id')
