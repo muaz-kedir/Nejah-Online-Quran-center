@@ -34,7 +34,6 @@ import {
   Video,
   Clock,
   Calendar,
-  Users,
   User,
   BookOpen,
   Target,
@@ -55,6 +54,12 @@ import {
   Play,
   Send,
   Monitor,
+  History,
+  UserCheck,
+  Users,
+  UserX,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -90,6 +95,8 @@ function SessionDetails() {
   const [recordingUrl, setRecordingUrl] = useState('');
   const [recordingTitle, setRecordingTitle] = useState('');
   const [savingRecording, setSavingRecording] = useState(false);
+  const [timeline, setTimeline] = useState<any>(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -98,16 +105,18 @@ function SessionDetails() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [sessionData, attendanceData, notesData, recordingsData] = await Promise.all([
+      const [sessionData, attendanceData, notesData, recordingsData, timelineData] = await Promise.all([
         api<any>(`/live-sessions/${id}`),
         api<any[]>(`/session-attendance/session/${id}`).catch(() => []),
         api<any[]>(`/session-notes/session/${id}`).catch(() => []),
         api<any[]>(`/live-sessions/${id}/recordings`).catch(() => []),
+        api<any>(`/analytics/session/${id}/timeline`).catch(() => null),
       ]);
       setSession(sessionData);
       setAttendance(Array.isArray(attendanceData) ? attendanceData : []);
       setNotes(Array.isArray(notesData) ? notesData : []);
       setRecordings(Array.isArray(recordingsData) ? recordingsData : []);
+      setTimeline(timelineData);
     } catch {
       toast.error('Failed to load session details');
     } finally {
@@ -201,6 +210,8 @@ function SessionDetails() {
     COMPLETED: { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-none', icon: XCircle },
     SCHEDULED: { label: 'Scheduled', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none', icon: Clock },
+    NO_SHOW: { label: 'No Show', color: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none', icon: XCircle },
+    EXPIRED: { label: 'Expired', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none', icon: AlertTriangle },
   };
 
   if (loading) {
@@ -301,6 +312,16 @@ function SessionDetails() {
               Cancel
             </Button>
           )}
+          {session.status === 'NO_SHOW' && (
+            <Button disabled variant="outline" className="rounded-xl gap-2 opacity-50 cursor-not-allowed">
+              <XCircle className="h-4 w-4" /> No participants joined
+            </Button>
+          )}
+          {session.status === 'EXPIRED' && (
+            <Button disabled variant="outline" className="rounded-xl gap-2 opacity-50 cursor-not-allowed">
+              <AlertTriangle className="h-4 w-4" /> Session expired
+            </Button>
+          )}
           {session.zoomJoinUrl && session.status !== 'LIVE' && (
             <Button onClick={() => window.open(session.zoomJoinUrl, '_blank')} className="rounded-xl gap-2" variant="outline">
               <ExternalLink className="h-4 w-4" /> Join Session
@@ -342,6 +363,7 @@ function SessionDetails() {
                 { value: 'notes', icon: MessageSquareText, label: 'Notes', count: notes.length },
                 { value: 'recordings', icon: Monitor, label: 'Recordings', count: recordings.length },
                 { value: 'analytics', icon: BarChart3, label: 'Analytics' },
+                { value: 'timeline', icon: History, label: 'Timeline' },
                 { value: 'metadata', icon: FileText, label: 'Metadata' },
               ].map((tab) => (
                 <TabsTrigger
@@ -809,6 +831,184 @@ function SessionDetails() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="timeline" className="p-6 space-y-6">
+            {timeline ? (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs font-bold uppercase tracking-wider text-nejah-slate-blue flex items-center gap-2">
+                        <UserCheck className="h-3.5 w-3.5 text-green-500" />
+                        Teacher-Stu Overlap
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {timeline.overlap ? (
+                        <div className="space-y-1">
+                          <p className="text-2xl font-bold text-foreground">{timeline.overlap.overlapMinutes} min</p>
+                          <p className="text-[10px] text-nejah-slate-blue">
+                            Teacher: {Math.round(timeline.overlap.teacherTotalMs / 60000)}min &middot;
+                            Student: {Math.round(timeline.overlap.studentTotalMs / 60000)}min
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-nejah-slate-blue">Calculating...</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs font-bold uppercase tracking-wider text-nejah-slate-blue flex items-center gap-2">
+                        <Wifi className="h-3.5 w-3.5 text-blue-500" />
+                        Reconnects
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-bold text-foreground">
+                        {timeline.attendances?.reduce((sum: number, a: any) => sum + (a.rejoinCount || 0), 0) || 0}
+                      </p>
+                      <p className="text-[10px] text-nejah-slate-blue">Total across all participants</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-xs font-bold uppercase tracking-wider text-nejah-slate-blue flex items-center gap-2">
+                        <Activity className="h-3.5 w-3.5 text-purple-500" />
+                        Timeline Events
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-bold text-foreground">{timeline.timeline?.length || 0}</p>
+                      <p className="text-[10px] text-nejah-slate-blue">Join/leave events recorded</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {timeline.overlap && timeline.overlap.segments?.length > 0 && (
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-nejah-electric" /> Overlap Timeline
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="relative h-16 bg-muted/50 rounded-xl overflow-hidden">
+                          {(() => {
+                            const allSegments = timeline.overlap.segments;
+                            if (!allSegments?.length) return null;
+                            const minTime = Math.min(...allSegments.map((s: any) => new Date(s.start).getTime()));
+                            const maxTime = Math.max(...allSegments.map((s: any) => new Date(s.end).getTime()));
+                            const range = maxTime - minTime || 1;
+                            return allSegments.map((seg: any, i: number) => {
+                              const left = ((new Date(seg.start).getTime() - minTime) / range) * 100;
+                              const width = ((new Date(seg.end).getTime() - new Date(seg.start).getTime()) / range) * 100;
+                              return (
+                                <div
+                                  key={i}
+                                  className="absolute top-2 h-12 bg-emerald-400/30 rounded-lg border border-emerald-400/50 flex items-center justify-center text-[9px] text-emerald-700 dark:text-emerald-300 font-bold"
+                                  style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                                  title={`${Math.round(seg.durationMs / 60000)}min overlap`}
+                                >
+                                  {width > 10 ? `${Math.round(seg.durationMs / 60000)}m` : ''}
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {timeline.attendances?.length > 0 && (
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <Users className="h-4 w-4 text-nejah-electric" /> Attendance Intelligence
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {timeline.attendances.map((att: any) => (
+                          <div key={att.studentId} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                            <div>
+                              <p className="text-sm font-bold">{att.studentName}</p>
+                              <div className="flex gap-3 text-[10px] text-nejah-slate-blue mt-1">
+                                <span>Status: <strong>{att.status}</strong></span>
+                                <span>Duration: <strong>{att.duration || 0}min</strong></span>
+                                {att.rejoinCount > 0 && (
+                                  <span className="text-amber-500">Rejoins: <strong>{att.rejoinCount}</strong></span>
+                                )}
+                              </div>
+                              <div className="flex gap-3 text-[10px] text-nejah-slate-blue mt-0.5">
+                                <span>Connected: <strong>{att.totalConnectedTimeMs ? Math.round(att.totalConnectedTimeMs / 60000) : 0}min</strong></span>
+                                {att.teacherOverlapMs != null && (
+                                  <span>Teaching time: <strong>{Math.round(att.teacherOverlapMs / 60000)}min</strong></span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {timeline.timeline?.length > 0 && (
+                  <Card className="rounded-2xl border-border dark:border-white/5 bg-background/50">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <History className="h-4 w-4 text-nejah-electric" /> Event Timeline
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="relative pl-6 space-y-0">
+                        <div className="absolute left-2.5 top-2 bottom-2 w-px bg-border" />
+                        {timeline.timeline.map((event: any, i: number) => (
+                          <div key={event.id || i} className="relative pb-4 last:pb-0">
+                            <div className={cn(
+                              "absolute -left-4 mt-1.5 w-2.5 h-2.5 rounded-full border-2",
+                              event.eventType === 'JOIN'
+                                ? 'bg-green-500 border-green-300'
+                                : 'bg-red-500 border-red-300',
+                            )} />
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold">
+                                {event.eventType === 'JOIN' ? (
+                                  <span className="text-green-600 dark:text-green-400">Joined</span>
+                                ) : (
+                                  <span className="text-red-600 dark:text-red-400">Left</span>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-nejah-slate-blue">
+                                {new Date(event.timestamp).toLocaleTimeString()}
+                              </span>
+                              <span className="text-[9px] text-nejah-slate-blue/60 capitalize">
+                                {event.role} &middot; {event.participantId?.slice(0, 8)}
+                              </span>
+                              {event.device && (
+                                <span className="text-[9px] text-nejah-slate-blue/40">{event.device}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-sm text-nejah-slate-blue">
+                  {session?.zoomMeetingId
+                    ? 'Timeline data will appear here once participant events are recorded.'
+                    : 'No Zoom meeting associated with this session.'}
+                </p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="metadata" className="p-6">
