@@ -9,19 +9,23 @@ import { SessionAttendanceService } from './session-attendance.service';
 import { SessionNoteService } from './session-note.service';
 import { ZoomWebhookService } from './zoom-webhook.service';
 import { ZoomAnalyticsService } from './zoom-analytics.service';
+import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { LiveSessionController } from './live-session.controller';
 import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
 import { ZoomSettingsController } from './zoom-settings.controller';
+import { ZoomOAuthController } from './zoom-oauth.controller';
 import { ZoomAnalyticsController } from './zoom-analytics.controller';
 import { SessionAttendanceController } from './session-attendance.controller';
 import { ParentSessionController } from './parent-session.controller';
+import { AnalyticsController } from './analytics.controller';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { ZoomPlatformConfig } from './entities/zoom-platform-config.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { SessionNote } from './entities/session-note.entity';
 import { ProcessedWebhook } from './entities/processed-webhook.entity';
+import { ParticipantTimelineEvent } from './entities/participant-timeline-event.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Parent } from '../parents/entities/parent.entity';
@@ -47,6 +51,7 @@ import { EncryptionService } from '../common/encryption.service';
       Parent,
       Schedule,
       ScheduleStudent,
+      ParticipantTimelineEvent,
     ]),
     HttpModule.register({
       timeout: 15000,
@@ -66,9 +71,11 @@ import { EncryptionService } from '../common/encryption.service';
     SessionNoteController,
     ZoomWebhookController,
     ZoomSettingsController,
+    ZoomOAuthController,
     ZoomAnalyticsController,
     SessionAttendanceController,
     ParentSessionController,
+    AnalyticsController,
   ],
   providers: [
     EncryptionService,
@@ -78,6 +85,7 @@ import { EncryptionService } from '../common/encryption.service';
     SessionNoteService,
     ZoomWebhookService,
     ZoomAnalyticsService,
+    AttendanceIntelligenceService,
     ScheduleSessionGeneratorService,
     ScheduleSessionsCron,
     {
@@ -91,6 +99,7 @@ import { EncryptionService } from '../common/encryption.service';
     SessionAttendanceService,
     ZoomWebhookService,
     ZoomAnalyticsService,
+    AttendanceIntelligenceService,
     ScheduleSessionGeneratorService,
   ],
 })

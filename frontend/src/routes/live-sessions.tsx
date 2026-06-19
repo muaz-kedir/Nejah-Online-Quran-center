@@ -194,6 +194,8 @@ function LiveSessionsPage() {
       case 'LIVE': return 'bg-red-500 text-white border-none animate-pulse';
       case 'COMPLETED': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none';
       case 'CANCELLED': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-none';
+      case 'NO_SHOW': return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none';
+      case 'EXPIRED': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none';
       default: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none';
     }
   };
@@ -391,7 +393,7 @@ function LiveSessionsPage() {
                 />
               </div>
               <div className="flex gap-1 overflow-x-auto">
-                {['all', 'SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED'].map((s) => (
+                {['all', 'SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'EXPIRED'].map((s) => (
                   <button
                     key={s}
                     onClick={() => { setStatusFilter(s); setPage(1); }}
@@ -482,7 +484,7 @@ function LiveSessionsPage() {
                         </td>
                         <td className="py-4 px-4">
                           <Badge className={cn('text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full', statusColor(s.status))}>
-                            {s.status === 'COMPLETED' ? 'Completed' : s.status === 'CANCELLED' ? 'Cancelled' : s.status === 'LIVE' ? 'Live' : 'Scheduled'}
+                            {s.status === 'COMPLETED' ? 'Completed' : s.status === 'CANCELLED' ? 'Cancelled' : s.status === 'LIVE' ? 'Live' : s.status === 'NO_SHOW' ? 'No Show' : s.status === 'EXPIRED' ? 'Expired' : 'Scheduled'}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
@@ -528,7 +530,7 @@ function LiveSessionsPage() {
                                   End Session
                                 </DropdownMenuItem>
                               )}
-                              {s.status !== 'COMPLETED' && s.status !== 'CANCELLED' && (
+                              {s.status !== 'COMPLETED' && s.status !== 'CANCELLED' && s.status !== 'NO_SHOW' && s.status !== 'EXPIRED' && (
                                 <DropdownMenuItem
                                   className="text-red-600 focus:text-red-600"
                                   onClick={(e) => { e.stopPropagation(); setCancelDialog(s.id); }}

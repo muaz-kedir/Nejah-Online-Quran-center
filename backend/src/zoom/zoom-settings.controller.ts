@@ -11,6 +11,7 @@ import { TeachersService } from '../teachers/teachers.service';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { IsString, IsOptional } from 'class-validator';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
+import { Throttle } from '@nestjs/throttler';
 
 class ConnectZoomDto {
   @IsString()
@@ -80,6 +81,7 @@ export class ZoomSettingsController {
   }
 
   @Get('oauth/callback')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async oauthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
@@ -98,6 +100,7 @@ export class ZoomSettingsController {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiresAt,
+        scope: tokens.scope,
       });
 
       return res.redirect(`${FRONTEND_URL}/zoom-settings?zoom=connected`);
@@ -206,5 +209,12 @@ export class ZoomSettingsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async getZoomUser(@Param('zoomUserId') zoomUserId: string) {
     return this.zoomService.getZoomUser(zoomUserId);
+  }
+
+  @Get('health')
+  @Roles(UserRole.TEACHER)
+  async healthCheck(@Request() req) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+    return this.zoomService.checkZoomConnectionHealth(teacher.id);
   }
 }

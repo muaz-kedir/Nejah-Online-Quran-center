@@ -7,9 +7,13 @@ import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { AttendanceStatus } from './enums/live-session-status.enum';
 import { ZoomService } from './zoom.service';
 import { SessionAttendanceService } from './session-attendance.service';
+import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Student } from '../students/entities/student.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
 import { ProcessedWebhook } from './entities/processed-webhook.entity';
+import { ZoomIntegration } from './entities/zoom-integration.entity';
+import { TimelineEventType } from './entities/participant-timeline-event.entity';
 
 @Injectable()
 export class ZoomWebhookService {
@@ -22,10 +26,15 @@ export class ZoomWebhookService {
     private readonly attendanceRepository: Repository<SessionAttendance>,
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
+    @InjectRepository(Teacher)
+    private readonly teacherRepository: Repository<Teacher>,
+    @InjectRepository(ZoomIntegration)
+    private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
     @InjectRepository(ProcessedWebhook)
     private readonly processedWebhookRepository: Repository<ProcessedWebhook>,
     private readonly zoomService: ZoomService,
     private readonly sessionAttendanceService: SessionAttendanceService,
+    private readonly attendanceIntelligence: AttendanceIntelligenceService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -53,13 +62,17 @@ export class ZoomWebhookService {
       case 'meeting.ended':
         await this.handleMeetingEnded(payload);
         break;
+      case 'meeting.participant_joined':
       case 'participant.joined':
         await this.handleParticipantJoined(payload);
         break;
+      case 'meeting.participant_left':
       case 'participant.left':
         await this.handleParticipantLeft(payload);
         break;
-
+      case 'recording.completed':
+        await this.handleRecordingCompleted(payload);
+        break;
       default:
         this.logger.log(`Unhandled webhook event: ${event}`);
     }
@@ -120,6 +133,7 @@ export class ZoomWebhookService {
 
     session.status = LiveSessionStatus.COMPLETED;
     session.actualEnd = new Date();
+    session.completedAt = new Date();
     session.teacherLeaveTime = session.teacherLeaveTime || new Date();
 
     if (session.actualStart) {
@@ -129,55 +143,35 @@ export class ZoomWebhookService {
 
     await this.liveSessionRepository.save(session);
 
-    const attendances = await this.attendanceRepository.find({
-      where: { sessionId: session.id },
-    });
-
-    const scheduledDuration = session.scheduledStart && session.scheduledEnd
-      ? Math.max(
-          1,
-          Math.round(
-            (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
-          ),
-        )
-      : 60;
-
-    for (const attendance of attendances) {
-      if (!attendance.joinTime) {
-        attendance.attendanceStatus = AttendanceStatus.ABSENT;
-      } else {
-        if (!attendance.leaveTime) {
-          attendance.leaveTime = session.actualEnd;
-        }
-        attendance.duration = Math.floor(
-          (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
-        );
-        attendance.attendanceStatus = this.sessionAttendanceService.calculateAttendanceStatus(
-          attendance.duration,
-          scheduledDuration,
-        );
-      }
-    }
-    await this.attendanceRepository.save(attendances);
-
-    const studentIds = attendances.map((a) => a.studentId);
     try {
-      await this.notificationsService.sendCustomNotifications(
-        studentIds,
-        'Class Completed',
-        `Your class has ended. Duration: ${session.durationMinutes || 'N/A'} minutes.`,
-        { sessionId: session.id, durationMinutes: session.durationMinutes },
-      );
+      await this.attendanceIntelligence.recalculateSession(session.id);
+      this.logger.log(`Recalculated attendance intelligence for session ${session.id}`);
     } catch (err) {
-      this.logger.error('Failed to send completion notification', err);
+      this.logger.error(`Failed to recalculate attendance intelligence for session ${session.id}`, err);
+    }
+
+    const studentIds = (await this.attendanceRepository.find({
+      where: { sessionId: session.id },
+      select: ['studentId'],
+    })).map((a) => a.studentId);
+
+    if (studentIds.length > 0) {
+      try {
+        await this.notificationsService.sendCustomNotifications(
+          studentIds,
+          'Class Completed',
+          `Your class has ended. Duration: ${session.durationMinutes || 'N/A'} minutes.`,
+          { sessionId: session.id, durationMinutes: session.durationMinutes },
+        );
+      } catch (err) {
+        this.logger.error('Failed to send completion notification', err);
+      }
     }
   }
 
   private async handleParticipantJoined(payload: Record<string, unknown>): Promise<void> {
     const zoomMeetingId = this.extractMeetingId(payload);
-    const participant = (payload?.object as any)?.participant as
-      | Record<string, unknown>
-      | undefined;
+    const participant = (payload?.object as any)?.participant as Record<string, unknown> | undefined;
     if (!zoomMeetingId || !participant) {
       this.logger.warn('Participant joined webhook missing data');
       return;
@@ -186,25 +180,42 @@ export class ZoomWebhookService {
     const session = await this.liveSessionRepository.findOne({
       where: { zoomMeetingId },
     });
-
     if (!session) return;
 
-    const studentId = await this.resolveStudentFromParticipant(participant, session);
-    if (!studentId) return;
+    const participantInfo = await this.resolveParticipant(participant, session);
 
-    try {
-      await this.sessionAttendanceService.recordJoin(session.id, studentId);
-      this.logger.log(`Attendance recorded for student ${studentId} in session ${session.id}`);
-    } catch (err) {
-      this.logger.error(`Failed to record attendance for student ${studentId}`, err);
+    await this.attendanceIntelligence.appendTimelineEvent({
+      sessionId: session.id,
+      participantId: participantInfo.id,
+      participantRole: participantInfo.role,
+      zoomUserId: String((participant as any).userid || participant.id || ''),
+      eventType: TimelineEventType.JOIN,
+      timestamp: new Date(),
+      device: (participant as any).device as string || undefined,
+      clientType: (participant as any).client_type as string || (participant as any).clientType as string || undefined,
+      rawPayload: participant as any,
+      webhookEventId: `${zoomMeetingId}_${participantInfo.id}_join_${Date.now()}`,
+    });
+
+    if (participantInfo.role === 'student') {
+      try {
+        await this.attendanceIntelligence.calculateAndUpdateAttendance(session.id, participantInfo.id);
+        this.logger.log(`Attendance updated for student ${participantInfo.id} in session ${session.id}`);
+      } catch (err) {
+        this.logger.error(`Failed to update attendance for student ${participantInfo.id}`, err);
+      }
+    }
+
+    if (participantInfo.role === 'teacher') {
+      session.teacherJoinTime = new Date();
+      await this.liveSessionRepository.save(session);
+      this.logger.log(`Teacher join recorded for session ${session.id}`);
     }
   }
 
   private async handleParticipantLeft(payload: Record<string, unknown>): Promise<void> {
     const zoomMeetingId = this.extractMeetingId(payload);
-    const participant = (payload?.object as any)?.participant as
-      | Record<string, unknown>
-      | undefined;
+    const participant = (payload?.object as any)?.participant as Record<string, unknown> | undefined;
     if (!zoomMeetingId || !participant) {
       this.logger.warn('Participant left webhook missing data');
       return;
@@ -213,50 +224,105 @@ export class ZoomWebhookService {
     const session = await this.liveSessionRepository.findOne({
       where: { zoomMeetingId },
     });
-
     if (!session) return;
 
-    const studentId = await this.resolveStudentFromParticipant(participant, session);
-    if (!studentId) return;
+    const participantInfo = await this.resolveParticipant(participant, session);
 
-    try {
-      await this.sessionAttendanceService.recordLeave(session.id, studentId);
-      this.logger.log(`Leave recorded for student ${studentId} in session ${session.id}`);
-    } catch (err) {
-      this.logger.error(`Failed to record leave for student ${studentId}`, err);
+    await this.attendanceIntelligence.appendTimelineEvent({
+      sessionId: session.id,
+      participantId: participantInfo.id,
+      participantRole: participantInfo.role,
+      zoomUserId: String((participant as any).userid || participant.id || ''),
+      eventType: TimelineEventType.LEAVE,
+      timestamp: new Date(),
+      device: (participant as any).device as string || undefined,
+      clientType: (participant as any).client_type as string || (participant as any).clientType as string || undefined,
+      rawPayload: participant as any,
+      webhookEventId: `${zoomMeetingId}_${participantInfo.id}_leave_${Date.now()}`,
+    });
+
+    if (participantInfo.role === 'student') {
+      try {
+        await this.attendanceIntelligence.calculateAndUpdateAttendance(session.id, participantInfo.id);
+        this.logger.log(`Attendance updated for student ${participantInfo.id} after leave in session ${session.id}`);
+      } catch (err) {
+        this.logger.error(`Failed to update attendance for student ${participantInfo.id}`, err);
+      }
+    }
+
+    if (participantInfo.role === 'teacher') {
+      session.teacherLeaveTime = new Date();
+      if (session.actualStart && session.teacherLeaveTime) {
+        const teacherDurationMs = session.teacherLeaveTime.getTime() - (session.teacherJoinTime || session.actualStart).getTime();
+        session.durationMinutes = Math.floor(teacherDurationMs / 60000);
+      }
+      await this.liveSessionRepository.save(session);
+      this.logger.log(`Teacher leave recorded for session ${session.id}`);
     }
   }
 
-  private async resolveStudentFromParticipant(
+  private async handleRecordingCompleted(payload: Record<string, unknown>): Promise<void> {
+    const zoomMeetingId = this.extractMeetingId(payload);
+    if (!zoomMeetingId) return;
+
+    const session = await this.liveSessionRepository.findOne({
+      where: { zoomMeetingId },
+    });
+    if (!session) return;
+
+    const recordingFiles = (payload?.object as any)?.recording_files || [];
+    if (recordingFiles.length > 0 && !session.metadata?.recordings) {
+      session.metadata = { ...(session.metadata || {}), recordings: recordingFiles };
+      await this.liveSessionRepository.save(session);
+      this.logger.log(`Recording metadata saved for session ${session.id}`);
+    }
+  }
+
+  private async resolveParticipant(
     participant: Record<string, unknown>,
     session: LiveSession,
-  ): Promise<string | null> {
+  ): Promise<{ id: string; role: 'teacher' | 'student' }> {
     const email = (participant.email as string) || '';
-    const zoomUserId = ((participant as any).userid || participant.id) as string;
-    const name = (participant.user_name as string) || '';
+    const zoomUserId = String((participant as any).userid || participant.id || '');
+    const participantId = (participant as any).participant_userid || zoomUserId;
 
     if (email) {
       const student = await this.studentRepository.findOne({
         where: [{ email }, { zoomEmail: email }],
       });
-      if (student) return student.id;
-    }
+      if (student) return { id: student.id, role: 'student' };
 
-    if (session.studentId) {
-      return session.studentId;
+      const teacher = await this.teacherRepository.findOne({
+        where: { email },
+      });
+      if (teacher) return { id: teacher.id, role: 'teacher' };
     }
 
     if (zoomUserId) {
-      const integration = await this.zoomService.getTeacherByZoomUserId(zoomUserId);
+      const integration = await this.zoomIntegrationRepository.findOne({
+        where: { zoomUserId },
+      });
       if (integration) {
-        return integration.teacherId;
+        const teacher = await this.teacherRepository.findOne({
+          where: { id: integration.teacherId },
+        });
+        if (teacher) return { id: teacher.id, role: 'teacher' };
       }
     }
 
+    if (session.studentId) {
+      return { id: session.studentId, role: 'student' };
+    }
+
+    if (session.teacherId) {
+      return { id: session.teacherId, role: 'teacher' };
+    }
+
     this.logger.warn(
-      `Unable to resolve participant to student: email=${email} name=${name} zoomUserId=${zoomUserId}`,
+      `Unable to resolve participant: email=${email} zoomUserId=${zoomUserId} participantId=${participantId}`,
     );
-    return null;
+
+    return { id: participantId || zoomUserId || 'unknown', role: 'student' };
   }
 
   private extractMeetingId(payload: Record<string, unknown>): string | null {

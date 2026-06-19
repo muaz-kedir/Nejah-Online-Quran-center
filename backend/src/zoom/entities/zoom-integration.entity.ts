@@ -33,6 +33,12 @@ export class ZoomIntegration {
   @Column({ nullable: true })
   accountType: string;
 
+  @Column({ nullable: true })
+  scope: string;
+
+  @Column({ nullable: true })
+  zoomAccountId: string;
+
   @Column({ type: 'text', nullable: true })
   accessToken: string;
 

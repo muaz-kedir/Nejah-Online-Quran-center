@@ -341,7 +341,7 @@ function AdminAttendancePage() {
               </div>
               
               <div className="flex items-center gap-2">
-                {['all', 'LIVE', 'COMPLETED', 'SCHEDULED'].map((status) => (
+                {['all', 'LIVE', 'SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'EXPIRED'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
@@ -417,6 +417,8 @@ function AdminAttendancePage() {
                             "text-[8px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border-none",
                             session.status === 'LIVE' ? "bg-red-500 text-white animate-pulse" :
                             session.status === 'COMPLETED' ? "bg-muted text-muted-foreground" :
+                            session.status === 'NO_SHOW' ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300" :
+                            session.status === 'EXPIRED' ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
                             "bg-amber-100 text-amber-800"
                           )}>
                             {session.status}

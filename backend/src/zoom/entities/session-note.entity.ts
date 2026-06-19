@@ -10,6 +10,11 @@ import {
 import { LiveSession } from './live-session.entity';
 import { Teacher } from '../../teachers/entities/teacher.entity';
 
+export enum SessionNoteVisibility {
+  TEACHER_ONLY = 'teacher_only',
+  ALL = 'all',
+}
+
 @Entity('session_notes')
 export class SessionNote {
   @PrimaryGeneratedColumn('uuid')
@@ -31,6 +36,24 @@ export class SessionNote {
 
   @Column({ type: 'text' })
   content: string;
+
+  @Column({ type: 'enum', enum: SessionNoteVisibility, default: SessionNoteVisibility.TEACHER_ONLY })
+  visibility: SessionNoteVisibility;
+
+  @Column({ type: 'text', nullable: true })
+  lessonSummary: string;
+
+  @Column({ type: 'text', nullable: true })
+  topicsCovered: string;
+
+  @Column({ type: 'text', nullable: true })
+  homeworkAssigned: string;
+
+  @Column({ type: 'text', nullable: true })
+  completionRemarks: string;
+
+  @Column({ type: 'text', nullable: true })
+  studentPerformance: string;
 
   @CreateDateColumn()
   createdAt: Date;
