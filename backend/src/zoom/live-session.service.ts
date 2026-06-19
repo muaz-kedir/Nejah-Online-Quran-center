@@ -12,6 +12,7 @@ import { ZoomService } from './zoom.service';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SessionAttendanceService } from './session-attendance.service';
+import { Student } from '../students/entities/student.entity';
 
 @Injectable()
 export class LiveSessionService {
@@ -24,6 +25,8 @@ export class LiveSessionService {
     private readonly attendanceRepository: Repository<SessionAttendance>,
     @InjectRepository(ZoomIntegration)
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
     private readonly zoomService: ZoomService,
     private readonly notificationsService: NotificationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
@@ -49,6 +52,8 @@ export class LiveSessionService {
       status: dto.status || LiveSessionStatus.SCHEDULED,
       notes: dto.notes,
       metadata: dto.metadata,
+      joinWindowOpenMinutes: dto.metadata?.joinWindowOpenMinutes || 15,
+      waitingRoomActive: true,
     });
 
     const saved = await this.liveSessionRepository.save(session);
@@ -198,14 +203,23 @@ export class LiveSessionService {
     return this.findById(id);
   }
 
-  async cancel(id: string): Promise<LiveSession> {
+  async cancel(id: string, cancellationReason?: string): Promise<LiveSession> {
     const session = await this.findById(id);
 
     if (session.status === LiveSessionStatus.COMPLETED) {
       throw new BadRequestException('Cannot cancel a completed session');
     }
 
+    if (session.status === LiveSessionStatus.CANCELLED) {
+      throw new BadRequestException('Session is already cancelled');
+    }
+
+    if (session.status === LiveSessionStatus.NO_SHOW || session.status === LiveSessionStatus.EXPIRED) {
+      throw new BadRequestException(`Cannot cancel a session with status: ${session.status}`);
+    }
+
     session.status = LiveSessionStatus.CANCELLED;
+    session.cancellationReason = cancellationReason || session.cancellationReason || null;
     await this.liveSessionRepository.save(session);
 
     if (session.zoomMeetingId) {
@@ -248,6 +262,35 @@ export class LiveSessionService {
 
     if (session.status === LiveSessionStatus.CANCELLED) {
       throw new BadRequestException('Cannot start a cancelled session');
+    }
+
+    if (session.status === LiveSessionStatus.NO_SHOW || session.status === LiveSessionStatus.EXPIRED) {
+      throw new BadRequestException(`Cannot start a session with status: ${session.status}`);
+    }
+
+    if (session.status !== LiveSessionStatus.LIVE) {
+      const now = new Date();
+      const gracePeriodMs = 30 * 60 * 1000;
+      if (session.scheduledEnd && now > new Date(session.scheduledEnd.getTime() + gracePeriodMs)) {
+        session.status = LiveSessionStatus.EXPIRED;
+        await this.liveSessionRepository.save(session);
+        throw new BadRequestException(
+          'This session has expired because its scheduled time window has passed. Create a new session or reschedule.',
+        );
+      }
+    }
+
+    const activeLiveCount = await this.liveSessionRepository.count({
+      where: {
+        teacherId,
+        status: LiveSessionStatus.LIVE,
+      },
+    });
+
+    if (activeLiveCount > 1 || (activeLiveCount === 1 && session.status !== LiveSessionStatus.LIVE)) {
+      throw new BadRequestException(
+        'You already have a live session in progress. End it before starting a new one.',
+      );
     }
 
     if (!session.zoomMeetingId) {
@@ -318,6 +361,20 @@ export class LiveSessionService {
       throw new BadRequestException('The teacher has not started this session yet');
     }
 
+    const now = new Date();
+    const windowMs = (session.joinWindowOpenMinutes || 15) * 60 * 1000;
+    const windowOpen = new Date(session.scheduledStart.getTime() - windowMs);
+    if (now < windowOpen) {
+      const minutesUntilWindow = Math.ceil((windowOpen.getTime() - now.getTime()) / 60000);
+      throw new BadRequestException(
+        `The session join window opens in ${minutesUntilWindow} minute(s). You can join ${session.joinWindowOpenMinutes} minutes before the scheduled start.`,
+      );
+    }
+
+    if (session.scheduledEnd && now > session.scheduledEnd) {
+      throw new BadRequestException('This session has already ended');
+    }
+
     await this.sessionAttendanceService.recordJoin(sessionId, options.studentId);
     return this.findById(sessionId);
   }
@@ -344,6 +401,9 @@ export class LiveSessionService {
     userEmail: string;
     zak: string | null;
     sdkEnabled: boolean;
+    classroomStatus: 'waiting_for_teacher' | 'teacher_online' | 'waiting_for_students' | 'students_joining' | 'class_live' | 'class_ending' | 'completed' | 'cancelled' | 'expired' | 'no_show' | 'not_available';
+    countdownSeconds: number | null;
+    joinWindowOpenAt: Date | null;
   }> {
     const session = await this.findById(sessionId);
 
@@ -381,6 +441,52 @@ export class LiveSessionService {
       }
     }
 
+    const now = new Date();
+    const windowMs = (session.joinWindowOpenMinutes || 15) * 60 * 1000;
+    const joinWindowOpenAt = new Date(session.scheduledStart.getTime() - windowMs);
+    const countdownSeconds = Math.max(0, Math.floor((session.scheduledStart.getTime() - now.getTime()) / 1000));
+
+    let classroomStatus: string;
+    switch (session.status) {
+      case LiveSessionStatus.LIVE:
+        if (options.isTeacher) {
+          const studentAttendances = await this.attendanceRepository
+            .createQueryBuilder('a')
+            .where('a.sessionId = :sessionId', { sessionId })
+            .andWhere('a.joinTime IS NOT NULL')
+            .getCount();
+          classroomStatus = studentAttendances > 0 ? 'class_live' : 'waiting_for_students';
+        } else {
+          classroomStatus = 'class_live';
+        }
+        break;
+      case LiveSessionStatus.SCHEDULED:
+        if (session.teacherJoinTime) {
+          classroomStatus = 'teacher_online';
+        } else if (countdownSeconds <= 0) {
+          classroomStatus = 'waiting_for_teacher';
+        } else if (now >= joinWindowOpenAt) {
+          classroomStatus = 'waiting_for_teacher';
+        } else {
+          classroomStatus = 'not_available';
+        }
+        break;
+      case LiveSessionStatus.COMPLETED:
+        classroomStatus = 'completed';
+        break;
+      case LiveSessionStatus.CANCELLED:
+        classroomStatus = 'cancelled';
+        break;
+      case LiveSessionStatus.NO_SHOW:
+        classroomStatus = 'no_show';
+        break;
+      case LiveSessionStatus.EXPIRED:
+        classroomStatus = 'expired';
+        break;
+      default:
+        classroomStatus = 'not_available';
+    }
+
     return {
       session,
       joinUrl: session.zoomJoinUrl,
@@ -394,6 +500,9 @@ export class LiveSessionService {
       userEmail: options.userEmail || '',
       zak,
       sdkEnabled: !!(sdkConfigured && sdkSignature && meetingNumber),
+      classroomStatus: classroomStatus as any,
+      countdownSeconds,
+      joinWindowOpenAt,
     };
   }
 
@@ -561,16 +670,27 @@ export class LiveSessionService {
     return userIds;
   }
 
-  async complete(id: string): Promise<LiveSession> {
+  async complete(id: string, completionReason?: string): Promise<LiveSession> {
     const session = await this.findById(id);
+
+    if (session.status === LiveSessionStatus.COMPLETED) {
+      throw new BadRequestException('Session is already completed');
+    }
+
+    if (session.status === LiveSessionStatus.CANCELLED) {
+      throw new BadRequestException('Cannot complete a cancelled session');
+    }
 
     if (session.status !== LiveSessionStatus.LIVE) {
       throw new BadRequestException('Only live sessions can be completed');
     }
 
+    const now = new Date();
     session.status = LiveSessionStatus.COMPLETED;
-    session.actualEnd = new Date();
-    session.teacherLeaveTime = session.teacherLeaveTime || new Date();
+    session.actualEnd = now;
+    session.completedAt = now;
+    session.teacherLeaveTime = session.teacherLeaveTime || now;
+    if (completionReason) session.completionReason = completionReason;
 
     if (session.actualStart) {
       const durationMs = session.actualEnd.getTime() - session.actualStart.getTime();
@@ -719,6 +839,103 @@ export class LiveSessionService {
     await this.liveSessionRepository.delete(session.id);
   }
 
+  async markNoShow(id: string, reason?: string): Promise<LiveSession> {
+    const session = await this.findById(id);
+
+    if (session.status !== LiveSessionStatus.SCHEDULED) {
+      throw new BadRequestException(`Cannot mark session as no-show. Current status: ${session.status}`);
+    }
+
+    session.status = LiveSessionStatus.NO_SHOW;
+    session.cancellationReason = reason || 'No participant joined the session';
+    session.actualEnd = new Date();
+    await this.liveSessionRepository.save(session);
+
+    if (session.zoomMeetingId) {
+      try {
+        await this.zoomService.deleteMeeting(session.zoomMeetingId);
+      } catch (error) {
+        this.logger.warn(`Failed to delete Zoom meeting for no-show session ${session.zoomMeetingId}: ${error.message}`);
+      }
+    }
+
+    try {
+      const studentUserIds = await this.resolveStudentUserIds(session);
+      if (studentUserIds.length > 0) {
+        await this.notificationsService.sendCustomNotifications(
+          studentUserIds,
+          'Session No-Show',
+          `The session scheduled for ${session.scheduledStart.toLocaleString()} was marked as no-show because no participants joined.`,
+          { sessionId: session.id, status: 'no_show' },
+        );
+      }
+    } catch (err) {
+      this.logger.error('Failed to send no-show notification', err);
+    }
+
+    return this.findById(id);
+  }
+
+  async markExpired(id: string): Promise<LiveSession> {
+    const session = await this.findById(id);
+
+    if (session.status !== LiveSessionStatus.SCHEDULED) {
+      throw new BadRequestException(`Cannot expire session. Current status: ${session.status}`);
+    }
+
+    session.status = LiveSessionStatus.EXPIRED;
+    session.cancellationReason = 'Session expired because it was not started within its scheduled window';
+    await this.liveSessionRepository.save(session);
+
+    if (session.zoomMeetingId) {
+      try {
+        await this.zoomService.deleteMeeting(session.zoomMeetingId);
+      } catch (error) {
+        this.logger.warn(`Failed to delete Zoom meeting for expired session ${session.zoomMeetingId}: ${error.message}`);
+      }
+    }
+
+    try {
+      const studentUserIds = await this.resolveStudentUserIds(session);
+      if (studentUserIds.length > 0) {
+        await this.notificationsService.sendCustomNotifications(
+          studentUserIds,
+          'Session Expired',
+          `The session scheduled for ${session.scheduledStart.toLocaleString()} has expired because it was not started on time.`,
+          { sessionId: session.id, status: 'expired' },
+        );
+      }
+    } catch (err) {
+      this.logger.error('Failed to send expired notification', err);
+    }
+
+    return this.findById(id);
+  }
+
+  async expireStaleSessions(): Promise<number> {
+    const now = new Date();
+    const staleSessions = await this.liveSessionRepository.find({
+      where: {
+        status: LiveSessionStatus.SCHEDULED,
+        scheduledEnd: LessThanOrEqual(now),
+      },
+    });
+
+    let expiredCount = 0;
+    for (const session of staleSessions) {
+      session.status = LiveSessionStatus.EXPIRED;
+      session.cancellationReason = 'Auto-expired: session window passed without activation';
+      await this.liveSessionRepository.save(session);
+      expiredCount++;
+    }
+
+    if (expiredCount > 0) {
+      this.logger.log(`Auto-expired ${expiredCount} stale session(s)`);
+    }
+
+    return expiredCount;
+  }
+
   async getLiveSessions(): Promise<LiveSession[]> {
     return this.liveSessionRepository.find({
       where: { status: LiveSessionStatus.LIVE },
@@ -768,6 +985,15 @@ export class LiveSessionService {
     });
 
     return { total, completed, cancelled, live, scheduled };
+  }
+
+  private async resolveStudentUserIds(session: LiveSession): Promise<string[]> {
+    if (!session.studentId) return [];
+    const student = await this.studentRepository.findOne({
+      where: { id: session.studentId },
+    });
+    if (student?.userId) return [student.userId];
+    return [];
   }
 
   private getScheduledDurationMinutes(session: LiveSession): number {
