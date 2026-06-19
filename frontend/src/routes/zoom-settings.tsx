@@ -26,6 +26,7 @@ import {
   Loader2,
   Search,
   Users,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +58,7 @@ type TeacherIntegration = {
   displayName?: string;
   accountType?: string;
   connectedAt?: string;
+  tokenExpiresAt?: string;
 };
 
 type PlatformConfigStatus = {
@@ -106,6 +108,14 @@ function TeacherZoomPanel() {
   const [integration, setIntegration] = useState<TeacherIntegration | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [health, setHealth] = useState<{
+    connected: boolean;
+    tokenExpired: boolean;
+    tokenExpiresAt: string | null;
+    apiReachable: boolean;
+  } | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -119,9 +129,32 @@ function TeacherZoomPanel() {
     }
   };
 
+  const fetchHealth = async () => {
+    setHealthLoading(true);
+    try {
+      const data = await api<{
+        connected: boolean;
+        tokenExpired: boolean;
+        tokenExpiresAt: string | null;
+        apiReachable: boolean;
+      }>('/zoom-settings/health');
+      setHealth(data);
+    } catch {
+      setHealth(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStatus();
   }, []);
+
+  useEffect(() => {
+    if (integration?.connectionStatus === 'connected') {
+      fetchHealth();
+    }
+  }, [integration?.connectionStatus]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -150,6 +183,7 @@ function TeacherZoomPanel() {
     try {
       await api('/zoom-settings/disconnect', { method: 'POST' });
       setIntegration(null);
+      setHealth(null);
       toast.success('Zoom account disconnected');
     } catch (err: any) {
       toast.error(err.message || 'Failed to disconnect');
@@ -158,9 +192,29 @@ function TeacherZoomPanel() {
     }
   };
 
+  const handleRefreshToken = async () => {
+    setRefreshing(true);
+    try {
+      await api('/zoom-oauth/refresh', { method: 'POST' });
+      toast.success('Token refreshed successfully');
+      await fetchHealth();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to refresh token');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const isConnected = integration?.connectionStatus === 'connected';
   const connectedEmail = integration?.zoomEmail || '';
   const accountType = integration?.accountType || '';
+  const tokenExpired = health?.tokenExpired ?? false;
+  const apiReachable = health?.apiReachable ?? false;
+  const tokenExpiresAt = health?.tokenExpiresAt ?? integration?.tokenExpiresAt ?? null;
+
+  const tokenExpiresInMs = tokenExpiresAt ? new Date(tokenExpiresAt).getTime() - Date.now() : 0;
+  const tokenExpiresInDays = tokenExpiresInMs > 0 ? Math.floor(tokenExpiresInMs / 86400000) : 0;
+  const tokenExpiresInHours = tokenExpiresInMs > 0 ? Math.floor((tokenExpiresInMs % 86400000) / 3600000) : 0;
 
   if (loading) {
     return (
@@ -183,23 +237,34 @@ function TeacherZoomPanel() {
         <CardContent className="space-y-6">
           {/* Connection status */}
           <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 dark:bg-nejah-surface border border-border dark:border-white/5">
-            {isConnected ? (
+            {isConnected && !tokenExpired && apiReachable ? (
               <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+            ) : isConnected && tokenExpired ? (
+              <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
             ) : (
               <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
             )}
             <div className="flex-1">
               <p className="text-sm font-bold">
-                {isConnected ? 'Connected' : 'Not Connected'}
+                {isConnected && !tokenExpired
+                  ? 'Connected'
+                  : isConnected && tokenExpired
+                    ? 'Token Expired'
+                    : 'Not Connected'}
               </p>
               <p className="text-xs text-nejah-slate-blue">
-                {isConnected
+                {isConnected && !tokenExpired
                   ? `Zoom account: ${connectedEmail}`
-                  : 'Authorize with Zoom to enable automatic meetings'}
+                  : isConnected && tokenExpired
+                    ? 'Your Zoom token has expired. Reconnect to continue using Zoom meetings.'
+                    : 'Authorize with Zoom to enable automatic meetings'}
               </p>
             </div>
-            {isConnected && (
+            {isConnected && !tokenExpired && (
               <Badge className="bg-green-100 text-green-700 border-none">Active</Badge>
+            )}
+            {isConnected && tokenExpired && (
+              <Badge className="bg-red-100 text-red-700 border-none">Expired</Badge>
             )}
           </div>
 
@@ -235,19 +300,98 @@ function TeacherZoomPanel() {
                   </p>
                 </div>
               </div>
-              <Button
-                onClick={handleDisconnect}
-                disabled={disconnecting}
-                variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
-              >
-                {disconnecting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+
+              {/* Token expiry status */}
+              {tokenExpiresAt && (
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border dark:border-white/5">
+                  {tokenExpired ? (
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  ) : tokenExpiresInDays < 7 ? (
+                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold">
+                      {tokenExpired
+                        ? 'Token Expired'
+                        : tokenExpiresInDays > 0
+                          ? `Expires in ${tokenExpiresInDays}d ${tokenExpiresInHours}h`
+                          : `Expires in ${tokenExpiresInHours}h`}
+                    </p>
+                    <p className="text-[10px] text-nejah-slate-blue">
+                      {new Date(tokenExpiresAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <Badge
+                    className={cn(
+                      'border-none shrink-0',
+                      tokenExpired
+                        ? 'bg-red-100 text-red-700'
+                        : tokenExpiresInDays < 7
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-green-100 text-green-700',
+                    )}
+                  >
+                    {tokenExpired ? 'Expired' : tokenExpiresInDays < 7 ? 'Expiring Soon' : 'Valid'}
+                  </Badge>
+                </div>
+              )}
+
+              {/* API Health indicator */}
+              {healthLoading ? (
+                <div className="flex items-center gap-2 text-xs text-nejah-slate-blue">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Checking connection...
+                </div>
+              ) : health ? (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className={cn('w-2 h-2 rounded-full', apiReachable ? 'bg-green-500' : 'bg-red-500')} />
+                  <span className={apiReachable ? 'text-green-700' : 'text-red-600'}>
+                    {apiReachable ? 'Zoom API reachable' : 'Zoom API unreachable'}
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
+                {tokenExpired ? (
+                  <Button
+                    onClick={handleConnect}
+                    className="w-full gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white"
+                  >
+                    <Link2 className="h-4 w-4" />
+                    Reconnect Zoom Account
+                  </Button>
                 ) : (
-                  <Link2Off className="h-4 w-4" />
+                  <Button
+                    onClick={handleRefreshToken}
+                    disabled={refreshing}
+                    variant="outline"
+                    className="w-full gap-2"
+                  >
+                    {refreshing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Refresh Token
+                  </Button>
                 )}
-                Disconnect Zoom Account
-              </Button>
+                <Button
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
+                >
+                  {disconnecting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Link2Off className="h-4 w-4" />
+                  )}
+                  Disconnect Zoom Account
+                </Button>
+              </div>
             </div>
           ) : (
             <div>
