@@ -278,15 +278,29 @@ export class NotificationsService {
     title: string,
     message: string,
     data?: Record<string, unknown>,
+    channel?: NotificationChannel,
   ): Promise<void> {
     if (!recipientIds.length) return;
+
+    const inferredChannel = channel ||
+      (title.toLowerCase().includes('start')
+        ? NotificationChannel.MEETING_STARTED
+        : title.toLowerCase().includes('end') || title.toLowerCase().includes('complet')
+          ? NotificationChannel.MEETING_ENDED
+          : title.toLowerCase().includes('absent') || title.toLowerCase().includes('no.show')
+            ? NotificationChannel.CLASS_ALERT
+            : title.toLowerCase().includes('cancel')
+              ? NotificationChannel.CLASS_ALERT
+              : title.toLowerCase().includes('soon') || title.toLowerCase().includes('reminder')
+                ? NotificationChannel.CLASS_ALERT
+                : NotificationChannel.SYSTEM_ALERT);
 
     const uniqueRecipientIds = Array.from(new Set(recipientIds));
     const notificationsToSave = uniqueRecipientIds.map((userId) =>
       this.notificationRepository.create({
         userId,
         type: NotificationType.IN_APP,
-        channel: NotificationChannel.SYSTEM_ALERT,
+        channel: inferredChannel,
         title,
         content: message,
         dataJson: data,

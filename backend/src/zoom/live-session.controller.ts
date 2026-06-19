@@ -256,11 +256,11 @@ export class LiveSessionController {
 
   @Post(':id/end')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async end(@Param('id') id: string, @Request() req) {
-    return this.endSession(id, req);
+  async end(@Param('id') id: string, @Body() body: { completionReason?: string }, @Request() req) {
+    return this.endSession(id, req, body?.completionReason);
   }
 
-  private async endSession(id: string, req: { user: { id: string; role: UserRole } }) {
+  private async endSession(id: string, req: { user: { id: string; role: UserRole } }, completionReason?: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       const session = await this.liveSessionService.findById(id);
@@ -268,12 +268,24 @@ export class LiveSessionController {
         throw new ForbiddenException('You are not assigned to this session');
       }
     }
-    return this.liveSessionService.complete(id);
+    return this.liveSessionService.complete(id, completionReason);
   }
 
   @Post(':id/cancel')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async cancel(@Param('id') id: string) {
-    return this.liveSessionService.cancel(id);
+  async cancel(@Param('id') id: string, @Body() body: { cancellationReason?: string }) {
+    return this.liveSessionService.cancel(id, body?.cancellationReason);
+  }
+
+  @Post(':id/no-show')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async markNoShow(@Param('id') id: string, @Body() body: { reason?: string }) {
+    return this.liveSessionService.markNoShow(id, body?.reason);
+  }
+
+  @Post(':id/expire')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async markExpired(@Param('id') id: string) {
+    return this.liveSessionService.markExpired(id);
   }
 }

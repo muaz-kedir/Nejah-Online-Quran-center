@@ -80,8 +80,32 @@ export class LiveSession {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'int', default: 15 })
+  joinWindowOpenMinutes: number;
+
+  @Column({ default: false })
+  attendanceLocked: boolean;
+
+  @Column({ default: false })
+  waitingRoomActive: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  cancellationReason: string;
+
+  @Column({ type: 'text', nullable: true })
+  completionReason: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata: any;
+
+  @Column({ nullable: true })
+  createdBy: string;
+
+  @Column({ nullable: true })
+  updatedBy: string;
 
   @OneToMany(() => SessionAttendance, (attendance) => attendance.session, { cascade: true })
   attendances: SessionAttendance[];
