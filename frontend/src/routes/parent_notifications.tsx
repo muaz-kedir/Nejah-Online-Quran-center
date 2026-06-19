@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,17 @@ import {
 } from 'lucide-react';
 
 export const Route = createFileRoute('/parent_notifications')({
-  component: ParentNotificationsPage,
+  component: ParentNotificationsRoute,
   beforeLoad: () => requireAuth(['parent']),
 });
+
+function ParentNotificationsRoute() {
+  return (
+    <LanguageProvider>
+      <ParentNotificationsPage />
+    </LanguageProvider>
+  );
+}
 
 function ParentNotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -74,8 +83,8 @@ function ParentNotificationsPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 pb-12">
+    <ParentPortalLayout activePath="/parent_notifications">
+      <div className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12">
         <PageHeader
           eyebrow="Notifications"
           title="Parent Notifications"
@@ -139,6 +148,6 @@ function ParentNotificationsPage() {
           </GlassPanel>
         )}
       </div>
-    </DashboardLayout>
+    </ParentPortalLayout>
   );
 }

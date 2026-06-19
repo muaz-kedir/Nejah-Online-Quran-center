@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { PageHeader, GlassPanel, BentoStatCard } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +30,17 @@ import {
 } from 'lucide-react';
 
 export const Route = createFileRoute('/parent_sessions')({
-  component: ParentSessionsPage,
+  component: ParentSessionsRoute,
   beforeLoad: () => requireAuth(['parent']),
 });
+
+function ParentSessionsRoute() {
+  return (
+    <LanguageProvider>
+      <ParentSessionsPage />
+    </LanguageProvider>
+  );
+}
 
 function ParentSessionsPage() {
   const navigate = useNavigate();
@@ -162,8 +171,8 @@ function ParentSessionsPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 pb-12">
+    <ParentPortalLayout activePath="/parent_sessions">
+      <div className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12">
         <PageHeader
           eyebrow="Parent Portal"
           title={`My Children's Sessions${activeSessions > 0 ? ' 🔴' : ''}`}
@@ -338,6 +347,6 @@ function ParentSessionsPage() {
           </Card>
         )}
       </div>
-    </DashboardLayout>
+    </ParentPortalLayout>
   );
 }

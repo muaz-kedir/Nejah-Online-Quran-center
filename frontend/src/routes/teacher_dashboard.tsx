@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { TemporaryReplacementClassCard } from "@/components/teachers/TemporaryReplacementClassCard";
-import { TeacherSidebar } from "@/components/dashboard/TeacherSidebar";
+import { TeacherPortalLayout, TeacherPageLoader } from "@/components/teachers/TeacherPortalLayout";
 
 const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
@@ -53,7 +53,7 @@ const noteTypeLabelColor: Record<NoteType, string> = {
 
 // ─── Topbar ────────────────────────────────────────────────────────────────────
 const Topbar = ({ teacher }: any) => (
-  <div className="h-20 flex items-center justify-between px-10 bg-card dark:bg-nejah-surface border-b border-border dark:border-white/5 sticky top-0 z-10 w-full ml-64 max-w-[calc(100%-256px)]">
+  <div className="h-20 hidden lg:flex items-center justify-between px-10 bg-card dark:bg-nejah-surface border-b border-border dark:border-white/5 sticky top-0 z-10 w-full">
     <div className="flex items-center gap-4">
       <div className="p-2 bg-primary/10 rounded-lg lg:hidden">
         <LayoutDashboard className="h-5 w-5 text-nejah-electric" />
@@ -471,21 +471,17 @@ function TeacherDashboard() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center bg-card dark:bg-nejah-surface">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-nejah-surface"></div>
-      </div>
-    );
+  if (loading) return <TeacherPageLoader />;
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground dark:text-foreground font-sans">
-      <TeacherSidebar activePath="/teacher_dashboard" />
+    <TeacherPortalLayout
+      activePath="/teacher_dashboard"
+      teacher={data?.teacher}
+      unreadNotifications={data?.unreadNotificationsCount}
+    >
+      <Topbar teacher={data?.teacher} />
 
-      <div className="flex-1 flex flex-col ml-64">
-        <Topbar teacher={data?.teacher} />
-
-        <main className="p-10 space-y-12">
+      <main className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12">
           {/* Header */}
           <div className="flex items-end justify-between">
             <div>
@@ -985,7 +981,6 @@ function TeacherDashboard() {
             )}
           </div>
         </main>
-      </div>
 
       {/* Floating Add Note button */}
       <div className="fixed bottom-10 right-10">
@@ -1001,7 +996,7 @@ function TeacherDashboard() {
       {noteModal.open && (
         <NoteModal note={noteModal.note} onClose={closeModal} onSave={handleSaveNote} />
       )}
-    </div>
+    </TeacherPortalLayout>
   );
 }
 

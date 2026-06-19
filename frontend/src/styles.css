@@ -343,6 +343,16 @@
     @apply hover:bg-primary/8 hover:text-foreground;
   }
 
+  /* Ensure the portal sidebar has clearly visible background vs page */
+  aside.sidebar-transition,
+  aside[class*="bg-card"] {
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  }
+  .dark aside.sidebar-transition,
+  .dark aside[class*="bg-nejah-surface"] {
+    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.4);
+  }
+
   .upcoming-class-gradient {
     background: linear-gradient(135deg, #0B355B 0%, #0F62AC 60%, #0091FF 100%);
   }
