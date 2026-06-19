@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { AttendanceStatus } from './enums/live-session-status.enum';
+import { AttendanceIntelligenceService } from './attendance-intelligence.service';
+import { TimelineEventType } from './entities/participant-timeline-event.entity';
 
 @Injectable()
 export class SessionAttendanceService {
@@ -14,69 +16,63 @@ export class SessionAttendanceService {
     private readonly attendanceRepository: Repository<SessionAttendance>,
     @InjectRepository(LiveSession)
     private readonly liveSessionRepository: Repository<LiveSession>,
+    private readonly attendanceIntelligence: AttendanceIntelligenceService,
   ) {}
 
-  async recordJoin(sessionId: string, studentId: string): Promise<SessionAttendance> {
+  async recordJoin(
+    sessionId: string,
+    studentId: string,
+    metadata?: { device?: string; clientType?: string; zoomUserId?: string; rawPayload?: any; webhookEventId?: string },
+  ): Promise<SessionAttendance> {
     const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
     if (!session) {
       throw new NotFoundException('Live session not found');
     }
 
-    let attendance = await this.attendanceRepository.findOne({
-      where: { sessionId, studentId },
+    const now = new Date();
+
+    await this.attendanceIntelligence.appendTimelineEvent({
+      sessionId,
+      participantId: studentId,
+      participantRole: 'student',
+      zoomUserId: metadata?.zoomUserId,
+      eventType: TimelineEventType.JOIN,
+      timestamp: now,
+      device: metadata?.device,
+      clientType: metadata?.clientType,
+      rawPayload: metadata?.rawPayload,
+      webhookEventId: metadata?.webhookEventId,
     });
 
-    const now = new Date();
-    const isLate = now > session.scheduledStart;
-
-    if (!attendance) {
-      attendance = this.attendanceRepository.create({
-        sessionId,
-        studentId,
-        joinTime: now,
-        attendanceStatus: isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT,
-      });
-    } else {
-      attendance.joinTime = now;
-      if (attendance.attendanceStatus === AttendanceStatus.ABSENT) {
-        attendance.attendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
-      }
-    }
-
-    return this.attendanceRepository.save(attendance);
+    return this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
   }
 
-  async recordLeave(sessionId: string, studentId: string): Promise<SessionAttendance> {
+  async recordLeave(
+    sessionId: string,
+    studentId: string,
+    metadata?: { device?: string; clientType?: string; zoomUserId?: string; rawPayload?: any; webhookEventId?: string },
+  ): Promise<SessionAttendance> {
     const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
     if (!session) {
       throw new NotFoundException('Live session not found');
     }
 
-    let attendance = await this.attendanceRepository.findOne({
-      where: { sessionId, studentId },
+    const now = new Date();
+
+    await this.attendanceIntelligence.appendTimelineEvent({
+      sessionId,
+      participantId: studentId,
+      participantRole: 'student',
+      zoomUserId: metadata?.zoomUserId,
+      eventType: TimelineEventType.LEAVE,
+      timestamp: now,
+      device: metadata?.device,
+      clientType: metadata?.clientType,
+      rawPayload: metadata?.rawPayload,
+      webhookEventId: metadata?.webhookEventId,
     });
 
-    if (!attendance) {
-      attendance = this.attendanceRepository.create({
-        sessionId,
-        studentId,
-        attendanceStatus: AttendanceStatus.ABSENT,
-      });
-    }
-
-    const now = new Date();
-    attendance.leaveTime = now;
-
-    if (attendance.joinTime) {
-      attendance.duration = Math.floor((now.getTime() - attendance.joinTime.getTime()) / 60000);
-      const scheduledDuration = this.getScheduledDurationMinutes(session);
-      attendance.attendanceStatus = this.calculateAttendanceStatus(
-        attendance.duration,
-        scheduledDuration,
-      );
-    }
-
-    return this.attendanceRepository.save(attendance);
+    return this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
   }
 
   /** 80%+ = Present, 50–79% = Late, <50% = Absent */
