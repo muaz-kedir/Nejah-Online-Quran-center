@@ -183,6 +183,18 @@ function TeacherZoomPage() {
             Cancelled
           </Badge>
         );
+      case "NO_SHOW":
+        return (
+          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none text-[9px] font-black uppercase tracking-widest">
+            No Show
+          </Badge>
+        );
+      case "EXPIRED":
+        return (
+          <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none text-[9px] font-black uppercase tracking-widest">
+            Expired
+          </Badge>
+        );
       default:
         return (
           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none text-[9px] font-black uppercase tracking-widest">
@@ -225,13 +237,21 @@ function TeacherZoomPage() {
                 ? "bg-red-100 dark:bg-red-900/30"
                 : session.status === "COMPLETED"
                   ? "bg-green-100 dark:bg-green-900/30"
-                  : "bg-amber-100 dark:bg-amber-900/30",
+                  : session.status === "NO_SHOW"
+                    ? "bg-gray-200 dark:bg-gray-700"
+                    : session.status === "EXPIRED"
+                      ? "bg-orange-100 dark:bg-orange-900/30"
+                      : "bg-amber-100 dark:bg-amber-900/30",
             )}
           >
             {session.status === "LIVE" ? (
               <Video className="h-5 w-5 text-red-500" />
             ) : session.status === "COMPLETED" ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : session.status === "NO_SHOW" ? (
+              <XCircle className="h-5 w-5 text-gray-500" />
+            ) : session.status === "EXPIRED" ? (
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
             ) : (
               <Clock className="h-5 w-5 text-amber-500" />
             )}
@@ -289,6 +309,13 @@ function TeacherZoomPage() {
               Cancel
             </Button>
           </>
+        )}
+        {(session.status === "NO_SHOW" || session.status === "EXPIRED") && (
+          <div className="flex gap-2">
+            <Button variant="outline" disabled className="rounded-xl h-9 text-xs font-bold opacity-50 cursor-not-allowed">
+              {session.status === "NO_SHOW" ? "No participant joined" : "Session window expired"}
+            </Button>
+          </div>
         )}
         {session.status === "LIVE" && (
           <>
