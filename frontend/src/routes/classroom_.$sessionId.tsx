@@ -1,14 +1,10 @@
 import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { Video, Loader2, ArrowLeft, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Video, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {
-  ZoomEmbeddedMeeting,
-  type ClassroomJoinConfig,
-} from "@/components/classroom/ZoomEmbeddedMeeting";
 
 const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
@@ -21,15 +17,6 @@ type ClassroomAccess = {
   session: any;
   joinUrl: string | null;
   startUrl: string | null;
-  sdkSignature: string | null;
-  clientId: string | null;
-  meetingNumber: string | null;
-  password: string | null;
-  role: 0 | 1;
-  userName: string;
-  userEmail: string;
-  zak: string | null;
-  sdkEnabled: boolean;
 };
 
 function ClassroomPage() {
@@ -38,9 +25,7 @@ function ClassroomPage() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [classroom, setClassroom] = useState<ClassroomAccess | null>(null);
-  const [embedConfig, setEmbedConfig] = useState<ClassroomJoinConfig | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
   const role = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
 
   const loadClassroom = useCallback(async () => {
@@ -74,7 +59,6 @@ function ClassroomPage() {
 
   const handleLeave = () => {
     setSessionEnded(true);
-    setEmbedConfig(null);
     goToDashboard();
     toast.success("Session completed successfully");
   };
@@ -89,17 +73,8 @@ function ClassroomPage() {
     }
   };
 
-  const startEmbeddedMeeting = async () => {
+  const joinSession = async () => {
     if (!classroom) return;
-
-    if (!classroom.meetingNumber) {
-      if (role === "teacher") {
-        toast.error("Please start the meeting first from the Class Session page. Go to your dashboard → Today's Classes → Start Meeting.");
-      } else {
-        toast.error("Meeting has not been started yet. Please wait for the teacher to start the session.");
-      }
-      return;
-    }
 
     if (
       role === "student" &&
@@ -116,22 +91,7 @@ function ClassroomPage() {
         method: "POST",
         headers: authHeaders(),
       });
-
-      if (classroom.sdkEnabled && classroom.sdkSignature && classroom.meetingNumber) {
-        setEmbedConfig({
-          sdkSignature: classroom.sdkSignature,
-          meetingNumber: classroom.meetingNumber,
-          password: classroom.password || "",
-          userName: classroom.userName,
-          userEmail: classroom.userEmail || "",
-          role: classroom.role,
-          zak: classroom.zak,
-        });
-        setUseFallback(false);
-      } else {
-        setUseFallback(true);
-        openExternalZoom(classroom);
-      }
+      openExternalZoom(classroom);
     } catch (e: any) {
       toast.error(e.message || "Failed to join session");
     } finally {
@@ -150,43 +110,6 @@ function ClassroomPage() {
   const session = classroom?.session;
   const className =
     session?.metadata?.className || session?.schedule?.className || "Quran Class";
-
-  if (embedConfig) {
-    return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-white">
-        <header className="h-[72px] shrink-0 border-b border-white/10 px-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10"
-              onClick={handleLeave}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-base font-bold font-serif">{className}</h1>
-              <p className="text-xs text-white/60">NEJAH Live Classroom</p>
-            </div>
-          </div>
-          <Badge className="bg-red-500/20 text-red-300 border-red-500/30 uppercase text-[10px] animate-pulse">
-            Live
-          </Badge>
-        </header>
-        <ZoomEmbeddedMeeting
-          config={embedConfig}
-          onLeft={handleLeave}
-          onError={() => {
-            if (classroom) {
-              setUseFallback(true);
-              setEmbedConfig(null);
-              openExternalZoom(classroom);
-            }
-          }}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white">
@@ -226,22 +149,9 @@ function ClassroomPage() {
           </p>
         </div>
 
-        {!classroom?.sdkEnabled && (
-          <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left text-sm">
-            <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-amber-100/90">
-              Embedded Zoom uses your Zoom OAuth app credentials (
-              <code className="text-xs">ZOOM_CLIENT_ID</code> and{" "}
-              <code className="text-xs">ZOOM_CLIENT_SECRET</code>). You can still join using the
-              external Zoom link fallback.
-            </p>
-          </div>
-        )}
-
         <div className="glass-panel bg-white/5 border border-white/10 rounded-3xl p-8 space-y-4">
           <p className="text-sm text-white/60">
-            Your class runs inside NEJAH using the Zoom Meeting SDK. Attendance is tracked when you
-            enter the classroom.
+            Your class runs via Zoom. Click the button below to open Zoom and join the session.
           </p>
 
           {session?.status === "COMPLETED" || sessionEnded ? (
@@ -254,7 +164,7 @@ function ClassroomPage() {
               <Button
                 size="lg"
                 className="rounded-2xl px-10 bg-emerald-500 hover:bg-emerald-600"
-                onClick={startEmbeddedMeeting}
+                onClick={joinSession}
                 disabled={joining || session?.status === "COMPLETED"}
               >
                 {joining ? (
@@ -264,16 +174,6 @@ function ClassroomPage() {
                 )}
                 {role === "teacher" ? "Enter Classroom" : "Join Session"}
               </Button>
-              {classroom && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="rounded-2xl border-white/20 text-white hover:bg-white/10"
-                  onClick={() => openExternalZoom(classroom)}
-                >
-                  Open in Zoom App
-                </Button>
-              )}
               <Button
                 size="lg"
                 variant="outline"
@@ -283,12 +183,6 @@ function ClassroomPage() {
                 Return to Dashboard
               </Button>
             </div>
-          )}
-
-          {useFallback && (
-            <p className="text-xs text-white/50 pt-2">
-              Embedded meeting unavailable — use &quot;Open in Zoom App&quot; if video did not start.
-            </p>
           )}
         </div>
 

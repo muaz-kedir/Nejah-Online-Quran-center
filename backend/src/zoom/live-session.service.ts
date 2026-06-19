@@ -56,6 +56,21 @@ export class LiveSessionService {
   }
 
   async createWithZoom(dto: CreateLiveSessionDto): Promise<LiveSession> {
+    if (dto.studentId && dto.teacherId) {
+      const existing = await this.liveSessionRepository.findOne({
+        where: {
+          studentId: dto.studentId,
+          teacherId: dto.teacherId,
+          status: In([LiveSessionStatus.SCHEDULED, LiveSessionStatus.LIVE]),
+        },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          `This student already has a ${existing.status.toLowerCase()} session. Complete or cancel the previous session before scheduling a new one.`,
+        );
+      }
+    }
+
     const session = await this.create(dto);
 
     const integration = await this.zoomIntegrationRepository.findOne({

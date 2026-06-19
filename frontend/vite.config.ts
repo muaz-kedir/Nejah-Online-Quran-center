@@ -24,5 +24,20 @@ export default defineConfig({
     resolve: {
       dedupe: ["react", "react-dom", "react/jsx-runtime"],
     },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "@tanstack/react-query",
+        "framer-motion",
+        "sonner",
+        "lucide-react",
+        "@radix-ui/react-slot",
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge",
+        "zod",
+      ],
+    },
   },
 });

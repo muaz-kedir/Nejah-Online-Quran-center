@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Res, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Response } from 'express';
 import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -42,6 +43,8 @@ function sanitizeIntegration(integration: ZoomIntegration | null) {
   return safe;
 }
 
+const FRONTEND_URL = (process.env.CORS_ORIGIN || 'http://localhost:8080').replace(/\/$/, '');
+
 @Controller('zoom-settings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ZoomSettingsController {
@@ -63,6 +66,51 @@ export class ZoomSettingsController {
   savePlatformConfig(@Body() dto: SavePlatformConfigDto) {
     return this.zoomService.savePlatformConfig(dto);
   }
+
+  /* ------------------------------------------------------------------ */
+  /*  OAuth authorization code flow                                     */
+  /* ------------------------------------------------------------------ */
+
+  @Get('oauth/url')
+  @Roles(UserRole.TEACHER)
+  async getOAuthUrl(@Request() req) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+    const url = this.zoomService.getOAuthAuthorizationUrl(teacher.id);
+    return { url };
+  }
+
+  @Get('oauth/callback')
+  async oauthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
+    if (!code || !state) {
+      return res.redirect(`${FRONTEND_URL}/zoom-settings?zoom=error&message=Missing authorization code`);
+    }
+
+    try {
+      const tokens = await this.zoomService.exchangeAuthorizationCode(code);
+      const userInfo = await this.zoomService.fetchOAuthUserInfo(tokens.access_token);
+      const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+
+      await this.zoomService.saveOAuthIntegration(state, userInfo, {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt,
+      });
+
+      return res.redirect(`${FRONTEND_URL}/zoom-settings?zoom=connected`);
+    } catch (error) {
+      return res.redirect(
+        `${FRONTEND_URL}/zoom-settings?zoom=error&message=${encodeURIComponent(error.message || 'Authorization failed')}`,
+      );
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Manual connect (kept for admin use, no longer used by teachers)    */
+  /* ------------------------------------------------------------------ */
 
   @Post('connect')
   @Roles(UserRole.TEACHER)

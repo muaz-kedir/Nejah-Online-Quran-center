@@ -58,22 +58,18 @@ export function Navbar() {
     };
   }, [mobileOpen]);
 
-  return (
-    <>
-      <motion.header
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "glass-panel border-b border-border dark:border-white/5 !rounded-none !shadow-lg"
-            : "bg-transparent"
-        }`}
-      >
-        <nav className="container-x flex items-center justify-between h-16 md:h-20">
-          <a href="#home" className="flex items-center gap-2 group">
-            <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
-          </a>
+        <div className="hidden lg:flex items-center gap-1">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="group relative px-4 py-2 text-sm font-semibold text-foreground/80 transition-colors hover:text-nejah-electric"
+            >
+              {l.label}
+              <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+            </a>
+          ))}
+        </div>
 
           <div className="hidden lg:flex items-center gap-1">
             {links.map((l) => (
@@ -94,6 +90,9 @@ export function Navbar() {
               aria-label="Toggle theme"
               className="size-10 grid place-items-center rounded-full hover:bg-muted transition"
               suppressHydrationWarning
+              onClick={() => setLangOpen((o) => !o)}
+              onBlur={() => setTimeout(() => setLangOpen(false), 150)}
+              className="flex items-center gap-1.5 px-3 h-10 rounded-full hover:bg-muted text-sm font-semibold transition"
             >
               {mounted && (
                 <AnimatePresence mode="wait" initial={false}>
@@ -192,8 +191,10 @@ export function Navbar() {
                   </div>
                   <button
                     onClick={() => setMobileOpen(false)}
-                    className="size-10 grid place-items-center rounded-full text-white hover:bg-white/10"
-                    aria-label="Close menu"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="px-4 py-3 rounded-xl hover:bg-muted text-base font-semibold"
                   >
                     <X className="size-6" />
                   </button>

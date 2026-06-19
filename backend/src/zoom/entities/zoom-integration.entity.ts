@@ -27,6 +27,12 @@ export class ZoomIntegration {
   @Column({ nullable: true })
   zoomEmail: string;
 
+  @Column({ nullable: true })
+  displayName: string;
+
+  @Column({ nullable: true })
+  accountType: string;
+
   @Column({ type: 'text', nullable: true })
   accessToken: string;
 

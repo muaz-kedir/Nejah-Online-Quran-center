@@ -54,6 +54,8 @@ type TeacherIntegration = {
   connectionStatus: string;
   zoomUserId?: string;
   zoomEmail?: string;
+  displayName?: string;
+  accountType?: string;
   connectedAt?: string;
 };
 
@@ -103,9 +105,7 @@ function ZoomSettingsPage() {
 function TeacherZoomPanel() {
   const [integration, setIntegration] = useState<TeacherIntegration | null>(null);
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
-  const [zoomUserId, setZoomUserId] = useState('');
-  const [zoomEmail, setZoomEmail] = useState('');
+  const [disconnecting, setDisconnecting] = useState(false);
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -123,55 +123,149 @@ function TeacherZoomPanel() {
     fetchStatus();
   }, []);
 
-  const handleConnect = async () => {
-    if (!zoomUserId.trim()) {
-      toast.error('Zoom User ID is required');
-      return;
-    }
-    setConnecting(true);
-    try {
-      const result = await api<TeacherIntegration>('/zoom-settings/connect', {
-        method: 'POST',
-        body: JSON.stringify({
-          zoomUserId: zoomUserId.trim(),
-          zoomEmail: zoomEmail.trim() || undefined,
-        }),
-      });
-      setIntegration(result);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const zoomStatus = params.get('zoom');
+    if (zoomStatus === 'connected') {
       toast.success('Zoom account connected successfully');
+      fetchStatus();
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (zoomStatus === 'error') {
+      toast.error(params.get('message') || 'Zoom authorization failed');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const handleConnect = async () => {
+    try {
+      const res = await api<{ url: string }>('/zoom-settings/oauth/url');
+      window.location.href = res.url;
     } catch (err: any) {
-      toast.error(err.message || 'Failed to connect Zoom account');
-    } finally {
-      setConnecting(false);
+      toast.error(err.message || 'Failed to start Zoom authorization');
     }
   };
 
   const handleDisconnect = async () => {
+    setDisconnecting(true);
     try {
       await api('/zoom-settings/disconnect', { method: 'POST' });
       setIntegration(null);
       toast.success('Zoom account disconnected');
     } catch (err: any) {
       toast.error(err.message || 'Failed to disconnect');
+    } finally {
+      setDisconnecting(false);
     }
   };
 
   const isConnected = integration?.connectionStatus === 'connected';
+  const connectedEmail = integration?.zoomEmail || '';
+  const accountType = integration?.accountType || '';
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-nejah-slate-blue" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <ZoomIntegrationCard
-        loading={loading}
-        isConnected={isConnected}
-        integration={integration}
-        zoomUserId={zoomUserId}
-        zoomEmail={zoomEmail}
-        connecting={connecting}
-        onZoomUserIdChange={setZoomUserId}
-        onZoomEmailChange={setZoomEmail}
-        onConnect={handleConnect}
-        onDisconnect={handleDisconnect}
-      />
+      <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 rounded-3xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg font-bold">
+            <Video className="h-5 w-5 text-nejah-electric" />
+            Zoom Integration
+          </CardTitle>
+          <CardDescription>Connect your Zoom account to enable automatic meeting creation</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Connection status */}
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 dark:bg-nejah-surface border border-border dark:border-white/5">
+            {isConnected ? (
+              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className="text-sm font-bold">
+                {isConnected ? 'Connected' : 'Not Connected'}
+              </p>
+              <p className="text-xs text-nejah-slate-blue">
+                {isConnected
+                  ? `Zoom account: ${connectedEmail}`
+                  : 'Authorize with Zoom to enable automatic meetings'}
+              </p>
+            </div>
+            {isConnected && (
+              <Badge className="bg-green-100 text-green-700 border-none">Active</Badge>
+            )}
+          </div>
+
+          {isConnected ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    Zoom Email
+                  </p>
+                  <p className="text-xs mt-1">{connectedEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    Account Type
+                  </p>
+                  <p className="text-xs mt-1">{accountType || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    Display Name
+                  </p>
+                  <p className="text-xs mt-1">{integration?.displayName || connectedEmail || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    Connected Since
+                  </p>
+                  <p className="text-xs mt-1">
+                    {integration?.connectedAt
+                      ? new Date(integration.connectedAt).toLocaleDateString()
+                      : 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
+              >
+                {disconnecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Link2Off className="h-4 w-4" />
+                )}
+                Disconnect Zoom Account
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Button
+                onClick={handleConnect}
+                className="w-full gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white"
+              >
+                <Link2 className="h-4 w-4" />
+                Connect Zoom
+              </Button>
+              <p className="text-[10px] text-nejah-slate-blue font-medium mt-3 text-center">
+                You will be redirected to Zoom to authorize the connection.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <HowItWorksCard />
     </div>
   );
@@ -532,139 +626,6 @@ function AdminZoomPanel() {
   );
 }
 
-function ZoomIntegrationCard({
-  loading,
-  isConnected,
-  integration,
-  zoomUserId,
-  zoomEmail,
-  connecting,
-  onZoomUserIdChange,
-  onZoomEmailChange,
-  onConnect,
-  onDisconnect,
-}: {
-  loading: boolean;
-  isConnected: boolean;
-  integration: TeacherIntegration | null;
-  zoomUserId: string;
-  zoomEmail: string;
-  connecting: boolean;
-  onZoomUserIdChange: (v: string) => void;
-  onZoomEmailChange: (v: string) => void;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}) {
-  return (
-    <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 rounded-3xl shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg font-bold">
-          <Video className="h-5 w-5 text-nejah-electric" />
-          Zoom Integration
-        </CardTitle>
-        <CardDescription>Link your Zoom account to this platform</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-nejah-slate-blue" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 dark:bg-nejah-surface border border-border dark:border-white/5">
-              {isConnected ? (
-                <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
-              )}
-              <div className="flex-1">
-                <p className="text-sm font-bold">{isConnected ? 'Connected' : 'Not Connected'}</p>
-                <p className="text-xs text-nejah-slate-blue">
-                  {isConnected
-                    ? `Zoom User: ${integration?.zoomEmail || integration?.zoomUserId}`
-                    : 'Link your Zoom account to enable automatic meetings'}
-                </p>
-              </div>
-              {isConnected && (
-                <Badge className="bg-green-100 text-green-700 border-none">Active</Badge>
-              )}
-            </div>
-
-            {isConnected ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                      Zoom User ID
-                    </p>
-                    <p className="font-mono text-xs mt-1">{integration?.zoomUserId}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                      Zoom Email
-                    </p>
-                    <p className="text-xs mt-1">{integration?.zoomEmail || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                      Connected Since
-                    </p>
-                    <p className="text-xs mt-1">
-                      {integration?.connectedAt
-                        ? new Date(integration.connectedAt).toLocaleDateString()
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={onDisconnect}
-                  variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
-                >
-                  <Link2Off className="h-4 w-4" />
-                  Disconnect Zoom Account
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="zoomUserId">Zoom User ID or licensed email *</Label>
-                  <Input
-                    id="zoomUserId"
-                    placeholder="your-licensed-email@yourdomain.com"
-                    value={zoomUserId}
-                    onChange={(e) => onZoomUserIdChange(e.target.value)}
-                    className="bg-background/50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zoomEmail">Zoom Email (optional)</Label>
-                  <Input
-                    id="zoomEmail"
-                    type="email"
-                    placeholder="your-zoom-email@example.com"
-                    value={zoomEmail}
-                    onChange={(e) => onZoomEmailChange(e.target.value)}
-                    className="bg-background/50"
-                  />
-                </div>
-                <Button onClick={onConnect} className="w-full gap-2" disabled={connecting}>
-                  {connecting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Link2 className="h-4 w-4" />
-                  )}
-                  {connecting ? 'Connecting...' : 'Connect Zoom Account'}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 function PlatformConfigCard({
   status,
   onSaved,
@@ -825,10 +786,10 @@ function HowItWorksCard() {
       <CardContent className="space-y-4 text-sm">
         <div className="space-y-3">
           {[
-            ['Connect Zoom Account', 'Each teacher needs a Zoom User ID linked to their profile'],
-            ['Automatic Meeting Creation', 'Zoom meetings are created when a teacher starts a class'],
-            ['Automatic Attendance', 'Join and leave times are recorded automatically'],
-            ['Session Management', 'Sessions are tracked with attendance and duration data'],
+            ['Connect Zoom Account', 'Click "Connect Zoom" and authorize via Zoom\'s OAuth consent screen'],
+            ['Automatic Meeting Creation', 'Zoom meetings are created when you schedule a live session'],
+            ['Students Join via Link', 'Students receive the join URL and open it in their browser or the Zoom app'],
+            ['Automatic Attendance', 'Join and leave times are recorded automatically via webhooks'],
           ].map(([title, desc], i) => (
             <div key={title} className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -841,12 +802,11 @@ function HowItWorksCard() {
             </div>
           ))}
         </div>
-        <div className="mt-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-          <p className="text-xs font-bold text-amber-800 dark:text-amber-400">Prerequisites</p>
-          <p className="text-xs text-amber-700 dark:text-amber-500 mt-1">
-            A super admin must configure Server-to-Server OAuth under Platform Configuration (or set
-            ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the backend). Each teacher
-            must connect their licensed Zoom email before starting live sessions.
+        <div className="mt-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+          <p className="text-xs font-bold text-blue-800 dark:text-blue-400">Teacher Experience</p>
+          <p className="text-xs text-blue-700 dark:text-blue-500 mt-1">
+            Connect Zoom once → Schedule a class → Meeting is created automatically → Students join
+            via the generated link. No Zoom account needed for students.
           </p>
         </div>
       </CardContent>
