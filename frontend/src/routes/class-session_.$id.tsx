@@ -262,6 +262,18 @@ function ClassSessionContent() {
             COMPLETED
           </Badge>
         );
+      case "NO_SHOW":
+        return (
+          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+            NO SHOW
+          </Badge>
+        );
+      case "EXPIRED":
+        return (
+          <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+            EXPIRED
+          </Badge>
+        );
       default:
         return (
           <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
