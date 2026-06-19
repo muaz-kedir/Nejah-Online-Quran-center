@@ -190,7 +190,7 @@ export class ZoomService implements OnModuleInit {
 
   async exchangeAuthorizationCode(
     code: string,
-  ): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
+  ): Promise<{ access_token: string; refresh_token: string; expires_in: number; scope?: string }> {
     const clientId = this.getZoomOAuthClientId();
     const clientSecret = this.getZoomOAuthClientSecret();
     const redirectUri = this.getZoomOAuthRedirectUri();
@@ -285,6 +285,7 @@ export class ZoomService implements OnModuleInit {
     email: string;
     displayName: string;
     accountType: string;
+    accountId?: string;
   }> {
     try {
       const response = await firstValueFrom(
@@ -298,6 +299,7 @@ export class ZoomService implements OnModuleInit {
         email: data.email || '',
         displayName: data.display_name || data.first_name + ' ' + data.last_name || data.email,
         accountType: data.account_type === 1 ? 'Basic' : 'Licensed',
+        accountId: data.account_id || undefined,
       };
     } catch (error) {
       this.logger.error('Failed to fetch Zoom user info', error.message);
@@ -310,8 +312,8 @@ export class ZoomService implements OnModuleInit {
 
   async saveOAuthIntegration(
     teacherId: string,
-    userInfo: { id: string; email: string; displayName: string; accountType: string },
-    tokens: { accessToken: string; refreshToken: string; expiresAt: Date },
+    userInfo: { id: string; email: string; displayName: string; accountType: string; accountId?: string },
+    tokens: { accessToken: string; refreshToken: string; expiresAt: Date; scope?: string },
   ): Promise<ZoomIntegration> {
     const encryptedAccess = this.encryptionService.encrypt(tokens.accessToken);
     const encryptedRefresh = this.encryptionService.encrypt(tokens.refreshToken);
@@ -325,6 +327,8 @@ export class ZoomService implements OnModuleInit {
     integration.zoomEmail = userInfo.email;
     integration.displayName = userInfo.displayName;
     integration.accountType = userInfo.accountType;
+    integration.zoomAccountId = userInfo.accountId || null;
+    integration.scope = tokens.scope || null;
     integration.accessToken = encryptedAccess;
     integration.refreshToken = encryptedRefresh;
     integration.tokenExpiresAt = tokens.expiresAt;
@@ -791,6 +795,72 @@ export class ZoomService implements OnModuleInit {
 
   async getTeacherIntegration(teacherId: string): Promise<ZoomIntegration | null> {
     return this.zoomIntegrationRepository.findOne({ where: { teacherId } });
+  }
+
+  async getTeacherIntegrationWithDecryptedTokens(teacherId: string): Promise<{
+    integration: ZoomIntegration;
+    decryptedAccessToken: string;
+    decryptedRefreshToken: string | null;
+  }> {
+    const integration = await this.getTeacherIntegration(teacherId);
+    if (!integration?.accessToken) {
+      throw new HttpException('Zoom account not connected', HttpStatus.NOT_FOUND);
+    }
+    const decryptedAccessToken = this.encryptionService.decrypt(integration.accessToken);
+    if (!decryptedAccessToken) {
+      throw new HttpException('Failed to decrypt Zoom credentials', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const decryptedRefreshToken = integration.refreshToken
+      ? this.encryptionService.decrypt(integration.refreshToken)
+      : null;
+    return { integration, decryptedAccessToken, decryptedRefreshToken };
+  }
+
+  async checkZoomConnectionHealth(teacherId: string): Promise<{
+    connected: boolean;
+    tokenExpired: boolean;
+    tokenExpiresAt: Date | null;
+    apiReachable: boolean;
+  }> {
+    const integration = await this.getTeacherIntegration(teacherId);
+    if (!integration || integration.connectionStatus !== 'connected') {
+      return { connected: false, tokenExpired: true, tokenExpiresAt: null, apiReachable: false };
+    }
+
+    const now = new Date();
+    const tokenExpired = !integration.tokenExpiresAt || integration.tokenExpiresAt <= now;
+
+    if (tokenExpired) {
+      return {
+        connected: true,
+        tokenExpired: true,
+        tokenExpiresAt: integration.tokenExpiresAt,
+        apiReachable: false,
+      };
+    }
+
+    try {
+      const { decryptedAccessToken } = await this.getTeacherIntegrationWithDecryptedTokens(teacherId);
+      await firstValueFrom(
+        this.httpService.get(`${this.baseUrl}/users/me`, {
+          headers: { Authorization: `Bearer ${decryptedAccessToken}` },
+          timeout: 5000,
+        }),
+      );
+      return {
+        connected: true,
+        tokenExpired: false,
+        tokenExpiresAt: integration.tokenExpiresAt,
+        apiReachable: true,
+      };
+    } catch {
+      return {
+        connected: true,
+        tokenExpired: false,
+        tokenExpiresAt: integration.tokenExpiresAt,
+        apiReachable: false,
+      };
+    }
   }
 
   async getAllIntegrations(): Promise<ZoomIntegration[]> {
