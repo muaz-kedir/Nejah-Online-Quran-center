@@ -40,16 +40,18 @@ export class ZoomService implements OnModuleInit {
   async reloadPlatformCredentials(): Promise<void> {
     this.cachedToken = null;
 
+    // Webhook secret is ALWAYS loaded independently from OAuth credentials
+    this.secretToken =
+      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() || '';
+
     const envAccountId = this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() || '';
     const envClientId = this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() || '';
     const envClientSecret = this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() || '';
-    const envSecretToken = this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() || '';
 
     if (envAccountId && envClientId && envClientSecret) {
       this.accountId = envAccountId;
       this.clientId = envClientId;
       this.clientSecret = envClientSecret;
-      this.secretToken = envSecretToken;
       this.credentialsSource = 'env';
       this.logWebhookSecretStatus();
       return;
@@ -64,9 +66,12 @@ export class ZoomService implements OnModuleInit {
       this.clientId = stored.clientId.trim();
       this.clientSecret =
         this.encryptionService.decrypt(stored.clientSecretEncrypted)?.trim() || '';
-      this.secretToken = stored.secretTokenEncrypted
-        ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
-        : '';
+      // DB-stored secret token only used when env var is not set
+      if (!this.secretToken) {
+        this.secretToken = stored.secretTokenEncrypted
+          ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
+          : '';
+      }
       this.credentialsSource = this.clientSecret ? 'database' : 'none';
       this.logWebhookSecretStatus();
       return;
@@ -75,7 +80,7 @@ export class ZoomService implements OnModuleInit {
     this.accountId = '';
     this.clientId = '';
     this.clientSecret = '';
-    this.secretToken = '';
+    // secretToken already set from env var at top of method
     this.credentialsSource = 'none';
     this.logWebhookSecretStatus();
   }
