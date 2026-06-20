@@ -41,237 +41,8 @@ import { cn } from "@/lib/utils";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
+import { ParentPortalLayout } from "@/components/parents/ParentPortalLayout";
 
-// --- Sidebar Component ---
-const ParentSidebar = ({
-  activeTab,
-  onTabChange,
-  isCollapsed,
-}: {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  isCollapsed: boolean;
-}) => {
-  const { translations } = useLanguage();
-
-  const menuItems = [
-    { label: translations.dashboard, icon: LayoutDashboard, tab: "dashboard" },
-    { label: translations.myChildren, icon: Users, tab: "children" },
-    { label: translations.quranProgress, icon: BookOpen, tab: "quran" },
-    { label: translations.attendance, icon: Calendar, tab: "attendance" },
-    { label: translations.homework, icon: ClipboardList, tab: "homework" },
-    { label: translations.examsResults, icon: FileText, tab: "exams" },
-    { label: translations.classSchedule, icon: Clock, tab: "schedule" },
-    { label: translations.recitationAudio, icon: Mic, tab: "recitations" },
-  ];
-
-  const bottomItems = [
-    { label: translations.messagesChat, icon: MessageSquare, tab: "messages" },
-    { label: translations.profileSettings, icon: Settings, tab: "settings" },
-    { label: "Logout", icon: LogOut, tab: "logout", className: "text-red-400 hover:bg-red-500/10" },
-  ];
-
-  const handleItemClick = (tab: string) => {
-    if (tab === "logout") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userRole");
-      window.location.href = "/login";
-    } else {
-      onTabChange(tab);
-    }
-  };
-
-  const toggleSidebar = () => {
-    const newValue = !isCollapsed;
-    setIsCollapsed(newValue);
-    localStorage.setItem("sidebarCollapsed", newValue.toString());
-  };
-
-  return (
-    <div
-      className={`${isCollapsed ? "w-20" : "w-72"} dark:bg-nejah-surface bg-card/80 backdrop-blur-xl dark:border-white/5 border-r border-slate-200 text-foreground flex flex-col h-screen fixed inset-y-0 left-0 shadow-2xl z-30 transition-all duration-300`}
-    >
-      {/* Brand Logo */}
-      <div className="p-6 pb-8 flex items-center justify-between shrink-0">
-        <div
-          className={`flex items-center gap-3 transition-all duration-300 overflow-hidden ${isCollapsed ? "w-0 opacity-0 px-0" : "w-auto opacity-100"}`}
-        >
-          <img src="/logo.png" alt="Nejah" className="h-10 w-auto rounded-xl flex-shrink-0" />
-          <div className="overflow-hidden">
-            <h1 className="font-extrabold text-lg leading-none tracking-tight text-foreground whitespace-nowrap">
-              Nejah Online
-            </h1>
-            <p className="text-[9px] text-nejah-electric font-bold tracking-[0.2em] mt-1 uppercase whitespace-nowrap">
-              Islamic Center
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Nav */}
-      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => {
-          const isActive = activeTab === item.tab;
-          return (
-            <button
-              key={item.tab}
-              onClick={() => handleItemClick(item.tab)}
-              className={cn(
-                "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 group relative",
-                isActive
-                  ? "bg-primary/15 text-foreground shadow-inner"
-                  : "text-foreground/50 hover:bg-white/5 hover:text-foreground",
-              )}
-            >
-              <item.icon
-                className={cn(
-                  "h-5 w-5 shrink-0",
-                  isActive
-                    ? "text-nejah-electric"
-                    : "text-foreground/30 group-hover:text-nejah-electric",
-                )}
-              />
-              <span
-                className={cn(
-                  "font-bold text-[13px] tracking-wide transition-all duration-300",
-                  isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto",
-                )}
-              >
-                {item.label}
-              </span>
-              {isActive && <div className="absolute left-0 w-1.5 h-6 bg-primary rounded-r-full" />}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Bottom Nav */}
-      <div className="p-4 mt-auto space-y-1 bg-background/80 shrink-0">
-        {bottomItems.map((item) => {
-          const isActive = activeTab === item.tab;
-          return (
-            <button
-              key={item.tab}
-              onClick={() => handleItemClick(item.tab)}
-              className={cn(
-                "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300",
-                item.className ||
-                  (isActive
-                    ? "bg-white/10 text-foreground"
-                    : "text-foreground/50 hover:bg-white/5 hover:text-foreground"),
-              )}
-            >
-              <item.icon className="h-5 w-5 opacity-50 shrink-0" />
-              <span
-                className={cn(
-                  "font-bold text-[13px] tracking-wide transition-all duration-300",
-                  isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto",
-                )}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// --- Topbar Component ---
-const Topbar = ({
-  parent,
-  onTabChange,
-  isCollapsed,
-  setIsCollapsed,
-}: {
-  parent: any;
-  onTabChange: (tab: string) => void;
-  isCollapsed: boolean;
-  setIsCollapsed: (val: boolean) => void;
-}) => {
-  const { lang, setLang, translations } = useLanguage();
-
-  return (
-    <div className="h-24 flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
-      <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="lg:hidden p-2 rounded-xl hover:bg-white/10 transition-colors text-foreground/50"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronRight className="h-5 w-5 rotate-180" />
-          )}
-        </button>
-        <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
-
-        <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search curriculum, teachers..."
-              className="pl-12 bg-transparent border-none w-80 h-10 text-xs focus-visible:ring-0"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-8">
-        {/* Language Switcher */}
-        <div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-2xl border border-border">
-          {["English", "Amharic", "Oromo"].map((l) => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              className={cn(
-                "text-[10px] font-bold uppercase tracking-widest transition-all px-2 py-0.5",
-                lang === l
-                  ? "text-nejah-sapphire underline underline-offset-4 decoration-2"
-                  : "text-muted-foreground hover:text-muted-foreground",
-              )}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
-          </button>
-          <button
-            onClick={() => onTabChange("messages")}
-            className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm"
-          >
-            <MessageSquare className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="w-px h-10 bg-muted" />
-
-        <div
-          onClick={() => onTabChange("settings")}
-          className="flex items-center gap-4 group cursor-pointer"
-        >
-          <div className="text-right">
-            <p className="text-sm font-black text-nejah-sapphire leading-none group-hover:text-nejah-electric transition-colors">
-              {parent?.name || "Ahmed Al-Mansour"}
-            </p>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">
-              Primary Guardian
-            </p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire">
-            {parent?.name?.charAt(0) || "P"}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- Stat Card Component ---
 const StatCard = ({ icon: Icon, value, label, subValue, trend, color, onClick }: any) => (
@@ -342,7 +113,75 @@ const StatCard = ({ icon: Icon, value, label, subValue, trend, color, onClick }:
   </div>
 );
 
-// --- Child Card Component ---
+// --- Topbar Component ---
+const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: string) => void }) => {
+  const { lang, setLang, translations } = useLanguage();
+  
+  return (
+    <div className="h-24 hidden lg:flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
+      <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
+          <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
+          
+          <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
+            <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search curriculum, teachers..." 
+                  className="pl-12 bg-transparent border-none w-80 h-10 text-xs focus-visible:ring-0"
+                />
+            </div>
+          </div>
+      </div>
+
+      <div className="flex items-center gap-8">
+        {/* Language Switcher */}
+        <div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-2xl border border-border">
+            {['English', 'Amharic', 'Oromo'].map((l) => (
+                <button 
+                    key={l}
+                    onClick={() => setLang(l as any)}
+                    className={cn(
+                        "text-[10px] font-bold uppercase tracking-widest transition-all px-2 py-0.5",
+                        lang === l ? "text-nejah-sapphire underline underline-offset-4 decoration-2" : "text-muted-foreground hover:text-muted-foreground"
+                    )}
+                >
+                    {l}
+                </button>
+            ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+            <button className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
+            </button>
+            <button 
+              onClick={() => onTabChange('messages')}
+              className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm"
+            >
+                <MessageSquare className="h-5 w-5" />
+            </button>
+        </div>
+
+        <div className="w-px h-10 bg-muted" />
+
+        <div 
+          onClick={() => onTabChange('settings')}
+          className="flex items-center gap-4 group cursor-pointer"
+        >
+          <div className="text-right">
+             <p className="text-sm font-black text-nejah-sapphire leading-none group-hover:text-nejah-electric transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
+             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Primary Guardian</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire">
+            {parent?.name?.charAt(0) || 'P'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
   <div className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm hover:shadow-xl transition-all group overflow-hidden relative flex flex-col h-full">
     <div
@@ -443,10 +282,16 @@ const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
 );
 
 // --- Main Page ---
-function ParentDashboard() {
+function ParentDashboard({ initialTab }: { initialTab?: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(initialTab || "dashboard");
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -731,22 +576,15 @@ function ParentDashboard() {
     data?.children?.find((c: any) => c.id === selectedChildId) || data?.children?.[0];
 
   return (
-    <div className="flex min-h-screen bg-[#f8f9fb] text-foreground font-sans selection:bg-primary/15">
-      {/* Sidebar navigation */}
-      <ParentSidebar activeTab={activeTab} onTabChange={setActiveTab} isCollapsed={isCollapsed} />
+    <ParentPortalLayout
+      activePath="/parent_dashboard"
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      parent={data?.parent}
+    >
+      <Topbar parent={data?.parent} onTabChange={setActiveTab} />
 
-      <div
-        className={`flex-1 flex flex-col ${isCollapsed ? "ml-20" : "ml-72"} transition-all duration-300`}
-      >
-        {/* Topbar */}
-        <Topbar
-          parent={data?.parent}
-          onTabChange={setActiveTab}
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
-
-        <main className="p-12 space-y-12 w-full">
+      <main className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 w-full">
           {/* ================================================================ */}
           {/* TAB: DASHBOARD OVERVIEW */}
           {/* ================================================================ */}
@@ -2128,13 +1966,17 @@ text-nejah-electric"
             </div>
           )}
         </main>
-      </div>
-    </div>
+    </ParentPortalLayout>
   );
 }
 
 export const Route = createFileRoute("/parent_dashboard")({
   component: ParentDashboardRoute,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      tab: (search.tab as string) || 'dashboard',
+    };
+  },
   beforeLoad: () => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
@@ -2151,9 +1993,10 @@ export const Route = createFileRoute("/parent_dashboard")({
 
 // Wrap component with LanguageProvider for translation support
 function ParentDashboardRoute() {
+  const search = Route.useSearch();
   return (
     <LanguageProvider>
-      <ParentDashboard />
+      <ParentDashboard initialTab={search.tab} />
     </LanguageProvider>
   );
 }

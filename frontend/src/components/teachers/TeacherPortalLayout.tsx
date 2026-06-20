@@ -3,40 +3,38 @@ import { useNavigate } from '@tanstack/react-router';
 import {
   LayoutDashboard,
   Users,
-  TrendingUp,
-  ClipboardList,
-  FolderOpen,
-  MessageSquare,
-  Bell,
+  Video,
   Settings,
-  LogOut,
+  Calendar,
+  Bell,
   User,
   ChevronLeft,
   ChevronRight,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { studentPaths } from '@/lib/student-portal';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const menuItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: studentPaths.dashboard },
-  { label: 'My Classes', icon: Users, path: studentPaths.classes },
-  { label: 'My Progress', icon: TrendingUp, path: studentPaths.progress },
-  { label: 'Homework', icon: ClipboardList, path: studentPaths.homework },
-  { label: 'Resources', icon: FolderOpen, path: studentPaths.resources },
-  { label: 'Messages', icon: MessageSquare, path: studentPaths.messages },
-  { label: 'Notifications', icon: Bell, path: studentPaths.notifications },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
+  { label: 'Students', icon: Users, path: '/teacher_students' },
+  { label: 'Zoom Sessions', icon: Video, path: '/teacher_zoom' },
+  { label: 'Zoom Settings', icon: Settings, path: '/zoom-settings' },
+  { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
+  { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
+  { label: 'Profile', icon: User, path: '/teacher_profile' },
 ];
 
 type Props = {
   activePath: string;
-  student?: {
+  teacher?: {
     name?: string;
     fullName?: string;
-    level?: string;
+    title?: string;
     avatarUrl?: string | null;
+    avatar?: string | null;
     initials?: string;
   };
   unreadNotifications?: number;
@@ -45,11 +43,11 @@ type Props = {
   children: ReactNode;
 };
 
-const SIDEBAR_KEY = 'nejah_sidebar_collapsed';
+const SIDEBAR_KEY = 'nejah_teacher_sidebar_collapsed';
 
-export function StudentPortalLayout({
+export function TeacherPortalLayout({
   activePath,
-  student,
+  teacher,
   unreadNotifications = 0,
   onOpenSettings,
   onOpenProfile,
@@ -68,7 +66,11 @@ export function StudentPortalLayout({
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
-      try { localStorage.setItem(SIDEBAR_KEY, String(next)); } catch { /* noop */ }
+      try {
+        localStorage.setItem(SIDEBAR_KEY, String(next));
+      } catch {
+        /* noop */
+      }
       return next;
     });
   }, []);
@@ -85,7 +87,9 @@ export function StudentPortalLayout({
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileOpen]);
 
   const handleLogout = () => {
@@ -97,7 +101,18 @@ export function StudentPortalLayout({
     window.location.href = '/login';
   };
 
-  const displayName = student?.fullName || student?.name || 'Student';
+  const displayName = teacher?.fullName || teacher?.name || 'Teacher';
+  const displayTitle = teacher?.title || 'Instructor';
+  const avatarUrl = teacher?.avatarUrl || teacher?.avatar;
+  const initials = teacher?.initials || displayName.charAt(0);
+
+  const handleProfileClick = () => {
+    if (onOpenProfile) {
+      onOpenProfile();
+    } else {
+      navigate({ to: '/teacher_profile' });
+    }
+  };
 
   const sidebarContent = (isMobile: boolean) => (
     <>
@@ -109,7 +124,7 @@ export function StudentPortalLayout({
         {(!collapsed || isMobile) && (
           <div className="min-w-0">
             <h1 className="font-extrabold text-foreground tracking-tight leading-none text-lg">Nejah</h1>
-            <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">Student Portal</p>
+            <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">Teacher Suite</p>
           </div>
         )}
       </div>
@@ -136,9 +151,9 @@ export function StudentPortalLayout({
                   )}
                 />
                 {(!collapsed || isMobile) && (
-                  <span className="flex-1 text-left truncate">{item.label}</span>
+                  <span className="flex-1 text-left truncate font-semibold">{item.label}</span>
                 )}
-                {item.path === studentPaths.notifications && unreadNotifications > 0 && (
+                {item.path === '/teacher_notifications' && unreadNotifications > 0 && (
                   <span className={cn(
                     'bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0',
                     collapsed && !isMobile ? 'absolute -top-1 -right-1 w-5 h-5' : 'px-1.5 py-0.5 min-w-[20px]',
@@ -151,7 +166,7 @@ export function StudentPortalLayout({
               {collapsed && !isMobile && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
                   {item.label}
-                  {item.path === studentPaths.notifications && unreadNotifications > 0 && (
+                  {item.path === '/teacher_notifications' && unreadNotifications > 0 && (
                     <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                       {unreadNotifications}
                     </span>
@@ -176,7 +191,7 @@ export function StudentPortalLayout({
               )}
             >
               <Settings className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && <span>Settings</span>}
+              {(!collapsed || isMobile) && <span className="font-semibold">Settings</span>}
             </button>
             {collapsed && !isMobile && (
               <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
@@ -195,7 +210,7 @@ export function StudentPortalLayout({
             )}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {(!collapsed || isMobile) && <span>Logout</span>}
+            {(!collapsed || isMobile) && <span className="font-semibold">Logout</span>}
           </button>
           {collapsed && !isMobile && (
             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
@@ -209,7 +224,7 @@ export function StudentPortalLayout({
       <div className={cn(collapsed && !isMobile ? 'px-2 pb-4' : 'px-3 pb-4')}>
         <button
           type="button"
-          onClick={onOpenProfile}
+          onClick={handleProfileClick}
           className={cn(
             'w-full rounded-2xl border border-border/60 dark:border-nejah-border-blue/50 shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left',
             'bg-gradient-to-br from-card to-muted/30 dark:from-nejah-surface dark:to-nejah-surface/50',
@@ -217,16 +232,16 @@ export function StudentPortalLayout({
           )}
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden shrink-0">
-            {student?.avatarUrl ? (
-              <img src={student.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
             ) : (
-              <span className="font-bold text-sm text-nejah-electric">{student?.initials || 'S'}</span>
+              <span className="font-bold text-sm text-nejah-electric">{initials}</span>
             )}
           </div>
           {(!collapsed || isMobile) && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-extrabold text-foreground leading-tight truncate">{displayName}</p>
-              <p className="text-[10px] text-muted-foreground font-medium truncate">{student?.level || 'Student'} Program</p>
+              <p className="text-[10px] text-muted-foreground font-medium truncate">{displayTitle}</p>
             </div>
           )}
           {(!collapsed || isMobile) && (
@@ -242,7 +257,7 @@ export function StudentPortalLayout({
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col h-screen shrink-0 sidebar-transition overflow-x-hidden',
+          'hidden lg:flex flex-col h-screen shrink-0 sidebar-transition',
           'bg-card/90 dark:bg-nejah-surface/95 backdrop-blur-xl',
           'border-r border-border/50 dark:border-nejah-border-blue/40',
           collapsed ? 'w-20' : 'w-64',
@@ -284,7 +299,7 @@ export function StudentPortalLayout({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate({ to: studentPaths.notifications })}
+            onClick={() => navigate({ to: '/teacher_notifications' })}
             className="relative p-2 rounded-xl hover:bg-primary/10 transition-colors"
           >
             <Bell className="h-5 w-5 text-muted-foreground" />
@@ -296,13 +311,13 @@ export function StudentPortalLayout({
           </button>
           <button
             type="button"
-            onClick={onOpenProfile}
+            onClick={handleProfileClick}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden"
           >
-            {student?.avatarUrl ? (
-              <img src={student.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
             ) : (
-              <span className="font-bold text-xs text-nejah-electric">{student?.initials || 'S'}</span>
+              <span className="font-bold text-xs text-nejah-electric">{initials}</span>
             )}
           </button>
         </div>
@@ -325,7 +340,7 @@ export function StudentPortalLayout({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 flex flex-col overflow-x-hidden overflow-y-auto bg-white dark:bg-nejah-surface shadow-2xl border-r border-border dark:border-nejah-border-blue"
+              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 flex flex-col bg-card dark:bg-nejah-surface shadow-2xl"
             >
               <div className="flex items-center justify-end px-4 pt-4">
                 <button
@@ -334,7 +349,7 @@ export function StudentPortalLayout({
                   className="p-2 rounded-xl hover:bg-primary/10 transition-colors"
                   aria-label="Close menu"
                 >
-                  <X className="h-5 w-5 text-foreground" />
+                  <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
               {sidebarContent(true)}
@@ -344,14 +359,14 @@ export function StudentPortalLayout({
       </AnimatePresence>
 
       {/* ─── Main Content ─── */}
-      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16">
+      <div className="flex-1 flex flex-col overflow-y-auto min-w-0 lg:pt-0 pt-16">
         {children}
       </div>
     </div>
   );
 }
 
-export function StudentPageLoader() {
+export function TeacherPageLoader() {
   return (
     <div className="flex h-screen items-center justify-center dark:bg-background bg-gray-50/80">
       <div className="flex flex-col items-center gap-4">

@@ -241,4 +241,128 @@
   .admin-page {
     @apply space-y-6 pb-12;
   }
+
+  /* ── Student Portal Redesign ── */
+
+  .sidebar-transition {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card {
+    @apply backdrop-blur-xl rounded-2xl;
+    @apply bg-card/80 border border-border/60;
+    @apply dark:bg-nejah-surface/70 dark:border-nejah-border-blue/60;
+    box-shadow: 0 4px 24px -6px rgba(15, 98, 172, 0.08),
+                0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px -8px rgba(15, 98, 172, 0.14),
+                0 4px 12px rgba(0,0,0,0.06);
+    border-color: rgba(0, 145, 255, 0.2);
+  }
+
+  .glass-card-static {
+    @apply backdrop-blur-xl rounded-2xl;
+    @apply bg-card/80 border border-border/60;
+    @apply dark:bg-nejah-surface/70 dark:border-nejah-border-blue/60;
+    box-shadow: 0 4px 24px -6px rgba(15, 98, 172, 0.08),
+                0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .gradient-accent-bar {
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(90deg, #0091FF 0%, #0F62AC 50%, #0B355B 100%);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg,
+      rgba(15, 98, 172, 0.06) 0%,
+      rgba(0, 145, 255, 0.04) 40%,
+      rgba(11, 53, 91, 0.03) 100%
+    );
+  }
+
+  .dark .hero-gradient {
+    background: linear-gradient(135deg,
+      rgba(0, 145, 255, 0.08) 0%,
+      rgba(15, 98, 172, 0.06) 40%,
+      rgba(11, 53, 91, 0.12) 100%
+    );
+  }
+
+  .mobile-overlay {
+    background: rgba(6, 21, 36, 0.55);
+    backdrop-filter: blur(4px);
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl p-4 text-center;
+    @apply bg-gradient-to-br from-primary/5 to-primary/[0.02];
+    @apply dark:from-primary/10 dark:to-primary/[0.03];
+    @apply border border-primary/10 dark:border-primary/15;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px -4px rgba(0, 145, 255, 0.12);
+  }
+
+  .progress-gradient {
+    background: linear-gradient(90deg, #0091FF, #0F62AC);
+    border-radius: 9999px;
+  }
+
+  .live-pulse-dot {
+    @apply relative inline-block w-2.5 h-2.5 rounded-full bg-red-500;
+  }
+
+  .live-pulse-dot::after {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-red-400 animate-ping;
+  }
+
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 rounded-xl transition-all duration-200;
+    @apply text-sm font-semibold;
+  }
+
+  .sidebar-nav-item-active {
+    @apply bg-gradient-to-r from-primary/15 via-primary/8 to-transparent;
+    @apply text-foreground;
+    @apply border-l-[3px] border-nejah-electric;
+  }
+
+  .sidebar-nav-item-inactive {
+    @apply text-muted-foreground;
+    @apply hover:bg-primary/8 hover:text-foreground;
+  }
+
+  /* Ensure the portal sidebar has clearly visible background vs page */
+  aside.sidebar-transition,
+  aside[class*="bg-card"] {
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  }
+  .dark aside.sidebar-transition,
+  .dark aside[class*="bg-nejah-surface"] {
+    box-shadow: 2px 0 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .upcoming-class-gradient {
+    background: linear-gradient(135deg, #0B355B 0%, #0F62AC 60%, #0091FF 100%);
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out both;
+  }
 }
