@@ -483,25 +483,26 @@ function TeacherDashboard() {
 
       <main className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12">
           {/* Header */}
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-[0.2em] mb-2">
                 Assalamu Alaikum, Teacher
               </p>
-              <h2 className="text-4xl font-extrabold text-foreground font-serif">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground font-serif">
                 Dashboard Overview
               </h2>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto">
               <Button
                 variant="outline"
-                className="h-12 rounded-xl px-6 border-border dark:border-white/10 font-bold text-muted-foreground dark:text-foreground gap-2"
+                onClick={() => navigate({ to: "/teacher_schedule" })}
+                className="h-12 flex-1 sm:flex-none rounded-xl px-6 border-border dark:border-white/10 font-bold text-muted-foreground dark:text-foreground gap-2"
               >
                 View Schedule
               </Button>
               <Button
                 onClick={openCreate}
-                className="h-12 rounded-xl px-6 bg-nejah-surface hover:bg-nejah-sapphire font-bold gap-2 text-white shadow-xl"
+                className="h-12 flex-1 sm:flex-none rounded-xl px-6 bg-nejah-surface hover:bg-nejah-sapphire font-bold gap-2 text-white shadow-xl"
               >
                 <Plus className="h-5 w-5" /> New Lesson Note
               </Button>
