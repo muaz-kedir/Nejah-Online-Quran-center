@@ -43,7 +43,7 @@ export class ZoomService implements OnModuleInit {
     const envAccountId = this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() || '';
     const envClientId = this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() || '';
     const envClientSecret = this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() || '';
-    const envSecretToken = this.configService.get<string>('ZOOM_SECRET_TOKEN')?.trim() || '';
+    const envSecretToken = this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() || '';
 
     if (envAccountId && envClientId && envClientSecret) {
       this.accountId = envAccountId;
@@ -51,6 +51,7 @@ export class ZoomService implements OnModuleInit {
       this.clientSecret = envClientSecret;
       this.secretToken = envSecretToken;
       this.credentialsSource = 'env';
+      this.logWebhookSecretStatus();
       return;
     }
 
@@ -67,6 +68,7 @@ export class ZoomService implements OnModuleInit {
         ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
         : '';
       this.credentialsSource = this.clientSecret ? 'database' : 'none';
+      this.logWebhookSecretStatus();
       return;
     }
 
@@ -75,6 +77,7 @@ export class ZoomService implements OnModuleInit {
     this.clientSecret = '';
     this.secretToken = '';
     this.credentialsSource = 'none';
+    this.logWebhookSecretStatus();
   }
 
   isPlatformConfigured(): boolean {
@@ -144,6 +147,11 @@ export class ZoomService implements OnModuleInit {
     }
 
     return { configured: true, source: 'database' };
+  }
+
+  /** Webhook secret token — used to verify incoming Zoom webhook signatures. */
+  getWebhookSecretToken(): string {
+    return this.secretToken;
   }
 
   /** OAuth Client ID — also used as Meeting SDK appKey for embedded classroom JWTs. */
@@ -373,13 +381,24 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
+  private logWebhookSecretStatus(): void {
+    if (this.secretToken) {
+      this.logger.log('✓ Zoom webhook secret configured');
+    } else {
+      this.logger.warn(
+        '✗ Zoom webhook secret missing. Set ZOOM_WEBHOOK_SECRET_TOKEN environment variable ' +
+        'for webhook signature verification. Without it, webhooks will not be verified.',
+      );
+    }
+  }
+
   verifyWebhookSignature(
     body: Record<string, unknown>,
     signatureHeader: string,
     timestampHeader?: string,
   ): boolean {
     if (!this.secretToken) {
-      this.logger.warn('ZOOM_SECRET_TOKEN not configured, skipping webhook verification');
+      this.logger.warn('ZOOM_WEBHOOK_SECRET_TOKEN not configured, skipping webhook verification');
       return true;
     }
 
