@@ -472,8 +472,8 @@ export class ZoomService implements OnModuleInit {
     return `${header}.${body}.${signature}`;
   }
 
-  async getUserZakToken(zoomUserId: string): Promise<string | null> {
-    const token = await this.getAccessToken();
+  async getUserZakToken(zoomUserId: string, accessToken?: string): Promise<string | null> {
+    const token = accessToken || await this.getAccessToken();
     try {
       const response = await firstValueFrom(
         this.httpService.get(
@@ -602,19 +602,39 @@ export class ZoomService implements OnModuleInit {
     return this.saveTeacherIntegration(teacherId, identifier, email);
   }
 
+  async getTeacherAccessToken(teacherId: string): Promise<string> {
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId, connectionStatus: 'connected' },
+    });
+    if (!integration?.accessToken) {
+      throw new HttpException(
+        'No Zoom access token available. Please reconnect your Zoom account.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (integration.tokenExpiresAt && new Date() >= integration.tokenExpiresAt) {
+      const refreshed = await this.refreshTeacherOAuthToken(teacherId);
+      return refreshed.accessToken;
+    }
+
+    return this.encryptionService.decrypt(integration.accessToken);
+  }
+
   async createMeeting(
     teacherZoomUserId: string,
     topic: string,
     startTime: Date,
     durationMinutes: number,
     settings?: Record<string, unknown>,
+    accessToken?: string,
   ): Promise<{
     zoomMeetingId: string;
     zoomJoinUrl: string;
     zoomStartUrl: string;
     zoomPassword: string;
   }> {
-    const token = await this.getAccessToken();
+    const token = accessToken || await this.getAccessToken();
     const defaultSettings = {
       host_video: true,
       participant_video: true,
@@ -677,8 +697,8 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
-  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>): Promise<void> {
-    const token = await this.getAccessToken();
+  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>, accessToken?: string): Promise<void> {
+    const token = accessToken || await this.getAccessToken();
 
     const payload: Record<string, unknown> = {};
     if (updateData.topic) payload.topic = updateData.topic;
@@ -710,8 +730,8 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
-  async deleteMeeting(zoomMeetingId: string): Promise<void> {
-    const token = await this.getAccessToken();
+  async deleteMeeting(zoomMeetingId: string, accessToken?: string): Promise<void> {
+    const token = accessToken || await this.getAccessToken();
 
     try {
       await firstValueFrom(
