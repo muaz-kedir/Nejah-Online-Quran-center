@@ -91,11 +91,14 @@ export class LiveSessionService {
       (endTime.getTime() - dto.scheduledStart.getTime()) / 60000,
     );
 
+    const teacherToken = await this.zoomService.getTeacherAccessToken(dto.teacherId);
     const meeting = await this.zoomService.createMeeting(
-      await this.resolveTeacherZoomHost(integration),
+      integration.zoomUserId,
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
+      undefined,
+      teacherToken,
     );
 
     session.zoomMeetingId = meeting.zoomMeetingId;
@@ -437,7 +440,8 @@ export class LiveSessionService {
         where: { teacherId: options.teacherId, connectionStatus: 'connected' },
       });
       if (integration?.zoomUserId) {
-        zak = await this.zoomService.getUserZakToken(integration.zoomUserId);
+        const teacherToken = await this.zoomService.getTeacherAccessToken(options.teacherId);
+        zak = await this.zoomService.getUserZakToken(integration.zoomUserId, teacherToken);
       }
     }
 
@@ -631,11 +635,14 @@ export class LiveSessionService {
       (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
     );
 
+    const teacherToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
     const meeting = await this.zoomService.createMeeting(
-      await this.resolveTeacherZoomHost(integration, session),
+      integration.zoomUserId,
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
+      undefined,
+      teacherToken,
     );
 
     session.zoomMeetingId = meeting.zoomMeetingId;
