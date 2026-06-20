@@ -6,6 +6,7 @@ import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
 import { Teacher } from '../teachers/entities/teacher.entity';
@@ -81,6 +82,7 @@ export class ZoomSettingsController {
   }
 
   @Get('oauth/callback')
+  @Public()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   async oauthCallback(
     @Query('code') code: string,
