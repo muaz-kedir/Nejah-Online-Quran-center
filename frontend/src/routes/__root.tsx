@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { AppProvider } from '@/context/AppContext';
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -151,8 +152,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-right" />
+      <AppProvider>
+        <Outlet />
+        <Toaster richColors position="top-right" />
+      </AppProvider>
     </QueryClientProvider>
   );
 }
