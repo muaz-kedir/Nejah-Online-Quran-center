@@ -40,17 +40,20 @@ export class ZoomService implements OnModuleInit {
   async reloadPlatformCredentials(): Promise<void> {
     this.cachedToken = null;
 
+    // Webhook secret is ALWAYS loaded independently from OAuth credentials
+    this.secretToken =
+      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() || '';
+
     const envAccountId = this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() || '';
     const envClientId = this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() || '';
     const envClientSecret = this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() || '';
-    const envSecretToken = this.configService.get<string>('ZOOM_SECRET_TOKEN')?.trim() || '';
 
     if (envAccountId && envClientId && envClientSecret) {
       this.accountId = envAccountId;
       this.clientId = envClientId;
       this.clientSecret = envClientSecret;
-      this.secretToken = envSecretToken;
       this.credentialsSource = 'env';
+      this.logWebhookSecretStatus();
       return;
     }
 
@@ -63,18 +66,23 @@ export class ZoomService implements OnModuleInit {
       this.clientId = stored.clientId.trim();
       this.clientSecret =
         this.encryptionService.decrypt(stored.clientSecretEncrypted)?.trim() || '';
-      this.secretToken = stored.secretTokenEncrypted
-        ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
-        : '';
+      // DB-stored secret token only used when env var is not set
+      if (!this.secretToken) {
+        this.secretToken = stored.secretTokenEncrypted
+          ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
+          : '';
+      }
       this.credentialsSource = this.clientSecret ? 'database' : 'none';
+      this.logWebhookSecretStatus();
       return;
     }
 
     this.accountId = '';
     this.clientId = '';
     this.clientSecret = '';
-    this.secretToken = '';
+    // secretToken already set from env var at top of method
     this.credentialsSource = 'none';
+    this.logWebhookSecretStatus();
   }
 
   isPlatformConfigured(): boolean {
@@ -144,6 +152,11 @@ export class ZoomService implements OnModuleInit {
     }
 
     return { configured: true, source: 'database' };
+  }
+
+  /** Webhook secret token — used to verify incoming Zoom webhook signatures. */
+  getWebhookSecretToken(): string {
+    return this.secretToken;
   }
 
   /** OAuth Client ID — also used as Meeting SDK appKey for embedded classroom JWTs. */
@@ -401,13 +414,24 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
+  private logWebhookSecretStatus(): void {
+    if (this.secretToken) {
+      this.logger.log('✓ Zoom webhook secret configured');
+    } else {
+      this.logger.warn(
+        '✗ Zoom webhook secret missing. Set ZOOM_WEBHOOK_SECRET_TOKEN environment variable ' +
+        'for webhook signature verification. Without it, webhooks will not be verified.',
+      );
+    }
+  }
+
   verifyWebhookSignature(
     body: Record<string, unknown>,
     signatureHeader: string,
     timestampHeader?: string,
   ): boolean {
     if (!this.secretToken) {
-      this.logger.warn('ZOOM_SECRET_TOKEN not configured, skipping webhook verification');
+      this.logger.warn('ZOOM_WEBHOOK_SECRET_TOKEN not configured, skipping webhook verification');
       return true;
     }
 
@@ -476,8 +500,8 @@ export class ZoomService implements OnModuleInit {
     return `${header}.${body}.${signature}`;
   }
 
-  async getUserZakToken(zoomUserId: string): Promise<string | null> {
-    const token = await this.getAccessToken();
+  async getUserZakToken(zoomUserId: string, accessToken?: string): Promise<string | null> {
+    const token = accessToken || await this.getAccessToken();
     try {
       const response = await firstValueFrom(
         this.httpService.get(
@@ -606,19 +630,39 @@ export class ZoomService implements OnModuleInit {
     return this.saveTeacherIntegration(teacherId, identifier, email);
   }
 
+  async getTeacherAccessToken(teacherId: string): Promise<string> {
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId, connectionStatus: 'connected' },
+    });
+    if (!integration?.accessToken) {
+      throw new HttpException(
+        'No Zoom access token available. Please reconnect your Zoom account.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (integration.tokenExpiresAt && new Date() >= integration.tokenExpiresAt) {
+      const refreshed = await this.refreshTeacherOAuthToken(teacherId);
+      return refreshed.accessToken;
+    }
+
+    return this.encryptionService.decrypt(integration.accessToken);
+  }
+
   async createMeeting(
     teacherZoomUserId: string,
     topic: string,
     startTime: Date,
     durationMinutes: number,
     settings?: Record<string, unknown>,
+    accessToken?: string,
   ): Promise<{
     zoomMeetingId: string;
     zoomJoinUrl: string;
     zoomStartUrl: string;
     zoomPassword: string;
   }> {
-    const token = await this.getAccessToken();
+    const token = accessToken || await this.getAccessToken();
     const defaultSettings = {
       host_video: true,
       participant_video: true,
@@ -681,8 +725,8 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
-  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>): Promise<void> {
-    const token = await this.getAccessToken();
+  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>, accessToken?: string): Promise<void> {
+    const token = accessToken || await this.getAccessToken();
 
     const payload: Record<string, unknown> = {};
     if (updateData.topic) payload.topic = updateData.topic;
@@ -714,8 +758,8 @@ export class ZoomService implements OnModuleInit {
     }
   }
 
-  async deleteMeeting(zoomMeetingId: string): Promise<void> {
-    const token = await this.getAccessToken();
+  async deleteMeeting(zoomMeetingId: string, accessToken?: string): Promise<void> {
+    const token = accessToken || await this.getAccessToken();
 
     try {
       await firstValueFrom(

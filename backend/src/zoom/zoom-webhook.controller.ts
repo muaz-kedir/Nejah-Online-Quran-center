@@ -22,29 +22,38 @@ export class ZoomWebhookController {
       headers['x-zm-signature'] || headers['authorization'] || '';
     const timestamp = headers['x-zm-request-timestamp'];
 
+    const event = body.event;
+    const payload = body.payload;
+
+    // endpoint.url_validation must run BEFORE signature check because Zoom
+    // sends this without a signature header during initial verification.
+    if (event === 'endpoint.url_validation') {
+      const plainToken = (payload as any)?.plainToken;
+      if (plainToken) {
+        const secretToken = this.zoomService.getWebhookSecretToken();
+        if (!secretToken) {
+          this.logger.warn('endpoint.url_validation received but ZOOM_WEBHOOK_SECRET_TOKEN is not set');
+          return { status: false, message: 'Webhook secret not configured' };
+        }
+        const hashForVerify = crypto
+          .createHmac('sha256', secretToken)
+          .update(plainToken)
+          .digest('hex');
+        this.logger.log('endpoint.url_validation — responding with encryptedToken');
+        return { plainToken, encryptedToken: hashForVerify };
+      }
+    }
+
     const isValid = this.zoomService.verifyWebhookSignature(
       body as unknown as Record<string, unknown>,
       signature,
       timestamp,
     );
     if (!isValid) {
-      this.logger.warn('Invalid webhook signature received');
+      this.logger.warn({ event, signaturePresent: !!signature, timestampPresent: !!timestamp }, 'Webhook signature verification failed');
       return { status: false, message: 'Invalid signature' };
     }
-
-    const event = body.event;
-    const payload = body.payload;
-
-    if (event === 'endpoint.url_validation') {
-      const plainToken = (payload as any)?.plainToken;
-      if (plainToken) {
-        const hashForVerify = crypto
-          .createHmac('sha256', (this.zoomService as any).secretToken || '')
-          .update(plainToken)
-          .digest('hex');
-        return { plainToken, encryptedToken: hashForVerify };
-      }
-    }
+    this.logger.log({ event }, 'Webhook signature verified');
 
     const eventId = (payload as any)?.object?.id
       ? `${event}_${(payload as any).object.id}_${(payload as any).event_ts || Date.now()}`
