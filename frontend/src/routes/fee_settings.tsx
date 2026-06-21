@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Plus, Pencil, Trash2, DollarSign, RefreshCw } from 'lucide-react';
 
 const API = API_BASE;
 
@@ -29,12 +30,19 @@ function FeeSettingsPage() {
   const [fees, setFees] = useState<FeeConfig[]>([]);
   const [goals, setGoals] = useState<LearningGoal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<FeeConfig | null>(null);
   const [form, setForm] = useState({ learningGoalId: '', country: '', amount: '', currency: 'ETB' });
 
   const token = () => localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData();
+    setIsRefreshing(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -98,7 +106,14 @@ function FeeSettingsPage() {
 
   return (
     <DashboardLayout>
-      <PageHeader title="Fee Settings" description="Configure monthly fees per learning goal and country" />
+      <PageHeader title="Fee Settings" description="Configure monthly fees per learning goal and country"
+        actions={
+          <Button onClick={handleRefresh} variant="outline" className="h-10 gap-2 rounded-xl px-4" disabled={isRefreshing}>
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        }
+      />
 
       <GlassPanel>
         <div className="flex justify-between items-center mb-6">

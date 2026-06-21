@@ -1,5 +1,5 @@
 import { API_BASE } from "@/lib/api";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
@@ -16,8 +16,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Search, BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History, Eye,
+  Search, BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History, Eye, RefreshCw,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { SurahSelect } from '@/components/progress/SurahSelect';
@@ -205,6 +206,14 @@ function ProgressPage() {
     }
   };
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchAll();
+    setIsRefreshing(false);
+  }, []);
+
   const filtered = useMemo(() =>
     students.filter((s: any) =>
       s.fullName?.toLowerCase().includes(search.toLowerCase())
@@ -225,9 +234,15 @@ function ProgressPage() {
   return (
     <DashboardLayout>
       <Breadcrumbs />
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Quran Progress</h1>
-        <p className="text-muted-foreground mt-1">Track student Quran memorization and progress</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Quran Progress</h1>
+          <p className="text-muted-foreground mt-1">Track student Quran memorization and progress</p>
+        </div>
+        <Button onClick={handleRefresh} variant="outline" className="h-10 gap-2 rounded-xl px-4" disabled={isRefreshing}>
+          <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
       <div className="relative mb-6 max-w-md">

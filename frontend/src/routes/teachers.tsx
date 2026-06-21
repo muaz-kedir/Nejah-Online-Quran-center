@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  RefreshCw,
   BookOpen,
   Calendar,
   Sparkles,
@@ -139,6 +140,7 @@ function TeachersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
   
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -153,13 +155,14 @@ function TeachersPage() {
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
   const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async (pageOverride?: number) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      let url = apiUrl(`/teachers?page=${meta.page}&limit=${meta.limit}`);
-      if (search) url += `&search=${search}`;
-      if (status !== 'all') url += `&status=${status}`;
+      const page = pageOverride ?? meta.page;
+      let url = apiUrl(`/teachers?page=${page}&limit=${meta.limit}`);
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (status !== 'all') url += `&status=${encodeURIComponent(status)}`;
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -176,10 +179,11 @@ function TeachersPage() {
       toast.error('Failed to fetch faculty directory');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [meta.page, meta.limit, search, status]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(apiUrl(`/teachers/stats`), {
@@ -197,26 +201,32 @@ function TeachersPage() {
     } catch (error) {
       console.error('Failed to fetch stats', error);
     }
-  };
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchTeachers();
+    fetchStats();
+  }, [fetchTeachers, fetchStats]);
 
   useEffect(() => {
     fetchTeachers();
-  }, [meta.page, status]);
+  }, [fetchTeachers]);
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [fetchStats]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setMeta({ ...meta, page: 1 });
-    fetchTeachers();
+    setMeta(prev => ({ ...prev, page: 1 }));
+    fetchTeachers(1);
   };
 
   const resetFilters = () => {
     setSearch('');
     setStatus('all');
-    setMeta({ ...meta, page: 1 });
+    setMeta(prev => ({ ...prev, page: 1 }));
   };
 
   const handleViewTeacher = useCallback((teacher: any) => setViewingTeacher(teacher), []);
@@ -230,10 +240,16 @@ function TeachersPage() {
           eyebrow="Academic Faculty"
           title="Teachers"
           actions={
-            <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
-              <Plus className="h-5 w-5" />
-              Add Teacher
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleRefresh} variant="outline" className="h-11 gap-2 rounded-xl px-4" disabled={refreshing}>
+                <RefreshCw className={cn('h-5 w-5', refreshing && 'animate-spin')} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
+                <Plus className="h-5 w-5" />
+                Add Teacher
+              </Button>
+            </div>
           }
         />
 
@@ -274,7 +290,7 @@ function TeachersPage() {
               </Select>
             </div>
 
-            <Button onClick={fetchTeachers} className="mt-5 h-11 rounded-xl px-6 font-bold">
+            <Button onClick={() => fetchTeachers(1)} className="mt-5 h-11 rounded-xl px-6 font-bold">
               Apply Filter
             </Button>
 
