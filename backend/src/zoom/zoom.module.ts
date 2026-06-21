@@ -15,6 +15,7 @@ import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
 import { ZoomSettingsController } from './zoom-settings.controller';
 import { ZoomOAuthController } from './zoom-oauth.controller';
+import { ZoomOAuthCallbackController } from './zoom-oauth-callback.controller';
 import { ZoomAnalyticsController } from './zoom-analytics.controller';
 import { SessionAttendanceController } from './session-attendance.controller';
 import { ParentSessionController } from './parent-session.controller';
@@ -72,6 +73,7 @@ import { EncryptionService } from '../common/encryption.service';
     ZoomWebhookController,
     ZoomSettingsController,
     ZoomOAuthController,
+    ZoomOAuthCallbackController,
     ZoomAnalyticsController,
     SessionAttendanceController,
     ParentSessionController,

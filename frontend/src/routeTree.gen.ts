@@ -59,6 +59,7 @@ import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebsiteHomeRouteImport } from './routes/website.home'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
 import { Route as TeachersIdRouteImport } from './routes/teachers_.$id'
 import { Route as Teacher_studentsStudentIdRouteImport } from './routes/teacher_students_.$studentId'
@@ -326,6 +327,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebsiteHomeRoute = WebsiteHomeRouteImport.update({
+  id: '/website/home',
+  path: '/website/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeachersCreateRoute = TeachersCreateRouteImport.update({
   id: '/teachers_/create',
   path: '/teachers/create',
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/teacher_students/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
+  '/website/home': typeof WebsiteHomeRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRoutesByTo {
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/teacher_students/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers/$id': typeof TeachersIdRouteWithChildren
   '/teachers/create': typeof TeachersCreateRoute
+  '/website/home': typeof WebsiteHomeRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRoutesById {
@@ -611,6 +619,7 @@ export interface FileRoutesById {
   '/teacher_students_/$studentId': typeof Teacher_studentsStudentIdRoute
   '/teachers_/$id': typeof TeachersIdRouteWithChildren
   '/teachers_/create': typeof TeachersCreateRoute
+  '/website/home': typeof WebsiteHomeRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
 }
 export interface FileRouteTypes {
@@ -681,6 +690,7 @@ export interface FileRouteTypes {
     | '/teacher_students/$studentId'
     | '/teachers/$id'
     | '/teachers/create'
+    | '/website/home'
     | '/teachers/$id/schedule/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -749,6 +759,7 @@ export interface FileRouteTypes {
     | '/teacher_students/$studentId'
     | '/teachers/$id'
     | '/teachers/create'
+    | '/website/home'
     | '/teachers/$id/schedule/$day'
   id:
     | '__root__'
@@ -817,6 +828,7 @@ export interface FileRouteTypes {
     | '/teacher_students_/$studentId'
     | '/teachers_/$id'
     | '/teachers_/create'
+    | '/website/home'
     | '/teachers_/$id/schedule/$day'
   fileRoutesById: FileRoutesById
 }
@@ -885,6 +897,7 @@ export interface RootRouteChildren {
   Teacher_studentsStudentIdRoute: typeof Teacher_studentsStudentIdRoute
   TeachersIdRoute: typeof TeachersIdRouteWithChildren
   TeachersCreateRoute: typeof TeachersCreateRoute
+  WebsiteHomeRoute: typeof WebsiteHomeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1239,6 +1252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/website/home': {
+      id: '/website/home'
+      path: '/website/home'
+      fullPath: '/website/home'
+      preLoaderRoute: typeof WebsiteHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teachers_/create': {
       id: '/teachers_/create'
       path: '/teachers/create'
@@ -1443,6 +1463,7 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_studentsStudentIdRoute: Teacher_studentsStudentIdRoute,
   TeachersIdRoute: TeachersIdRouteWithChildren,
   TeachersCreateRoute: TeachersCreateRoute,
+  WebsiteHomeRoute: WebsiteHomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

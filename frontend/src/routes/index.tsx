@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ThemeProvider } from "@/components/site/ThemeProvider";
+import { HomeCmsProvider } from "@/components/site/HomeCmsProvider";
 import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { About } from "@/components/site/About";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <ThemeProvider>
+      <HomeCmsProvider>
       <Loader />
       <div className="relative flex min-h-screen flex-col admin-shell-bg">
         <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
@@ -52,6 +54,7 @@ function Index() {
         <Footer />
         <FloatingActions />
       </div>
+      </HomeCmsProvider>
     </ThemeProvider>
   );
 }

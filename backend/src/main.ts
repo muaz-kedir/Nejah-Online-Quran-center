@@ -5,8 +5,41 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { validateEnvironment } from './config/env-validation';
 import { isAllowedCorsOrigin } from './config/cors-origins';
+
+function freeBackendPort(targetPort: number) {
+  try {
+    execSync('node scripts/free-port.cjs', {
+      cwd: process.cwd(),
+      stdio: 'pipe',
+      env: { ...process.env, PORT: String(targetPort) },
+    });
+  } catch {
+    /* no stale listener */
+  }
+}
+
+async function listenOnPort(
+  app: NestExpressApplication,
+  port: number,
+  logger: Logger,
+) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    freeBackendPort(port);
+    try {
+      await app.listen(port);
+      return;
+    } catch (err: any) {
+      if (err?.code === 'EADDRINUSE' && attempt < 3) {
+        logger.warn(`Port ${port} in use (attempt ${attempt}), retrying...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -15,6 +48,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
+  app.enableShutdownHooks();
   const configService = app.get(ConfigService);
 
   // Global validation pipe
@@ -52,12 +86,13 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   const port = configService.get('PORT') || 3000;
+
   try {
     const dataSource = app.get(DataSource);
     if (dataSource.isInitialized) {
       console.log('✅ Database connected');
     }
-    await app.listen(port);
+    await listenOnPort(app, port, logger);
     console.log(`🚀 Nejah Backend API is running on: http://localhost:${port}/api`);
   } catch (err: any) {
     if (err?.code === 'EADDRINUSE') {
@@ -70,3 +105,4 @@ async function bootstrap() {
 }
 
 bootstrap();
+

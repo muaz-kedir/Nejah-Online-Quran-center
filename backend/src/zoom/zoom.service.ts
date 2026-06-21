@@ -183,10 +183,38 @@ export class ZoomService implements OnModuleInit {
   }
 
   getZoomOAuthRedirectUri(): string {
-    return (
-      this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim() ||
-      ''
-    );
+    const explicit = this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim();
+    if (explicit) return explicit;
+
+    const backendUrl =
+      this.configService.get<string>('BACKEND_URL')?.trim() ||
+      this.configService.get<string>('API_BASE_URL')?.trim();
+    if (backendUrl) {
+      const base = backendUrl.replace(/\/$/, '').replace(/\/api$/, '');
+      const prefix = this.configService.get<string>('API_PREFIX') || 'api';
+      return `${base}/${prefix}/zoom-settings/oauth/callback`;
+    }
+
+    return '';
+  }
+
+  assertOAuthConfiguredForAuthorize(): void {
+    const clientId = this.getZoomOAuthClientId()?.trim();
+    const redirectUri = this.getZoomOAuthRedirectUri()?.trim();
+
+    if (!clientId) {
+      throw new HttpException(
+        'Zoom OAuth is not configured. Set ZOOM_OAUTH_CLIENT_ID (or ZOOM_CLIENT_ID) on the server.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!redirectUri) {
+      throw new HttpException(
+        'Zoom OAuth is not configured. Set ZOOM_OAUTH_REDIRECT_URI or BACKEND_URL on the server.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   getOAuthAuthorizationUrl(state: string): string {

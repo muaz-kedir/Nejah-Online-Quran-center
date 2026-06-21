@@ -41,6 +41,10 @@ import { LiveSession } from '../zoom/entities/live-session.entity';
 import { SessionAttendance } from '../zoom/entities/session-attendance.entity';
 import { SessionNote } from '../zoom/entities/session-note.entity';
 import { ProcessedWebhook } from '../zoom/entities/processed-webhook.entity';
+import { HomeMissionSection } from '../website-cms/entities/home-mission-section.entity';
+import { HomeMissionCard } from '../website-cms/entities/home-mission-card.entity';
+import { HomeProgramsSection } from '../website-cms/entities/home-programs-section.entity';
+import { HomeProgram } from '../website-cms/entities/home-program.entity';
 
 /** Every TypeORM entity — explicit registration avoids missing relation metadata on Render. */
 export const ALL_ENTITIES = [
@@ -87,4 +91,8 @@ export const ALL_ENTITIES = [
   SessionAttendance,
   SessionNote,
   ProcessedWebhook,
+  HomeMissionSection,
+  HomeMissionCard,
+  HomeProgramsSection,
+  HomeProgram,
 ];
