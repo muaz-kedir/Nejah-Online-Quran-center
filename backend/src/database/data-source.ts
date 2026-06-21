@@ -12,7 +12,7 @@ const options: DataSourceOptions = {
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'nejah_db',
   entities: [join(__dirname, '/../**/*.entity{.ts,.js}')],
-  migrations: [join(__dirname, '/migrations/*{.ts,.js}')],
+  migrations: [join(__dirname, '/../migrations/*{.ts,.js}')],
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 };
 

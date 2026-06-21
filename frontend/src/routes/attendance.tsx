@@ -1,6 +1,6 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { 
   Users, 
@@ -39,6 +39,7 @@ export const Route = createFileRoute('/attendance')({
 });
 
 function AdminAttendancePage() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<any[]>([]);
   const [liveSessions, setLiveSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +60,7 @@ function AdminAttendancePage() {
       const token = localStorage.getItem('token');
       
       // 1. Fetch live sessions
-      const liveRes = await fetch(apiUrl(`/attendance/live-classes`), {
+      const liveRes = await fetch(apiUrl(`/live-sessions/live`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (liveRes.ok) {
@@ -253,8 +254,17 @@ function AdminAttendancePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {liveSessions.map((meeting) => {
-                const startTime = meeting.actualStartTime ? new Date(meeting.actualStartTime) : null;
+                const startTime = meeting.actualStart ? new Date(meeting.actualStart) : null;
                 const elapsedMins = startTime ? Math.floor((Date.now() - startTime.getTime()) / 60000) : 0;
+                const attendances = meeting.attendances || [];
+                const joinedCount = attendances.filter((a: any) => a.joinTime != null).length;
+                const absentCount = attendances.filter((a: any) => a.attendanceStatus === 'ABSENT').length;
+                // Determine total assigned students: from schedule group students, or attendance records, or single student
+                const totalAssigned = meeting.schedule?.scheduleStudents?.length || attendances.length || (meeting.studentId ? 1 : 0);
+                const classTitle = meeting.schedule?.className || meeting.metadata?.className || 'Quran Class';
+                const quranLevel = meeting.metadata?.quranLevel || meeting.student?.level || 'Beginner';
+                const meetingLink = meeting.zoomJoinUrl;
+                const teacherName = meeting.teacher?.fullName || 'Unknown Teacher';
                 
                 return (
                   <div 
@@ -270,24 +280,30 @@ function AdminAttendancePage() {
                         </span>
                       </div>
                       
-                      <h3 className="text-lg font-black text-nejah-sapphire dark:text-white font-serif truncate">{meeting.classTitle}</h3>
-                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-500 mt-1 uppercase tracking-wide">{meeting.quranLevel} Level</p>
+                      <h3 className="text-lg font-black text-nejah-sapphire dark:text-white font-serif truncate">{classTitle}</h3>
+                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-500 mt-1 uppercase tracking-wide">{quranLevel} Level</p>
                       
                       <div className="bg-background/50 dark:bg-nejah-surface/30 rounded-2xl p-4 my-5 border border-border dark:border-white/5 space-y-2">
                         <div className="flex justify-between text-xs">
                           <span className="text-nejah-slate-blue font-medium">Teacher</span>
-                          <span className="font-bold text-nejah-slate-blue dark:text-foreground">{meeting.teacher?.fullName}</span>
+                          <span className="font-bold text-nejah-slate-blue dark:text-foreground">{teacherName}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-nejah-slate-blue font-medium">Students Assigned</span>
+                          <span className="font-bold text-foreground">
+                            {totalAssigned} Total
+                          </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-nejah-slate-blue font-medium">Joined Students</span>
                           <span className="font-bold text-nejah-electric">
-                            {meeting.totalStudentsPresent || 0} Joined
+                            {joinedCount} Joined
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-nejah-slate-blue font-medium">Students Absent</span>
                           <span className="font-bold text-red-500">
-                            {meeting.totalStudentsAbsent || 0} Absent
+                            {absentCount} Absent
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
@@ -299,15 +315,15 @@ function AdminAttendancePage() {
                     
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => handleRowClick(meeting.id)}
+                        onClick={() => navigate({ to: `/live-sessions/${meeting.id}` })}
                         className="flex-1 bg-nejah-sapphire hover:bg-background text-white rounded-xl h-10 text-xs font-bold gap-1.5"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Supervise Logs
                       </Button>
-                      {meeting.meetingLink && (
+                      {meetingLink && (
                         <Button
-                          onClick={() => window.open(meeting.meetingLink, '_blank')}
+                          onClick={() => window.open(meetingLink, '_blank')}
                           variant="outline"
                           className="h-10 w-10 border-border dark:border-white/5 rounded-xl p-0 hover:bg-background/50"
                           title="Open Live Meeting Stream"
