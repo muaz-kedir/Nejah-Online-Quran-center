@@ -37,7 +37,6 @@ import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as Parent_sessionsRouteImport } from './routes/parent_sessions'
 import { Route as Parent_notificationsRouteImport } from './routes/parent_notifications'
 import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
-import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveSessionsRouteImport } from './routes/live-sessions'
 import { Route as HomeworkRouteImport } from './routes/homework'
@@ -67,7 +66,6 @@ import { Route as TeacherApplicationsIdRouteImport } from './routes/teacher-appl
 import { Route as StudentResourcesRouteImport } from './routes/student_.resources'
 import { Route as StudentProgressRouteImport } from './routes/student_.progress'
 import { Route as StudentNotificationsRouteImport } from './routes/student_.notifications'
-import { Route as StudentMessagesRouteImport } from './routes/student_.messages'
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
@@ -217,11 +215,6 @@ const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
   path: '/parent_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MessagesRoute = MessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -368,11 +361,6 @@ const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
   path: '/student/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentMessagesRoute = StudentMessagesRouteImport.update({
-  id: '/student_/messages',
-  path: '/student/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StudentHomeworkRoute = StudentHomeworkRouteImport.update({
   id: '/student_/homework',
   path: '/student/homework',
@@ -436,7 +424,6 @@ export interface FileRoutesByFullPath {
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
-  '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
@@ -472,7 +459,6 @@ export interface FileRoutesByFullPath {
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
-  '/student/messages': typeof StudentMessagesRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
@@ -505,7 +491,6 @@ export interface FileRoutesByTo {
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
-  '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
@@ -541,7 +526,6 @@ export interface FileRoutesByTo {
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
-  '/student/messages': typeof StudentMessagesRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
   '/student/resources': typeof StudentResourcesRoute
@@ -575,7 +559,6 @@ export interface FileRoutesById {
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
-  '/messages': typeof MessagesRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
@@ -611,7 +594,6 @@ export interface FileRoutesById {
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
   '/student_/homework': typeof StudentHomeworkRoute
-  '/student_/messages': typeof StudentMessagesRoute
   '/student_/notifications': typeof StudentNotificationsRoute
   '/student_/progress': typeof StudentProgressRoute
   '/student_/resources': typeof StudentResourcesRoute
@@ -646,7 +628,6 @@ export interface FileRouteTypes {
     | '/homework'
     | '/live-sessions'
     | '/login'
-    | '/messages'
     | '/parent_dashboard'
     | '/parent_notifications'
     | '/parent_sessions'
@@ -682,7 +663,6 @@ export interface FileRouteTypes {
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
-    | '/student/messages'
     | '/student/notifications'
     | '/student/progress'
     | '/student/resources'
@@ -715,7 +695,6 @@ export interface FileRouteTypes {
     | '/homework'
     | '/live-sessions'
     | '/login'
-    | '/messages'
     | '/parent_dashboard'
     | '/parent_notifications'
     | '/parent_sessions'
@@ -751,7 +730,6 @@ export interface FileRouteTypes {
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
-    | '/student/messages'
     | '/student/notifications'
     | '/student/progress'
     | '/student/resources'
@@ -784,7 +762,6 @@ export interface FileRouteTypes {
     | '/homework'
     | '/live-sessions'
     | '/login'
-    | '/messages'
     | '/parent_dashboard'
     | '/parent_notifications'
     | '/parent_sessions'
@@ -820,7 +797,6 @@ export interface FileRouteTypes {
     | '/student_/classes'
     | '/student_/evaluations'
     | '/student_/homework'
-    | '/student_/messages'
     | '/student_/notifications'
     | '/student_/progress'
     | '/student_/resources'
@@ -854,7 +830,6 @@ export interface RootRouteChildren {
   HomeworkRoute: typeof HomeworkRoute
   LiveSessionsRoute: typeof LiveSessionsRouteWithChildren
   LoginRoute: typeof LoginRoute
-  MessagesRoute: typeof MessagesRoute
   Parent_dashboardRoute: typeof Parent_dashboardRoute
   Parent_notificationsRoute: typeof Parent_notificationsRoute
   Parent_sessionsRoute: typeof Parent_sessionsRoute
@@ -889,7 +864,6 @@ export interface RootRouteChildren {
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
-  StudentMessagesRoute: typeof StudentMessagesRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentProgressRoute: typeof StudentProgressRoute
   StudentResourcesRoute: typeof StudentResourcesRoute
@@ -1098,13 +1072,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Parent_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/messages': {
-      id: '/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof MessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -1308,13 +1275,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/student_/messages': {
-      id: '/student_/messages'
-      path: '/student/messages'
-      fullPath: '/student/messages'
-      preLoaderRoute: typeof StudentMessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/student_/homework': {
       id: '/student_/homework'
       path: '/student/homework'
@@ -1420,7 +1380,6 @@ const rootRouteChildren: RootRouteChildren = {
   HomeworkRoute: HomeworkRoute,
   LiveSessionsRoute: LiveSessionsRouteWithChildren,
   LoginRoute: LoginRoute,
-  MessagesRoute: MessagesRoute,
   Parent_dashboardRoute: Parent_dashboardRoute,
   Parent_notificationsRoute: Parent_notificationsRoute,
   Parent_sessionsRoute: Parent_sessionsRoute,
@@ -1455,7 +1414,6 @@ const rootRouteChildren: RootRouteChildren = {
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
-  StudentMessagesRoute: StudentMessagesRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentProgressRoute: StudentProgressRoute,
   StudentResourcesRoute: StudentResourcesRoute,

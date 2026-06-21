@@ -6,7 +6,6 @@ import {
   TrendingUp,
   ClipboardList,
   FolderOpen,
-  MessageSquare,
   Bell,
   Settings,
   LogOut,
@@ -26,7 +25,6 @@ const menuItems = [
   { label: 'My Progress', icon: TrendingUp, path: studentPaths.progress },
   { label: 'Homework', icon: ClipboardList, path: studentPaths.homework },
   { label: 'Resources', icon: FolderOpen, path: studentPaths.resources },
-  { label: 'Messages', icon: MessageSquare, path: studentPaths.messages },
   { label: 'Notifications', icon: Bell, path: studentPaths.notifications },
 ];
 
