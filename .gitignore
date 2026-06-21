@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# IDE
+.vscode/
+.cursor/
+.idea/
+
+# Deployment
+.vercel/
+.wrangler/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env*.local

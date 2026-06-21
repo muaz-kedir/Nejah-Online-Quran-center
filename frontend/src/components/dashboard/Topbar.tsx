@@ -101,35 +101,37 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={iconBtn} title="Change Language">
-              <Globe className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
-            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-nejah-slate-blue">
-              Language
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
-            {LANGUAGES.map((lang) => (
-              <DropdownMenuItem
-                key={lang.code}
-                onClick={() => setLanguage(lang.code)}
-                className={cn(
-                  'cursor-pointer text-foreground focus:bg-primary/10',
-                  language === lang.code && 'font-medium text-nejah-electric',
-                )}
-              >
-                <span className="flex items-center gap-2">
-                  <span>{lang.flag}</span>
-                  <span>{lang.label}</span>
-                </span>
-                {language === lang.code && <Check className="h-3.5 w-3.5" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {userRole !== 'super_admin' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={iconBtn} title="Change Language">
+                <Globe className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
+              <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-nejah-slate-blue">
+                Language
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
+              {LANGUAGES.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={cn(
+                    'cursor-pointer text-foreground focus:bg-primary/10',
+                    language === lang.code && 'font-medium text-nejah-electric',
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </span>
+                  {language === lang.code && <Check className="h-3.5 w-3.5" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <div className="relative">
           <button className={iconBtn} onClick={() => {

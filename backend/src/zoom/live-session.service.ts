@@ -939,7 +939,7 @@ export class LiveSessionService {
   async getLiveSessions(): Promise<LiveSession[]> {
     return this.liveSessionRepository.find({
       where: { status: LiveSessionStatus.LIVE },
-      relations: ['teacher', 'student', 'attendances', 'attendances.student'],
+      relations: ['teacher', 'student', 'schedule', 'schedule.scheduleStudents', 'attendances', 'attendances.student'],
       order: { actualStart: 'DESC' },
     });
   }

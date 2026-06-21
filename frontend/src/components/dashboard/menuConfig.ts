@@ -66,6 +66,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
+    { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'Settings', icon: Settings, path: '/settings' },
