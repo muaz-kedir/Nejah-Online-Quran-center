@@ -33,16 +33,33 @@ export function apiUrl(path: string): string {
   return API_BASE + normalized;
 }
 
+export function clearAuthStorage() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('userName');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('studentId');
+}
+
 export async function api<T = any>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(apiUrl(path), {
     ...options,
     headers: { ...apiHeaders(), ...options?.headers },
   });
+  const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    if (
+      res.status === 401 &&
+      typeof window !== 'undefined' &&
+      !window.location.pathname.includes('/login')
+    ) {
+      clearAuthStorage();
+      window.location.assign('/login?reason=session_expired');
+    }
     throw new Error(formatApiError(body, 'Request failed: ' + res.status));
   }
-  return res.json();
+  return body as T;
 }
 
 /** NestJS validation errors return message as a string or string[]. */

@@ -53,6 +53,10 @@ function LoginPage() {
   const [quickLoginRole, setQuickLoginRole] = useState<string | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reason') === 'session_expired') {
+      toast.info('Your session expired. Please sign in again.');
+    }
     fetch(apiUrl(`/teacher-applications/settings`))
       .then(res => res.json())
       .then(data => setIsApplicationsOpen(data.isApplicationsOpen))
