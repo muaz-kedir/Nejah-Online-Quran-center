@@ -3,13 +3,14 @@ const RENDER_ORIGIN = 'https://nejah-online-quran-center.onrender.com';
 const LOCAL_API = 'http://localhost:3000/api';
 const LOCAL_ORIGIN = 'http://localhost:3000';
 
-export const API_BASE: string = import.meta.env.DEV
-  ? String(import.meta.env.VITE_API_URL || LOCAL_API)
-  : RENDER_API;
+/** Prefer VITE_API_URL when set (Vercel/local), else dev localhost or Render production. */
+export const API_BASE: string = String(
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? LOCAL_API : RENDER_API),
+);
 
-export const API_ORIGIN: string = import.meta.env.DEV
-  ? String(import.meta.env.VITE_WS_URL || LOCAL_ORIGIN).replace(/\/$/, '')
-  : RENDER_ORIGIN;
+export const API_ORIGIN: string = String(
+  import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? LOCAL_ORIGIN : RENDER_ORIGIN),
+).replace(/\/$/, '');
 
 export const WS_URL = API_ORIGIN;
 

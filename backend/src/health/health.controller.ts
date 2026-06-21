@@ -8,6 +8,12 @@ export class HealthController {
   @Get()
   async check() {
     await this.dataSource.query('SELECT 1');
-    return { status: 'ok', database: 'connected' };
+    return {
+      status: 'ok',
+      database: 'connected',
+      features: {
+        websiteCms: true,
+      },
+    };
   }
 }

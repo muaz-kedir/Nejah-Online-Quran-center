@@ -30,6 +30,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { WebsiteCmsModule } from './website-cms/website-cms.module';
+import { UploadsModule } from './uploads/uploads.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
 
 @Module({
@@ -74,6 +76,8 @@ import { createTypeOrmOptions } from './database/typeorm.config';
     LearningGoalsModule,
     FeeConfigModule,
     CurrencyModule,
+    WebsiteCmsModule,
+    UploadsModule,
     ScheduleModule.forRoot(),
     HealthModule,
     DatabaseModule,

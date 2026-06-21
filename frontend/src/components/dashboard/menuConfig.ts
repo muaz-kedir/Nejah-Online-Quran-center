@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Video,
   VideoOff,
+  Layout,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -51,6 +52,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    { label: 'Website Management', icon: Layout, path: '/website/home' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
