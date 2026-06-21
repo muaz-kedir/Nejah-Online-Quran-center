@@ -4,7 +4,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   Search,
   Bell,
-  MessageSquare,
   ChevronRight,
   BookOpen,
   Users,
@@ -155,12 +154,6 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
             </button>
-            <button 
-              onClick={() => onTabChange('messages')}
-              className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm"
-            >
-                <MessageSquare className="h-5 w-5" />
-            </button>
         </div>
 
         <div className="w-px h-10 bg-muted" />
@@ -306,38 +299,6 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
 
   // Recitations states
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-
-  // Messages / Chat states
-  const [messages, setMessages] = useState<any[]>([
-    {
-      id: "1",
-      sender: "Sheikh Abdullah",
-      role: "Teacher",
-      content:
-        "Assalamu Alaikum. Zaid did exceptionally well in class today. He memorized 10 new verses of Surah Al-Buruj.",
-      time: "Today, 4:45 PM",
-      child: "Zaid",
-    },
-    {
-      id: "2",
-      sender: "Ustadha Maryam",
-      role: "Teacher",
-      content:
-        "Assalamu Alaikum. Lina is struggling slightly with the letters with Sukoon. Please practice with her at home.",
-      time: "Yesterday, 6:15 PM",
-      child: "Lina",
-    },
-    {
-      id: "3",
-      sender: "Admin Office",
-      role: "Staff",
-      content:
-        "Dear Parent, this is a reminder that the monthly tuition fee invoice for June has been posted.",
-      time: "2 days ago",
-      child: "General",
-    },
-  ]);
-  const [newMessageText, setNewMessageText] = useState("");
 
   // Profile Form state
   const [profileForm, setProfileForm] = useState({
@@ -541,23 +502,6 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
   const handleInspectProgress = (childId: string) => {
     setSelectedChildId(childId);
     setActiveTab("quran");
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessageText.trim()) return;
-
-    const newMsg = {
-      id: Date.now().toString(),
-      sender: data?.parent?.name || "Ahmed Al-Mansour",
-      role: "Guardian",
-      content: newMessageText,
-      time: "Just now",
-      child: "General",
-    };
-    setMessages([...messages, newMsg]);
-    setNewMessageText("");
-    toast.success("Message sent to instructor successfully.");
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -788,9 +732,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                           onClick={() => setActiveTab("quran")}
                         >
                           <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
-                            {a.type === "Message" ? (
-                              <MessageSquare className="h-5 w-5" />
-                            ) : a.type === "Result" ? (
+                            {a.type === "Result" ? (
                               <Award className="h-5 w-5" />
                             ) : (
                               <BookOpen className="h-5 w-5" />
@@ -1749,119 +1691,6 @@ text-nejah-electric"
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ================================================================ */}
-          {/* TAB: MESSAGES / CHAT */}
-          {/* ================================================================ */}
-          {activeTab === "messages" && (
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                  Direct Teacher Messages
-                </h3>
-                <p className="text-sm text-muted-foreground font-medium mt-1">
-                  Communicate directly with Sheikhs, Ustadhas, and administrative staff.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 glass-panel bg-white border border-white/10 rounded-[40px] shadow-sm overflow-hidden h-[600px]">
-                {/* Contacts pane */}
-                <div className="lg:col-span-4 border-r border-border flex flex-col h-full bg-background/50">
-                  <div className="p-6 border-b border-border">
-                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-                      Active Chats
-                    </h4>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                    <button className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-nejah-electric/15 shadow-sm text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-nejah-sapphire text-white flex items-center justify-center font-bold text-xs shrink-0">
-                          SA
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">Sheikh Abdullah</p>
-                          <p className="text-[9px] text-muted-foreground font-bold truncate max-w-[150px]">
-                            Assalamu Alaikum. Zaid did...
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[8px] text-nejah-electric font-bold uppercase shrink-0">
-                        Active
-                      </span>
-                    </button>
-                    <button className="w-full flex items-center justify-between p-4 hover:bg-card rounded-2xl transition-colors text-left text-muted-foreground">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-primary/15 text-foreground flex items-center justify-center font-bold text-xs shrink-0">
-                          UM
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">Ustadha Maryam</p>
-                          <p className="text-[9px] text-muted-foreground">
-                            Assalamu Alaikum. Lina is...
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Chat pane */}
-                <div className="lg:col-span-8 flex flex-col h-full bg-white justify-between">
-                  {/* Messages Feed */}
-                  <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                    {messages.map((msg) => {
-                      const isMe = msg.role === "Guardian";
-                      return (
-                        <div
-                          key={msg.id}
-                          className={cn(
-                            "flex flex-col max-w-[70%]",
-                            isMe ? "ml-auto items-end" : "mr-auto items-start",
-                          )}
-                        >
-                          <span className="text-[9px] font-bold text-muted-foreground mb-1">
-                            {msg.sender} ({msg.role})
-                          </span>
-                          <div
-                            className={cn(
-                              "p-4 rounded-3xl text-xs font-medium leading-relaxed shadow-sm",
-                              isMe
-                                ? "bg-nejah-sapphire text-white rounded-tr-none"
-                                : "bg-background/50 text-foreground rounded-tl-none border border-border",
-                            )}
-                          >
-                            {msg.content}
-                          </div>
-                          <span className="text-[8px] text-muted-foreground font-bold mt-1 tabular-nums">
-                            {msg.time}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Message Input box */}
-                  <form
-                    onSubmit={handleSendMessage}
-                    className="p-6 border-t border-border flex gap-3"
-                  >
-                    <Input
-                      placeholder="Type your message to instructor..."
-                      value={newMessageText}
-                      onChange={(e) => setNewMessageText(e.target.value)}
-                      className="flex-1 bg-background/50 border-none rounded-2xl h-12 text-xs focus-visible:ring-nejah-electric"
-                    />
-                    <Button
-                      type="submit"
-                      className="bg-nejah-sapphire hover:bg-background text-white h-12 px-6 rounded-2xl text-xs font-extrabold uppercase tracking-wider"
-                    >
-                      Send Message
-                    </Button>
-                  </form>
-                </div>
-              </div>
             </div>
           )}
 
