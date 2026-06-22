@@ -183,7 +183,9 @@ export class ZoomService implements OnModuleInit {
   }
 
   getZoomOAuthRedirectUri(): string {
-    const explicit = this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim();
+    const explicit =
+      this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim() ||
+      this.configService.get<string>('ZOOM_REDIRECT_URI')?.trim();
     if (explicit) return explicit;
 
     const backendUrl =

@@ -8,8 +8,8 @@ services:
     region: oregon # Change to your preferred region
     plan: free # Change to 'starter' or 'standard' for production
     buildCommand: npm install && npm run build
-    startCommand: npm run start:prod
-    healthCheckPath: /api/health
+    startCommand: node dist/main.js
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production

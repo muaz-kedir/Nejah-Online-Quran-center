@@ -9,9 +9,18 @@ export class AppController {
       version: '1.0.0',
       status: 'running',
       endpoints: {
-        health: '/api/health',
-        docs: '/api',
+        health: '/health',
+        apiHealth: '/api/monitoring/health',
+        zoomWebhook: '/zoom/webhook',
       },
+    };
+  }
+
+  @Get('health')
+  health() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
     };
   }
 }

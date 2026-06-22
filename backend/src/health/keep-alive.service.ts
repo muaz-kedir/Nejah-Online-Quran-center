@@ -13,34 +13,28 @@ export class KeepAliveService {
     private readonly httpService: HttpService,
   ) {}
 
-  // Run every 10 minutes to keep Render service alive
+  /** Ping /health every 10 minutes so Render free tier stays awake. */
   @Cron(CronExpression.EVERY_10_MINUTES)
   async pingHealth() {
-    const nodeEnv = this.configService.get<string>('NODE_ENV');
-    
-    // Only run on production (Render)
-    if (nodeEnv !== 'production') {
+    if (this.configService.get<string>('NODE_ENV') !== 'production') {
       return;
     }
 
+    const port = process.env.PORT || this.configService.get<string>('PORT') || '3000';
+    const healthUrl = `http://127.0.0.1:${port}/health`;
+
     try {
-      const backendUrl =
-        this.configService.get<string>('BACKEND_URL') ||
-        this.configService.get<string>('API_BASE_URL') ||
-        'https://nejah-online-quran-center.onrender.com';
-
-      const apiPrefix = this.configService.get<string>('API_PREFIX') || 'api';
-      const healthUrl = `${backendUrl}/${apiPrefix}/health`;
-
       const response = await firstValueFrom(
         this.httpService.get(healthUrl, { timeout: 5000 }),
       );
 
       if (response.data?.status === 'ok') {
-        this.logger.log('✓ Keep-alive ping successful');
+        this.logger.log('Keep-alive ping successful');
       }
     } catch (error) {
-      this.logger.warn(`Keep-alive ping failed: ${error.message}`);
+      this.logger.warn(
+        `Keep-alive ping failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

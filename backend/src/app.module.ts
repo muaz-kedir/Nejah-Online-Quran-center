@@ -33,6 +33,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { WebsiteCmsModule } from './website-cms/website-cms.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -82,5 +83,6 @@ import { createTypeOrmOptions } from './database/typeorm.config';
     HealthModule,
     DatabaseModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

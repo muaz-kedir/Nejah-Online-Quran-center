@@ -1,10 +1,26 @@
-import { Controller, Post, Body, Headers, HttpCode, HttpStatus, Logger, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  Req,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ZoomWebhookService } from './zoom-webhook.service';
 import { ZoomService } from './zoom.service';
-import { ZoomWebhookDto } from './dto/zoom-webhook.dto';
-import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import * as crypto from 'crypto';
+
+type ZoomWebhookBody = {
+  event?: string;
+  payload?: Record<string, unknown>;
+  event_ts?: number | string;
+};
 
 @Controller('zoom')
 export class ZoomWebhookController {
@@ -17,62 +33,66 @@ export class ZoomWebhookController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @SkipThrottle()
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: false,
+      forbidNonWhitelisted: false,
+      transform: false,
+    }),
+  )
   async handleWebhook(
-    @Body() body: ZoomWebhookDto,
+    @Body() body: ZoomWebhookBody,
     @Headers() headers: Record<string, string>,
-    @Req() req: Request,
+    @Req() req: Request & { rawBody?: Buffer },
   ) {
-    const event = body.event;
-    const payload = body.payload;
+    const event = body?.event || '';
+    const payload = body?.payload || {};
 
-    // Handle Zoom endpoint URL validation challenge FIRST
+    // Zoom endpoint URL validation — respond immediately (no signature check)
     if (event === 'endpoint.url_validation') {
-      const plainToken = (payload as any)?.plainToken;
-      if (plainToken) {
-        const secretToken = this.zoomService.getWebhookSecretToken();
-        if (!secretToken) {
-          this.logger.warn('endpoint.url_validation received but ZOOM_WEBHOOK_SECRET_TOKEN is not set');
-          return { plainToken, encryptedToken: '' };
-        }
-        const encryptedToken = crypto
-          .createHmac('sha256', secretToken)
-          .update(plainToken)
-          .digest('hex');
-        this.logger.log('✓ endpoint.url_validation responded successfully');
-        return { plainToken, encryptedToken };
+      const plainToken = payload.plainToken as string | undefined;
+      if (!plainToken) {
+        this.logger.warn('endpoint.url_validation missing plainToken');
+        return { plainToken: '', encryptedToken: '' };
       }
+
+      const secretToken = this.zoomService.getWebhookSecretToken();
+      if (!secretToken) {
+        this.logger.warn(
+          'endpoint.url_validation received but ZOOM_WEBHOOK_SECRET_TOKEN is not set',
+        );
+        return { plainToken, encryptedToken: '' };
+      }
+
+      const encryptedToken = crypto
+        .createHmac('sha256', secretToken)
+        .update(plainToken)
+        .digest('hex');
+
+      this.logger.log('Zoom endpoint.url_validation challenge answered');
+      return { plainToken, encryptedToken };
     }
 
-    // Verify signature for all other events
-    const signature = headers['x-zm-signature'] || '';
-    const timestamp = headers['x-zm-request-timestamp'];
+    const signature = headers['x-zm-signature'] || headers['x-zm-signature'.toLowerCase()] || '';
+    const timestamp = headers['x-zm-request-timestamp'] || headers['x-zm-request-timestamp'.toLowerCase()];
 
-    // Get raw body for signature verification
-    const rawBody = (req as any).rawBody || JSON.stringify(body);
-    
-    const isValid = this.verifyWebhookSignature(rawBody, signature, timestamp);
-    
-    if (!isValid) {
-      this.logger.warn(
-        `Webhook signature verification failed for event: ${event}`,
-      );
-      // Zoom requires 200 status even on rejection
-      return { status: 'rejected', message: 'Invalid signature' };
+    const rawBody = this.getRawBody(req);
+    if (!this.verifyWebhookSignature(rawBody, signature, timestamp)) {
+      this.logger.warn(`Webhook signature verification failed for event: ${event}`);
+      return { status: 'rejected' };
     }
 
-    this.logger.log(`✓ Webhook signature verified for event: ${event}`);
+    this.logger.log(`Webhook signature verified for event: ${event}`);
 
-    // Acknowledge immediately and process in background
-    const eventId = (payload as any)?.object?.id
-      ? `${event}_${(payload as any).object.id}_${(payload as any).event_ts || Date.now()}`
+    const eventId = (payload?.object as { id?: string | number } | undefined)?.id
+      ? `${event}_${(payload.object as { id: string | number }).id}_${payload.event_ts || body.event_ts || Date.now()}`
       : undefined;
 
-    // Process webhook asynchronously
     setImmediate(() => {
       this.zoomWebhookService
         .handleWebhook(event, payload, eventId)
-        .catch((error) => {
+        .catch((error: Error) => {
           this.logger.error(
             `Background webhook processing error: ${error.message}`,
             error.stack,
@@ -80,8 +100,17 @@ export class ZoomWebhookController {
         });
     });
 
-    // Return success immediately
-    return { status: 'success', message: 'Webhook received' };
+    return { status: 'success' };
+  }
+
+  private getRawBody(req: Request & { rawBody?: Buffer }): string {
+    if (req.rawBody) {
+      return Buffer.isBuffer(req.rawBody)
+        ? req.rawBody.toString('utf8')
+        : String(req.rawBody);
+    }
+    this.logger.warn('rawBody missing — webhook signature verification may fail');
+    return '';
   }
 
   private verifyWebhookSignature(
@@ -90,19 +119,18 @@ export class ZoomWebhookController {
     timestampHeader?: string,
   ): boolean {
     const secretToken = this.zoomService.getWebhookSecretToken();
-    
+
     if (!secretToken) {
       this.logger.warn('ZOOM_WEBHOOK_SECRET_TOKEN not configured, skipping verification');
       return true;
     }
 
-    if (!signatureHeader || !timestampHeader) {
-      this.logger.warn('Missing signature or timestamp header');
+    if (!rawBody || !signatureHeader || !timestampHeader) {
+      this.logger.warn('Missing raw body, signature, or timestamp header');
       return false;
     }
 
     try {
-      // Zoom signature format: v0=<hmac_sha256>
       const message = `v0:${timestampHeader}:${rawBody}`;
       const expectedHash = crypto
         .createHmac('sha256', secretToken)
@@ -115,10 +143,7 @@ export class ZoomWebhookController {
         return false;
       }
 
-      return crypto.timingSafeEqual(
-        Buffer.from(expected),
-        Buffer.from(actual),
-      );
+      return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
     } catch (error) {
       this.logger.error('Signature verification error:', error);
       return false;
