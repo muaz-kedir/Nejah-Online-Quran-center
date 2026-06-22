@@ -63,6 +63,18 @@ export class ZoomSettingsController {
     return this.zoomService.savePlatformConfig(dto);
   }
 
+  @Post('platform/verify')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async verifyPlatformConfig() {
+    await this.zoomService.verifyPlatformAuth();
+    const status = this.zoomService.getPlatformConfigStatus();
+    return {
+      ok: true,
+      message: 'Zoom Server-to-Server credentials are valid.',
+      source: status.source,
+    };
+  }
+
   @Post('connect')
   @Roles(UserRole.TEACHER)
   async connect(@Request() req, @Body() dto: ConnectZoomDto) {

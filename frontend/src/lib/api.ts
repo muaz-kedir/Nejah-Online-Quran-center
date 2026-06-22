@@ -52,6 +52,14 @@ export function clearAuthStorage() {
   localStorage.removeItem('studentId');
 }
 
+function shouldForceLogout(status: number, body: unknown): boolean {
+  if (status !== 401) return false;
+  const message = formatApiError(body, '').toLowerCase();
+  // Third-party auth failures (e.g. Zoom S2S) must not clear the user's app login.
+  if (message.includes('zoom')) return false;
+  return true;
+}
+
 export async function api<T = any>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(apiUrl(path), {
     ...options,
@@ -60,7 +68,7 @@ export async function api<T = any>(path: string, options?: RequestInit): Promise
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (
-      res.status === 401 &&
+      shouldForceLogout(res.status, body) &&
       typeof window !== 'undefined' &&
       !window.location.pathname.includes('/login')
     ) {
