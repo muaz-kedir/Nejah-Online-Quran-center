@@ -172,7 +172,9 @@ export class AuthService {
     try {
       let user = await this.usersService.findByEmail(identifier);
 
+      // If no user found by email, try to find by student email/phone or teacher email
       if (!user) {
+        // Try to find student by email or phone
         const student = await this.studentsRepository.findOne({
           where: [{ email: identifier }, { familyPhone: identifier }],
           relations: ['user'],
@@ -223,6 +225,7 @@ export class AuthService {
         role: user.role,
       };
 
+      // Add studentId for student users
       if (user.role === UserRole.STUDENT) {
         const student = await this.studentsRepository.findOne({
           where: { userId: user.id },
@@ -231,6 +234,8 @@ export class AuthService {
           userResponse.studentId = student.id;
         }
       }
+
+      console.log(`[AuthService] Login successful for user: ${user.email}, role: ${user.role}`);
 
       return {
         access_token: this.jwtService.sign(payload),

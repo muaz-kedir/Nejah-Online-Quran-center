@@ -133,6 +133,55 @@ export class ZoomService implements OnModuleInit {
     return reason.includes('invalid client') || reason.includes('invalid_client');
   }
 
+  private isEncryptedEnvelope(value: string): boolean {
+    const parts = value.split(':');
+    if (parts.length !== 3) return false;
+    return parts.every((part) => /^[0-9a-f]+$/i.test(part) && part.length >= 8);
+  }
+
+  /** Read client secret from DB row — plaintext column first, then legacy encrypted. */
+  private readStoredClientSecret(stored: ZoomPlatformConfig): string | null {
+    const plain = this.sanitizeCredential(stored.clientSecret);
+    if (plain && !this.isEncryptedEnvelope(plain)) {
+      return plain;
+    }
+
+    if (!stored.clientSecretEncrypted) return null;
+
+    const decrypted = this.encryptionService.decrypt(stored.clientSecretEncrypted);
+    if (!decrypted) return null;
+
+    const sanitized = this.sanitizeCredential(decrypted);
+    if (!sanitized) return null;
+
+    if (this.isEncryptedEnvelope(sanitized)) {
+      this.logger.error(
+        'Zoom client secret is stored in encrypted form but cannot be decrypted. ' +
+          'Re-save Account ID, Client ID, and Client Secret in Zoom Settings (Super Admin).',
+      );
+      return null;
+    }
+
+    return sanitized;
+  }
+
+  private async loadDatabaseCredentials(): Promise<ZoomCredentialSet | null> {
+    const stored = await this.platformConfigRepository.findOne({
+      where: { id: PLATFORM_CONFIG_ID },
+    });
+
+    if (!stored?.accountId || !stored.clientId) return null;
+
+    const clientSecret = this.readStoredClientSecret(stored);
+    if (!clientSecret) return null;
+
+    return {
+      accountId: this.sanitizeCredential(stored.accountId),
+      clientId: this.sanitizeCredential(stored.clientId),
+      clientSecret,
+    };
+  }
+
   async reloadPlatformCredentials(): Promise<void> {
     this.accessToken = null;
     this.tokenExpiresAt = null;
@@ -145,35 +194,18 @@ export class ZoomService implements OnModuleInit {
       ) || '';
 
     this.envCredentials = this.readEnvCredentials();
+    this.databaseCredentials = await this.loadDatabaseCredentials();
 
     const stored = await this.platformConfigRepository.findOne({
       where: { id: PLATFORM_CONFIG_ID },
     });
-
-    if (stored?.accountId && stored.clientId && stored.clientSecretEncrypted) {
-      const decryptedSecret = this.sanitizeCredential(
-        this.encryptionService.decrypt(stored.clientSecretEncrypted),
+    if (stored?.secretTokenEncrypted && !this.secretToken) {
+      const token = this.sanitizeCredential(
+        this.encryptionService.decrypt(stored.secretTokenEncrypted),
       );
-      if (!decryptedSecret) {
-        this.logger.error(
-          'Zoom client secret could not be decrypted. Set ENCRYPTION_KEY on the server to match the key used when credentials were saved, or re-save credentials in Zoom Settings.',
-        );
-        this.databaseCredentials = null;
-      } else {
-        this.databaseCredentials = {
-          accountId: this.sanitizeCredential(stored.accountId),
-          clientId: this.sanitizeCredential(stored.clientId),
-          clientSecret: decryptedSecret,
-        };
+      if (token && !this.isEncryptedEnvelope(token)) {
+        this.secretToken = token;
       }
-      if (!this.secretToken && stored.secretTokenEncrypted) {
-        this.secretToken =
-          this.sanitizeCredential(
-            this.encryptionService.decrypt(stored.secretTokenEncrypted),
-          ) || '';
-      }
-    } else {
-      this.databaseCredentials = null;
     }
 
     const order = this.credentialSourceOrder();
@@ -243,6 +275,17 @@ export class ZoomService implements OnModuleInit {
       new Date() < this.tokenExpiresAt
     ) {
       return this.accessToken;
+    }
+
+    // Always refresh from DB/env before requesting a new Zoom token.
+    await this.reloadPlatformCredentials();
+
+    // No credentials configured at all — skip quietly
+    if (!this.isPlatformConfigured()) {
+      throw new HttpException(
+        'Zoom is not configured. Add credentials in Zoom Settings.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const sources = this.credentialSourceOrder();
@@ -317,7 +360,9 @@ export class ZoomService implements OnModuleInit {
       hint += ' Update the ZOOM_* variables on Render (no quotes around values).';
     } else if (hasDb) {
       hint +=
-        ' Re-save credentials in Zoom Settings (Super Admin) or set ENCRYPTION_KEY if the secret cannot be decrypted.';
+        ' Re-save Account ID, Client ID, and Client Secret in Zoom Settings (Super Admin). The Client Secret field is required every time you save.';
+    } else {
+      hint += ' Add credentials in Zoom Settings (Super Admin) or set ZOOM_* on Render.';
     }
 
     throw new HttpException(
@@ -516,6 +561,7 @@ export class ZoomService implements OnModuleInit {
     envConfigured: boolean;
     databaseConfigured: boolean;
     credentialsConflict: boolean;
+    databaseSecretReadable: boolean;
     accountId: string | null;
     clientId: string | null;
     hasClientSecret: boolean;
@@ -535,6 +581,7 @@ export class ZoomService implements OnModuleInit {
       envConfigured,
       databaseConfigured,
       credentialsConflict,
+      databaseSecretReadable: databaseConfigured,
       accountId: this.accountId || null,
       clientId: this.clientId || null,
       hasClientSecret: !!this.clientSecret,
@@ -561,30 +608,36 @@ export class ZoomService implements OnModuleInit {
       row = this.platformConfigRepository.create({ id: PLATFORM_CONFIG_ID });
     }
 
-    if (!clientSecret && !row.clientSecretEncrypted) {
-      throw new HttpException('Client Secret is required', HttpStatus.BAD_REQUEST);
+    const existingSecret = row ? this.readStoredClientSecret(row) : null;
+
+    if (!clientSecret && !existingSecret) {
+      throw new HttpException(
+        'Client Secret is required. Enter the secret from your Zoom Server-to-Server OAuth app.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    const effectiveSecret = clientSecret || existingSecret!;
 
     row.accountId = accountId;
     row.clientId = clientId;
+    row.clientSecret = effectiveSecret;
     if (clientSecret) {
-      row.clientSecretEncrypted = this.encryptionService.encrypt(clientSecret);
+      row.clientSecretEncrypted = this.encryptionService.encrypt(clientSecret) ?? clientSecret;
     }
     if (input.secretToken !== undefined) {
-      row.secretTokenEncrypted = input.secretToken?.trim()
-        ? this.encryptionService.encrypt(input.secretToken.trim())
+      const token = this.sanitizeCredential(input.secretToken);
+      row.secretTokenEncrypted = token
+        ? this.encryptionService.encrypt(token) ?? token
         : null;
     }
 
     await this.platformConfigRepository.save(row);
-    await this.reloadPlatformCredentials();
 
-    if (!this.isPlatformConfigured()) {
-      throw new HttpException(
-        'Zoom credentials were saved but could not be loaded. Set ENCRYPTION_KEY in backend environment variables (must stay the same after saving secrets).',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    this.databaseCredentials = { accountId, clientId, clientSecret: effectiveSecret };
+    this.applyCredentialSet(this.databaseCredentials, 'database');
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
 
     await this.verifyPlatformAuth();
 
@@ -694,7 +747,156 @@ export class ZoomService implements OnModuleInit {
     const encodings = new Set<string>();
     encodings.add(encodeURIComponent(email));
     encodings.add(email.replace('@', '%40'));
+    // Some Zoom accounts accept the raw email in the path when using regional API hosts.
+    encodings.add(email);
     return [...encodings];
+  }
+
+  private parseAccessTokenScopes(): string[] {
+    try {
+      const token = this.accessToken;
+      if (!token) return [];
+      const parts = token.split('.');
+      if (parts.length < 2) return [];
+      const payload = JSON.parse(
+        Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
+      );
+      const scope = String(payload?.scope || '');
+      return scope.split(/\s+/).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  private async assertUserReadScope(): Promise<void> {
+    await this.getAccessToken();
+    const scopes = this.parseAccessTokenScopes();
+    if (scopes.length === 0) return;
+
+    const canReadUsers = scopes.some(
+      (scope) =>
+        scope === 'user:read:admin' ||
+        scope === 'user:read' ||
+        scope.startsWith('user:read:'),
+    );
+
+    if (!canReadUsers) {
+      throw new HttpException(
+        'Your Zoom app is missing the user:read:admin scope. In Zoom Marketplace → your Server-to-Server OAuth app → Scopes, add user:read:admin and meeting:write:admin, activate the app, then try again.',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  async listAccountUsers(): Promise<
+    Array<{ id: string; email: string; status?: string; displayName?: string }>
+  > {
+    this.assertPlatformConfigured();
+    await this.assertUserReadScope();
+
+    const users: Array<{ id: string; email: string; status?: string; displayName?: string }> =
+      [];
+    const statuses = ['active', 'pending', 'inactive'] as const;
+
+    for (const status of statuses) {
+      let nextPageToken: string | undefined;
+      let pages = 0;
+
+      do {
+        const params = new URLSearchParams({ status, page_size: '300' });
+        if (nextPageToken) params.set('next_page_token', nextPageToken);
+
+        const result = await this.zoomRequestSoft<{
+          users?: Array<{
+            id: string;
+            email: string;
+            status?: string;
+            display_name?: string;
+            first_name?: string;
+            last_name?: string;
+          }>;
+          next_page_token?: string;
+        }>('GET', `/users?${params.toString()}`);
+
+        if (result.ok === false) {
+          if (result.status === 403) {
+            throw new HttpException(
+              'Zoom denied listing users. Add the user:read:admin scope to your Server-to-Server OAuth app and activate it.',
+              HttpStatus.BAD_GATEWAY,
+            );
+          }
+          break;
+        }
+
+        for (const user of result.data.users || []) {
+          if (!user.id || !user.email) continue;
+          users.push({
+            id: user.id,
+            email: user.email,
+            status: user.status || status,
+            displayName:
+              user.display_name ||
+              [user.first_name, user.last_name].filter(Boolean).join(' ').trim() ||
+              undefined,
+          });
+        }
+
+        nextPageToken = result.data.next_page_token;
+        pages += 1;
+      } while (nextPageToken && pages < 50);
+    }
+
+    return users.sort((a, b) => a.email.localeCompare(b.email));
+  }
+
+  private async findZoomUserBySearchKey(
+    email: string,
+  ): Promise<{ id: string; email: string } | null> {
+    const searchTerms = [...new Set([email, email.split('@')[0], ...this.emailLookupKeys(email)])];
+
+    for (const term of searchTerms) {
+      if (!term || term.length < 3) continue;
+
+      const params = new URLSearchParams({
+        search_key: term,
+        page_size: '50',
+        status: 'active',
+      });
+
+      const result = await this.zoomRequestSoft<{
+        users?: Array<{ id: string; email: string }>;
+      }>('GET', `/users?${params.toString()}`);
+
+      if (!result.ok || !result.data.users?.length) continue;
+
+      const match = result.data.users.find(
+        (user) => user.email && this.emailsMatch(user.email, email),
+      );
+      if (match) return { id: match.id, email: match.email };
+    }
+
+    return null;
+  }
+
+  private suggestAccountEmails(
+    targetEmail: string,
+    accountUsers: Array<{ id: string; email: string; displayName?: string }>,
+  ): string[] {
+    const targetLocal = targetEmail.split('@')[0]?.replace(/\./g, '').toLowerCase() || '';
+    if (!targetLocal) return [];
+
+    const suggestions = accountUsers
+      .filter((user) => {
+        const local = user.email.split('@')[0]?.replace(/\./g, '').toLowerCase() || '';
+        return (
+          local.includes(targetLocal) ||
+          targetLocal.includes(local) ||
+          user.email.toLowerCase().includes(targetLocal)
+        );
+      })
+      .map((user) => user.email);
+
+    return [...new Set(suggestions)].slice(0, 5);
   }
 
   private async zoomRequestSoft<T>(
@@ -819,6 +1021,7 @@ export class ZoomService implements OnModuleInit {
     fallbackEmail?: string,
   ): Promise<{ id: string; email: string }> {
     this.assertPlatformConfigured();
+    await this.assertUserReadScope();
 
     const rawCandidates = [identifier, fallbackEmail]
       .map((value) => value?.trim())
@@ -827,10 +1030,14 @@ export class ZoomService implements OnModuleInit {
     const candidates: string[] = [];
 
     for (const candidate of rawCandidates) {
-      const variants = candidate.includes('@')
-        ? this.emailLookupKeys(candidate)
-        : [candidate];
-      for (const variant of variants) {
+      if (!candidate.includes('@')) {
+        if (!seen.has(candidate.toLowerCase())) {
+          seen.add(candidate.toLowerCase());
+          candidates.push(candidate);
+        }
+        continue;
+      }
+      for (const variant of this.emailLookupKeys(candidate)) {
         const key = variant.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
@@ -843,34 +1050,44 @@ export class ZoomService implements OnModuleInit {
       if (direct) return direct;
     }
 
-    const emailCandidates = candidates.filter((candidate) => candidate.includes('@'));
+    const emailCandidates = [...new Set(rawCandidates.filter((c) => c.includes('@')))];
+    for (const email of emailCandidates) {
+      const fromSearch = await this.findZoomUserBySearchKey(email);
+      if (fromSearch) return fromSearch;
+    }
+
     for (const email of emailCandidates) {
       const fromList = await this.scanUsersInAccount(email);
       if (fromList) return fromList;
     }
 
-    const accountProbe = await this.zoomRequestSoft<{ total_records?: number }>(
-      'GET',
-      '/users?page_size=1&status=active',
-    );
-    if (accountProbe.ok === false) {
-      if (accountProbe.status === 401 || accountProbe.status === 403) {
-        throw new HttpException(
-          'Zoom credentials are invalid or missing user:read:admin scope. Check ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the server.',
-          HttpStatus.BAD_GATEWAY,
-        );
-      }
+    let accountUsers: Array<{ id: string; email: string; displayName?: string }> = [];
+    try {
+      accountUsers = await this.listAccountUsers();
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
     }
 
-    const accountUserCount = accountProbe.ok ? accountProbe.data.total_records : undefined;
-    const tried = emailCandidates.length
-      ? emailCandidates.join(', ')
-      : candidates.join(', ');
+    const primaryEmail = emailCandidates[0] || identifier;
+    const suggestions = this.suggestAccountEmails(primaryEmail, accountUsers);
+    const tried = emailCandidates.length ? emailCandidates.join(', ') : candidates.join(', ');
+
+    if (accountUsers.length === 0) {
+      throw new HttpException(
+        `Zoom user not found for "${tried}" and no users were returned from your Zoom account. ` +
+          'Add the teacher as a licensed user in Zoom Admin → Users (same account as your Server-to-Server app), then link again.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const suggestionText = suggestions.length
+      ? ` Similar emails on your Zoom account: ${suggestions.join(', ')}.`
+      : accountUsers.length <= 8
+        ? ` Licensed emails on your Zoom account: ${accountUsers.map((u) => u.email).join(', ')}.`
+        : ` Your Zoom account has ${accountUsers.length} users — open Zoom Admin → Users to confirm the exact email.`;
 
     throw new HttpException(
-      accountUserCount === 0
-        ? 'No Zoom users exist on the account linked to your Server-to-Server OAuth app. Add licensed users in Zoom Admin, then try again.'
-        : `Zoom user not found for "${tried}". Use the exact licensed email from Zoom Admin → Users on the same account as your Server-to-Server OAuth app (${accountUserCount ?? 'multiple'} users on that account).`,
+      `Zoom user not found for "${tried}". The teacher must exist as a licensed user in Zoom Admin → Users on the same account as your Server-to-Server OAuth app.${suggestionText}`,
       HttpStatus.BAD_REQUEST,
     );
   }

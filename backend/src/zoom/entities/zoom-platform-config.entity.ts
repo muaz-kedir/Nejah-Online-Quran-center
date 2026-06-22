@@ -18,9 +18,13 @@ export class ZoomPlatformConfig {
   @Column({ nullable: true })
   clientId: string | null;
 
-  /** AES-256-GCM via EncryptionService */
+  /** AES-256-GCM via EncryptionService (legacy — prefer clientSecret) */
   @Column({ type: 'text', nullable: true })
   clientSecretEncrypted: string | null;
+
+  /** Plaintext S2S client secret (server-side DB only; avoids ENCRYPTION_KEY breakage on Render). */
+  @Column({ type: 'text', nullable: true })
+  clientSecret: string | null;
 
   @Column({ type: 'text', nullable: true })
   secretTokenEncrypted: string | null;

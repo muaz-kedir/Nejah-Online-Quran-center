@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { api } from '@/lib/api';
 import {
   Video,
@@ -88,8 +89,10 @@ function ZoomSettingsPage() {
     typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
   const isAdminView = ADMIN_ROLES.includes(userRole);
 
+  const Layout = isAdminView ? DashboardLayout : TeacherLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <div className="space-y-8 pb-12">
         <div>
           <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-nejah-slate-blue mb-1">
@@ -105,7 +108,7 @@ function ZoomSettingsPage() {
 
         {isAdminView ? <AdminZoomPanel /> : <TeacherZoomPanel />}
       </div>
-    </DashboardLayout>
+    </Layout>
   );
 }
 
@@ -330,7 +333,8 @@ function TeacherZoomPanel() {
                 Link Zoom Account
               </Button>
               <p className="text-[10px] text-nejah-slate-blue font-medium text-center">
-                Uses Server-to-Server OAuth — no Zoom login redirect required.
+                Use the exact email from Zoom Admin → Users. If you are not added there yet, ask
+                your admin to invite you as a licensed user first.
               </p>
             </div>
           )}
@@ -351,6 +355,10 @@ function AdminZoomPanel() {
   const [zoomUserId, setZoomUserId] = useState('');
   const [zoomEmail, setZoomEmail] = useState('');
   const [saving, setSaving] = useState(false);
+  const [accountUsers, setAccountUsers] = useState<
+    Array<{ id: string; email: string; displayName?: string; status?: string }>
+  >([]);
+  const [accountUsersLoading, setAccountUsersLoading] = useState(false);
 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [overviewRefreshing, setOverviewRefreshing] = useState(false);
@@ -441,10 +449,21 @@ function AdminZoomPanel() {
     );
   }, [overview, search]);
 
-  const openConnect = (teacher: TeacherZoomRow) => {
+  const openConnect = async (teacher: TeacherZoomRow) => {
     setConnectTarget(teacher);
     setZoomUserId(teacher.zoomUserId || teacher.teacherEmail || '');
     setZoomEmail(teacher.zoomEmail || teacher.teacherEmail || '');
+    setAccountUsersLoading(true);
+    try {
+      const data = await api<{ users: Array<{ id: string; email: string; displayName?: string }> }>(
+        '/zoom-settings/account-users',
+      );
+      setAccountUsers(data.users || []);
+    } catch {
+      setAccountUsers([]);
+    } finally {
+      setAccountUsersLoading(false);
+    }
   };
 
   const closeConnect = () => {
@@ -675,6 +694,45 @@ function AdminZoomPanel() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {accountUsers.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="adminZoomPick">Pick from Zoom account</Label>
+                <select
+                  id="adminZoomPick"
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value=""
+                  onChange={(e) => {
+                    const picked = accountUsers.find((u) => u.id === e.target.value);
+                    if (picked) {
+                      setZoomUserId(picked.id);
+                      setZoomEmail(picked.email);
+                    }
+                  }}
+                >
+                  <option value="">Select licensed Zoom user…</option>
+                  {accountUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.email}
+                      {user.displayName ? ` (${user.displayName})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-muted-foreground">
+                  These are users on the same Zoom account as your Server-to-Server app.
+                </p>
+              </div>
+            )}
+            {accountUsersLoading && (
+              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-3 w-3 animate-spin" /> Loading Zoom account users…
+              </p>
+            )}
+            {!accountUsersLoading && accountUsers.length === 0 && (
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 text-xs text-amber-800 dark:text-amber-400">
+                Could not load Zoom users. Ensure <strong>user:read:admin</strong> scope is added
+                to your Server-to-Server OAuth app in Zoom Marketplace, then activate the app.
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="adminZoomUserId">Zoom User ID *</Label>
               <Input
@@ -760,8 +818,8 @@ function PlatformConfigCard({
       toast.error('Account ID and Client ID are required');
       return;
     }
-    if (!clientSecret.trim() && !status?.hasClientSecret) {
-      toast.error('Client Secret is required');
+    if (!clientSecret.trim()) {
+      toast.error('Client Secret is required — paste it from Zoom Marketplace → Server-to-Server OAuth app');
       return;
     }
     setSaving(true);
@@ -847,7 +905,17 @@ function PlatformConfigCard({
             >
               Zoom Marketplace
             </a>
-            , then paste Account ID, Client ID, and Client Secret below.
+            . Copy Account ID, Client ID, and Client Secret — all three are required when saving.
+          </div>
+        )}
+
+        {configured && status?.databaseConfigured === false && status?.envConfigured && (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-400">
+            Zoom credentials are only in Render environment variables. If you see authentication
+            errors, update <code className="text-[10px]">ZOOM_ACCOUNT_ID</code>,{' '}
+            <code className="text-[10px]">ZOOM_CLIENT_ID</code>, and{' '}
+            <code className="text-[10px]">ZOOM_CLIENT_SECRET</code> on Render (no quotes), or
+            save all three fields below.
           </div>
         )}
 
@@ -872,13 +940,13 @@ function PlatformConfigCard({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="zoomClientSecret">Client Secret</Label>
+              <Label htmlFor="zoomClientSecret">Client Secret *</Label>
               <Input
                 id="zoomClientSecret"
                 type="password"
                 value={clientSecret}
                 onChange={(e) => setClientSecret(e.target.value)}
-                placeholder={status?.hasClientSecret ? '•••••••• (leave blank to keep)' : 'Required'}
+                placeholder="Required — paste from Zoom Marketplace"
               />
             </div>
             <div className="space-y-2">

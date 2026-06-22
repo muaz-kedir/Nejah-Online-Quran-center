@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, MapPin } from 'lucide-react';
+import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, MapPin, Clock, Wifi, Megaphone } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Country, City } from 'country-state-city';
 import { getCountryIsoByName } from '@/lib/geo-data';
@@ -27,14 +28,27 @@ import { buildUpdateTeacherPayload } from '@/lib/teacher-payload';
 
 const API = API_BASE;
 
+const LANGUAGES = ['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French'];
+const INTERNET_TYPES = ['Wi-Fi', 'Mobile Data'];
+const QIRAT_LEVELS = ['Fully Hafiz', 'Partial Hafiz', 'Learned Quran with Tajweed'];
+const AVAILABILITY = [
+  'After Fajr until Dhuhr',
+  'Between Dhuhr and Asr',
+  'Between Asr and Maghrib',
+  'Between Maghrib and Isha',
+  'After Isha',
+];
+const MARKETING_SOURCES = ['TikTok', 'YouTube', 'Telegram', 'Facebook', 'Instagram'];
+
 interface EditTeacherModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   teacher: any;
+  apiEndpoint?: string;
 }
 
-export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeacherModalProps) {
+export function EditTeacherModal({ open, onClose, onSuccess, teacher, apiEndpoint }: EditTeacherModalProps) {
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +57,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
     email: '',
     gender: 'Male',
     phoneNumber: '',
+    dateOfBirth: '',
     qualification: '',
     specialization: '',
     experience: '',
@@ -54,7 +69,17 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
     country: '',
     city: '',
     streetAddress: '',
+    languages: [] as string[],
+    internetConnectionType: '',
+    qiratEducationLevel: '',
+    teachingTimeAvailability: [] as string[],
+    marketingSource: '',
+    additionalComments: '',
   });
+  const [languageOther, setLanguageOther] = useState('');
+  const [internetOther, setInternetOther] = useState('');
+  const [qiratOther, setQiratOther] = useState('');
+  const [marketingOther, setMarketingOther] = useState('');
 
   useEffect(() => {
     if (teacher) {
@@ -63,6 +88,7 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
         email: teacher.email || '',
         gender: teacher.gender || 'Male',
         phoneNumber: teacher.phoneNumber || '',
+        dateOfBirth: teacher.dateOfBirth || '',
         qualification: teacher.qualification || '',
         specialization: teacher.specialization || '',
         experience: teacher.experience !== undefined ? String(teacher.experience) : '',
@@ -74,6 +100,12 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
         country: teacher.country || '',
         city: teacher.city || '',
         streetAddress: teacher.streetAddress || '',
+        languages: teacher.languages || [],
+        internetConnectionType: teacher.internetConnectionType || '',
+        qiratEducationLevel: teacher.qiratEducationLevel || '',
+        teachingTimeAvailability: teacher.teachingTimeAvailability || [],
+        marketingSource: teacher.marketingSource || '',
+        additionalComments: teacher.additionalComments || '',
       });
     }
   }, [teacher]);
@@ -125,9 +157,17 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
         ...formData,
         experience: formData.experience ? parseInt(formData.experience, 10) : 0,
         monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
+      }, {
+        otherStates: {
+          languages: languageOther || undefined,
+          internetConnectionType: internetOther || undefined,
+          qiratEducationLevel: qiratOther || undefined,
+          marketingSource: marketingOther || undefined,
+        },
       });
 
-      const response = await fetch(`${API}/teachers/${teacher.id}`, {
+      const endpoint = apiEndpoint || `${API}/teachers/${teacher.id}`;
+      const response = await fetch(endpoint, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -137,6 +177,16 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userId');
+          toast.error('Session expired. Please log in again.');
+          window.location.href = '/login';
+          return;
+        }
         const error = await response.json();
         throw new Error(error.message || 'Failed to update teacher');
       }
@@ -240,6 +290,17 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
 
               <div className="grid gap-1.5">
+                <Label htmlFor="edit-dateOfBirth" className="text-xs font-semibold dark:text-muted-foreground">Date of Birth</Label>
+                <Input
+                  id="edit-dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
                 <Label htmlFor="edit-email" className="text-xs font-semibold dark:text-muted-foreground">Email Address *</Label>
                 <Input
                   id="edit-email"
@@ -328,6 +389,45 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
             </div>
           </div>
 
+          {/* Languages */}
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
+              <span className="p-1.5 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-blue-600">
+                <Globe className="h-4 w-4" />
+              </span>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Languages</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">Select languages you speak</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[...LANGUAGES, 'Other'].map(lang => (
+                <label key={lang} className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                  formData.languages.includes(lang) ? 'border-nejah-electric bg-brand-electric/10' : 'border-border hover:border-nejah-electric/30'
+                }`}>
+                  <Checkbox
+                    checked={formData.languages.includes(lang)}
+                    onCheckedChange={(checked) => {
+                      setFormData({
+                        ...formData,
+                        languages: checked
+                          ? [...formData.languages, lang]
+                          : formData.languages.filter(l => l !== lang),
+                      });
+                    }}
+                  />
+                  <span className="text-sm font-medium text-foreground">{lang}</span>
+                </label>
+              ))}
+            </div>
+            {formData.languages.includes('Other') && (
+              <Input
+                value={languageOther}
+                onChange={(e) => setLanguageOther(e.target.value)}
+                placeholder="Specify other language"
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl mt-2"
+              />
+            )}
+          </div>
+
           {/* Section 2: Academic Qualifications */}
           <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
             <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
@@ -363,6 +463,33 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-muted-foreground">Internet Connection</Label>
+                <Select value={formData.internetConnectionType} onValueChange={(v) => setFormData({ ...formData, internetConnectionType: v })}>
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    {[...INTERNET_TYPES, 'Other'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {formData.internetConnectionType === 'Other' && (
+                  <Input value={internetOther} onChange={(e) => setInternetOther(e.target.value)} placeholder="Specify other" className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl mt-1" />
+                )}
+              </div>
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold dark:text-muted-foreground">Qirat / Quran Level</Label>
+                <Select value={formData.qiratEducationLevel} onValueChange={(v) => setFormData({ ...formData, qiratEducationLevel: v })}>
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select level" /></SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    {[...QIRAT_LEVELS, 'Other'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {formData.qiratEducationLevel === 'Other' && (
+                  <Input value={qiratOther} onChange={(e) => setQiratOther(e.target.value)} placeholder="Specify other" className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl mt-1" />
+                )}
+              </div>
+            </div>
+
             <div className="grid gap-1.5">
               <Label htmlFor="edit-qualification" className="text-xs font-semibold dark:text-muted-foreground">Certifications / Ijazah</Label>
               <Textarea
@@ -372,6 +499,38 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
                 placeholder="List all formal certifications and ijazahs received with respective institutions..."
                 className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl min-h-[80px]"
               />
+            </div>
+          </div>
+
+          {/* Teaching Availability */}
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
+              <span className="p-1.5 bg-green-50 dark:bg-green-950/50 rounded-lg text-green-600">
+                <Clock className="h-4 w-4" />
+              </span>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Teaching Availability</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">Select your available teaching times</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {AVAILABILITY.map(time => (
+                <label key={time} className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                  formData.teachingTimeAvailability.includes(time) ? 'border-nejah-electric bg-brand-electric/10' : 'border-border hover:border-nejah-electric/30'
+                }`}>
+                  <Checkbox
+                    checked={formData.teachingTimeAvailability.includes(time)}
+                    onCheckedChange={(checked) => {
+                      setFormData({
+                        ...formData,
+                        teachingTimeAvailability: checked
+                          ? [...formData.teachingTimeAvailability, time]
+                          : formData.teachingTimeAvailability.filter(t => t !== time),
+                      });
+                    }}
+                  />
+                  <Clock className="h-4 w-4 text-nejah-electric flex-shrink-0" />
+                  <span className="text-sm font-medium text-foreground">{time}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -431,7 +590,39 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher }: EditTeac
             </div>
           </div>
 
+          {/* Marketing Source & Additional Comments */}
+          <div className="bg-muted/50 dark:bg-nejah-surface/30 p-4 rounded-2xl border border-border dark:border-nejah-border-blue space-y-4">
+            <div className="flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-2">
+              <span className="p-1.5 bg-pink-50 dark:bg-pink-950/50 rounded-lg text-pink-600">
+                <Megaphone className="h-4 w-4" />
+              </span>
+              <h3 className="font-bold text-sm text-foreground dark:text-foreground">Additional Info</h3>
+            </div>
 
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold dark:text-muted-foreground">Where did you hear about us?</Label>
+              <Select value={formData.marketingSource} onValueChange={(v) => setFormData({ ...formData, marketingSource: v })}>
+                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select source" /></SelectTrigger>
+                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                  {[...MARKETING_SOURCES, 'Other'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {formData.marketingSource === 'Other' && (
+                <Input value={marketingOther} onChange={(e) => setMarketingOther(e.target.value)} placeholder="Specify other" className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl mt-1" />
+              )}
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="edit-additionalComments" className="text-xs font-semibold dark:text-muted-foreground">Additional Comments (Optional)</Label>
+              <Textarea
+                id="edit-additionalComments"
+                value={formData.additionalComments}
+                onChange={(e) => setFormData({ ...formData, additionalComments: e.target.value })}
+                placeholder="Any additional information you'd like to share..."
+                className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl min-h-[80px]"
+              />
+            </div>
+          </div>
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose} className="rounded-xl border-border dark:border-nejah-border-blue dark:text-muted-foreground">

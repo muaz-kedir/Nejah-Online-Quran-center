@@ -8,8 +8,6 @@ import {
   Calendar,
   Bell,
   User,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   X,
   LogOut,
@@ -130,7 +128,7 @@ export function TeacherPortalLayout({
       </div>
 
       {/* Navigation */}
-      <nav className={cn('flex-1 space-y-1 overflow-y-auto', collapsed && !isMobile ? 'px-2' : 'px-3')}>
+      <nav className={cn('flex-1 space-y-1 overflow-y-auto min-w-0', collapsed && !isMobile ? 'px-2' : 'px-3')}>
         {menuItems.map((item) => {
           const isActive = activePath === item.path;
           return (
@@ -179,7 +177,7 @@ export function TeacherPortalLayout({
       </nav>
 
       {/* Bottom actions */}
-      <div className={cn('space-y-1', collapsed && !isMobile ? 'px-2 pb-2' : 'px-3 pb-2')}>
+      <div className={cn('space-y-1 min-w-0', collapsed && !isMobile ? 'px-2 pb-2' : 'px-3 pb-2')}>
         {onOpenSettings && (
           <div className="relative group">
             <button
@@ -221,7 +219,7 @@ export function TeacherPortalLayout({
       </div>
 
       {/* Profile card */}
-      <div className={cn(collapsed && !isMobile ? 'px-2 pb-4' : 'px-3 pb-4')}>
+      <div className={cn('min-w-0', collapsed && !isMobile ? 'px-2 pb-4' : 'px-3 pb-4')}>
         <button
           type="button"
           onClick={handleProfileClick}
@@ -257,25 +255,16 @@ export function TeacherPortalLayout({
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col h-screen shrink-0 sidebar-transition',
+          'hidden lg:flex flex-col h-screen shrink-0 sidebar-transition overflow-hidden max-w-full',
           'bg-card/90 dark:bg-nejah-surface/95 backdrop-blur-xl',
           'border-r border-border/50 dark:border-nejah-border-blue/40',
           collapsed ? 'w-20' : 'w-64',
         )}
       >
-        {sidebarContent(false)}
-
-        {/* Collapse toggle */}
-        <div className="px-3 pb-3">
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="w-full flex items-center justify-center py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-all duration-200"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </button>
+        <div className="flex flex-col h-full min-w-0 overflow-hidden w-full max-w-full">
+          {sidebarContent(false)}
         </div>
+
       </aside>
 
       {/* ─── Mobile Top Bar ─── */}
@@ -297,18 +286,6 @@ export function TeacherPortalLayout({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate({ to: '/teacher_notifications' })}
-            className="relative p-2 rounded-xl hover:bg-primary/10 transition-colors"
-          >
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            {unreadNotifications > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                {unreadNotifications}
-              </span>
-            )}
-          </button>
           <button
             type="button"
             onClick={handleProfileClick}
@@ -359,7 +336,7 @@ export function TeacherPortalLayout({
       </AnimatePresence>
 
       {/* ─── Main Content ─── */}
-      <div className="flex-1 flex flex-col overflow-y-auto min-w-0 lg:pt-0 pt-16">
+      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16">
         {children}
       </div>
     </div>
