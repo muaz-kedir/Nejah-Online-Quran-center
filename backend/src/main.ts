@@ -47,6 +47,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    rawBody: true, // Enable raw body for Zoom webhook signature verification
   });
   app.enableShutdownHooks();
   const configService = app.get(ConfigService);
@@ -85,7 +86,8 @@ async function bootstrap() {
   // Serve uploaded files
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
-  const port = configService.get('PORT') || 3000;
+  // Use Render's dynamic port or fallback to 3000
+  const port = parseInt(process.env.PORT || '3000', 10);
 
   try {
     const dataSource = app.get(DataSource);

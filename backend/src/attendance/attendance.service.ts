@@ -507,4 +507,21 @@ export class AttendanceService {
     }
     return null;
   }
+
+  async getAllSessions(limit: number = 100, status?: string): Promise<ClassSession[]> {
+    const query = this.classSessionRepository
+      .createQueryBuilder('session')
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendance')
+      .leftJoinAndSelect('attendance.student', 'student')
+      .orderBy('session.sessionDate', 'DESC')
+      .addOrderBy('session.scheduledStartTime', 'DESC')
+      .take(limit);
+
+    if (status && status !== 'all') {
+      query.where('session.status = :status', { status });
+    }
+
+    return query.getMany();
+  }
 }

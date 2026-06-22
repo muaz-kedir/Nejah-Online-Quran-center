@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StudentsModule } from './students/students.module';
@@ -26,7 +28,6 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { LearningGoalsModule } from './learning-goals/learning-goals.module';
 import { FeeConfigModule } from './fee-config/fee-config.module';
 import { CurrencyModule } from './currency/currency.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './sessions/sessions.module';
@@ -42,12 +43,19 @@ import { createTypeOrmOptions } from './database/typeorm.config';
       envFilePath: '.env',
     }),
 
+    // Scheduler for cron jobs (keep-alive, etc.)
+    ScheduleModule.forRoot(),
+
     // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => createTypeOrmOptions(configService),
       inject: [ConfigService],
     }),
+
+    // Core modules
+    HealthModule,
+    DatabaseModule,
 
     // Feature modules
     AuthModule,
@@ -78,9 +86,7 @@ import { createTypeOrmOptions } from './database/typeorm.config';
     CurrencyModule,
     WebsiteCmsModule,
     UploadsModule,
-    ScheduleModule.forRoot(),
-    HealthModule,
-    DatabaseModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
