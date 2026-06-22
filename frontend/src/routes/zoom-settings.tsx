@@ -55,6 +55,7 @@ type TeacherIntegration = {
   connectionStatus: string;
   zoomUserId?: string;
   zoomEmail?: string;
+  profileEmail?: string;
   displayName?: string;
   accountType?: string;
   connectedAt?: string;
@@ -123,7 +124,11 @@ function TeacherZoomPanel() {
     try {
       const data = await api<TeacherIntegration | null>('/zoom-settings/status');
       setIntegration(data);
-      if (data?.zoomEmail) setConnectEmail(data.zoomEmail);
+      if (data?.zoomEmail) {
+        setConnectEmail(data.zoomEmail);
+      } else if (data?.profileEmail) {
+        setConnectEmail(data.profileEmail);
+      }
     } catch {
       setIntegration(null);
     } finally {
@@ -434,8 +439,8 @@ function AdminZoomPanel() {
 
   const openConnect = (teacher: TeacherZoomRow) => {
     setConnectTarget(teacher);
-    setZoomUserId(teacher.zoomUserId || '');
-    setZoomEmail(teacher.zoomEmail || '');
+    setZoomUserId(teacher.zoomUserId || teacher.teacherEmail || '');
+    setZoomEmail(teacher.zoomEmail || teacher.teacherEmail || '');
   };
 
   const closeConnect = () => {

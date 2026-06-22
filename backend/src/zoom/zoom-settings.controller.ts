@@ -106,7 +106,11 @@ export class ZoomSettingsController {
   @Roles(UserRole.TEACHER)
   async getStatus(@Request() req) {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    return sanitizeIntegration(await this.zoomService.getTeacherIntegration(teacher.id));
+    const integration = await this.zoomService.getTeacherIntegration(teacher.id);
+    return {
+      ...sanitizeIntegration(integration),
+      profileEmail: teacher.email,
+    };
   }
 
   @Get('overview')
