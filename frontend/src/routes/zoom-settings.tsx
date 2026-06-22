@@ -720,11 +720,36 @@ function PlatformConfigCard({
   const [clientSecret, setClientSecret] = useState('');
   const [secretToken, setSecretToken] = useState('');
   const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyOk, setVerifyOk] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (status?.accountId) setAccountId(status.accountId);
     if (status?.clientId) setClientId(status.clientId);
   }, [status?.accountId, status?.clientId]);
+
+  const handleVerify = async () => {
+    setVerifying(true);
+    setVerifyOk(null);
+    try {
+      const result = await api<{ ok: boolean; message: string; source?: string }>(
+        '/zoom-settings/platform/verify',
+        { method: 'POST' },
+      );
+      setVerifyOk(true);
+      toast.success(
+        result.message +
+          (result.source === 'env'
+            ? ' (using Render/server environment variables)'
+            : ' (using saved database credentials)'),
+      );
+    } catch (err: any) {
+      setVerifyOk(false);
+      toast.error(err.message || 'Zoom credentials are invalid');
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!accountId.trim() || !clientId.trim()) {
@@ -746,9 +771,10 @@ function PlatformConfigCard({
           ...(secretToken.trim() ? { secretToken: secretToken.trim() } : {}),
         }),
       });
-      toast.success('Zoom platform credentials saved');
+      toast.success('Zoom credentials saved and verified with Zoom');
       setClientSecret('');
       setSecretToken('');
+      setVerifyOk(true);
       await onSaved();
     } catch (err: any) {
       toast.error(err.message || 'Failed to save Zoom credentials');
@@ -772,7 +798,7 @@ function PlatformConfigCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Status:</span>
           {configured ? (
             <Badge className="bg-green-100 text-green-700 border-none">
@@ -781,7 +807,21 @@ function PlatformConfigCard({
           ) : (
             <Badge className="bg-red-100 text-red-700 border-none">Not configured</Badge>
           )}
+          {verifyOk === true && (
+            <Badge className="bg-green-100 text-green-700 border-none">Zoom API verified</Badge>
+          )}
+          {verifyOk === false && (
+            <Badge className="bg-red-100 text-red-700 border-none">Zoom API failed</Badge>
+          )}
         </div>
+
+        {status?.source === 'env' && configured && (
+          <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-400">
+            Platform credentials are loaded from <strong>server environment variables</strong>{' '}
+            (ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET). Values saved below are ignored
+            until those env vars are removed. Use &quot;Test Zoom Connection&quot; to verify them.
+          </div>
+        )}
 
         {!configured && (
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-400">
@@ -838,11 +878,23 @@ function PlatformConfigCard({
                 placeholder="For Zoom webhook verification"
               />
             </div>
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 flex flex-wrap gap-2">
               <Button onClick={handleSave} disabled={saving} className="gap-2">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Save Platform Credentials
               </Button>
+              {configured && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleVerify}
+                  disabled={verifying}
+                  className="gap-2"
+                >
+                  {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Test Zoom Connection
+                </Button>
+              )}
             </div>
           </div>
         ) : (

@@ -103,8 +103,15 @@ export class ZoomService implements OnModuleInit {
     if (stored?.accountId && stored.clientId && stored.clientSecretEncrypted) {
       this.accountId = stored.accountId.trim();
       this.clientId = stored.clientId.trim();
-      this.clientSecret =
-        this.encryptionService.decrypt(stored.clientSecretEncrypted)?.trim() || '';
+      const decryptedSecret = this.encryptionService
+        .decrypt(stored.clientSecretEncrypted)
+        ?.trim();
+      this.clientSecret = decryptedSecret || '';
+      if (!this.clientSecret) {
+        this.logger.error(
+          'Zoom client secret could not be decrypted. Set ENCRYPTION_KEY on the server to match the key used when credentials were saved, or re-save credentials in Zoom Settings.',
+        );
+      }
       if (!this.secretToken && stored.secretTokenEncrypted) {
         this.secretToken =
           this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || '';
@@ -134,50 +141,78 @@ export class ZoomService implements OnModuleInit {
       return this.accessToken;
     }
 
-    const accountId =
+    const accountId = (
       this.accountId ||
       this.configService.get<string>('ZOOM_ACCOUNT_ID') ||
-      process.env.ZOOM_ACCOUNT_ID;
-    const clientId =
+      process.env.ZOOM_ACCOUNT_ID ||
+      ''
+    ).trim();
+    const clientId = (
       this.clientId ||
       this.configService.get<string>('ZOOM_CLIENT_ID') ||
-      process.env.ZOOM_CLIENT_ID;
-    const clientSecret =
+      process.env.ZOOM_CLIENT_ID ||
+      ''
+    ).trim();
+    const clientSecret = (
       this.clientSecret ||
       this.configService.get<string>('ZOOM_CLIENT_SECRET') ||
-      process.env.ZOOM_CLIENT_SECRET;
+      process.env.ZOOM_CLIENT_SECRET ||
+      ''
+    ).trim();
 
     if (!accountId || !clientId || !clientSecret) {
       throw new HttpException(
-        'Zoom Server-to-Server OAuth is not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET.',
+        'Zoom Server-to-Server OAuth is not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the server, or save them in Zoom Settings (Super Admin).',
         HttpStatus.BAD_REQUEST,
       );
     }
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const tokenUrl = `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(accountId)}`;
 
     try {
       const { data } = await firstValueFrom(
         this.httpService.post(
-          `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
+          tokenUrl,
           {},
           { headers: { Authorization: `Basic ${credentials}` } },
         ),
       );
 
+      if (!data?.access_token) {
+        throw new Error('Zoom token response did not include access_token');
+      }
+
       this.accessToken = data.access_token;
       this.tokenExpiresAt = new Date(Date.now() + (data.expires_in - 60) * 1000);
       return this.accessToken;
     } catch (error) {
+      this.accessToken = null;
+      this.tokenExpiresAt = null;
+
+      const zoomPayload = error?.response?.data;
+      const reason =
+        (typeof zoomPayload === 'object' &&
+          (zoomPayload?.reason || zoomPayload?.error || zoomPayload?.message)) ||
+        error?.message ||
+        'Unknown Zoom OAuth error';
+
       this.logger.error(
         'Failed to get Zoom Server-to-Server access token',
-        error?.response?.data || error.message,
+        zoomPayload || error.message,
       );
+
       throw new HttpException(
-        'Failed to authenticate with Zoom',
-        HttpStatus.UNAUTHORIZED,
+        `Zoom Server-to-Server authentication failed (${reason}). Verify ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET match your activated Zoom Marketplace app.`,
+        HttpStatus.BAD_GATEWAY,
       );
     }
+  }
+
+  /** Confirms platform credentials can obtain a Zoom access token. */
+  async verifyPlatformAuth(): Promise<{ ok: true }> {
+    await this.getAccessToken();
+    return { ok: true };
   }
 
   private async zoomRequest<T>(
@@ -377,7 +412,7 @@ export class ZoomService implements OnModuleInit {
     clientId: string;
     clientSecret?: string;
     secretToken?: string;
-  }): Promise<{ configured: boolean; source: 'database' }> {
+  }): Promise<{ configured: boolean; source: 'database'; zoomAuthVerified: boolean }> {
     const accountId = input.accountId?.trim();
     const clientId = input.clientId?.trim();
     const clientSecret = input.clientSecret?.trim();
@@ -411,12 +446,14 @@ export class ZoomService implements OnModuleInit {
 
     if (!this.isPlatformConfigured()) {
       throw new HttpException(
-        'Zoom credentials were saved but could not be loaded. Set ENCRYPTION_KEY in backend environment variables.',
+        'Zoom credentials were saved but could not be loaded. Set ENCRYPTION_KEY in backend environment variables (must stay the same after saving secrets).',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    return { configured: true, source: 'database' };
+    await this.verifyPlatformAuth();
+
+    return { configured: true, source: 'database', zoomAuthVerified: true };
   }
 
   getWebhookSecretToken(): string {
