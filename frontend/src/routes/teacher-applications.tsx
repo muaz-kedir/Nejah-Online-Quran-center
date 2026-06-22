@@ -13,6 +13,7 @@ import {
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
 import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
+import { cn } from '@/lib/utils';
 
 interface Application {
   id: string;
@@ -61,6 +62,7 @@ function TeacherApplicationsContent() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
@@ -93,12 +95,15 @@ function TeacherApplicationsContent() {
     }
   };
 
-  const fetchApplications = useCallback(async (page = 1) => {
+  const fetchApplications = useCallback(async (opts?: { page?: number; searchTerm?: string; statusVal?: string }) => {
     setIsLoading(true);
     try {
+      const page = opts?.page ?? 1;
+      const term = opts?.searchTerm ?? search;
+      const sFilter = opts?.statusVal ?? statusFilter;
       const params = new URLSearchParams({ page: String(page), limit: '10' });
-      if (search) params.set('search', search);
-      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (term) params.set('search', term);
+      if (sFilter !== 'all') params.set('status', sFilter);
 
       const res = await fetch(apiUrl(`/teacher-applications?${params}`), { headers: apiHeaders() });
       if (!res.ok) throw new Error('Failed to fetch applications');
@@ -109,6 +114,7 @@ function TeacherApplicationsContent() {
       toast.error(err.message);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [search, statusFilter]);
 
@@ -122,15 +128,27 @@ function TeacherApplicationsContent() {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    fetchApplications();
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    fetchApplications({ page: meta.page, searchTerm: search, statusVal: statusFilter });
     fetchStats();
     fetchSettings();
-  }, [fetchApplications, fetchStats, fetchSettings]);
+  }, [fetchApplications, fetchStats, fetchSettings, meta.page, search, statusFilter]);
+
+  useEffect(() => {
+    fetchApplications({ page: 1 });
+    fetchStats();
+    fetchSettings();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchApplications(1);
+    fetchApplications({ page: 1, searchTerm: search, statusVal: statusFilter });
+  };
+
+  const handleStatusChange = (val: string) => {
+    setStatusFilter(val);
+    fetchApplications({ page: 1, searchTerm: search, statusVal: val });
   };
 
   return (
@@ -145,17 +163,23 @@ function TeacherApplicationsContent() {
           <p className="text-muted-foreground text-sm mt-1">Review and manage teacher applications</p>
         </div>
         
-        {/* Toggle Button */}
-        <Button 
-          variant={isApplicationsOpen ? "destructive" : "default"} 
-          className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary"}
-          onClick={toggleApplicationsOpen}
-          disabled={isToggling}
-        >
-          {isToggling ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : 
-           isApplicationsOpen ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
-          {isApplicationsOpen ? "Close Applications (Unpost)" : "Open Applications (Post)"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          {/* Toggle Button */}
+          <Button 
+            variant={isApplicationsOpen ? "destructive" : "default"} 
+            className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary"}
+            onClick={toggleApplicationsOpen}
+            disabled={isToggling}
+          >
+            {isToggling ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : 
+             isApplicationsOpen ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+            {isApplicationsOpen ? "Close Applications (Unpost)" : "Open Applications (Post)"}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -196,7 +220,7 @@ function TeacherApplicationsContent() {
           </form>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); }}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[180px] h-10 bg-muted border-border">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
@@ -208,8 +232,8 @@ function TeacherApplicationsContent() {
                 <SelectItem value="MORE_INFO_REQUIRED">More Info Required</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10 border-border" onClick={() => { fetchApplications(meta.page); fetchStats(); }}>
-              <RefreshCw className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-10 w-10 border-border" onClick={handleRefresh}>
+              <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
             </Button>
           </div>
         </div>
@@ -291,19 +315,19 @@ function TeacherApplicationsContent() {
               Showing {((meta.page - 1) * meta.limit) + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" disabled={meta.page <= 1} onClick={() => fetchApplications(meta.page - 1)}
+              <Button variant="outline" size="sm" disabled={meta.page <= 1} onClick={() => fetchApplications({ page: meta.page - 1 })}
                 className="h-8 px-2 border-border">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <Button key={p} variant={p === meta.page ? 'default' : 'outline'} size="sm"
-                  onClick={() => fetchApplications(p)}
+                  onClick={() => fetchApplications({ page: p })}
                   className={`h-8 w-8 px-0 ${p === meta.page ? 'bg-primary hover:bg-nejah-azure' : 'border-border'}`}
                 >
                   {p}
                 </Button>
               ))}
-              <Button variant="outline" size="sm" disabled={meta.page >= meta.totalPages} onClick={() => fetchApplications(meta.page + 1)}
+              <Button variant="outline" size="sm" disabled={meta.page >= meta.totalPages} onClick={() => fetchApplications({ page: meta.page + 1 })}
                 className="h-8 px-2 border-border">
                 <ChevronRight className="h-4 w-4" />
               </Button>

@@ -5,7 +5,7 @@ import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, UserCog, XCircle } from 'lucide-react';
+import { Plus, Search, UserCog, XCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -49,6 +49,7 @@ function TeacherReplacementsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchReplacements = async () => {
     setLoading(true);
@@ -74,9 +75,15 @@ function TeacherReplacementsPage() {
     fetchReplacements();
   }, [meta.page, statusFilter]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchReplacements();
+    setIsRefreshing(false);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setMeta({ ...meta, page: 1 });
+    setMeta(prev => ({ ...prev, page: 1 }));
     fetchReplacements();
   };
 
@@ -104,13 +111,19 @@ function TeacherReplacementsPage() {
             Manage temporary teacher assignments for students
           </p>
         </div>
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary hover:bg-primary"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Assign Temporary Teacher
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary hover:bg-primary"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Assign Temporary Teacher
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4 mb-6">
