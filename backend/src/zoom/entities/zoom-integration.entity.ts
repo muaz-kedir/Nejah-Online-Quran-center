@@ -34,19 +34,7 @@ export class ZoomIntegration {
   accountType: string;
 
   @Column({ nullable: true })
-  scope: string;
-
-  @Column({ nullable: true })
   zoomAccountId: string;
-
-  @Column({ type: 'text', nullable: true })
-  accessToken: string;
-
-  @Column({ type: 'text', nullable: true })
-  refreshToken: string;
-
-  @Column({ type: 'timestamp', nullable: true })
-  tokenExpiresAt: Date;
 
   @Column({ default: 'disconnected' })
   connectionStatus: string;

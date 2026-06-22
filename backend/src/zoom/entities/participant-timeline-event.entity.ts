@@ -15,6 +15,11 @@ export enum TimelineEventType {
   LEAVE = 'LEAVE',
 }
 
+export enum TimelineEventSource {
+  WEBHOOK = 'webhook',
+  REPORT = 'report',
+}
+
 @Entity('participant_timeline_events')
 @Index(['sessionId', 'participantId', 'timestamp'])
 @Index(['sessionId', 'eventType'])
@@ -51,6 +56,9 @@ export class ParticipantTimelineEvent {
 
   @Column({ type: 'varchar', length: 64, nullable: true })
   webhookEventId: string;
+
+  @Column({ type: 'varchar', length: 20, default: TimelineEventSource.WEBHOOK })
+  source: TimelineEventSource;
 
   @CreateDateColumn()
   createdAt: Date;

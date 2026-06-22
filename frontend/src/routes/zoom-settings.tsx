@@ -108,12 +108,13 @@ function TeacherZoomPanel() {
   const [integration, setIntegration] = useState<TeacherIntegration | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [connectEmail, setConnectEmail] = useState('');
   const [health, setHealth] = useState<{
     connected: boolean;
-    tokenExpired: boolean;
-    tokenExpiresAt: string | null;
+    platformConfigured: boolean;
     apiReachable: boolean;
+    zoomEmail: string | null;
   } | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
 
@@ -122,6 +123,7 @@ function TeacherZoomPanel() {
     try {
       const data = await api<TeacherIntegration | null>('/zoom-settings/status');
       setIntegration(data);
+      if (data?.zoomEmail) setConnectEmail(data.zoomEmail);
     } catch {
       setIntegration(null);
     } finally {
@@ -134,9 +136,9 @@ function TeacherZoomPanel() {
     try {
       const data = await api<{
         connected: boolean;
-        tokenExpired: boolean;
-        tokenExpiresAt: string | null;
+        platformConfigured: boolean;
         apiReachable: boolean;
+        zoomEmail: string | null;
       }>('/zoom-settings/health');
       setHealth(data);
     } catch {
@@ -156,25 +158,25 @@ function TeacherZoomPanel() {
     }
   }, [integration?.connectionStatus]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const zoomStatus = params.get('zoom');
-    if (zoomStatus === 'connected') {
-      toast.success('Zoom account connected successfully');
-      fetchStatus();
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (zoomStatus === 'error') {
-      toast.error(params.get('message') || 'Zoom authorization failed');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
-
   const handleConnect = async () => {
+    const email = connectEmail.trim();
+    if (!email) {
+      toast.error('Enter your licensed Zoom email');
+      return;
+    }
+    setConnecting(true);
     try {
-      const res = await api<{ url: string }>('/zoom-settings/oauth/url');
-      window.location.href = res.url;
+      const data = await api<TeacherIntegration>('/zoom-settings/connect', {
+        method: 'POST',
+        body: JSON.stringify({ zoomUserId: email, zoomEmail: email }),
+      });
+      setIntegration(data);
+      toast.success('Zoom account linked successfully');
+      await fetchHealth();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to start Zoom authorization');
+      toast.error(err.message || 'Failed to connect Zoom account');
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -192,29 +194,10 @@ function TeacherZoomPanel() {
     }
   };
 
-  const handleRefreshToken = async () => {
-    setRefreshing(true);
-    try {
-      await api('/zoom-oauth/refresh', { method: 'POST' });
-      toast.success('Token refreshed successfully');
-      await fetchHealth();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to refresh token');
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   const isConnected = integration?.connectionStatus === 'connected';
   const connectedEmail = integration?.zoomEmail || '';
-  const accountType = integration?.accountType || '';
-  const tokenExpired = health?.tokenExpired ?? false;
   const apiReachable = health?.apiReachable ?? false;
-  const tokenExpiresAt = health?.tokenExpiresAt ?? integration?.tokenExpiresAt ?? null;
-
-  const tokenExpiresInMs = tokenExpiresAt ? new Date(tokenExpiresAt).getTime() - Date.now() : 0;
-  const tokenExpiresInDays = tokenExpiresInMs > 0 ? Math.floor(tokenExpiresInMs / 86400000) : 0;
-  const tokenExpiresInHours = tokenExpiresInMs > 0 ? Math.floor((tokenExpiresInMs % 86400000) / 3600000) : 0;
+  const platformConfigured = health?.platformConfigured ?? false;
 
   if (loading) {
     return (
@@ -237,34 +220,23 @@ function TeacherZoomPanel() {
         <CardContent className="space-y-6">
           {/* Connection status */}
           <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 dark:bg-nejah-surface border border-border dark:border-white/5">
-            {isConnected && !tokenExpired && apiReachable ? (
+            {isConnected && apiReachable ? (
               <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-            ) : isConnected && tokenExpired ? (
-              <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
             ) : (
               <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
             )}
             <div className="flex-1">
               <p className="text-sm font-bold">
-                {isConnected && !tokenExpired
-                  ? 'Connected'
-                  : isConnected && tokenExpired
-                    ? 'Token Expired'
-                    : 'Not Connected'}
+                {isConnected ? 'Connected' : 'Not Connected'}
               </p>
               <p className="text-xs text-nejah-slate-blue">
-                {isConnected && !tokenExpired
-                  ? `Zoom account: ${connectedEmail}`
-                  : isConnected && tokenExpired
-                    ? 'Your Zoom token has expired. Reconnect to continue using Zoom meetings.'
-                    : 'Authorize with Zoom to enable automatic meetings'}
+                {isConnected
+                  ? `Zoom host email: ${connectedEmail}`
+                  : 'Link your licensed Zoom email to enable automatic meetings'}
               </p>
             </div>
-            {isConnected && !tokenExpired && (
+            {isConnected && (
               <Badge className="bg-green-100 text-green-700 border-none">Active</Badge>
-            )}
-            {isConnected && tokenExpired && (
-              <Badge className="bg-red-100 text-red-700 border-none">Expired</Badge>
             )}
           </div>
 
@@ -279,18 +251,6 @@ function TeacherZoomPanel() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    Account Type
-                  </p>
-                  <p className="text-xs mt-1">{accountType || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    Display Name
-                  </p>
-                  <p className="text-xs mt-1">{integration?.displayName || connectedEmail || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
                     Connected Since
                   </p>
                   <p className="text-xs mt-1">
@@ -301,83 +261,25 @@ function TeacherZoomPanel() {
                 </div>
               </div>
 
-              {/* Token expiry status */}
-              {tokenExpiresAt && (
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border dark:border-white/5">
-                  {tokenExpired ? (
-                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
-                  ) : tokenExpiresInDays < 7 ? (
-                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold">
-                      {tokenExpired
-                        ? 'Token Expired'
-                        : tokenExpiresInDays > 0
-                          ? `Expires in ${tokenExpiresInDays}d ${tokenExpiresInHours}h`
-                          : `Expires in ${tokenExpiresInHours}h`}
-                    </p>
-                    <p className="text-[10px] text-nejah-slate-blue">
-                      {new Date(tokenExpiresAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <Badge
-                    className={cn(
-                      'border-none shrink-0',
-                      tokenExpired
-                        ? 'bg-red-100 text-red-700'
-                        : tokenExpiresInDays < 7
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-green-100 text-green-700',
-                    )}
-                  >
-                    {tokenExpired ? 'Expired' : tokenExpiresInDays < 7 ? 'Expiring Soon' : 'Valid'}
-                  </Badge>
-                </div>
-              )}
-
-              {/* API Health indicator */}
               {healthLoading ? (
                 <div className="flex items-center gap-2 text-xs text-nejah-slate-blue">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   Checking connection...
                 </div>
               ) : health ? (
-                <div className="flex items-center gap-2 text-xs">
-                  <div className={cn('w-2 h-2 rounded-full', apiReachable ? 'bg-green-500' : 'bg-red-500')} />
-                  <span className={apiReachable ? 'text-green-700' : 'text-red-600'}>
-                    {apiReachable ? 'Zoom API reachable' : 'Zoom API unreachable'}
-                  </span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className={cn('w-2 h-2 rounded-full', platformConfigured ? 'bg-green-500' : 'bg-red-500')} />
+                    <span>{platformConfigured ? 'Platform credentials configured' : 'Platform credentials missing'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={cn('w-2 h-2 rounded-full', apiReachable ? 'bg-green-500' : 'bg-red-500')} />
+                    <span>{apiReachable ? 'Zoom user verified in account' : 'Zoom user not reachable'}</span>
+                  </div>
                 </div>
               ) : null}
 
-              {/* Actions */}
               <div className="flex flex-col gap-2">
-                {tokenExpired ? (
-                  <Button
-                    onClick={handleConnect}
-                    className="w-full gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white"
-                  >
-                    <Link2 className="h-4 w-4" />
-                    Reconnect Zoom Account
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleRefreshToken}
-                    disabled={refreshing}
-                    variant="outline"
-                    className="w-full gap-2"
-                  >
-                    {refreshing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    Refresh Token
-                  </Button>
-                )}
                 <Button
                   onClick={handleDisconnect}
                   disabled={disconnecting}
@@ -394,16 +296,32 @@ function TeacherZoomPanel() {
               </div>
             </div>
           ) : (
-            <div>
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="zoom-email">Licensed Zoom Email</Label>
+                <Input
+                  id="zoom-email"
+                  type="email"
+                  value={connectEmail}
+                  onChange={(e) => setConnectEmail(e.target.value)}
+                  placeholder="teacher@example.com"
+                  className="mt-1"
+                />
+              </div>
               <Button
                 onClick={handleConnect}
+                disabled={connecting}
                 className="w-full gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white"
               >
-                <Link2 className="h-4 w-4" />
-                Connect Zoom
+                {connecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Link2 className="h-4 w-4" />
+                )}
+                Link Zoom Account
               </Button>
-              <p className="text-[10px] text-nejah-slate-blue font-medium mt-3 text-center">
-                You will be redirected to Zoom to authorize the connection.
+              <p className="text-[10px] text-nejah-slate-blue font-medium text-center">
+                Uses Server-to-Server OAuth — no Zoom login redirect required.
               </p>
             </div>
           )}
@@ -930,7 +848,7 @@ function HowItWorksCard() {
       <CardContent className="space-y-4 text-sm">
         <div className="space-y-3">
           {[
-            ['Connect Zoom Account', 'Click "Connect Zoom" and authorize via Zoom\'s OAuth consent screen'],
+            ['Link Zoom Email', 'Enter your licensed Zoom email — verified via Server-to-Server OAuth'],
             ['Automatic Meeting Creation', 'Zoom meetings are created when you schedule a live session'],
             ['Students Join via Link', 'Students receive the join URL and open it in their browser or the Zoom app'],
             ['Automatic Attendance', 'Join and leave times are recorded automatically via webhooks'],
@@ -949,7 +867,7 @@ function HowItWorksCard() {
         <div className="mt-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
           <p className="text-xs font-bold text-blue-800 dark:text-blue-400">Teacher Experience</p>
           <p className="text-xs text-blue-700 dark:text-blue-500 mt-1">
-            Connect Zoom once → Schedule a class → Meeting is created automatically → Students join
+            Connect your Zoom email once → Schedule a class → Meeting is created automatically → Students join
             via the generated link. No Zoom account needed for students.
           </p>
         </div>
