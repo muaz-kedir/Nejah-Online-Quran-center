@@ -25,11 +25,12 @@ async function listenOnPort(
   app: NestExpressApplication,
   port: number,
   logger: Logger,
+  host = '0.0.0.0',
 ) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     freeBackendPort(port);
     try {
-      await app.listen(port);
+      await app.listen(port, host);
       return;
     } catch (err: any) {
       if (err?.code === 'EADDRINUSE' && attempt < 3) {
@@ -100,7 +101,7 @@ async function bootstrap() {
     if (dataSource.isInitialized) {
       console.log('✅ Database connected');
     }
-    await listenOnPort(app, port, logger);
+    await listenOnPort(app, port, logger, '0.0.0.0');
     console.log(`🚀 Nejah Backend API is running on: http://localhost:${port}/api`);
   } catch (err: any) {
     if (err?.code === 'EADDRINUSE') {

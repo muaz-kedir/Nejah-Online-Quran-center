@@ -9,6 +9,7 @@ import {
 import {
   ParticipantTimelineEvent,
   TimelineEventType,
+  TimelineEventSource,
 } from './entities/participant-timeline-event.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { AttendanceStatus } from './enums/live-session-status.enum';
@@ -68,6 +69,7 @@ export class AttendanceIntelligenceService {
     clientType?: string;
     rawPayload?: any;
     webhookEventId?: string;
+    source?: TimelineEventSource;
   }): Promise<ParticipantTimelineEvent> {
     const entity = this.timelineRepository.create({
       sessionId: event.sessionId,
@@ -80,6 +82,7 @@ export class AttendanceIntelligenceService {
       clientType: event.clientType || null,
       rawPayload: event.rawPayload || null,
       webhookEventId: event.webhookEventId || null,
+      source: event.source || TimelineEventSource.WEBHOOK,
     });
     return this.timelineRepository.save(entity);
   }

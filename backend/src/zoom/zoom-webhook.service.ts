@@ -14,6 +14,7 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { ProcessedWebhook } from './entities/processed-webhook.entity';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { TimelineEventType } from './entities/participant-timeline-event.entity';
+import { AttendanceReconciliationService } from './attendance-reconciliation.service';
 
 @Injectable()
 export class ZoomWebhookService {
@@ -36,6 +37,7 @@ export class ZoomWebhookService {
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
     private readonly notificationsService: NotificationsService,
+    private readonly reconciliationService: AttendanceReconciliationService,
   ) {}
 
   async handleWebhook(
@@ -111,6 +113,10 @@ export class ZoomWebhookService {
     ) {
       session.status = LiveSessionStatus.LIVE;
       session.actualStart = new Date();
+      const meetingUUID = (payload?.object as { uuid?: string } | undefined)?.uuid;
+      if (meetingUUID) {
+        session.zoomMeetingUUID = meetingUUID;
+      }
       await this.liveSessionRepository.save(session);
     }
   }
@@ -136,6 +142,12 @@ export class ZoomWebhookService {
     session.completedAt = new Date();
     session.teacherLeaveTime = session.teacherLeaveTime || new Date();
 
+    const meetingUUID =
+      (payload?.object as { uuid?: string } | undefined)?.uuid || session.zoomMeetingUUID;
+    if (meetingUUID) {
+      session.zoomMeetingUUID = meetingUUID;
+    }
+
     if (session.actualStart) {
       const durationMs = session.actualEnd.getTime() - session.actualStart.getTime();
       session.durationMinutes = Math.floor(durationMs / 60000);
@@ -148,6 +160,10 @@ export class ZoomWebhookService {
       this.logger.log(`Recalculated attendance intelligence for session ${session.id}`);
     } catch (err) {
       this.logger.error(`Failed to recalculate attendance intelligence for session ${session.id}`, err);
+    }
+
+    if (session.zoomMeetingUUID) {
+      this.reconciliationService.scheduleReconciliation(session.id, session.zoomMeetingUUID);
     }
 
     const studentIds = (await this.attendanceRepository.find({

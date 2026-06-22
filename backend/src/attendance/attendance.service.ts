@@ -190,17 +190,18 @@ export class AttendanceService {
           const now = new Date();
           const durationMinutes = 90; // 90 minutes default
 
+          const teacherEmail = integration.zoomEmail || integration.zoomUserId;
           const meeting = await this.zoomService.createMeeting(
-            integration.zoomUserId,
+            teacherEmail,
             session.classTitle || 'Quran Class',
             now,
             durationMinutes,
           );
 
-          meetingLink = meeting.zoomJoinUrl;
+          meetingLink = meeting.joinUrl;
           session.meetingLink = meetingLink;
-          session.zoomMeetingId = meeting.zoomMeetingId;
-          session.zoomPassword = meeting.zoomPassword;
+          session.zoomMeetingId = meeting.meetingId;
+          session.zoomPassword = meeting.password;
         } catch (error) {
           throw new BadRequestException(
             'Failed to auto-create Zoom meeting. Please provide a meeting link manually or check your Zoom connection.',

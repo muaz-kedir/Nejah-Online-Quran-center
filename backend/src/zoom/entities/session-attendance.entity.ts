@@ -77,6 +77,12 @@ export class SessionAttendance {
   @Column({ nullable: true })
   lastLeaveTime: Date;
 
+  @Column({ nullable: true })
+  zoomRegistrantJoinUrl: string;
+
+  @Column({ default: false })
+  isReconciled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

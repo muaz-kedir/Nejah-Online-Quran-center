@@ -45,6 +45,9 @@ export class LiveSession {
   zoomMeetingId: string;
 
   @Column({ nullable: true })
+  zoomMeetingUUID: string;
+
+  @Column({ nullable: true })
   zoomJoinUrl: string;
 
   @Column({ nullable: true })

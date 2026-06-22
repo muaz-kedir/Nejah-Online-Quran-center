@@ -5,7 +5,6 @@ import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { Public } from '../common/decorators/public.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
 import { Teacher } from '../teachers/entities/teacher.entity';
@@ -39,8 +38,7 @@ class SavePlatformConfigDto {
 
 function sanitizeIntegration(integration: ZoomIntegration | null) {
   if (!integration) return null;
-  const { accessToken, refreshToken, ...safe } = integration;
-  return safe;
+  return integration;
 }
 
 @Controller('zoom-settings')
@@ -64,23 +62,6 @@ export class ZoomSettingsController {
   savePlatformConfig(@Body() dto: SavePlatformConfigDto) {
     return this.zoomService.savePlatformConfig(dto);
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  OAuth authorization code flow                                     */
-  /* ------------------------------------------------------------------ */
-
-  @Get('oauth/url')
-  @Roles(UserRole.TEACHER)
-  async getOAuthUrl(@Request() req) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    this.zoomService.assertOAuthConfiguredForAuthorize();
-    const url = this.zoomService.getOAuthAuthorizationUrl(teacher.id);
-    return { url };
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*  Manual connect (kept for admin use, no longer used by teachers)    */
-  /* ------------------------------------------------------------------ */
 
   @Post('connect')
   @Roles(UserRole.TEACHER)

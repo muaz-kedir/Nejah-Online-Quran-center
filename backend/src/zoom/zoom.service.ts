@@ -1,4 +1,10 @@
-import { Injectable, HttpException, HttpStatus, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -11,11 +17,33 @@ import * as crypto from 'crypto';
 
 const PLATFORM_CONFIG_ID = 'default';
 
+type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+
+export type ZoomMeetingResult = {
+  meetingId: string;
+  meetingUUID: string;
+  startUrl: string;
+  joinUrl: string;
+  password: string;
+};
+
+export type ZoomReportParticipant = {
+  id?: string;
+  user_id?: string;
+  name?: string;
+  user_email?: string;
+  join_time?: string;
+  leave_time?: string;
+  duration?: number;
+};
+
 @Injectable()
 export class ZoomService implements OnModuleInit {
   private readonly logger = new Logger(ZoomService.name);
   private readonly baseUrl = 'https://api.zoom.us/v2';
-  private cachedToken: { accessToken: string; expiresAt: number } | null = null;
+
+  private accessToken: string | null = null;
+  private tokenExpiresAt: Date | null = null;
 
   private accountId = '';
   private clientId = '';
@@ -38,15 +66,26 @@ export class ZoomService implements OnModuleInit {
   }
 
   async reloadPlatformCredentials(): Promise<void> {
-    this.cachedToken = null;
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
 
-    // Webhook secret is ALWAYS loaded independently from OAuth credentials
     this.secretToken =
-      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() || '';
+      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() ||
+      process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() ||
+      '';
 
-    const envAccountId = this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() || '';
-    const envClientId = this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() || '';
-    const envClientSecret = this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() || '';
+    const envAccountId =
+      this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() ||
+      process.env.ZOOM_ACCOUNT_ID?.trim() ||
+      '';
+    const envClientId =
+      this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() ||
+      process.env.ZOOM_CLIENT_ID?.trim() ||
+      '';
+    const envClientSecret =
+      this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() ||
+      process.env.ZOOM_CLIENT_SECRET?.trim() ||
+      '';
 
     if (envAccountId && envClientId && envClientSecret) {
       this.accountId = envAccountId;
@@ -66,11 +105,9 @@ export class ZoomService implements OnModuleInit {
       this.clientId = stored.clientId.trim();
       this.clientSecret =
         this.encryptionService.decrypt(stored.clientSecretEncrypted)?.trim() || '';
-      // DB-stored secret token only used when env var is not set
-      if (!this.secretToken) {
-        this.secretToken = stored.secretTokenEncrypted
-          ? this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || ''
-          : '';
+      if (!this.secretToken && stored.secretTokenEncrypted) {
+        this.secretToken =
+          this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || '';
       }
       this.credentialsSource = this.clientSecret ? 'database' : 'none';
       this.logWebhookSecretStatus();
@@ -80,13 +117,241 @@ export class ZoomService implements OnModuleInit {
     this.accountId = '';
     this.clientId = '';
     this.clientSecret = '';
-    // secretToken already set from env var at top of method
     this.credentialsSource = 'none';
     this.logWebhookSecretStatus();
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  Server-to-Server OAuth token + API helper                           */
+  /* ------------------------------------------------------------------ */
+
+  async getAccessToken(): Promise<string> {
+    if (
+      this.accessToken &&
+      this.tokenExpiresAt &&
+      new Date() < this.tokenExpiresAt
+    ) {
+      return this.accessToken;
+    }
+
+    const accountId =
+      this.accountId ||
+      this.configService.get<string>('ZOOM_ACCOUNT_ID') ||
+      process.env.ZOOM_ACCOUNT_ID;
+    const clientId =
+      this.clientId ||
+      this.configService.get<string>('ZOOM_CLIENT_ID') ||
+      process.env.ZOOM_CLIENT_ID;
+    const clientSecret =
+      this.clientSecret ||
+      this.configService.get<string>('ZOOM_CLIENT_SECRET') ||
+      process.env.ZOOM_CLIENT_SECRET;
+
+    if (!accountId || !clientId || !clientSecret) {
+      throw new HttpException(
+        'Zoom Server-to-Server OAuth is not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post(
+          `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
+          {},
+          { headers: { Authorization: `Basic ${credentials}` } },
+        ),
+      );
+
+      this.accessToken = data.access_token;
+      this.tokenExpiresAt = new Date(Date.now() + (data.expires_in - 60) * 1000);
+      return this.accessToken;
+    } catch (error) {
+      this.logger.error(
+        'Failed to get Zoom Server-to-Server access token',
+        error?.response?.data || error.message,
+      );
+      throw new HttpException(
+        'Failed to authenticate with Zoom',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }
+
+  private async zoomRequest<T>(
+    method: HttpMethod,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const token = await this.getAccessToken();
+    const url = path.startsWith('http')
+      ? path
+      : `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.request({
+          method,
+          url,
+          data: body,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      return response.data as T;
+    } catch (error) {
+      const status = error?.response?.status;
+      const zoomMessage = error?.response?.data?.message as string | undefined;
+      this.logger.error(
+        `Zoom API ${method} ${path} failed: ${zoomMessage || error.message}`,
+      );
+      throw new HttpException(
+        zoomMessage || `Zoom API request failed: ${error.message}`,
+        status || HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Meetings & registrants                                              */
+  /* ------------------------------------------------------------------ */
+
+  async createMeeting(
+    teacherEmail: string,
+    topic: string,
+    startTime: Date,
+    durationMinutes: number,
+  ): Promise<ZoomMeetingResult> {
+    this.assertPlatformConfigured();
+
+    const meeting = await this.zoomRequest<{
+      id: number;
+      uuid: string;
+      join_url: string;
+      start_url: string;
+      password?: string;
+    }>('POST', `/users/${this.encodeZoomUserId(teacherEmail)}/meetings`, {
+      topic,
+      type: 2,
+      start_time: startTime.toISOString(),
+      duration: durationMinutes,
+      timezone: 'UTC',
+      settings: {
+        host_video: true,
+        participant_video: true,
+        approval_type: 0,
+        registrants_email_notification: false,
+        waiting_room: false,
+        join_before_host: false,
+        mute_upon_entry: true,
+        auto_recording: 'none',
+        audio: 'voip',
+      },
+    });
+
+    return {
+      meetingId: String(meeting.id),
+      meetingUUID: meeting.uuid,
+      startUrl: meeting.start_url,
+      joinUrl: meeting.join_url,
+      password: meeting.password || '',
+    };
+  }
+
+  async registerParticipant(
+    meetingId: string,
+    student: { email: string; firstName: string; lastName: string },
+  ): Promise<string> {
+    this.assertPlatformConfigured();
+
+    const data = await this.zoomRequest<{ join_url?: string }>(
+      'POST',
+      `/meetings/${meetingId}/registrants`,
+      {
+        email: student.email,
+        first_name: student.firstName,
+        last_name: student.lastName,
+      },
+    );
+
+    if (!data.join_url) {
+      throw new HttpException(
+        'Zoom did not return a registrant join URL',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    return data.join_url;
+  }
+
+  async getMeetingParticipantsReport(
+    meetingUUID: string,
+  ): Promise<ZoomReportParticipant[]> {
+    this.assertPlatformConfigured();
+
+    const encodedUUID = encodeURIComponent(encodeURIComponent(meetingUUID));
+    const data = await this.zoomRequest<{ participants?: ZoomReportParticipant[] }>(
+      'GET',
+      `/report/meetings/${encodedUUID}/participants?page_size=300`,
+    );
+
+    return data.participants || [];
+  }
+
+  async updateMeeting(
+    zoomMeetingId: string,
+    updateData: Record<string, unknown>,
+  ): Promise<void> {
+    const payload: Record<string, unknown> = {};
+    if (updateData.topic) payload.topic = updateData.topic;
+    if (updateData.startTime) {
+      payload.start_time = new Date(updateData.startTime as string | Date).toISOString();
+      payload.type = 2;
+    }
+    if (updateData.durationMinutes) payload.duration = updateData.durationMinutes;
+    if (updateData.settings) payload.settings = updateData.settings;
+
+    await this.zoomRequest('PATCH', `/meetings/${zoomMeetingId}`, payload);
+  }
+
+  async deleteMeeting(zoomMeetingId: string): Promise<void> {
+    await this.zoomRequest('DELETE', `/meetings/${zoomMeetingId}`);
+  }
+
+  async getMeeting(zoomMeetingId: string): Promise<Record<string, unknown> | null> {
+    try {
+      return await this.zoomRequest<Record<string, unknown>>(
+        'GET',
+        `/meetings/${zoomMeetingId}`,
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Platform config & webhooks                                          */
+  /* ------------------------------------------------------------------ */
+
   isPlatformConfigured(): boolean {
-    return !!(this.accountId && this.clientId && this.clientSecret);
+    return !!(
+      (this.accountId || process.env.ZOOM_ACCOUNT_ID) &&
+      (this.clientId || process.env.ZOOM_CLIENT_ID) &&
+      (this.clientSecret || process.env.ZOOM_CLIENT_SECRET)
+    );
+  }
+
+  private assertPlatformConfigured(): void {
+    if (!this.isPlatformConfigured()) {
+      throw new HttpException(
+        'Zoom platform credentials are not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   getPlatformConfigStatus(): {
@@ -154,325 +419,18 @@ export class ZoomService implements OnModuleInit {
     return { configured: true, source: 'database' };
   }
 
-  /** Webhook secret token — used to verify incoming Zoom webhook signatures. */
   getWebhookSecretToken(): string {
-    return this.secretToken;
+    return (
+      this.secretToken ||
+      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() ||
+      process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() ||
+      ''
+    );
   }
 
-  /** OAuth Client ID — also used as Meeting SDK appKey for embedded classroom JWTs. */
+  /** Meeting SDK app key — same as ZOOM_CLIENT_ID. */
   getOAuthClientId(): string | null {
     return this.clientId || null;
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*  User-facing OAuth (authorization_code grant)                       */
-  /* ------------------------------------------------------------------ */
-
-  getZoomOAuthClientId(): string {
-    return (
-      this.configService.get<string>('ZOOM_OAUTH_CLIENT_ID')?.trim() ||
-      this.clientId
-    );
-  }
-
-  getZoomOAuthClientSecret(): string {
-    return (
-      this.configService.get<string>('ZOOM_OAUTH_CLIENT_SECRET')?.trim() ||
-      this.clientSecret
-    );
-  }
-
-  getZoomOAuthRedirectUri(): string {
-    const explicit =
-      this.configService.get<string>('ZOOM_OAUTH_REDIRECT_URI')?.trim() ||
-      this.configService.get<string>('ZOOM_REDIRECT_URI')?.trim();
-    if (explicit) return explicit;
-
-    const backendUrl =
-      this.configService.get<string>('BACKEND_URL')?.trim() ||
-      this.configService.get<string>('API_BASE_URL')?.trim();
-    if (backendUrl) {
-      const base = backendUrl.replace(/\/$/, '').replace(/\/api$/, '');
-      const prefix = this.configService.get<string>('API_PREFIX') || 'api';
-      return `${base}/${prefix}/zoom-settings/oauth/callback`;
-    }
-
-    return '';
-  }
-
-  assertOAuthConfiguredForAuthorize(): void {
-    const clientId = this.getZoomOAuthClientId()?.trim();
-    const redirectUri = this.getZoomOAuthRedirectUri()?.trim();
-
-    if (!clientId) {
-      throw new HttpException(
-        'Zoom OAuth is not configured. Set ZOOM_OAUTH_CLIENT_ID (or ZOOM_CLIENT_ID) on the server.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!redirectUri) {
-      throw new HttpException(
-        'Zoom OAuth is not configured. Set ZOOM_OAUTH_REDIRECT_URI or BACKEND_URL on the server.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  getOAuthAuthorizationUrl(state: string): string {
-    const clientId = this.getZoomOAuthClientId();
-    const redirectUri = this.getZoomOAuthRedirectUri();
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      state,
-    });
-    return `https://zoom.us/oauth/authorize?${params.toString()}`;
-  }
-
-  async exchangeAuthorizationCode(
-    code: string,
-  ): Promise<{ access_token: string; refresh_token: string; expires_in: number; scope?: string }> {
-    const clientId = this.getZoomOAuthClientId();
-    const clientSecret = this.getZoomOAuthClientSecret();
-    const redirectUri = this.getZoomOAuthRedirectUri();
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          'https://zoom.us/oauth/token',
-          new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            redirect_uri: redirectUri,
-          }),
-          {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          },
-        ),
-      );
-      return response.data;
-    } catch (error) {
-      this.logger.error('Failed to exchange Zoom authorization code', error?.response?.data || error.message);
-      throw new HttpException(
-        'Failed to complete Zoom authorization. Please try again.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  async refreshTeacherOAuthToken(
-    teacherId: string,
-  ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
-    const integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
-    if (!integration?.refreshToken) {
-      throw new HttpException(
-        'No Zoom refresh token available. Please reconnect your Zoom account.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const clientId = this.getZoomOAuthClientId();
-    const clientSecret = this.getZoomOAuthClientSecret();
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    const refreshToken = this.encryptionService.decrypt(integration.refreshToken);
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          'https://zoom.us/oauth/token',
-          new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken,
-          }),
-          {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          },
-        ),
-      );
-
-      const { access_token, refresh_token, expires_in } = response.data;
-      const expiresAt = new Date(Date.now() + expires_in * 1000);
-      const encryptedAccess = this.encryptionService.encrypt(access_token);
-      const encryptedRefresh = this.encryptionService.encrypt(refresh_token);
-
-      await this.zoomIntegrationRepository.update(teacherId, {
-        accessToken: encryptedAccess,
-        refreshToken: encryptedRefresh,
-        tokenExpiresAt: expiresAt,
-      });
-
-      return { accessToken: access_token, refreshToken: refresh_token, expiresAt };
-    } catch (error) {
-      this.logger.error('Failed to refresh Zoom OAuth token', error.message);
-      await this.disconnectTeacher(teacherId);
-      throw new HttpException(
-        'Zoom session expired. Please reconnect your Zoom account.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-  }
-
-  async fetchOAuthUserInfo(
-    accessToken: string,
-  ): Promise<{
-    id: string;
-    email: string;
-    displayName: string;
-    accountType: string;
-    accountId?: string;
-  }> {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/me`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }),
-      );
-      const data = response.data;
-      return {
-        id: data.id,
-        email: data.email || '',
-        displayName: data.display_name || data.first_name + ' ' + data.last_name || data.email,
-        accountType: data.account_type === 1 ? 'Basic' : 'Licensed',
-        accountId: data.account_id || undefined,
-      };
-    } catch (error) {
-      this.logger.error('Failed to fetch Zoom user info', error.message);
-      throw new HttpException(
-        'Failed to retrieve Zoom account information.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  async saveOAuthIntegration(
-    teacherId: string,
-    userInfo: { id: string; email: string; displayName: string; accountType: string; accountId?: string },
-    tokens: { accessToken: string; refreshToken: string; expiresAt: Date; scope?: string },
-  ): Promise<ZoomIntegration> {
-    const encryptedAccess = this.encryptionService.encrypt(tokens.accessToken);
-    const encryptedRefresh = this.encryptionService.encrypt(tokens.refreshToken);
-
-    let integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
-    if (!integration) {
-      integration = this.zoomIntegrationRepository.create({ teacherId });
-    }
-
-    integration.zoomUserId = userInfo.id;
-    integration.zoomEmail = userInfo.email;
-    integration.displayName = userInfo.displayName;
-    integration.accountType = userInfo.accountType;
-    integration.zoomAccountId = userInfo.accountId || null;
-    integration.scope = tokens.scope || null;
-    integration.accessToken = encryptedAccess;
-    integration.refreshToken = encryptedRefresh;
-    integration.tokenExpiresAt = tokens.expiresAt;
-    integration.connectionStatus = 'connected';
-    integration.connectedAt = new Date();
-
-    return this.zoomIntegrationRepository.save(integration);
-  }
-
-  async getAccessToken(): Promise<string> {
-    if (this.cachedToken && Date.now() < this.cachedToken.expiresAt) {
-      return this.cachedToken.accessToken;
-    }
-
-    const tokenUrl = 'https://zoom.us/oauth/token';
-    const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          tokenUrl,
-          new URLSearchParams({ grant_type: 'account_credentials', account_id: this.accountId }),
-          {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          },
-        ),
-      );
-
-      const { access_token, expires_in } = response.data;
-      this.cachedToken = {
-        accessToken: access_token,
-        expiresAt: Date.now() + (expires_in - 60) * 1000,
-      };
-
-      return access_token;
-    } catch (error) {
-      this.logger.error('Failed to get Zoom access token', error.stack);
-      throw new HttpException('Failed to authenticate with Zoom', HttpStatus.UNAUTHORIZED);
-    }
-  }
-
-  private logWebhookSecretStatus(): void {
-    if (this.secretToken) {
-      this.logger.log('✓ Zoom webhook secret configured');
-    } else {
-      this.logger.warn(
-        '✗ Zoom webhook secret missing. Set ZOOM_WEBHOOK_SECRET_TOKEN environment variable ' +
-        'for webhook signature verification. Without it, webhooks will not be verified.',
-      );
-    }
-  }
-
-  verifyWebhookSignature(
-    body: Record<string, unknown>,
-    signatureHeader: string,
-    timestampHeader?: string,
-  ): boolean {
-    if (!this.secretToken) {
-      this.logger.warn('ZOOM_WEBHOOK_SECRET_TOKEN not configured, skipping webhook verification');
-      return true;
-    }
-
-    if (!signatureHeader) {
-      this.logger.warn('Webhook request missing signature header');
-      return false;
-    }
-
-    try {
-      const rawBody = JSON.stringify(body);
-
-      // Zoom sends x-zm-signature as v0=<hash> with x-zm-request-timestamp
-      if (timestampHeader) {
-        const message = `v0:${timestampHeader}:${rawBody}`;
-        const expectedHash = crypto
-          .createHmac('sha256', this.secretToken)
-          .update(message)
-          .digest('hex');
-        const expected = `v0=${expectedHash}`;
-        const actual = signatureHeader.trim();
-        if (actual.length === expected.length) {
-          return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
-        }
-        return false;
-      }
-
-      // Legacy authorization header fallback
-      const expectedSignature = crypto
-        .createHmac('sha256', this.secretToken)
-        .update(rawBody)
-        .digest('hex');
-      const expected = `v0=${expectedSignature}`;
-      const actual = signatureHeader.trim();
-      if (actual.length !== expected.length) return false;
-      return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
-    } catch {
-      this.logger.warn('Webhook signature verification failed');
-      return false;
-    }
   }
 
   generateMeetingSdkSignature(meetingNumber: string, role: 0 | 1): string | null {
@@ -502,26 +460,33 @@ export class ZoomService implements OnModuleInit {
     return `${header}.${body}.${signature}`;
   }
 
-  async getUserZakToken(zoomUserId: string, accessToken?: string): Promise<string | null> {
-    const token = accessToken || await this.getAccessToken();
+  async getUserZakToken(zoomUserId: string): Promise<string | null> {
     try {
-      const response = await firstValueFrom(
-        this.httpService.get(
-          `${this.baseUrl}/users/${this.encodeZoomUserId(zoomUserId)}/token`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { type: 'zak' },
-          },
-        ),
+      const data = await this.zoomRequest<{ token?: string }>(
+        'GET',
+        `/users/${this.encodeZoomUserId(zoomUserId)}/token?type=zak`,
       );
-      return (response.data?.token as string) || null;
+      return data.token || null;
     } catch (error) {
       this.logger.warn(`Failed to fetch ZAK token for ${zoomUserId}: ${error.message}`);
       return null;
     }
   }
 
-  /** Encode user id or email for Zoom API path segments. */
+  private logWebhookSecretStatus(): void {
+    if (this.getWebhookSecretToken()) {
+      this.logger.log('Zoom webhook secret configured');
+    } else {
+      this.logger.warn(
+        'ZOOM_WEBHOOK_SECRET_TOKEN is not set — webhook signature verification will be skipped.',
+      );
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Teacher host mapping (no per-teacher OAuth tokens)                  */
+  /* ------------------------------------------------------------------ */
+
   private encodeZoomUserId(userId: string): string {
     const trimmed = userId.trim();
     if (trimmed.includes('@')) {
@@ -533,18 +498,16 @@ export class ZoomService implements OnModuleInit {
   private async fetchZoomUser(
     identifier: string,
   ): Promise<{ id: string; email: string } | null> {
-    const token = await this.getAccessToken();
     try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/${this.encodeZoomUserId(identifier)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+      const data = await this.zoomRequest<{ id: string; email: string }>(
+        'GET',
+        `/users/${this.encodeZoomUserId(identifier)}`,
       );
-      if (response.data?.id) {
-        return { id: response.data.id, email: response.data.email };
+      if (data?.id) {
+        return { id: data.id, email: data.email };
       }
     } catch (error) {
-      if (error?.response?.status !== 404) {
+      if (error?.status !== 404) {
         this.logger.warn(`Zoom user lookup failed for "${identifier}": ${error.message}`);
       }
     }
@@ -552,17 +515,13 @@ export class ZoomService implements OnModuleInit {
   }
 
   private async findZoomUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
-    const token = await this.getAccessToken();
     try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { email: email.trim().toLowerCase(), status: 'active' },
-        }),
+      const data = await this.zoomRequest<{ users?: Array<{ id: string; email: string }> }>(
+        'GET',
+        `/users?email=${encodeURIComponent(email.trim().toLowerCase())}&status=active`,
       );
-      const users = response.data?.users as Array<{ id: string; email: string }> | undefined;
-      if (users?.length) {
-        return { id: users[0].id, email: users[0].email };
+      if (data.users?.length) {
+        return { id: data.users[0].id, email: data.users[0].email };
       }
     } catch (error) {
       this.logger.warn(`Zoom user email search failed for "${email}": ${error.message}`);
@@ -574,12 +533,7 @@ export class ZoomService implements OnModuleInit {
     identifier: string,
     fallbackEmail?: string,
   ): Promise<{ id: string; email: string }> {
-    if (!this.isPlatformConfigured()) {
-      throw new HttpException(
-        'Zoom platform credentials are not configured. A super admin must add Server-to-Server OAuth credentials under Zoom Settings → Platform Configuration, or set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET in the backend environment.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    this.assertPlatformConfigured();
 
     const candidates = [identifier, fallbackEmail]
       .map((value) => value?.trim())
@@ -601,7 +555,7 @@ export class ZoomService implements OnModuleInit {
     }
 
     throw new HttpException(
-      'Zoom user not found in your Zoom account. Open Zoom Settings and connect using your licensed Zoom email or User ID from the same account as your Server-to-Server OAuth app.',
+      'Zoom user not found in your Zoom account. Connect using the licensed Zoom email on the same account as your Server-to-Server OAuth app.',
       HttpStatus.BAD_REQUEST,
     );
   }
@@ -616,221 +570,14 @@ export class ZoomService implements OnModuleInit {
       throw new HttpException('Zoom User ID or email is required', HttpStatus.BAD_REQUEST);
     }
 
-    if (this.isPlatformConfigured()) {
-      const resolved = await this.resolveZoomUser(identifier, zoomEmail);
-      return this.saveTeacherIntegration(teacherId, resolved.id, resolved.email);
-    }
-
-    const email = (zoomEmail || (identifier.includes('@') ? identifier : '')).trim();
-    if (!email) {
-      throw new HttpException(
-        'Zoom email is required when platform OAuth is not configured yet',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    return this.saveTeacherIntegration(teacherId, identifier, email);
-  }
-
-  async getTeacherAccessToken(teacherId: string): Promise<string> {
-    const integration = await this.zoomIntegrationRepository.findOne({
-      where: { teacherId, connectionStatus: 'connected' },
-    });
-    if (!integration?.accessToken) {
-      throw new HttpException(
-        'No Zoom access token available. Please reconnect your Zoom account.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    if (integration.tokenExpiresAt && new Date() >= integration.tokenExpiresAt) {
-      const refreshed = await this.refreshTeacherOAuthToken(teacherId);
-      return refreshed.accessToken;
-    }
-
-    return this.encryptionService.decrypt(integration.accessToken);
-  }
-
-  async createMeeting(
-    teacherZoomUserId: string,
-    topic: string,
-    startTime: Date,
-    durationMinutes: number,
-    settings?: Record<string, unknown>,
-    accessToken?: string,
-  ): Promise<{
-    zoomMeetingId: string;
-    zoomJoinUrl: string;
-    zoomStartUrl: string;
-    zoomPassword: string;
-  }> {
-    const token = accessToken || await this.getAccessToken();
-    const defaultSettings = {
-      host_video: true,
-      participant_video: true,
-      join_before_host: true,
-      mute_upon_entry: true,
-      waiting_room: false,
-      auto_recording: 'none',
-      approval_type: 2,
-      audio: 'voip',
-    };
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.baseUrl}/users/${this.encodeZoomUserId(teacherZoomUserId)}/meetings`,
-          {
-            topic,
-            type: 2,
-            start_time: startTime.toISOString(),
-            duration: durationMinutes,
-            timezone: 'UTC',
-            settings: { ...defaultSettings, ...settings },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-
-      const meeting = response.data;
-      return {
-        zoomMeetingId: meeting.id.toString(),
-        zoomJoinUrl: meeting.join_url,
-        zoomStartUrl: meeting.start_url,
-        zoomPassword: meeting.password || '',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to create Zoom meeting: ${error.message}`, error.stack);
-      const status = error?.response?.status;
-      const zoomMessage = error?.response?.data?.message as string | undefined;
-      if (status === 404) {
-        throw new HttpException(
-          'Zoom user not found — reconnect your Zoom account in Zoom Settings using your licensed Zoom email',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (status === 429) {
-        throw new HttpException(
-          'Zoom API rate limit exceeded — try again later',
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-      throw new HttpException(
-        zoomMessage || `Failed to create Zoom meeting: ${error.message}`,
-        error?.response?.status || HttpStatus.BAD_GATEWAY,
-      );
-    }
-  }
-
-  async updateMeeting(zoomMeetingId: string, updateData: Record<string, unknown>, accessToken?: string): Promise<void> {
-    const token = accessToken || await this.getAccessToken();
-
-    const payload: Record<string, unknown> = {};
-    if (updateData.topic) payload.topic = updateData.topic;
-    if (updateData.startTime) {
-      payload.start_time = new Date(updateData.startTime as string | Date).toISOString();
-      payload.type = 2;
-    }
-    if (updateData.durationMinutes) payload.duration = updateData.durationMinutes;
-    if (updateData.settings) payload.settings = updateData.settings;
-
-    try {
-      await firstValueFrom(
-        this.httpService.patch(`${this.baseUrl}/meetings/${zoomMeetingId}`, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to update Zoom meeting ${zoomMeetingId}: ${error.message}`,
-        error.stack,
-      );
-      throw new HttpException(
-        `Failed to update Zoom meeting: ${error.message}`,
-        error?.response?.status || HttpStatus.BAD_GATEWAY,
-      );
-    }
-  }
-
-  async deleteMeeting(zoomMeetingId: string, accessToken?: string): Promise<void> {
-    const token = accessToken || await this.getAccessToken();
-
-    try {
-      await firstValueFrom(
-        this.httpService.delete(`${this.baseUrl}/meetings/${zoomMeetingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to delete Zoom meeting ${zoomMeetingId}: ${error.message}`,
-        error.stack,
-      );
-      throw new HttpException(
-        `Failed to delete Zoom meeting: ${error.message}`,
-        error?.response?.status || HttpStatus.BAD_GATEWAY,
-      );
-    }
-  }
-
-  async getMeeting(zoomMeetingId: string): Promise<Record<string, unknown> | null> {
-    const token = await this.getAccessToken();
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/meetings/${zoomMeetingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      );
-      return response.data;
-    } catch (error) {
-      this.logger.error(
-        `Failed to get Zoom meeting ${zoomMeetingId}: ${error.message}`,
-        error.stack,
-      );
-      return null;
-    }
-  }
-
-  async getMeetingAnalytics(zoomMeetingId: string): Promise<Record<string, unknown> | null> {
-    const token = await this.getAccessToken();
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/meetings/${zoomMeetingId}/participants`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { page_size: 300 },
-        }),
-      );
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Failed to get Zoom meeting analytics: ${error.message}`, error.stack);
-      return null;
-    }
-  }
-
-  async getZoomUser(zoomUserId: string): Promise<Record<string, unknown> | null> {
-    try {
-      const resolved = await this.resolveZoomUser(zoomUserId);
-      return { id: resolved.id, email: resolved.email };
-    } catch {
-      return null;
-    }
+    const resolved = await this.resolveZoomUser(identifier, zoomEmail);
+    return this.saveTeacherIntegration(teacherId, resolved.id, resolved.email);
   }
 
   async saveTeacherIntegration(
     teacherId: string,
     zoomUserId: string,
     zoomEmail: string,
-    tokens?: { accessToken?: string; refreshToken?: string; expiresAt?: Date },
   ): Promise<ZoomIntegration> {
     let integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
 
@@ -842,12 +589,7 @@ export class ZoomService implements OnModuleInit {
     integration.zoomEmail = zoomEmail;
     integration.connectionStatus = 'connected';
     integration.connectedAt = new Date();
-
-    if (tokens?.accessToken)
-      integration.accessToken = this.encryptionService.encrypt(tokens.accessToken);
-    if (tokens?.refreshToken)
-      integration.refreshToken = this.encryptionService.encrypt(tokens.refreshToken);
-    if (tokens?.expiresAt) integration.tokenExpiresAt = tokens.expiresAt;
+    integration.disconnectedAt = null;
 
     return this.zoomIntegrationRepository.save(integration);
   }
@@ -860,9 +602,6 @@ export class ZoomService implements OnModuleInit {
 
     integration.connectionStatus = 'disconnected';
     integration.disconnectedAt = new Date();
-    integration.accessToken = null;
-    integration.refreshToken = null;
-    integration.tokenExpiresAt = null;
 
     return this.zoomIntegrationRepository.save(integration);
   }
@@ -871,68 +610,45 @@ export class ZoomService implements OnModuleInit {
     return this.zoomIntegrationRepository.findOne({ where: { teacherId } });
   }
 
-  async getTeacherIntegrationWithDecryptedTokens(teacherId: string): Promise<{
-    integration: ZoomIntegration;
-    decryptedAccessToken: string;
-    decryptedRefreshToken: string | null;
-  }> {
-    const integration = await this.getTeacherIntegration(teacherId);
-    if (!integration?.accessToken) {
-      throw new HttpException('Zoom account not connected', HttpStatus.NOT_FOUND);
-    }
-    const decryptedAccessToken = this.encryptionService.decrypt(integration.accessToken);
-    if (!decryptedAccessToken) {
-      throw new HttpException('Failed to decrypt Zoom credentials', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    const decryptedRefreshToken = integration.refreshToken
-      ? this.encryptionService.decrypt(integration.refreshToken)
-      : null;
-    return { integration, decryptedAccessToken, decryptedRefreshToken };
-  }
-
   async checkZoomConnectionHealth(teacherId: string): Promise<{
     connected: boolean;
-    tokenExpired: boolean;
-    tokenExpiresAt: Date | null;
+    platformConfigured: boolean;
     apiReachable: boolean;
+    zoomEmail: string | null;
   }> {
     const integration = await this.getTeacherIntegration(teacherId);
     if (!integration || integration.connectionStatus !== 'connected') {
-      return { connected: false, tokenExpired: true, tokenExpiresAt: null, apiReachable: false };
+      return {
+        connected: false,
+        platformConfigured: this.isPlatformConfigured(),
+        apiReachable: false,
+        zoomEmail: null,
+      };
     }
 
-    const now = new Date();
-    const tokenExpired = !integration.tokenExpiresAt || integration.tokenExpiresAt <= now;
-
-    if (tokenExpired) {
+    if (!this.isPlatformConfigured()) {
       return {
         connected: true,
-        tokenExpired: true,
-        tokenExpiresAt: integration.tokenExpiresAt,
+        platformConfigured: false,
         apiReachable: false,
+        zoomEmail: integration.zoomEmail,
       };
     }
 
     try {
-      const { decryptedAccessToken } = await this.getTeacherIntegrationWithDecryptedTokens(teacherId);
-      await firstValueFrom(
-        this.httpService.get(`${this.baseUrl}/users/me`, {
-          headers: { Authorization: `Bearer ${decryptedAccessToken}` },
-          timeout: 5000,
-        }),
-      );
+      await this.resolveZoomUser(integration.zoomUserId, integration.zoomEmail);
       return {
         connected: true,
-        tokenExpired: false,
-        tokenExpiresAt: integration.tokenExpiresAt,
+        platformConfigured: true,
         apiReachable: true,
+        zoomEmail: integration.zoomEmail,
       };
     } catch {
       return {
         connected: true,
-        tokenExpired: false,
-        tokenExpiresAt: integration.tokenExpiresAt,
+        platformConfigured: true,
         apiReachable: false,
+        zoomEmail: integration.zoomEmail,
       };
     }
   }
@@ -946,5 +662,14 @@ export class ZoomService implements OnModuleInit {
       where: { zoomUserId },
       relations: ['teacher'],
     });
+  }
+
+  async getZoomUser(zoomUserId: string): Promise<Record<string, unknown> | null> {
+    try {
+      const resolved = await this.resolveZoomUser(zoomUserId);
+      return { id: resolved.id, email: resolved.email };
+    } catch {
+      return null;
+    }
   }
 }
