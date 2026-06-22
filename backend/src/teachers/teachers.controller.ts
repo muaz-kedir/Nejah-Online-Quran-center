@@ -93,6 +93,15 @@ export class TeachersController {
     return this.teachersService.getTeacherNotifications(teacher.id, page, limit);
   }
 
+  @Patch('profile')
+  @Roles(UserRole.TEACHER)
+  async updateMyProfile(@Req() req: any, @Body() updateTeacherDto: UpdateTeacherDto) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(
+      this.authenticatedUserId(req),
+    );
+    return this.teachersService.update(teacher.id, updateTeacherDto);
+  }
+
   // ─── Admin / staff management ───
 
   @Post()
@@ -126,8 +135,18 @@ export class TeachersController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  update(@Param('id') id: string, @Body() updateTeacherDto: UpdateTeacherDto) {
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
+  async update(@Req() req: any, @Param('id') id: string, @Body() updateTeacherDto: UpdateTeacherDto) {
+    // TEACHER role can only update their own profile
+    if (req.user?.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(
+        this.authenticatedUserId(req),
+      );
+      if (teacher.id !== id) {
+        throw new ForbiddenException('You can only update your own profile');
+      }
+      return this.teachersService.update(teacher.id, updateTeacherDto);
+    }
     return this.teachersService.update(id, updateTeacherDto);
   }
 

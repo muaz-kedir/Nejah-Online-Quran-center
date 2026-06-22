@@ -4,8 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Loader2, Mail, Lock, ArrowLeft, ChevronDown, Eye, EyeOff,
-  Shield, ShieldAlert, GraduationCap, User, Users, Zap, LogIn,
+  Loader2, Mail, Lock, Eye, EyeOff, LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,21 +36,11 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-const demoAccounts = [
-  { role: 'Super Admin', email: 'nejahsuperadmin@gmail.com', password: 'SuperAdmin123', icon: ShieldAlert, gradient: 'from-purple-600 to-purple-800' },
-  { role: 'Admin', email: 'admin@nejah.com', password: 'Admin123', icon: Shield, gradient: 'from-blue-600 to-blue-800' },
-  { role: 'Teacher', email: 'teacher@nejah.com', password: 'Teacher123', icon: GraduationCap, gradient: 'from-emerald-600 to-emerald-800' },
-  { role: 'Student', email: 'student@nejah.com', password: 'Student123', icon: User, gradient: 'from-amber-600 to-amber-800' },
-  { role: 'Parent', email: 'parent@nejah.com', password: 'Parent123', icon: Users, gradient: 'from-rose-600 to-rose-800' },
-];
-
 function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
-  const [quickLoginRole, setQuickLoginRole] = useState<string | null>(null);
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reason') === 'session_expired') {
@@ -62,13 +51,6 @@ function LoginPage() {
       .then(data => setIsApplicationsOpen(data.isApplicationsOpen))
       .catch(() => {});
   }, []);
-
-  const handleQuickLogin = (email: string, password: string, role: string) => {
-    setQuickLoginRole(role);
-    form.setValue('email', email);
-    form.setValue('password', password);
-    setTimeout(() => form.handleSubmit(onSubmit)(), 400);
-  };
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -143,7 +125,6 @@ function LoginPage() {
       toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
-      setQuickLoginRole(null);
     }
   }
 
@@ -307,28 +288,7 @@ function LoginPage() {
                     )}
                   </div>
 
-                  <div className="pt-4 border-t border-nejah-border-blue/30">
-                    <details className="group">
-                      <summary className="text-xs font-semibold text-nejah-slate-blue hover:text-nejah-electric cursor-pointer list-none flex items-center gap-1 select-none transition-colors">
-                        <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
-                        Demo Accounts
-                      </summary>
-                      <div className="mt-3 text-xs text-nejah-slate-blue">
-                        <div className="grid grid-cols-3 gap-2 font-semibold text-foreground pb-1.5 border-b border-nejah-border-blue/30 mb-1">
-                          <span>Role</span>
-                          <span>Email</span>
-                          <span>Password</span>
-                        </div>
-                        {demoAccounts.map(({ role, email, password }) => (
-                          <div className="grid grid-cols-3 gap-2 py-0.5 hover:bg-nejah-surface/40 rounded px-1 -mx-1 transition-colors" key={role}>
-                            <span>{role}</span>
-                            <span className="font-mono text-nejah-electric">{email}</span>
-                            <span className="font-mono text-amber-600">{password}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
+                  <SilverDivider />
                 </form>
               </Form>
             </AuthPageLayout>

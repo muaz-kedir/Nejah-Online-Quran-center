@@ -178,6 +178,13 @@ export class ZoomSettingsController {
     return this.zoomService.getZoomUser(zoomUserId);
   }
 
+  @Get('account-users')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async listAccountUsers() {
+    const users = await this.zoomService.listAccountUsers();
+    return { users, total: users.length };
+  }
+
   @Get('health')
   @Roles(UserRole.TEACHER)
   async healthCheck(@Request() req) {
