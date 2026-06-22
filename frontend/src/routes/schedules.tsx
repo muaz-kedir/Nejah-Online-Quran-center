@@ -5,7 +5,7 @@ import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Calendar, Clock, User, BookOpen, Pencil } from 'lucide-react';
+import { Plus, Search, Calendar, Clock, User, BookOpen, Pencil, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api, apiUrl } from "@/lib/api";
@@ -30,6 +30,7 @@ function SchedulesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Edit Modal State
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
@@ -69,6 +70,12 @@ function SchedulesPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchSchedules();
+    setIsRefreshing(false);
   };
 
   useEffect(() => {
@@ -124,14 +131,20 @@ function SchedulesPage() {
           <h1 className="text-3xl font-bold text-foreground">Class Schedules</h1>
           <p className="text-muted-foreground mt-1">View and manage teaching schedules by day</p>
         </div>
-        <Button 
-          className="bg-primary hover:bg-primary"
-          onClick={() => {
-            navigate({ to: '/teachers' });
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Schedule a Class
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button 
+            className="bg-primary hover:bg-primary"
+            onClick={() => {
+              navigate({ to: '/teachers' });
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Schedule a Class
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6">

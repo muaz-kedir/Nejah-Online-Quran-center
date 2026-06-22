@@ -349,6 +349,13 @@ function AdminZoomPanel() {
   const [saving, setSaving] = useState(false);
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [overviewRefreshing, setOverviewRefreshing] = useState(false);
+
+  const handleOverviewRefresh = async () => {
+    setOverviewRefreshing(true);
+    await fetchOverview();
+    setOverviewRefreshing(false);
+  };
 
   const fetchOverview = async () => {
     setLoading(true);
@@ -540,14 +547,20 @@ function AdminZoomPanel() {
               )}
             </CardDescription>
           </div>
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search teachers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleOverviewRefresh} disabled={overviewRefreshing}>
+              <RefreshCw className={cn('h-4 w-4', overviewRefreshing && 'animate-spin')} />
+              {overviewRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search teachers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>

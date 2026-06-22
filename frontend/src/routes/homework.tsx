@@ -32,9 +32,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, ClipboardList, Clock, User, Trash2 } from 'lucide-react';
+import { Plus, Search, ClipboardList, Clock, User, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { cn } from '@/lib/utils';
 
 const API = API_BASE;
 
@@ -52,6 +53,7 @@ function HomeworkPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,6 +63,13 @@ function HomeworkPage() {
   });
 
   const token = () => localStorage.getItem('token');
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchStudents();
+    if (selectedStudentId) await fetchHomework(selectedStudentId);
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
     fetchStudents();
@@ -211,16 +220,22 @@ function HomeworkPage() {
           <h1 className="text-3xl font-bold text-foreground">Homework Management</h1>
           <p className="text-muted-foreground mt-1">Assign and track student homework</p>
         </div>
-        <Button
-          className="bg-primary hover:bg-primary"
-          disabled={!selectedStudentId}
-          onClick={() => {
-            setFormData({ ...formData, studentId: selectedStudentId });
-            setShowCreate(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Assign Homework
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button
+            className="bg-primary hover:bg-primary"
+            disabled={!selectedStudentId}
+            onClick={() => {
+              setFormData({ ...formData, studentId: selectedStudentId });
+              setShowCreate(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Assign Homework
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6">

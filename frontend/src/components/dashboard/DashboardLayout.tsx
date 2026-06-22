@@ -1,14 +1,13 @@
 import { memo, ReactNode, useState, useCallback } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { AppProvider } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const DashboardLayoutInner = memo(function DashboardLayoutInner({ children }: DashboardLayoutProps) {
+export const DashboardLayout = memo(function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => setMobileSidebarOpen(prev => !prev), []);
@@ -25,14 +24,6 @@ const DashboardLayoutInner = memo(function DashboardLayoutInner({ children }: Da
         </main>
       </div>
     </div>
-  );
-});
-
-export const DashboardLayout = memo(function DashboardLayout({ children }: DashboardLayoutProps) {
-  return (
-    <AppProvider>
-      <DashboardLayoutInner>{children}</DashboardLayoutInner>
-    </AppProvider>
   );
 });
 
