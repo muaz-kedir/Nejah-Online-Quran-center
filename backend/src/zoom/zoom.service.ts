@@ -488,44 +488,157 @@ export class ZoomService implements OnModuleInit {
   /* ------------------------------------------------------------------ */
 
   private encodeZoomUserId(userId: string): string {
-    const trimmed = userId.trim();
-    if (trimmed.includes('@')) {
-      return encodeURIComponent(trimmed.toLowerCase()).replace(/\./g, '%2E');
-    }
-    return encodeURIComponent(trimmed);
+    return this.pathEncodingsForUserId(userId)[0];
   }
 
-  private async fetchZoomUser(
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  /** Gmail treats dots in the local part as equivalent — try both forms. */
+  private emailLookupKeys(email: string): string[] {
+    const normalized = this.normalizeEmail(email);
+    const keys = new Set<string>([normalized]);
+
+    const [localPart, domain] = normalized.split('@');
+    if (!localPart || !domain) return [...keys];
+
+    if (domain === 'gmail.com' || domain === 'googlemail.com') {
+      const dotlessLocal = localPart.replace(/\./g, '');
+      keys.add(`${dotlessLocal}@gmail.com`);
+      keys.add(`${dotlessLocal}@googlemail.com`);
+    }
+
+    return [...keys];
+  }
+
+  private pathEncodingsForUserId(userId: string): string[] {
+    const trimmed = userId.trim();
+    if (!trimmed.includes('@')) {
+      return [encodeURIComponent(trimmed)];
+    }
+
+    const email = this.normalizeEmail(trimmed);
+    const encodings = new Set<string>();
+    encodings.add(encodeURIComponent(email));
+    encodings.add(email.replace('@', '%40'));
+    return [...encodings];
+  }
+
+  private async zoomRequestSoft<T>(
+    method: HttpMethod,
+    path: string,
+  ): Promise<{ ok: true; data: T } | { ok: false; status: number; message: string }> {
+    const token = await this.getAccessToken();
+    const url = path.startsWith('http')
+      ? path
+      : `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.request({
+          method,
+          url,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      return { ok: true, data: response.data as T };
+    } catch (error) {
+      const status = error?.response?.status ?? HttpStatus.BAD_GATEWAY;
+      const message =
+        (error?.response?.data?.message as string | undefined) ||
+        error?.message ||
+        'Zoom API request failed';
+      return { ok: false, status, message };
+    }
+  }
+
+  private async fetchZoomUserByPath(
     identifier: string,
   ): Promise<{ id: string; email: string } | null> {
-    try {
-      const data = await this.zoomRequest<{ id: string; email: string }>(
+    for (const encoded of this.pathEncodingsForUserId(identifier)) {
+      const result = await this.zoomRequestSoft<{ id: string; email: string }>(
         'GET',
-        `/users/${this.encodeZoomUserId(identifier)}`,
+        `/users/${encoded}`,
       );
-      if (data?.id) {
-        return { id: data.id, email: data.email };
+
+      if (result.ok && result.data?.id) {
+        return { id: result.data.id, email: result.data.email };
       }
-    } catch (error) {
-      if (error?.status !== 404) {
-        this.logger.warn(`Zoom user lookup failed for "${identifier}": ${error.message}`);
+
+      if (result.ok === false) {
+        if (result.status === 403) {
+          throw new HttpException(
+            'Zoom API denied user lookup. Add the user:read:admin scope to your Server-to-Server OAuth app and activate it.',
+            HttpStatus.BAD_GATEWAY,
+          );
+        }
+        continue;
       }
     }
+
     return null;
   }
 
-  private async findZoomUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
-    try {
-      const data = await this.zoomRequest<{ users?: Array<{ id: string; email: string }> }>(
-        'GET',
-        `/users?email=${encodeURIComponent(email.trim().toLowerCase())}&status=active`,
-      );
-      if (data.users?.length) {
-        return { id: data.users[0].id, email: data.users[0].email };
-      }
-    } catch (error) {
-      this.logger.warn(`Zoom user email search failed for "${email}": ${error.message}`);
+  private emailsMatch(left: string, right: string): boolean {
+    const leftKeys = new Set(this.emailLookupKeys(left));
+    return this.emailLookupKeys(right).some((key) => leftKeys.has(key));
+  }
+
+  private async scanUsersInAccount(
+    targetEmail: string,
+  ): Promise<{ id: string; email: string } | null> {
+    const statuses = ['active', 'pending', 'inactive'] as const;
+    let nextPageToken: string | undefined;
+    let pagesScanned = 0;
+    const maxPages = 20;
+
+    for (const status of statuses) {
+      nextPageToken = undefined;
+      pagesScanned = 0;
+
+      do {
+        const params = new URLSearchParams({
+          status,
+          page_size: '300',
+        });
+        if (nextPageToken) {
+          params.set('next_page_token', nextPageToken);
+        }
+
+        const result = await this.zoomRequestSoft<{
+          users?: Array<{ id: string; email: string }>;
+          next_page_token?: string;
+        }>('GET', `/users?${params.toString()}`);
+
+        if (result.ok === false) {
+          if (result.status === 403) {
+            throw new HttpException(
+              'Zoom API denied user listing. Add the user:read:admin scope to your Server-to-Server OAuth app and activate it.',
+              HttpStatus.BAD_GATEWAY,
+            );
+          }
+          this.logger.warn(
+            `Zoom user list failed (status=${status}, page=${pagesScanned + 1}): ${result.message}`,
+          );
+          break;
+        }
+
+        const match = result.data.users?.find(
+          (user) => user.email && this.emailsMatch(user.email, targetEmail),
+        );
+        if (match) {
+          return { id: match.id, email: match.email };
+        }
+
+        nextPageToken = result.data.next_page_token;
+        pagesScanned += 1;
+      } while (nextPageToken && pagesScanned < maxPages);
     }
+
     return null;
   }
 
@@ -535,27 +648,57 @@ export class ZoomService implements OnModuleInit {
   ): Promise<{ id: string; email: string }> {
     this.assertPlatformConfigured();
 
-    const candidates = [identifier, fallbackEmail]
+    const rawCandidates = [identifier, fallbackEmail]
       .map((value) => value?.trim())
       .filter(Boolean) as string[];
     const seen = new Set<string>();
+    const candidates: string[] = [];
 
-    for (const candidate of candidates) {
-      const key = candidate.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-
-      const direct = await this.fetchZoomUser(candidate);
-      if (direct) return direct;
-
-      if (candidate.includes('@')) {
-        const byEmail = await this.findZoomUserByEmail(candidate);
-        if (byEmail) return byEmail;
+    for (const candidate of rawCandidates) {
+      const variants = candidate.includes('@')
+        ? this.emailLookupKeys(candidate)
+        : [candidate];
+      for (const variant of variants) {
+        const key = variant.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push(variant);
       }
     }
 
+    for (const candidate of candidates) {
+      const direct = await this.fetchZoomUserByPath(candidate);
+      if (direct) return direct;
+    }
+
+    const emailCandidates = candidates.filter((candidate) => candidate.includes('@'));
+    for (const email of emailCandidates) {
+      const fromList = await this.scanUsersInAccount(email);
+      if (fromList) return fromList;
+    }
+
+    const accountProbe = await this.zoomRequestSoft<{ total_records?: number }>(
+      'GET',
+      '/users?page_size=1&status=active',
+    );
+    if (accountProbe.ok === false) {
+      if (accountProbe.status === 401 || accountProbe.status === 403) {
+        throw new HttpException(
+          'Zoom credentials are invalid or missing user:read:admin scope. Check ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the server.',
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+    }
+
+    const accountUserCount = accountProbe.ok ? accountProbe.data.total_records : undefined;
+    const tried = emailCandidates.length
+      ? emailCandidates.join(', ')
+      : candidates.join(', ');
+
     throw new HttpException(
-      'Zoom user not found in your Zoom account. Connect using the licensed Zoom email on the same account as your Server-to-Server OAuth app.',
+      accountUserCount === 0
+        ? 'No Zoom users exist on the account linked to your Server-to-Server OAuth app. Add licensed users in Zoom Admin, then try again.'
+        : `Zoom user not found for "${tried}". Use the exact licensed email from Zoom Admin → Users on the same account as your Server-to-Server OAuth app (${accountUserCount ?? 'multiple'} users on that account).`,
       HttpStatus.BAD_REQUEST,
     );
   }
