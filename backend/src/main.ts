@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -77,17 +77,23 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-zm-signature', 'x-zm-request-timestamp'],
   });
 
-  // API prefix
-  app.setGlobalPrefix(configService.get('API_PREFIX') || 'api');
+  // API prefix — exclude Zoom webhook and public health from /api
+  const apiPrefix = configService.get<string>('API_PREFIX') || 'api';
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'zoom/webhook', method: RequestMethod.POST },
+    ],
+  });
 
   // Serve uploaded files
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   // Use Render's dynamic port or fallback to 3000
-  const port = process.env.PORT || 3000;
+  const port = Number(process.env.PORT) || 3000;
 
   try {
     const dataSource = app.get(DataSource);
