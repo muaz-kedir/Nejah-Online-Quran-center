@@ -10,6 +10,7 @@ export class HealthController {
     await this.dataSource.query('SELECT 1');
     return {
       status: 'ok',
+      timestamp: new Date().toISOString(),
       database: 'connected',
       features: {
         websiteCms: true,

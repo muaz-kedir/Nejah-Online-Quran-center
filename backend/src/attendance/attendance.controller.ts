@@ -187,4 +187,14 @@ export class AttendanceController {
       req.user.role === UserRole.TEACHER ? await this.resolveTeacherIdForUser(req) : undefined;
     return this.attendanceService.getTodaysSessions(teacherId);
   }
+
+  @Get('all-sessions')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAllSessions(
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    const limitNum = limit ? parseInt(limit, 10) : 100;
+    return this.attendanceService.getAllSessions(limitNum, status);
+  }
 }
