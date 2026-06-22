@@ -66,12 +66,15 @@ export class ZoomSettingsController {
   @Post('platform/verify')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async verifyPlatformConfig() {
-    await this.zoomService.verifyPlatformAuth();
+    const result = await this.zoomService.verifyPlatformAuth();
     const status = this.zoomService.getPlatformConfigStatus();
     return {
       ok: true,
       message: 'Zoom Server-to-Server credentials are valid.',
-      source: status.source,
+      source: result.source,
+      envConfigured: status.envConfigured,
+      databaseConfigured: status.databaseConfigured,
+      credentialsConflict: status.credentialsConflict,
     };
   }
 

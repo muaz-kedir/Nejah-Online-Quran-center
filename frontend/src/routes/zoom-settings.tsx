@@ -65,6 +65,10 @@ type TeacherIntegration = {
 type PlatformConfigStatus = {
   configured: boolean;
   source: 'env' | 'database' | 'none';
+  activeSource?: 'env' | 'database' | 'none';
+  envConfigured?: boolean;
+  databaseConfigured?: boolean;
+  credentialsConflict?: boolean;
   accountId: string | null;
   clientId: string | null;
   hasClientSecret: boolean;
@@ -815,7 +819,16 @@ function PlatformConfigCard({
           )}
         </div>
 
-        {status?.source === 'env' && configured && (
+        {status?.credentialsConflict && (
+          <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-xs text-red-800 dark:text-red-400">
+            <strong>Credential conflict:</strong> Render environment variables and saved Zoom Settings
+            use different Client IDs. Stale env vars often cause &quot;Invalid client_id or
+            client_secret&quot;. Update or remove <code className="text-[10px]">ZOOM_*</code> on
+            Render, or save the correct values below and redeploy.
+          </div>
+        )}
+
+        {status?.source === 'env' && configured && !status?.credentialsConflict && (
           <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-400">
             Platform credentials are loaded from <strong>server environment variables</strong>{' '}
             (ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET). Values saved below are ignored

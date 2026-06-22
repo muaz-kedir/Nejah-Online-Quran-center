@@ -37,10 +37,16 @@ export type ZoomReportParticipant = {
   duration?: number;
 };
 
+type ZoomCredentialSet = {
+  accountId: string;
+  clientId: string;
+  clientSecret: string;
+};
+
 @Injectable()
 export class ZoomService implements OnModuleInit {
   private readonly logger = new Logger(ZoomService.name);
-  private readonly baseUrl = 'https://api.zoom.us/v2';
+  private apiBaseUrl = 'https://api.zoom.us/v2';
 
   private accessToken: string | null = null;
   private tokenExpiresAt: Date | null = null;
@@ -50,6 +56,9 @@ export class ZoomService implements OnModuleInit {
   private clientSecret = '';
   private secretToken = '';
   private credentialsSource: 'env' | 'database' | 'none' = 'none';
+  private envCredentials: ZoomCredentialSet | null = null;
+  private databaseCredentials: ZoomCredentialSet | null = null;
+  private lastSuccessfulCredentialSource: 'env' | 'database' | null = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -65,72 +74,167 @@ export class ZoomService implements OnModuleInit {
     await this.reloadPlatformCredentials();
   }
 
+  /** Strip whitespace and wrapping quotes from Render / copy-paste values. */
+  private sanitizeCredential(value: string | undefined | null): string {
+    if (!value) return '';
+    let trimmed = value.replace(/^\uFEFF/, '').trim();
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      trimmed = trimmed.slice(1, -1).trim();
+    }
+    return trimmed;
+  }
+
+  private isCompleteCredentialSet(creds: ZoomCredentialSet | null): creds is ZoomCredentialSet {
+    return !!(creds?.accountId && creds.clientId && creds.clientSecret);
+  }
+
+  private applyCredentialSet(creds: ZoomCredentialSet, source: 'env' | 'database'): void {
+    this.accountId = creds.accountId;
+    this.clientId = creds.clientId;
+    this.clientSecret = creds.clientSecret;
+    this.credentialsSource = source;
+  }
+
+  private readEnvCredentials(): ZoomCredentialSet | null {
+    const accountId = this.sanitizeCredential(
+      this.configService.get<string>('ZOOM_ACCOUNT_ID') || process.env.ZOOM_ACCOUNT_ID,
+    );
+    const clientId = this.sanitizeCredential(
+      this.configService.get<string>('ZOOM_CLIENT_ID') || process.env.ZOOM_CLIENT_ID,
+    );
+    const clientSecret = this.sanitizeCredential(
+      this.configService.get<string>('ZOOM_CLIENT_SECRET') || process.env.ZOOM_CLIENT_SECRET,
+    );
+    if (!accountId || !clientId || !clientSecret) return null;
+    return { accountId, clientId, clientSecret };
+  }
+
+  private credentialSourceOrder(): Array<'env' | 'database'> {
+    const pref = this.sanitizeCredential(process.env.ZOOM_CREDENTIALS_SOURCE).toLowerCase();
+    if (pref === 'database') return ['database', 'env'];
+    if (pref === 'env') return ['env', 'database'];
+    // Default: prefer database when saved (UI), then env — auto-fallback handles stale env on Render.
+    if (this.isCompleteCredentialSet(this.databaseCredentials)) {
+      return ['database', 'env'];
+    }
+    return ['env', 'database'];
+  }
+
+  private getCredentialsBySource(source: 'env' | 'database'): ZoomCredentialSet | null {
+    return source === 'env' ? this.envCredentials : this.databaseCredentials;
+  }
+
+  private isInvalidClientCredentialsError(error: unknown): boolean {
+    const payload = (error as { response?: { data?: Record<string, unknown> } })?.response?.data;
+    const reason = String(payload?.reason || payload?.error || payload?.message || '').toLowerCase();
+    return reason.includes('invalid client') || reason.includes('invalid_client');
+  }
+
   async reloadPlatformCredentials(): Promise<void> {
     this.accessToken = null;
     this.tokenExpiresAt = null;
+    this.lastSuccessfulCredentialSource = null;
 
     this.secretToken =
-      this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN')?.trim() ||
-      process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() ||
-      '';
+      this.sanitizeCredential(
+        this.configService.get<string>('ZOOM_WEBHOOK_SECRET_TOKEN') ||
+          process.env.ZOOM_WEBHOOK_SECRET_TOKEN,
+      ) || '';
 
-    const envAccountId =
-      this.configService.get<string>('ZOOM_ACCOUNT_ID')?.trim() ||
-      process.env.ZOOM_ACCOUNT_ID?.trim() ||
-      '';
-    const envClientId =
-      this.configService.get<string>('ZOOM_CLIENT_ID')?.trim() ||
-      process.env.ZOOM_CLIENT_ID?.trim() ||
-      '';
-    const envClientSecret =
-      this.configService.get<string>('ZOOM_CLIENT_SECRET')?.trim() ||
-      process.env.ZOOM_CLIENT_SECRET?.trim() ||
-      '';
-
-    if (envAccountId && envClientId && envClientSecret) {
-      this.accountId = envAccountId;
-      this.clientId = envClientId;
-      this.clientSecret = envClientSecret;
-      this.credentialsSource = 'env';
-      this.logWebhookSecretStatus();
-      return;
-    }
+    this.envCredentials = this.readEnvCredentials();
 
     const stored = await this.platformConfigRepository.findOne({
       where: { id: PLATFORM_CONFIG_ID },
     });
 
     if (stored?.accountId && stored.clientId && stored.clientSecretEncrypted) {
-      this.accountId = stored.accountId.trim();
-      this.clientId = stored.clientId.trim();
-      const decryptedSecret = this.encryptionService
-        .decrypt(stored.clientSecretEncrypted)
-        ?.trim();
-      this.clientSecret = decryptedSecret || '';
-      if (!this.clientSecret) {
+      const decryptedSecret = this.sanitizeCredential(
+        this.encryptionService.decrypt(stored.clientSecretEncrypted),
+      );
+      if (!decryptedSecret) {
         this.logger.error(
           'Zoom client secret could not be decrypted. Set ENCRYPTION_KEY on the server to match the key used when credentials were saved, or re-save credentials in Zoom Settings.',
         );
+        this.databaseCredentials = null;
+      } else {
+        this.databaseCredentials = {
+          accountId: this.sanitizeCredential(stored.accountId),
+          clientId: this.sanitizeCredential(stored.clientId),
+          clientSecret: decryptedSecret,
+        };
       }
       if (!this.secretToken && stored.secretTokenEncrypted) {
         this.secretToken =
-          this.encryptionService.decrypt(stored.secretTokenEncrypted)?.trim() || '';
+          this.sanitizeCredential(
+            this.encryptionService.decrypt(stored.secretTokenEncrypted),
+          ) || '';
       }
-      this.credentialsSource = this.clientSecret ? 'database' : 'none';
-      this.logWebhookSecretStatus();
-      return;
+    } else {
+      this.databaseCredentials = null;
     }
 
-    this.accountId = '';
-    this.clientId = '';
-    this.clientSecret = '';
-    this.credentialsSource = 'none';
+    const order = this.credentialSourceOrder();
+    let applied = false;
+    for (const source of order) {
+      const creds = this.getCredentialsBySource(source);
+      if (this.isCompleteCredentialSet(creds)) {
+        this.applyCredentialSet(creds, source);
+        applied = true;
+        break;
+      }
+    }
+
+    if (!applied) {
+      this.accountId = '';
+      this.clientId = '';
+      this.clientSecret = '';
+      this.credentialsSource = 'none';
+    }
+
+    if (
+      this.isCompleteCredentialSet(this.envCredentials) &&
+      this.isCompleteCredentialSet(this.databaseCredentials) &&
+      this.envCredentials.clientId !== this.databaseCredentials.clientId
+    ) {
+      this.logger.warn(
+        'Zoom credentials exist in both environment variables and the database with different Client IDs. ' +
+          'Using source order: ' +
+          order.join(' → ') +
+          '. Set ZOOM_CREDENTIALS_SOURCE=env|database to force one source.',
+      );
+    }
+
     this.logWebhookSecretStatus();
   }
 
   /* ------------------------------------------------------------------ */
   /*  Server-to-Server OAuth token + API helper                           */
   /* ------------------------------------------------------------------ */
+
+  private async requestZoomAccessToken(
+    creds: ZoomCredentialSet,
+  ): Promise<{ access_token: string; expires_in: number; api_url?: string }> {
+    const credentials = Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64');
+    const tokenUrl = `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(creds.accountId)}`;
+
+    const { data } = await firstValueFrom(
+      this.httpService.post(
+        tokenUrl,
+        {},
+        {
+          headers: {
+            Authorization: `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      ),
+    );
+
+    return data;
+  }
 
   async getAccessToken(): Promise<string> {
     if (
@@ -141,78 +245,94 @@ export class ZoomService implements OnModuleInit {
       return this.accessToken;
     }
 
-    const accountId = (
-      this.accountId ||
-      this.configService.get<string>('ZOOM_ACCOUNT_ID') ||
-      process.env.ZOOM_ACCOUNT_ID ||
-      ''
-    ).trim();
-    const clientId = (
-      this.clientId ||
-      this.configService.get<string>('ZOOM_CLIENT_ID') ||
-      process.env.ZOOM_CLIENT_ID ||
-      ''
-    ).trim();
-    const clientSecret = (
-      this.clientSecret ||
-      this.configService.get<string>('ZOOM_CLIENT_SECRET') ||
-      process.env.ZOOM_CLIENT_SECRET ||
-      ''
-    ).trim();
+    const sources = this.credentialSourceOrder();
+    let lastError: unknown = null;
 
-    if (!accountId || !clientId || !clientSecret) {
-      throw new HttpException(
-        'Zoom Server-to-Server OAuth is not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET on the server, or save them in Zoom Settings (Super Admin).',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    for (const source of sources) {
+      const creds = this.getCredentialsBySource(source);
+      if (!this.isCompleteCredentialSet(creds)) continue;
 
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    const tokenUrl = `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(accountId)}`;
+      try {
+        const data = await this.requestZoomAccessToken(creds);
 
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post(
-          tokenUrl,
-          {},
-          { headers: { Authorization: `Basic ${credentials}` } },
-        ),
-      );
+        if (!data?.access_token) {
+          throw new Error('Zoom token response did not include access_token');
+        }
 
-      if (!data?.access_token) {
-        throw new Error('Zoom token response did not include access_token');
+        this.applyCredentialSet(creds, source);
+        this.lastSuccessfulCredentialSource = source;
+        this.accessToken = data.access_token;
+        this.tokenExpiresAt = new Date(Date.now() + (data.expires_in - 60) * 1000);
+
+        if (data.api_url) {
+          this.apiBaseUrl = `${String(data.api_url).replace(/\/$/, '')}/v2`;
+        }
+
+        if (source !== sources[0]) {
+          this.logger.warn(
+            `Zoom authentication succeeded using "${source}" credentials after "${sources[0]}" failed. ` +
+              'Update Render environment variables or set ZOOM_CREDENTIALS_SOURCE to avoid fallback.',
+          );
+        }
+
+        return this.accessToken;
+      } catch (error) {
+        lastError = error;
+        if (!this.isInvalidClientCredentialsError(error)) {
+          break;
+        }
+        this.logger.warn(
+          `Zoom rejected ${source} credentials (${(error as { response?: { data?: { reason?: string } } })?.response?.data?.reason || 'invalid client'}). Trying next source.`,
+        );
       }
-
-      this.accessToken = data.access_token;
-      this.tokenExpiresAt = new Date(Date.now() + (data.expires_in - 60) * 1000);
-      return this.accessToken;
-    } catch (error) {
-      this.accessToken = null;
-      this.tokenExpiresAt = null;
-
-      const zoomPayload = error?.response?.data;
-      const reason =
-        (typeof zoomPayload === 'object' &&
-          (zoomPayload?.reason || zoomPayload?.error || zoomPayload?.message)) ||
-        error?.message ||
-        'Unknown Zoom OAuth error';
-
-      this.logger.error(
-        'Failed to get Zoom Server-to-Server access token',
-        zoomPayload || error.message,
-      );
-
-      throw new HttpException(
-        `Zoom Server-to-Server authentication failed (${reason}). Verify ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET match your activated Zoom Marketplace app.`,
-        HttpStatus.BAD_GATEWAY,
-      );
     }
+
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+
+    const zoomPayload = (lastError as { response?: { data?: unknown }; message?: string })?.response
+      ?.data;
+    const reason =
+      (typeof zoomPayload === 'object' &&
+        zoomPayload &&
+        ((zoomPayload as Record<string, unknown>).reason ||
+          (zoomPayload as Record<string, unknown>).error ||
+          (zoomPayload as Record<string, unknown>).message)) ||
+      (lastError as Error)?.message ||
+      'Unknown Zoom OAuth error';
+
+    this.logger.error(
+      'Failed to get Zoom Server-to-Server access token from all configured sources',
+      zoomPayload || (lastError as Error)?.message,
+    );
+
+    const hasEnv = this.isCompleteCredentialSet(this.envCredentials);
+    const hasDb = this.isCompleteCredentialSet(this.databaseCredentials);
+    let hint =
+      'Verify ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET match your activated Server-to-Server OAuth app in Zoom Marketplace.';
+    if (hasEnv && hasDb) {
+      hint +=
+        ' Credentials exist in both Render env vars and the database — remove outdated ZOOM_* env vars on Render or re-save the correct values in Zoom Settings.';
+    } else if (hasEnv) {
+      hint += ' Update the ZOOM_* variables on Render (no quotes around values).';
+    } else if (hasDb) {
+      hint +=
+        ' Re-save credentials in Zoom Settings (Super Admin) or set ENCRYPTION_KEY if the secret cannot be decrypted.';
+    }
+
+    throw new HttpException(
+      `Zoom Server-to-Server authentication failed (${reason}). ${hint}`,
+      HttpStatus.BAD_GATEWAY,
+    );
   }
 
-  /** Confirms platform credentials can obtain a Zoom access token. */
-  async verifyPlatformAuth(): Promise<{ ok: true }> {
+  async verifyPlatformAuth(): Promise<{ ok: true; source: 'env' | 'database' }> {
     await this.getAccessToken();
-    return { ok: true };
+    const source = this.lastSuccessfulCredentialSource || this.credentialsSource;
+    return {
+      ok: true,
+      source: source === 'database' ? 'database' : 'env',
+    };
   }
 
   private async zoomRequest<T>(
@@ -223,7 +343,7 @@ export class ZoomService implements OnModuleInit {
     const token = await this.getAccessToken();
     const url = path.startsWith('http')
       ? path
-      : `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      : `${this.apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
     try {
       const response = await firstValueFrom(
@@ -373,10 +493,10 @@ export class ZoomService implements OnModuleInit {
   /* ------------------------------------------------------------------ */
 
   isPlatformConfigured(): boolean {
-    return !!(
-      (this.accountId || process.env.ZOOM_ACCOUNT_ID) &&
-      (this.clientId || process.env.ZOOM_CLIENT_ID) &&
-      (this.clientSecret || process.env.ZOOM_CLIENT_SECRET)
+    return (
+      this.isCompleteCredentialSet(this.envCredentials) ||
+      this.isCompleteCredentialSet(this.databaseCredentials) ||
+      !!(this.accountId && this.clientId && this.clientSecret)
     );
   }
 
@@ -392,14 +512,29 @@ export class ZoomService implements OnModuleInit {
   getPlatformConfigStatus(): {
     configured: boolean;
     source: 'env' | 'database' | 'none';
+    activeSource: 'env' | 'database' | 'none';
+    envConfigured: boolean;
+    databaseConfigured: boolean;
+    credentialsConflict: boolean;
     accountId: string | null;
     clientId: string | null;
     hasClientSecret: boolean;
     hasSecretToken: boolean;
   } {
+    const envConfigured = this.isCompleteCredentialSet(this.envCredentials);
+    const databaseConfigured = this.isCompleteCredentialSet(this.databaseCredentials);
+    const credentialsConflict =
+      envConfigured &&
+      databaseConfigured &&
+      this.envCredentials!.clientId !== this.databaseCredentials!.clientId;
+
     return {
       configured: this.isPlatformConfigured(),
       source: this.credentialsSource,
+      activeSource: this.lastSuccessfulCredentialSource || this.credentialsSource,
+      envConfigured,
+      databaseConfigured,
+      credentialsConflict,
       accountId: this.accountId || null,
       clientId: this.clientId || null,
       hasClientSecret: !!this.clientSecret,
@@ -413,9 +548,9 @@ export class ZoomService implements OnModuleInit {
     clientSecret?: string;
     secretToken?: string;
   }): Promise<{ configured: boolean; source: 'database'; zoomAuthVerified: boolean }> {
-    const accountId = input.accountId?.trim();
-    const clientId = input.clientId?.trim();
-    const clientSecret = input.clientSecret?.trim();
+    const accountId = this.sanitizeCredential(input.accountId);
+    const clientId = this.sanitizeCredential(input.clientId);
+    const clientSecret = this.sanitizeCredential(input.clientSecret);
 
     if (!accountId || !clientId) {
       throw new HttpException('Account ID and Client ID are required', HttpStatus.BAD_REQUEST);
@@ -569,7 +704,7 @@ export class ZoomService implements OnModuleInit {
     const token = await this.getAccessToken();
     const url = path.startsWith('http')
       ? path
-      : `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+      : `${this.apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
     try {
       const response = await firstValueFrom(
