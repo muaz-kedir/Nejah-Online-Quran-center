@@ -3,14 +3,24 @@ const RENDER_ORIGIN = 'https://nejah-online-quran-center.onrender.com';
 const LOCAL_API = 'http://localhost:3000/api';
 const LOCAL_ORIGIN = 'http://localhost:3000';
 
-/** Prefer VITE_API_URL when set (Vercel/local), else dev localhost or Render production. */
-export const API_BASE: string = String(
-  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? LOCAL_API : RENDER_API),
-);
+/** Ensure URL has protocol prefix */
+function ensureProtocol(url: string): string {
+  if (!url) return url;
+  // If the URL doesn't start with http:// or https://, add https://
+  if (!/^https?:\/\//i.test(url)) {
+    return 'https://' + url;
+  }
+  return url;
+}
 
-export const API_ORIGIN: string = String(
+/** Prefer VITE_API_URL when set (Vercel/local), else dev localhost or Render production. */
+export const API_BASE: string = ensureProtocol(String(
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? LOCAL_API : RENDER_API),
+));
+
+export const API_ORIGIN: string = ensureProtocol(String(
   import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? LOCAL_ORIGIN : RENDER_ORIGIN),
-).replace(/\/$/, '');
+)).replace(/\/$/, '');
 
 export const WS_URL = API_ORIGIN;
 
