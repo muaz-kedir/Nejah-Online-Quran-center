@@ -56,68 +56,98 @@ function AdminAttendancePage() {
     if (showLoading) setLoading(true);
     else setRefreshing(true);
     
+    console.log('[Attendance] Starting data fetch...', { showLoading });
+    
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('[Attendance] No auth token found');
+        toast.error('Authentication required');
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
       
       // 1. Fetch live sessions
-      const liveRes = await fetch(apiUrl(`/live-sessions/live`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (liveRes.ok) {
-        const liveData = await liveRes.json();
-        setLiveSessions(liveData);
+      try {
+        const liveRes = await fetch(apiUrl(`/live-sessions/live`), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (liveRes.ok) {
+          const liveData = await liveRes.json();
+          console.log('[Attendance] Live sessions fetched:', liveData?.length || 0);
+          setLiveSessions(Array.isArray(liveData) ? liveData : []);
+        } else if (liveRes.status === 401) {
+          console.error('[Attendance] Unauthorized - token may be invalid');
+          // Don't clear data, just log the error
+        } else {
+          console.warn('[Attendance] Live sessions fetch failed:', liveRes.status);
+        }
+      } catch (error) {
+        console.error('[Attendance] Error fetching live sessions:', error);
+        // Don't fail completely, continue to fetch other data
       }
 
-      // 2. Fetch today's sessions or all sessions
-      // We query the general sessions history. Let's write an endpoint or map it.
-      // We can hit getTodaysSessions or create sessions list. Let's call /api/attendance/teacher/sessions as fallback or fetch all sessions.
-      // Wait, there is no generic /api/attendance/sessions GET all endpoint, but we can query teacher/sessions with no teacher ID or teacher dashboard.
-      // Wait! Let's check: does teacher/sessions exist? Yes. Let's see what endpoint exists for admins to view sessions.
-      // Let's call GET /api/attendance/live-classes and mock/fetch history if needed, or query from DB.
-      // Wait, let's write a generic GET /api/attendance/sessions endpoint in the backend for admins! That is much cleaner.
-      // Let's implement GET /api/attendance/sessions in backend first if it's missing, or we can fetch list of sessions from backend.
-      // Let's check what endpoints are in attendance.controller.ts:
-      // - POST sessions
-      // - POST sessions/start-meeting
-      // - POST sessions/end
-      // - POST record
-      // - GET sessions/:id
-      // - GET teacher/sessions
-      // - GET student/history
-      // - GET student/stats
-      // - GET live-classes
-      // - GET todays-sessions
-      // Ah! We don't have a generic endpoint to list all sessions. But we have GET /api/attendance/todays-sessions!
-      // Let's fetch todays-sessions (which returns sessions for today). We can also write a backend method to list all sessions for admins.
-      // Let's hit GET /attendance/todays-sessions to show today's checklist, and we can also fetch all sessions.
-      const sessionsRes = await fetch(apiUrl(`/attendance/todays-sessions`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (sessionsRes.ok) {
-        const sessionsData = await sessionsRes.json();
-        setSessions(sessionsData);
+      // 2. Fetch all sessions (recent 100 sessions ordered by date)
+      try {
+        console.log('[Attendance] Fetching all sessions...');
+        const sessionsRes = await fetch(apiUrl(`/attendance/all-sessions?limit=100`), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        console.log('[Attendance] Sessions response status:', sessionsRes.status);
+        
+        if (sessionsRes.ok) {
+          const sessionsData = await sessionsRes.json();
+          console.log('[Attendance] Sessions fetched successfully:', sessionsData?.length || 0, 'sessions');
+          setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+        } else if (sessionsRes.status === 401) {
+          console.error('[Attendance] Unauthorized - token may be invalid');
+          toast.error('Session expired. Please log in again.');
+        } else {
+          const errorText = await sessionsRes.text();
+          console.error('[Attendance] Failed to fetch sessions:', sessionsRes.status, sessionsRes.statusText, errorText);
+          // Only show error on initial load, not on refresh
+          if (showLoading) {
+            toast.error('Failed to load attendance sessions');
+          }
+        }
+      } catch (error) {
+        console.error('[Attendance] Error fetching sessions:', error);
+        // Only show error on initial load
+        if (showLoading) {
+          toast.error('Error loading attendance data');
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch attendance logs:', error);
+      console.error('[Attendance] Failed to fetch attendance logs:', error);
+      if (showLoading) {
+        toast.error('Error loading attendance data');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
+      console.log('[Attendance] Data fetch completed');
     }
   };
 
   useEffect(() => {
-    fetchAttendanceData();
+    // Initial fetch
+    fetchAttendanceData(true);
 
+    // Setup polling every 15 seconds for background refresh
     pollIntervalRef.current = setInterval(() => {
       fetchAttendanceData(false);
     }, 15000);
 
+    // Cleanup on unmount
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
       }
     };
-  }, []);
+  }, []); // Empty dependency array - only run once on mount
 
   const handleRowClick = async (sessionId: string) => {
     try {
@@ -156,13 +186,26 @@ function AdminAttendancePage() {
   }, [sessions]);
 
   const filteredSessions = useMemo(() => {
-    if (!search && statusFilter === 'all') return sessions;
-    const q = search.toLowerCase();
-    return sessions.filter(session => {
-      const matchesSearch = !search || session.classTitle.toLowerCase().includes(q) || (session.teacher?.fullName && session.teacher.fullName.toLowerCase().includes(q));
-      if (statusFilter === 'all') return matchesSearch;
-      return matchesSearch && session.status === statusFilter;
-    });
+    let filtered = sessions;
+    
+    // Apply search filter
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(session => {
+        const matchesTitle = session.classTitle?.toLowerCase().includes(q);
+        const matchesTeacher = session.teacher?.fullName?.toLowerCase().includes(q);
+        const matchesSubject = session.subject?.toLowerCase().includes(q);
+        const matchesLevel = session.quranLevel?.toLowerCase().includes(q);
+        return matchesTitle || matchesTeacher || matchesSubject || matchesLevel;
+      });
+    }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(session => session.status === statusFilter);
+    }
+    
+    return filtered;
   }, [sessions, search, statusFilter]);
 
   return (
@@ -342,36 +385,58 @@ function AdminAttendancePage() {
         {/* Daily Session History Log Table */}
         <section className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border dark:border-white/5 pb-4">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">Daily Session Log</h2>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">Daily Session Log</h2>
+              {(search || statusFilter !== 'all') && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Showing {filteredSessions.length} of {sessions.length} sessions
+                  {statusFilter !== 'all' && ` • Filtered by: ${statusFilter}`}
+                </p>
+              )}
+            </div>
             
             {/* Search & filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search classes or teachers..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-10 bg-background/50 dark:bg-nejah-surface border-none rounded-xl text-xs w-60"
+                  className="pl-9 h-10 bg-background/50 dark:bg-nejah-surface border-none rounded-xl text-xs w-full sm:w-60"
                 />
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {['all', 'LIVE', 'SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'EXPIRED'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all",
+                      "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap",
                       statusFilter === status 
-                        ? "bg-nejah-sapphire text-white" 
-                        : "bg-background/50 text-nejah-slate-blue hover:bg-muted"
+                        ? "bg-nejah-sapphire text-white shadow-md" 
+                        : "bg-background/50 dark:bg-nejah-surface text-nejah-slate-blue hover:bg-muted dark:hover:bg-nejah-surface/70"
                     )}
                   >
-                    {status}
+                    {status === 'all' ? 'All' : status}
                   </button>
                 ))}
               </div>
+              
+              {(search || statusFilter !== 'all') && (
+                <Button
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 px-3 text-xs font-bold text-nejah-slate-blue hover:text-foreground"
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
 
