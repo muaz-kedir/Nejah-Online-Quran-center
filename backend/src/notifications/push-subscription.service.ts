@@ -29,19 +29,47 @@ export class PushSubscriptionService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const publicKey = this.configService.get<string>('VAPID_PUBLIC_KEY');
-    const privateKey = this.configService.get<string>('VAPID_PRIVATE_KEY');
-    const subject =
+    const publicKey = this.configService.get<string>('VAPID_PUBLIC_KEY')?.trim();
+    const privateKey = this.configService.get<string>('VAPID_PRIVATE_KEY')?.trim();
+    const subject = this.normalizeVapidSubject(
       this.configService.get<string>('VAPID_EMAIL') ||
-      this.configService.get<string>('VAPID_SUBJECT') ||
-      'mailto:admin@nejah-center.com';
+        this.configService.get<string>('VAPID_SUBJECT'),
+    );
 
-    if (publicKey && privateKey) {
+    if (!publicKey || !privateKey) {
+      this.logger.warn('VAPID keys not configured — push notifications disabled');
+      return;
+    }
+
+    try {
       webpush.setVapidDetails(subject, publicKey, privateKey);
       this.vapidConfigured = true;
-    } else {
-      this.logger.warn('VAPID keys not configured — push notifications disabled');
+      this.logger.log(`Web push configured (subject: ${subject})`);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to configure VAPID — push notifications disabled: ${error.message}`,
+      );
     }
+  }
+
+  /** web-push requires subject to be mailto:email or https:// URL */
+  private normalizeVapidSubject(raw?: string): string {
+    const fallback = 'mailto:admin@nejah-center.com';
+    const value = raw?.trim();
+    if (!value) return fallback;
+
+    if (/^mailto:/i.test(value) || /^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    if (value.includes('@')) {
+      return `mailto:${value}`;
+    }
+
+    this.logger.warn(
+      `VAPID_EMAIL/VAPID_SUBJECT is not a valid URL or email — using default subject`,
+    );
+    return fallback;
   }
 
   getVapidPublicKey(): string | null {
