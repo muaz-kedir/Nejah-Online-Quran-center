@@ -1,13 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import { PushSubscription } from './entities/push-subscription.entity';
 
 export interface PushPayload {
   title: string;
   body: string;
+  url?: string;
   data?: Record<string, unknown>;
   icon?: string;
   badge?: string;
@@ -17,41 +18,67 @@ export interface PushPayload {
 }
 
 @Injectable()
-export class PushSubscriptionService {
+export class PushSubscriptionService implements OnModuleInit {
   private readonly logger = new Logger(PushSubscriptionService.name);
+  private vapidConfigured = false;
 
   constructor(
     @InjectRepository(PushSubscription)
     private readonly subscriptionRepository: Repository<PushSubscription>,
     private readonly configService: ConfigService,
-  ) {
+  ) {}
+
+  onModuleInit() {
     const publicKey = this.configService.get<string>('VAPID_PUBLIC_KEY');
     const privateKey = this.configService.get<string>('VAPID_PRIVATE_KEY');
-    const subject = this.configService.get<string>('VAPID_SUBJECT') || 'mailto:admin@nejah-center.com';
+    const subject =
+      this.configService.get<string>('VAPID_EMAIL') ||
+      this.configService.get<string>('VAPID_SUBJECT') ||
+      'mailto:admin@nejah-center.com';
 
     if (publicKey && privateKey) {
       webpush.setVapidDetails(subject, publicKey, privateKey);
+      this.vapidConfigured = true;
     } else {
       this.logger.warn('VAPID keys not configured — push notifications disabled');
     }
   }
 
-  async subscribe(userId: string, subscription: { endpoint: string; keys: { p256dh: string; auth: string } }): Promise<PushSubscription> {
-    let existing = await this.subscriptionRepository.findOne({
+  getVapidPublicKey(): string | null {
+    return this.configService.get<string>('VAPID_PUBLIC_KEY') || null;
+  }
+
+  isConfigured(): boolean {
+    return this.vapidConfigured;
+  }
+
+  async subscribe(
+    userId: string,
+    userType: string,
+    subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+    deviceInfo?: string,
+  ): Promise<PushSubscription> {
+    await this.subscriptionRepository.delete({ endpoint: subscription.endpoint });
+
+    const existing = await this.subscriptionRepository.findOne({
       where: { userId, endpoint: subscription.endpoint },
     });
 
     if (existing) {
       existing.p256dh = subscription.keys.p256dh;
       existing.auth = subscription.keys.auth;
+      existing.userType = userType;
+      existing.deviceInfo = deviceInfo || existing.deviceInfo;
       return this.subscriptionRepository.save(existing);
     }
 
     const entity = this.subscriptionRepository.create({
       userId,
+      userType,
       endpoint: subscription.endpoint,
       p256dh: subscription.keys.p256dh,
       auth: subscription.keys.auth,
+      deviceInfo,
     });
 
     return this.subscriptionRepository.save(entity);
@@ -61,67 +88,90 @@ export class PushSubscriptionService {
     await this.subscriptionRepository.delete({ userId, endpoint });
   }
 
+  async removeByEndpoint(endpoint: string): Promise<void> {
+    await this.subscriptionRepository.delete({ endpoint });
+  }
+
   async getUserSubscriptions(userId: string): Promise<PushSubscription[]> {
     return this.subscriptionRepository.find({ where: { userId } });
   }
 
-  async sendPush(userId: string, payload: PushPayload): Promise<void> {
-    const subscriptions = await this.getUserSubscriptions(userId);
-    if (subscriptions.length === 0) return;
+  private serializePayload(payload: PushPayload): string {
+    return JSON.stringify({
+      title: payload.title,
+      body: payload.body,
+      icon: payload.icon || '/logo.png',
+      badge: payload.badge || '/logo.png',
+      tag: payload.tag,
+      url: payload.url || payload.data?.url,
+      data: {
+        ...(payload.data || {}),
+        url: payload.url || payload.data?.url,
+      },
+      actions: payload.actions,
+      renotify: payload.renotify,
+    });
+  }
 
-    const pushPayload = JSON.stringify(payload);
-
-    for (const sub of subscriptions) {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          pushPayload,
-        );
-      } catch (error: any) {
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          this.logger.warn(`Removing expired push subscription for user ${userId}`);
-          await this.subscriptionRepository.delete(sub.id);
-        } else {
-          this.logger.error(`Failed to send push to user ${userId}: ${error.message}`);
-        }
+  private async sendToSubscription(sub: PushSubscription, payload: string): Promise<void> {
+    try {
+      await webpush.sendNotification(
+        {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
+        },
+        payload,
+      );
+    } catch (error: any) {
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        this.logger.warn(`Removing expired push subscription ${sub.id}`);
+        await this.subscriptionRepository.delete(sub.id);
+      } else {
+        this.logger.error(`Failed to send push to ${sub.userId}: ${error.message}`);
       }
     }
   }
 
+  async sendPush(userId: string, payload: PushPayload): Promise<void> {
+    if (!this.vapidConfigured) return;
+
+    const subscriptions = await this.getUserSubscriptions(userId);
+    if (subscriptions.length === 0) return;
+
+    const pushPayload = this.serializePayload(payload);
+    for (const sub of subscriptions) {
+      await this.sendToSubscription(sub, pushPayload);
+    }
+  }
+
   async sendPushToUsers(userIds: string[], payload: PushPayload): Promise<void> {
+    if (!this.vapidConfigured || userIds.length === 0) return;
+
+    const uniqueIds = Array.from(new Set(userIds));
     const subscriptions = await this.subscriptionRepository.find({
-      where: userIds.map((id) => ({ userId: id })),
+      where: { userId: In(uniqueIds) },
     });
 
     if (subscriptions.length === 0) return;
 
-    const pushPayload = JSON.stringify(payload);
-    const grouped = new Map<string, PushSubscription[]>();
+    const pushPayload = this.serializePayload(payload);
+    await Promise.allSettled(
+      subscriptions.map((sub) => this.sendToSubscription(sub, pushPayload)),
+    );
+  }
 
-    for (const sub of subscriptions) {
-      const list = grouped.get(sub.userId) || [];
-      list.push(sub);
-      grouped.set(sub.userId, list);
-    }
+  async sendToUserTypes(userTypes: string[], payload: PushPayload): Promise<void> {
+    if (!this.vapidConfigured || userTypes.length === 0) return;
 
-    for (const [, subs] of grouped) {
-      for (const sub of subs) {
-        try {
-          await webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            pushPayload,
-          );
-        } catch (error: any) {
-          if (error.statusCode === 410 || error.statusCode === 404) {
-            await this.subscriptionRepository.delete(sub.id);
-          } else {
-            this.logger.error(`Failed to send push: ${error.message}`);
-          }
-        }
-      }
-    }
+    const subscriptions = await this.subscriptionRepository.find({
+      where: { userType: In(userTypes) },
+    });
+
+    if (subscriptions.length === 0) return;
+
+    const pushPayload = this.serializePayload(payload);
+    await Promise.allSettled(
+      subscriptions.map((sub) => this.sendToSubscription(sub, pushPayload)),
+    );
   }
 }

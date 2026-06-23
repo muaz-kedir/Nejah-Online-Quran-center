@@ -13,6 +13,7 @@ import {
   NotificationType,
   NotificationChannel,
 } from './entities/notification.entity';
+import { LiveSession } from '../zoom/entities/live-session.entity';
 
 export interface NotificationPayload {
   type: 'meeting_started' | 'meeting_ended' | 'attendance_recorded' | 'class_cancelled';
@@ -279,6 +280,7 @@ export class NotificationsService {
     message: string,
     data?: Record<string, unknown>,
     channel?: NotificationChannel,
+    skipPush = false,
   ): Promise<void> {
     if (!recipientIds.length) return;
 
@@ -325,13 +327,121 @@ export class NotificationsService {
     }
 
     // Send push notification to all recipients
-    await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
-      title,
-      body: message,
-      data,
+    if (!skipPush) {
+      await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
+        title,
+        body: message,
+        url: typeof data?.url === 'string' ? data.url : undefined,
+        data,
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof data?.sessionId === 'string' ? `session-${data.sessionId}` : 'session-notification',
+      });
+    }
+  }
+
+  async notifyLiveSessionStarted(session: LiveSession): Promise<void> {
+    const studentUserIds = new Set<string>();
+    const parentUserIds = new Set<string>();
+
+    const collectStudent = (student?: Student | null) => {
+      if (!student) return;
+      if (student.userId) studentUserIds.add(student.userId);
+      const parentUser = student.parent?.user;
+      if (parentUser?.id) parentUserIds.add(parentUser.id);
+    };
+
+    collectStudent(session.student);
+
+    for (const attendance of session.attendances || []) {
+      collectStudent(attendance.student);
+    }
+
+    for (const scheduleStudent of session.schedule?.scheduleStudents || []) {
+      collectStudent(scheduleStudent.student);
+    }
+
+    const className =
+      session.schedule?.className || session.metadata?.className || 'Quran Class';
+    const teacherName = session.teacher?.fullName || 'Your teacher';
+    const sessionId = session.id;
+    const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const enrolledCount =
+      session.schedule?.scheduleStudents?.length ||
+      (session.studentId ? 1 : 0) ||
+      session.attendances?.length ||
+      0;
+
+    const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
+
+    const learnerPayload = {
+      title: '📚 Class Started — Nejah',
+      body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
       icon: '/logo.png',
       badge: '/logo.png',
-      tag: 'session-notification',
+      url: joinUrl,
+      tag: `session-${sessionId}`,
+      data: {
+        sessionId,
+        url: joinUrl,
+        channel: 'MEETING_STARTED',
+        className,
+        teacherName,
+      },
+      actions: [
+        { action: 'join', title: '▶ Join Class' },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+      renotify: true,
+    };
+
+    const adminPayload = {
+      ...learnerPayload,
+      title: '📚 Session Started — Nejah Admin',
+      body: `Teacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.`,
+      url: `/live-sessions/${sessionId}`,
+      data: {
+        sessionId,
+        url: `/live-sessions/${sessionId}`,
+        channel: 'MEETING_STARTED',
+        className,
+        teacherName,
+        enrolledCount,
+      },
+    };
+
+    if (studentParentIds.length > 0) {
+      await this.sendCustomNotifications(
+        studentParentIds,
+        learnerPayload.title,
+        learnerPayload.body,
+        learnerPayload.data,
+        NotificationChannel.MEETING_STARTED,
+        true,
+      );
+      await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
+    }
+
+    const admins = await this.userRepository.find({
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
     });
+    const adminUserIds = admins.map((admin) => admin.id);
+
+    if (adminUserIds.length > 0) {
+      await this.sendCustomNotifications(
+        adminUserIds,
+        adminPayload.title,
+        adminPayload.body,
+        adminPayload.data,
+        NotificationChannel.MEETING_STARTED,
+        true,
+      );
+      await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+    }
+
+    await this.pushSubscriptionService.sendToUserTypes(
+      [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      adminPayload,
+    );
   }
 }
