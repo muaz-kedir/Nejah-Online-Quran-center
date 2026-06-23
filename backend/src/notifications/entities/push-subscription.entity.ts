@@ -20,9 +20,13 @@ export class PushSubscription {
   user: User;
 
   @Column()
+  @Index()
   userId: string;
 
-  @Column()
+  @Column({ nullable: true })
+  userType: string;
+
+  @Column({ type: 'text' })
   endpoint: string;
 
   @Column({ type: 'text' })
@@ -33,6 +37,9 @@ export class PushSubscription {
 
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
+
+  @Column({ nullable: true })
+  deviceInfo: string;
 
   @CreateDateColumn()
   createdAt: Date;

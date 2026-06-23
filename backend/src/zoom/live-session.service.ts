@@ -126,10 +126,17 @@ export class LiveSessionService {
       relations: [
         'teacher',
         'student',
+        'student.parent',
+        'student.parent.user',
         'schedule',
         'schedule.scheduleStudents',
+        'schedule.scheduleStudents.student',
+        'schedule.scheduleStudents.student.parent',
+        'schedule.scheduleStudents.student.parent.user',
         'attendances',
         'attendances.student',
+        'attendances.student.parent',
+        'attendances.student.parent.user',
         'sessionNotes',
         'sessionNotes.teacher',
       ],
@@ -323,19 +330,11 @@ export class LiveSessionService {
     await this.liveSessionRepository.save(session);
 
     const fullSession = await this.findById(id);
-    const recipientUserIds = await this.getSessionStudentUserIds(fullSession);
 
-    if (recipientUserIds.length > 0) {
-      try {
-        await this.notificationsService.sendCustomNotifications(
-          recipientUserIds,
-          `Class Started: ${fullSession.schedule?.className || 'Quran Class'}`,
-          `Your class has started. Click to join.`,
-          { sessionId: id, channel: 'MEETING_STARTED' },
-        );
-      } catch (err) {
-        this.logger.error('Failed to send meeting started notifications', err);
-      }
+    try {
+      await this.notificationsService.notifyLiveSessionStarted(fullSession);
+    } catch (err) {
+      this.logger.error('Failed to send session started notifications', err);
     }
 
     return fullSession;
