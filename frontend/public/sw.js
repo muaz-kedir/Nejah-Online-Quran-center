@@ -1,20 +1,18 @@
-const CACHE_NAME = "nejah-pwa-v1";
+const CACHE_NAME = "nejah-pwa-v2";
 const STATIC_URLS = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_URLS);
-    }),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_URLS)),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
-    }),
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+    ),
   );
   self.clients.claim();
 });
@@ -36,61 +34,66 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   if (!event.data) return;
+
   try {
     const data = event.data.json();
     const title = data.title || "Nejah Online Quran Center";
-    const options = {
-      body: data.body || data.message || "",
-      icon: data.icon || "/logo.png",
-      badge: "/logo.png",
-      vibrate: [200, 100, 200],
-      data: data.data || {},
-      actions: data.actions || [
-        { action: "open", title: "View" },
-      ],
-      tag: data.tag || "default",
-      renotify: data.renotify || false,
-    };
-    event.waitUntil(self.registration.showNotification(title, options));
+    const targetUrl = data.url || data.data?.url || "/";
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: data.body || data.message || "",
+        icon: data.icon || "/logo.png",
+        badge: data.badge || "/logo.png",
+        tag: data.tag || "nejah-notification",
+        requireInteraction: true,
+        renotify: data.renotify || false,
+        data: {
+          ...(data.data || {}),
+          url: targetUrl,
+        },
+        actions: data.actions || [
+          { action: "join", title: "▶ Join Class" },
+          { action: "dismiss", title: "Dismiss" },
+        ],
+      }),
+    );
   } catch {
-    const title = "Nejah Online Quran Center";
-    const options = {
-      body: typeof event.data === "string" ? event.data : "New notification",
-      icon: "/logo.png",
-      badge: "/logo.png",
-    };
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+      self.registration.showNotification("Nejah Online Quran Center", {
+        body: event.data.text(),
+        icon: "/logo.png",
+        badge: "/logo.png",
+      }),
+    );
   }
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const data = event.notification.data;
-  const action = event.action;
-  let url = "/";
-  if (action === "open" && data) {
-    if (data.sessionId) {
-      const role = data.role || "student";
-      if (role === "student") {
-        url = `/class-session/${data.sessionId}`;
-      } else {
-        url = `/live-sessions/${data.sessionId}`;
-      }
-    } else if (data.url) {
-      url = data.url;
-    }
+
+  if (event.action === "dismiss") return;
+
+  const data = event.notification.data || {};
+  let url = data.url || "/";
+
+  if (url.startsWith("http")) {
+    event.waitUntil(clients.openWindow(url));
+    return;
   }
+
+  const absoluteUrl = new URL(url, self.location.origin).href;
+
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      if (windowClients.length > 0) {
-        const matchingClient = windowClients.find((c) => c.url.includes(url));
-        if (matchingClient) {
-          matchingClient.focus();
-          matchingClient.navigate(url);
-          return;
+      for (const client of windowClients) {
+        if (client.url.includes(url) && "focus" in client) {
+          return client.focus();
         }
       }
-      clients.openWindow(url);
+      if (clients.openWindow) {
+        return clients.openWindow(absoluteUrl);
+      }
     }),
   );
 });

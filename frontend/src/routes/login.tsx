@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { API_BASE, apiUrl } from "@/lib/api";
+import { subscribeToPushNotifications } from "@/lib/push-notifications";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
@@ -106,6 +107,8 @@ function LoginPage() {
       }
 
       toast.success("Welcome back, " + data.user.name + "!");
+
+      subscribeToPushNotifications().catch(() => {});
 
       const role = data.user.role;
       if (role === "student") {
