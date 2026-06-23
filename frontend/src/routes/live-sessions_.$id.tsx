@@ -129,7 +129,9 @@ function SessionDetails() {
     try {
       const res = await api<any>(`/live-sessions/${id}/start`, { method: 'POST' });
       toast.success('Session started!');
-      if (res?.zoomJoinUrl) window.open(res.zoomJoinUrl, '_blank');
+      if (res?.zoomStartUrl || res?.startUrl) {
+        window.open(res.zoomStartUrl || res.startUrl, '_blank');
+      }
       fetchAll();
     } catch (err: any) {
       toast.error(err.message || 'Failed to start session');

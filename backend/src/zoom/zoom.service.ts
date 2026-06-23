@@ -424,7 +424,6 @@ export class ZoomService implements OnModuleInit {
   /* ------------------------------------------------------------------ */
 
   async createMeeting(
-    teacherEmail: string,
     topic: string,
     startTime: Date,
     durationMinutes: number,
@@ -437,22 +436,20 @@ export class ZoomService implements OnModuleInit {
       join_url: string;
       start_url: string;
       password?: string;
-    }>('POST', `/users/${this.encodeZoomUserId(teacherEmail)}/meetings`, {
+    }>('POST', '/users/me/meetings', {
       topic,
       type: 2,
       start_time: startTime.toISOString(),
-      duration: durationMinutes,
+      duration: durationMinutes || 60,
       timezone: 'UTC',
       settings: {
         host_video: true,
         participant_video: true,
-        approval_type: 0,
-        registrants_email_notification: false,
-        waiting_room: false,
-        join_before_host: false,
-        mute_upon_entry: true,
+        join_before_host: true,
+        approval_type: 2,
+        audio: 'both',
         auto_recording: 'none',
-        audio: 'voip',
+        waiting_room: false,
       },
     });
 

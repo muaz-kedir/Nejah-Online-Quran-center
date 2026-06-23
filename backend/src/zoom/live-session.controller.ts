@@ -9,7 +9,6 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -219,6 +218,43 @@ export class LiveSessionController {
     });
   }
 
+  @Post(':id/start')
+  @Roles(UserRole.TEACHER)
+  async startSession(@Param('id') id: string, @Request() req) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+    return this.liveSessionService.startSession(id, teacher.id);
+  }
+
+  @Post(':id/complete')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async complete(@Param('id') id: string, @Request() req) {
+    return this.endSession(id, req);
+  }
+
+  @Post(':id/end')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async end(@Param('id') id: string, @Body() body: { completionReason?: string }, @Request() req) {
+    return this.endSession(id, req, body?.completionReason);
+  }
+
+  @Post(':id/cancel')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async cancel(@Param('id') id: string, @Body() body: { cancellationReason?: string }) {
+    return this.liveSessionService.cancel(id, body?.cancellationReason);
+  }
+
+  @Post(':id/no-show')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async markNoShow(@Param('id') id: string, @Body() body: { reason?: string }) {
+    return this.liveSessionService.markNoShow(id, body?.reason);
+  }
+
+  @Post(':id/expire')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async markExpired(@Param('id') id: string) {
+    return this.liveSessionService.markExpired(id);
+  }
+
   @Get(':id')
   @Roles(
     UserRole.TEACHER,
@@ -241,25 +277,6 @@ export class LiveSessionController {
     return this.liveSessionService.update(id, dto);
   }
 
-  @Post(':id/start')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async start(@Param('id') id: string, @Request() req) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    return this.liveSessionService.start(teacher.id, id);
-  }
-
-  @Post(':id/complete')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async complete(@Param('id') id: string, @Request() req) {
-    return this.endSession(id, req);
-  }
-
-  @Post(':id/end')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async end(@Param('id') id: string, @Body() body: { completionReason?: string }, @Request() req) {
-    return this.endSession(id, req, body?.completionReason);
-  }
-
   private async endSession(id: string, req: { user: { id: string; role: UserRole } }, completionReason?: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
@@ -269,23 +286,5 @@ export class LiveSessionController {
       }
     }
     return this.liveSessionService.complete(id, completionReason);
-  }
-
-  @Post(':id/cancel')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async cancel(@Param('id') id: string, @Body() body: { cancellationReason?: string }) {
-    return this.liveSessionService.cancel(id, body?.cancellationReason);
-  }
-
-  @Post(':id/no-show')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async markNoShow(@Param('id') id: string, @Body() body: { reason?: string }) {
-    return this.liveSessionService.markNoShow(id, body?.reason);
-  }
-
-  @Post(':id/expire')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  async markExpired(@Param('id') id: string) {
-    return this.liveSessionService.markExpired(id);
   }
 }
