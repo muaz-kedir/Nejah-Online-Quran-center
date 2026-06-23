@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { ZoomPlatformConfig } from './entities/zoom-platform-config.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
 import { EncryptionService } from '../common/encryption.service';
 import * as crypto from 'crypto';
 
@@ -67,6 +68,8 @@ export class ZoomService implements OnModuleInit {
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
     @InjectRepository(ZoomPlatformConfig)
     private readonly platformConfigRepository: Repository<ZoomPlatformConfig>,
+    @InjectRepository(Teacher)
+    private readonly teacherRepository: Repository<Teacher>,
     private readonly encryptionService: EncryptionService,
   ) {}
 
@@ -932,15 +935,20 @@ export class ZoomService implements OnModuleInit {
 
   private async fetchZoomUserByPath(
     identifier: string,
-  ): Promise<{ id: string; email: string } | null> {
+  ): Promise<{ id: string; email: string; type?: number } | null> {
     for (const encoded of this.pathEncodingsForUserId(identifier)) {
-      const result = await this.zoomRequestSoft<{ id: string; email: string }>(
-        'GET',
-        `/users/${encoded}`,
-      );
+      const result = await this.zoomRequestSoft<{
+        id: string;
+        email: string;
+        type?: number;
+      }>('GET', `/users/${encoded}`);
 
       if (result.ok && result.data?.id) {
-        return { id: result.data.id, email: result.data.email };
+        return {
+          id: result.data.id,
+          email: result.data.email,
+          type: result.data.type,
+        };
       }
 
       if (result.ok === false) {
@@ -955,6 +963,105 @@ export class ZoomService implements OnModuleInit {
     }
 
     return null;
+  }
+
+  /** Zoom user type 2 = Licensed (can host meetings). */
+  private static readonly ZOOM_LICENSED_USER_TYPE = 2;
+
+  async verifyLicensedZoomUserByEmail(
+    email: string,
+  ): Promise<{ id: string; email: string }> {
+    this.assertPlatformConfigured();
+    await this.assertUserReadScope();
+
+    const normalizedEmail = this.normalizeEmail(email);
+    let zoomUser: { id: string; email: string; type?: number } | null = null;
+
+    for (const candidate of this.emailLookupKeys(normalizedEmail)) {
+      zoomUser = await this.fetchZoomUserByPath(candidate);
+      if (zoomUser) break;
+    }
+
+    if (!zoomUser) {
+      try {
+        const resolved = await this.resolveZoomUser(normalizedEmail);
+        zoomUser = await this.fetchZoomUserByPath(resolved.id);
+        if (!zoomUser) {
+          zoomUser = { id: resolved.id, email: resolved.email };
+        }
+      } catch {
+        throw new HttpException(
+          'Your email is not registered as a licensed Zoom user. Please contact your admin.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    if (zoomUser.type === undefined) {
+      const details = await this.fetchZoomUserByPath(zoomUser.id);
+      if (details?.type !== undefined) {
+        zoomUser.type = details.type;
+      }
+    }
+
+    if (zoomUser.type !== undefined && zoomUser.type !== ZoomService.ZOOM_LICENSED_USER_TYPE) {
+      throw new HttpException(
+        'Your email is not registered as a licensed Zoom user. Please contact your admin.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return { id: zoomUser.id, email: zoomUser.email };
+  }
+
+  async connectTeacherWithNejahEmail(
+    teacherId: string,
+    nejahEmail: string,
+  ): Promise<{ connected: true; email: string }> {
+    const email = this.sanitizeCredential(nejahEmail);
+    if (!email || !email.includes('@')) {
+      throw new HttpException('Teacher account email is missing or invalid', HttpStatus.BAD_REQUEST);
+    }
+
+    // No Zoom API call — S2S OAuth creates meetings at session time using this email.
+    await this.saveTeacherIntegration(teacherId, email, email);
+
+    return {
+      connected: true,
+      email,
+    };
+  }
+
+  async getTeacherConnectionStatus(
+    teacherId: string,
+    fallbackEmail?: string,
+  ): Promise<{
+    connected: boolean;
+    email: string | null;
+    zoomUserId: string | null;
+    connectedAt: Date | null;
+  }> {
+    const integration = await this.getTeacherIntegration(teacherId);
+    const teacher = await this.teacherRepository.findOne({ where: { id: teacherId } });
+
+    const connected =
+      integration?.connectionStatus === 'connected' || teacher?.zoomConnected === true;
+
+    if (!connected) {
+      return {
+        connected: false,
+        email: fallbackEmail || teacher?.email || null,
+        zoomUserId: null,
+        connectedAt: null,
+      };
+    }
+
+    return {
+      connected: true,
+      email: integration?.zoomEmail || teacher?.zoomEmail || fallbackEmail || teacher?.email || null,
+      zoomUserId: integration?.zoomUserId || teacher?.zoomUserId || null,
+      connectedAt: integration?.connectedAt || teacher?.zoomConnectedAt || null,
+    };
   }
 
   private emailsMatch(left: string, right: string): boolean {
@@ -1123,19 +1230,46 @@ export class ZoomService implements OnModuleInit {
     integration.connectedAt = new Date();
     integration.disconnectedAt = null;
 
-    return this.zoomIntegrationRepository.save(integration);
+    const saved = await this.zoomIntegrationRepository.save(integration);
+    await this.syncTeacherZoomFields(teacherId, {
+      zoomConnected: true,
+      zoomEmail,
+      zoomUserId,
+      zoomConnectedAt: saved.connectedAt,
+    });
+
+    return saved;
   }
 
-  async disconnectTeacher(teacherId: string): Promise<ZoomIntegration> {
+  private async syncTeacherZoomFields(
+    teacherId: string,
+    fields: {
+      zoomConnected: boolean;
+      zoomEmail: string | null;
+      zoomUserId: string | null;
+      zoomConnectedAt: Date | null;
+    },
+  ): Promise<void> {
+    await this.teacherRepository.update(teacherId, fields);
+  }
+
+  async disconnectTeacher(teacherId: string): Promise<ZoomIntegration | null> {
     const integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
-    if (!integration) {
-      throw new HttpException('Zoom integration not found', HttpStatus.NOT_FOUND);
+
+    if (integration) {
+      integration.connectionStatus = 'disconnected';
+      integration.disconnectedAt = new Date();
+      await this.zoomIntegrationRepository.save(integration);
     }
 
-    integration.connectionStatus = 'disconnected';
-    integration.disconnectedAt = new Date();
+    await this.syncTeacherZoomFields(teacherId, {
+      zoomConnected: false,
+      zoomEmail: null,
+      zoomUserId: null,
+      zoomConnectedAt: null,
+    });
 
-    return this.zoomIntegrationRepository.save(integration);
+    return integration;
   }
 
   async getTeacherIntegration(teacherId: string): Promise<ZoomIntegration | null> {

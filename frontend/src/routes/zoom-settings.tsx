@@ -52,15 +52,11 @@ type AdminOverview = {
   teachers: TeacherZoomRow[];
 };
 
-type TeacherIntegration = {
-  connectionStatus: string;
-  zoomUserId?: string;
-  zoomEmail?: string;
-  profileEmail?: string;
-  displayName?: string;
-  accountType?: string;
-  connectedAt?: string;
-  tokenExpiresAt?: string;
+type TeacherZoomStatus = {
+  connected: boolean;
+  email: string | null;
+  zoomUserId: string | null;
+  connectedAt: string | null;
 };
 
 type PlatformConfigStatus = {
@@ -113,50 +109,21 @@ function ZoomSettingsPage() {
 }
 
 function TeacherZoomPanel() {
-  const [integration, setIntegration] = useState<TeacherIntegration | null>(null);
+  const [status, setStatus] = useState<TeacherZoomStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [connectEmail, setConnectEmail] = useState('');
-  const [health, setHealth] = useState<{
-    connected: boolean;
-    platformConfigured: boolean;
-    apiReachable: boolean;
-    zoomEmail: string | null;
-  } | null>(null);
-  const [healthLoading, setHealthLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const data = await api<TeacherIntegration | null>('/zoom-settings/status');
-      setIntegration(data);
-      if (data?.zoomEmail) {
-        setConnectEmail(data.zoomEmail);
-      } else if (data?.profileEmail) {
-        setConnectEmail(data.profileEmail);
-      }
+      const data = await api<TeacherZoomStatus>('/zoom-settings/status');
+      setStatus(data);
     } catch {
-      setIntegration(null);
+      setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchHealth = async () => {
-    setHealthLoading(true);
-    try {
-      const data = await api<{
-        connected: boolean;
-        platformConfigured: boolean;
-        apiReachable: boolean;
-        zoomEmail: string | null;
-      }>('/zoom-settings/health');
-      setHealth(data);
-    } catch {
-      setHealth(null);
-    } finally {
-      setHealthLoading(false);
     }
   };
 
@@ -164,29 +131,27 @@ function TeacherZoomPanel() {
     fetchStatus();
   }, []);
 
-  useEffect(() => {
-    if (integration?.connectionStatus === 'connected') {
-      fetchHealth();
-    }
-  }, [integration?.connectionStatus]);
-
   const handleConnect = async () => {
-    const email = connectEmail.trim();
-    if (!email) {
-      toast.error('Enter your licensed Zoom email');
-      return;
-    }
     setConnecting(true);
+    setConnectError(null);
     try {
-      const data = await api<TeacherIntegration>('/zoom-settings/connect', {
+      const data = await api<{ connected: boolean; email: string }>('/zoom-settings/connect', {
         method: 'POST',
-        body: JSON.stringify({ zoomUserId: email, zoomEmail: email }),
       });
-      setIntegration(data);
-      toast.success('Zoom account linked successfully');
-      await fetchHealth();
+      setStatus({
+        connected: true,
+        email: data.email,
+        zoomUserId: null,
+        connectedAt: new Date().toISOString(),
+      });
+      toast.success('Zoom connected');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to connect Zoom account');
+      const message = err?.message || 'Something went wrong. Please try again.';
+      setConnectError(
+        message.includes('fetch') || message.includes('network')
+          ? 'Something went wrong. Please try again.'
+          : message,
+      );
     } finally {
       setConnecting(false);
     }
@@ -195,10 +160,10 @@ function TeacherZoomPanel() {
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      await api('/zoom-settings/disconnect', { method: 'POST' });
-      setIntegration(null);
-      setHealth(null);
-      toast.success('Zoom account disconnected');
+      await api('/zoom-settings/disconnect', { method: 'DELETE' });
+      setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
+      setConnectError(null);
+      toast.success('Zoom disconnected');
     } catch (err: any) {
       toast.error(err.message || 'Failed to disconnect');
     } finally {
@@ -206,10 +171,8 @@ function TeacherZoomPanel() {
     }
   };
 
-  const isConnected = integration?.connectionStatus === 'connected';
-  const connectedEmail = integration?.zoomEmail || '';
-  const apiReachable = health?.apiReachable ?? false;
-  const platformConfigured = health?.platformConfigured ?? false;
+  const isConnected = status?.connected === true;
+  const connectedEmail = status?.email || '';
 
   if (loading) {
     return (
@@ -225,100 +188,37 @@ function TeacherZoomPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg font-bold">
             <Video className="h-5 w-5 text-nejah-electric" />
-            Zoom Integration
+            Zoom
           </CardTitle>
-          <CardDescription>Connect your Zoom account to enable automatic meeting creation</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Connection status */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 dark:bg-nejah-surface border border-border dark:border-white/5">
-            {isConnected && apiReachable ? (
-              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
-            )}
-            <div className="flex-1">
-              <p className="text-sm font-bold">
-                {isConnected ? 'Connected' : 'Not Connected'}
-              </p>
-              <p className="text-xs text-nejah-slate-blue">
-                {isConnected
-                  ? `Zoom host email: ${connectedEmail}`
-                  : 'Link your licensed Zoom email to enable automatic meetings'}
-              </p>
-            </div>
-            {isConnected && (
-              <Badge className="bg-green-100 text-green-700 border-none">Active</Badge>
-            )}
-          </div>
-
           {isConnected ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    Zoom Email
-                  </p>
-                  <p className="text-xs mt-1">{connectedEmail || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                    Connected Since
-                  </p>
-                  <p className="text-xs mt-1">
-                    {integration?.connectedAt
-                      ? new Date(integration.connectedAt).toLocaleDateString()
-                      : 'N/A'}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+                <span className="font-medium">
+                  Connected — <span className="text-foreground">{connectedEmail}</span>
+                </span>
               </div>
-
-              {healthLoading ? (
-                <div className="flex items-center gap-2 text-xs text-nejah-slate-blue">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Checking connection...
-                </div>
-              ) : health ? (
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className={cn('w-2 h-2 rounded-full', platformConfigured ? 'bg-green-500' : 'bg-red-500')} />
-                    <span>{platformConfigured ? 'Platform credentials configured' : 'Platform credentials missing'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={cn('w-2 h-2 rounded-full', apiReachable ? 'bg-green-500' : 'bg-red-500')} />
-                    <span>{apiReachable ? 'Zoom user verified in account' : 'Zoom user not reachable'}</span>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
-                  variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
-                >
-                  {disconnecting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Link2Off className="h-4 w-4" />
-                  )}
-                  Disconnect Zoom Account
-                </Button>
-              </div>
+              <Button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 gap-2"
+              >
+                {disconnecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Link2Off className="h-4 w-4" />
+                )}
+                Disconnect
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
-              <div>
-                <Label htmlFor="zoom-email">Licensed Zoom Email</Label>
-                <Input
-                  id="zoom-email"
-                  type="email"
-                  value={connectEmail}
-                  onChange={(e) => setConnectEmail(e.target.value)}
-                  placeholder="teacher@example.com"
-                  className="mt-1"
-                />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <span>Not Connected</span>
               </div>
               <Button
                 onClick={handleConnect}
@@ -330,12 +230,11 @@ function TeacherZoomPanel() {
                 ) : (
                   <Link2 className="h-4 w-4" />
                 )}
-                Link Zoom Account
+                Connect Zoom
               </Button>
-              <p className="text-[10px] text-nejah-slate-blue font-medium text-center">
-                Use the exact email from Zoom Admin → Users. If you are not added there yet, ask
-                your admin to invite you as a licensed user first.
-              </p>
+              {connectError && (
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{connectError}</p>
+              )}
             </div>
           )}
         </CardContent>
@@ -999,7 +898,7 @@ function HowItWorksCard() {
       <CardContent className="space-y-4 text-sm">
         <div className="space-y-3">
           {[
-            ['Link Zoom Email', 'Enter your licensed Zoom email — verified via Server-to-Server OAuth'],
+            ['Connect Zoom', 'One click links your Nejah account email for meeting creation'],
             ['Automatic Meeting Creation', 'Zoom meetings are created when you schedule a live session'],
             ['Students Join via Link', 'Students receive the join URL and open it in their browser or the Zoom app'],
             ['Automatic Attendance', 'Join and leave times are recorded automatically via webhooks'],
