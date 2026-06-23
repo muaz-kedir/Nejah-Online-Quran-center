@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
 import { Teacher } from '../teachers/entities/teacher.entity';
@@ -78,24 +87,27 @@ export class ZoomSettingsController {
     };
   }
 
+  /** One-click connect: saves the teacher's Nejah email — no Zoom API verification. */
   @Post('connect')
   @Roles(UserRole.TEACHER)
-  async connect(@Request() req, @Body() dto: ConnectZoomDto) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    const result = await this.zoomService.connectTeacherIntegration(
-      teacher.id,
-      dto.zoomUserId,
-      dto.zoomEmail || teacher.email,
-    );
-    return sanitizeIntegration(result);
+  async connect(@CurrentUser() user: { id: string }) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
+    return this.zoomService.connectTeacherWithNejahEmail(teacher.id, teacher.email);
   }
 
+  @Delete('disconnect')
+  @Roles(UserRole.TEACHER)
+  async disconnect(@CurrentUser() user: { id: string }) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
+    await this.zoomService.disconnectTeacher(teacher.id);
+    return { connected: false };
+  }
+
+  /** Legacy POST disconnect for older clients. */
   @Post('disconnect')
   @Roles(UserRole.TEACHER)
-  async disconnect(@Request() req) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    const result = await this.zoomService.disconnectTeacher(teacher.id);
-    return sanitizeIntegration(result);
+  async disconnectPost(@CurrentUser() user: { id: string }) {
+    return this.disconnect(user);
   }
 
   @Post('teacher/:teacherId/connect')
@@ -119,13 +131,9 @@ export class ZoomSettingsController {
 
   @Get('status')
   @Roles(UserRole.TEACHER)
-  async getStatus(@Request() req) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    const integration = await this.zoomService.getTeacherIntegration(teacher.id);
-    return {
-      ...sanitizeIntegration(integration),
-      profileEmail: teacher.email,
-    };
+  async getStatus(@CurrentUser() user: { id: string }) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
+    return this.zoomService.getTeacherConnectionStatus(teacher.id, teacher.email);
   }
 
   @Get('overview')
@@ -140,15 +148,17 @@ export class ZoomSettingsController {
 
     const rows = teachers.map((teacher) => {
       const integration = integrationByTeacher.get(teacher.id) ?? null;
+      const connected =
+        integration?.connectionStatus === 'connected' || teacher.zoomConnected === true;
       return {
         teacherId: teacher.id,
         teacherName: teacher.fullName,
         teacherEmail: teacher.email,
         teacherStatus: teacher.status || 'active',
-        connectionStatus: integration?.connectionStatus ?? 'disconnected',
-        zoomUserId: integration?.zoomUserId ?? null,
-        zoomEmail: integration?.zoomEmail ?? null,
-        connectedAt: integration?.connectedAt ?? null,
+        connectionStatus: connected ? 'connected' : 'disconnected',
+        zoomUserId: integration?.zoomUserId ?? teacher.zoomUserId ?? null,
+        zoomEmail: integration?.zoomEmail ?? teacher.zoomEmail ?? null,
+        connectedAt: integration?.connectedAt ?? teacher.zoomConnectedAt ?? null,
       };
     });
 
@@ -187,8 +197,8 @@ export class ZoomSettingsController {
 
   @Get('health')
   @Roles(UserRole.TEACHER)
-  async healthCheck(@Request() req) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+  async healthCheck(@CurrentUser() user: { id: string }) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
     return this.zoomService.checkZoomConnectionHealth(teacher.id);
   }
 }

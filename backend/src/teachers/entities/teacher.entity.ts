@@ -100,6 +100,18 @@ export class Teacher {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ default: false })
+  zoomConnected: boolean;
+
+  @Column({ nullable: true })
+  zoomEmail: string;
+
+  @Column({ nullable: true })
+  zoomUserId: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  zoomConnectedAt: Date;
+
   @OneToMany(() => Student, (student) => student.teacher)
   students: Student[];
 
