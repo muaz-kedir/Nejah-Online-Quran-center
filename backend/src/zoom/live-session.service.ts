@@ -81,21 +81,7 @@ export class LiveSessionService {
 
     const session = await this.create(dto);
 
-    const integration = await this.zoomIntegrationRepository.findOne({
-      where: { teacherId: dto.teacherId, connectionStatus: 'connected' },
-      relations: ['teacher'],
-    });
-
-    if (!integration?.zoomEmail && !integration?.zoomUserId) {
-      return this.findById(session.id);
-    }
-
-    const teacherEmail =
-      integration.zoomEmail ||
-      integration.teacher?.email ||
-      (await this.teacherRepository.findOne({ where: { id: dto.teacherId } }))?.email;
-
-    if (!teacherEmail) {
+    if (!this.zoomService.isPlatformConfigured()) {
       return this.findById(session.id);
     }
 
@@ -105,7 +91,6 @@ export class LiveSessionService {
     );
 
     const meeting = await this.zoomService.createMeeting(
-      teacherEmail,
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
@@ -117,10 +102,6 @@ export class LiveSessionService {
     session.zoomStartUrl = meeting.startUrl;
     session.zoomPassword = meeting.password || null;
     await this.liveSessionRepository.save(session);
-
-    if (dto.studentId && session.zoomMeetingId) {
-      await this.registerStudentForMeeting(session.id, dto.studentId, session.zoomMeetingId);
-    }
 
     const created = await this.findById(session.id);
     if (created.student?.userId) {
@@ -265,6 +246,26 @@ export class LiveSessionService {
     }
 
     return cancelled;
+  }
+
+  async startSession(
+    sessionId: string,
+    teacherId: string,
+  ): Promise<{
+    zoomMeetingId: string;
+    startUrl: string;
+    joinUrl: string;
+    zoomStartUrl: string;
+    zoomJoinUrl: string;
+  }> {
+    const session = await this.start(teacherId, sessionId);
+    return {
+      zoomMeetingId: session.zoomMeetingId!,
+      startUrl: session.zoomStartUrl!,
+      joinUrl: session.zoomJoinUrl!,
+      zoomStartUrl: session.zoomStartUrl!,
+      zoomJoinUrl: session.zoomJoinUrl!,
+    };
   }
 
   async start(teacherId: string, id: string): Promise<LiveSession> {
@@ -635,24 +636,10 @@ export class LiveSessionService {
   }
 
   private async ensureZoomMeeting(session: LiveSession): Promise<void> {
-    const integration = await this.zoomIntegrationRepository.findOne({
-      where: { teacherId: session.teacherId, connectionStatus: 'connected' },
-      relations: ['teacher'],
-    });
-
-    if (!integration?.zoomEmail && !integration?.zoomUserId) {
+    if (!this.zoomService.isPlatformConfigured()) {
       throw new BadRequestException(
-        'Teacher Zoom account is not connected. Connect Zoom in settings before starting.',
+        'Zoom platform is not configured. Contact your administrator.',
       );
-    }
-
-    const teacherEmail =
-      integration.zoomEmail ||
-      integration.teacher?.email ||
-      (await this.teacherRepository.findOne({ where: { id: session.teacherId } }))?.email;
-
-    if (!teacherEmail) {
-      throw new BadRequestException('Teacher Zoom email is not configured.');
     }
 
     const durationMinutes = Math.round(
@@ -660,7 +647,6 @@ export class LiveSessionService {
     );
 
     const meeting = await this.zoomService.createMeeting(
-      teacherEmail,
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
@@ -672,10 +658,6 @@ export class LiveSessionService {
     session.zoomStartUrl = meeting.startUrl;
     session.zoomPassword = meeting.password || null;
     await this.liveSessionRepository.save(session);
-
-    if (session.studentId && session.zoomMeetingId) {
-      await this.registerStudentForMeeting(session.id, session.studentId, session.zoomMeetingId);
-    }
   }
 
   private async registerStudentForMeeting(

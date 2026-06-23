@@ -190,9 +190,7 @@ export class AttendanceService {
           const now = new Date();
           const durationMinutes = 90; // 90 minutes default
 
-          const teacherEmail = integration.zoomEmail || integration.zoomUserId;
           const meeting = await this.zoomService.createMeeting(
-            teacherEmail,
             session.classTitle || 'Quran Class',
             now,
             durationMinutes,
