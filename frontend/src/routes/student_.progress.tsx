@@ -1,181 +1,424 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { BookOpen, Award, TrendingUp, CalendarCheck, GraduationCap } from 'lucide-react';
+import { 
+  BookOpen, Award, TrendingUp, CalendarCheck, GraduationCap, 
+  Download, Clock, CheckCircle2, AlertCircle, XCircle, ChevronRight,
+  Star, FileText, User
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress as ProgressBar } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
-import { api, getLinkedStudentId, requireStudentAuth, studentPaths } from '@/lib/student-portal';
-import {
-  LearningPathCard,
-  LevelHistoryList,
-  type LearningPathData,
-  type LevelHistoryEntry,
-} from '@/components/progress/LearningPathCard';
+import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
 
 function StudentProgress() {
   const [data, setData] = useState<any>(null);
-  const [attendance, setAttendance] = useState<any>(null);
-  const [learningPath, setLearningPath] = useState<LearningPathData | null>(null);
-  const [levelHistory, setLevelHistory] = useState<LevelHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [selectedDetails, setSelectedDetails] = useState<any>(null);
+  const [attendanceFilter, setAttendanceFilter] = useState<string>('all');
+  
   useEffect(() => {
-    Promise.all([
-      api('/student/dashboard/progress'),
-      api('/student/dashboard/attendance').catch(() => null),
-    ])
-      .then(([progress, att]) => {
-        setData(progress);
-        setAttendance(att);
-      })
+    api('/student/dashboard/progress')
+      .then(setData)
+      .catch(console.error)
       .finally(() => setLoading(false));
-
-    getLinkedStudentId().then((studentId) => {
-      if (!studentId) return;
-      api<LearningPathData>(`/progress/student/${studentId}/learning-path`)
-        .then(setLearningPath)
-        .catch(() => null);
-      api<LevelHistoryEntry[]>(`/progress/student/${studentId}/level-history`)
-        .then((h) => setLevelHistory(h || []))
-        .catch(() => null);
-    });
   }, []);
 
   if (loading) return <StudentPageLoader />;
+  if (!data) return <div className="p-8 text-center text-muted-foreground">No progress data found.</div>;
 
-  const overview = data?.overview || data;
-  const percentage = overview?.memorizationPercentage ?? data?.percentage ?? 0;
+  const overview = data.overview || {};
+  const learningTrack = overview.learningTrack || 'quran_reading';
+  
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getAttendanceBadge = (status: string) => {
+    switch (status) {
+      case 'Present': return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-1"/> Present</Badge>;
+      case 'Late': return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1"/> Late</Badge>;
+      case 'Absent': return <Badge className="bg-rose-100 text-rose-700 border-rose-200"><XCircle className="w-3 h-3 mr-1"/> Absent</Badge>;
+      default: return <Badge variant="outline" className="text-muted-foreground">{status}</Badge>;
+    }
+  };
+
+  const renderAcademicOverview = () => {
+    const p = overview.progressSummary || {};
+    const lastLog = data.timeline?.find((t: any) => t.type === 'daily_log');
+    
+    if (learningTrack === 'qaidah') {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Current Topic</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{overview.currentTopic?.label || 'Not Started'}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Progress</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{p.completed || 0} / {p.total || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Remaining</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{p.remaining || 0} Topics</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Last Lesson</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{lastLog?.date ? new Date(lastLog.date).toLocaleDateString() : '—'}</p>
+          </div>
+        </div>
+      );
+    }
+    
+    if (learningTrack === 'quran_reading') {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Current Surah</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{overview.lastPosition?.lastStudiedSurah || 'Not Started'}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Current Ayah</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{overview.lastPosition?.lastStudiedAyah || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Surahs</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{overview.progress?.surahsCount || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Ayahs</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{overview.progress?.ayahsCount || 0}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (learningTrack === 'tajweed') {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Current Rule</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{overview.currentTopic?.label || 'Not Started'}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Rules</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{p.completed || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Remaining Rules</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{p.remaining || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Last Lesson</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{lastLog?.date ? new Date(lastLog.date).toLocaleDateString() : '—'}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (learningTrack === 'hifz') {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Current Memorization</p>
+            <p className="font-bold text-nejah-sapphire mt-1 text-sm">{overview.lastPosition?.lastStudiedSurah || 'Not Started'}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Memorized Surahs</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{overview.progress?.surahsCount || 0}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Memorized Juz</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{Math.floor((overview.progress?.surahsCount || 0) / 4)}</p>
+          </div>
+          <div className="bg-muted/50 p-4 rounded-2xl border">
+            <p className="text-xs text-muted-foreground font-bold uppercase">Revision Progress</p>
+            <p className="font-bold text-nejah-sapphire mt-1">{overview.progress?.progressPercentage || 0}%</p>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const filteredAttendance = (data.attendanceHistory || []).filter((a: any) => {
+    if (attendanceFilter === 'all') return true;
+    const date = new Date(a.date);
+    const now = new Date();
+    if (attendanceFilter === 'this_week') {
+      const msInWeek = 7 * 24 * 60 * 60 * 1000;
+      return (now.getTime() - date.getTime()) < msInWeek;
+    }
+    if (attendanceFilter === 'this_month') {
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
 
   return (
     <StudentPortalLayout activePath={studentPaths.progress}>
-      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-4xl">
-        <div className="mb-10">
-          <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">My Progress</h1>
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-5xl mx-auto print:p-0 print:max-w-none">
+        
+        {/* PDF Header (Hidden normally) */}
+        <div className="hidden print:block text-center mb-8 border-b pb-6">
+          <h1 className="text-3xl font-extrabold text-nejah-sapphire font-serif">Nejah Quran Institute</h1>
+          <p className="text-xl font-bold mt-2">Student Progress Report</p>
+          <p className="text-muted-foreground mt-1">Generated on {new Date().toLocaleDateString()}</p>
         </div>
 
-        {learningPath && (
-          <div className="bg-card rounded-[32px] p-8 border mb-8">
-            <LearningPathCard path={learningPath} />
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 print:hidden">
+          <div>
+            <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-1">Student Portal</p>
+            <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">My Progress</h1>
           </div>
-        )}
+          <Button onClick={handlePrint} variant="outline" className="gap-2 font-bold rounded-xl border-nejah-blue/20 text-nejah-sapphire hover:bg-nejah-blue/10">
+            <Download className="w-4 h-4" /> Download PDF Report
+          </Button>
+        </div>
 
-        <div className="bg-card rounded-[32px] p-8 border mb-8">
+        {/* 1. Academic Overview */}
+        <div className="bg-card rounded-[32px] p-8 border mb-8 print:shadow-none print:border-gray-200">
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-xl font-bold text-nejah-sapphire">Academic Overview</h3>
-              <p className="text-sm text-muted-foreground">{percentage}% memorization</p>
+              <p className="text-sm text-muted-foreground mt-1">{overview.learningTrackLabel || overview.quranLevel || 'Quran Reading'}</p>
             </div>
-            <Badge className="bg-primary/10 text-nejah-sapphire border-none">
-              <Award className="h-3 w-3 mr-1" /> {overview?.rank || data?.rank}
-            </Badge>
-          </div>
-          <ProgressBar value={percentage} className="h-3 mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-            <div className="bg-muted p-4 rounded-2xl">
-              <p className="text-xs text-muted-foreground font-bold uppercase">Quran Level</p>
-              <p className="font-bold text-nejah-sapphire mt-1">{overview?.quranLevel || '—'}</p>
-            </div>
-            <div className="bg-muted p-4 rounded-2xl">
-              <p className="text-xs text-muted-foreground font-bold uppercase">Current Surah</p>
-              <p className="font-bold text-nejah-sapphire mt-1 text-sm">{overview?.currentSurah || '—'}</p>
-            </div>
-            <div className="bg-muted p-4 rounded-2xl">
-              <p className="text-xs text-muted-foreground font-bold uppercase">Current Page</p>
-              <p className="font-bold text-nejah-sapphire mt-1">{overview?.currentPage || 0}</p>
-            </div>
-            <div className="bg-muted p-4 rounded-2xl">
-              <p className="text-xs text-muted-foreground font-bold uppercase">Current Ayah</p>
-              <p className="font-bold text-nejah-sapphire mt-1">{overview?.currentAyah || 0}</p>
-            </div>
-            <div className="bg-muted p-4 rounded-2xl col-span-2 md:col-span-1">
-              <p className="text-xs text-muted-foreground font-bold uppercase">Juz Completed</p>
-              <p className="font-bold text-nejah-sapphire mt-1">{overview?.completedJuz ?? 0}</p>
+            <div className="text-right">
+              <Badge className="bg-nejah-blue/10 text-nejah-sapphire border-none px-3 py-1 mb-2">
+                <Award className="h-4 w-4 mr-1.5" /> {overview.progress?.rank || overview.rank || 'Beginner'}
+              </Badge>
+              <p className="text-2xl font-black text-nejah-sapphire">{data.percentage}%</p>
             </div>
           </div>
+          <ProgressBar value={data.percentage} className="h-3 mb-2" />
+          {renderAcademicOverview()}
         </div>
 
-        {attendance?.stats && (
-          <div className="bg-card rounded-[32px] p-8 border mb-8">
-            <h3 className="text-lg font-bold text-nejah-sapphire mb-4 flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5" /> Attendance History
+        {/* 6. Achievement Summary */}
+        {data.achievements?.length > 0 && (
+          <div className="bg-card rounded-[32px] p-8 border mb-8 print:break-inside-avoid">
+            <h3 className="text-xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-500" /> Achievement Summary
             </h3>
-            <div className="grid grid-cols-4 gap-4 text-center">
-              <div><p className="text-2xl font-bold text-nejah-sapphire">{attendance.stats.present}</p><p className="text-xs text-muted-foreground">Present</p></div>
-              <div><p className="text-2xl font-bold text-amber-600">{attendance.stats.late}</p><p className="text-xs text-muted-foreground">Late</p></div>
-              <div><p className="text-2xl font-bold text-red-600">{attendance.stats.absent}</p><p className="text-xs text-muted-foreground">Absent</p></div>
-              <div><p className="text-2xl font-bold">{Math.round(attendance.stats.attendancePercentage || 0)}%</p><p className="text-xs text-muted-foreground">Rate</p></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {data.achievements.map((ach: any, i: number) => (
+                <div key={i} className="bg-amber-50/50 border border-amber-100 rounded-2xl p-5 text-center flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+                    <Award className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <h4 className="font-bold text-sm text-amber-950">{ach.name}</h4>
+                  <p className="text-[11px] text-amber-700/80 mt-1">{ach.description}</p>
+                  <p className="text-[10px] text-amber-600/60 mt-2">{new Date(ach.date).toLocaleDateString()}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {levelHistory.length > 0 && (
-          <div className="bg-card rounded-[32px] p-8 border mb-8">
-            <h3 className="text-lg font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" /> Level History
+        {/* 5. Level-Based Evaluation */}
+        {data.evaluations?.length > 0 && (
+          <div className="bg-card rounded-[32px] p-8 border mb-8 print:break-inside-avoid">
+            <h3 className="text-xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Official Evaluations
             </h3>
-            <LevelHistoryList history={levelHistory} />
+            <div className="space-y-6">
+              {data.evaluations.map((ev: any) => (
+                <div key={ev.id} className="bg-muted/30 rounded-2xl p-6 border">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="font-bold text-nejah-sapphire text-lg">{ev.evaluationType}</h4>
+                      <p className="text-sm text-muted-foreground">{ev.programType} · {new Date(ev.date).toLocaleDateString()}</p>
+                    </div>
+                    <Badge variant="outline" className="text-lg px-4 py-1 border-primary text-primary">
+                      {ev.score}/100
+                    </Badge>
+                  </div>
+                  
+                  {Object.keys(ev.criteriaRatings || {}).length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                      {Object.entries(ev.criteriaRatings).map(([key, value]: any) => (
+                        <div key={key} className="bg-white dark:bg-card p-3 rounded-xl border text-center">
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                          <p className="font-bold text-nejah-sapphire">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="bg-primary/5 p-4 rounded-xl">
+                    <p className="font-bold text-sm mb-1 text-primary">Teacher Comments</p>
+                    <p className="text-sm text-foreground/80">{ev.notes || 'No additional comments.'}</p>
+                  </div>
+                  
+                  {ev.recommendations && (
+                    <div className="mt-3 p-4 rounded-xl border border-dashed">
+                      <p className="font-bold text-sm mb-1">Recommendations</p>
+                      <p className="text-sm text-muted-foreground">{ev.recommendations}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="bg-card rounded-[32px] p-8 border mb-8">
-          <h3 className="text-lg font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" /> Progress Timeline
-          </h3>
-          {data?.timeline?.length ? (
-            <div className="space-y-4 border-l-2 border-primary/200 pl-6">
-              {data.timeline.map((item: any, i: number) => (
-                <div key={i} className="relative">
-                  <span className="absolute -left-[31px] w-3 h-3 rounded-full bg-primary top-1" />
-                  <p className="font-bold text-sm text-nejah-sapphire">{item.title}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {item.date ? new Date(item.date).toLocaleDateString() : ''}
-                    {item.teacherName ? ` · ${item.teacherName}` : ''}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">No timeline entries yet.</p>
-          )}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* 2. Progress Timeline */}
+          <div className="bg-card rounded-[32px] p-8 border">
+            <h3 className="text-xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" /> Progress Timeline
+            </h3>
+            {data.timeline?.length > 0 ? (
+              <div className="space-y-6 border-l-2 border-nejah-blue/20 pl-6 ml-2">
+                {data.timeline.slice(0, 10).map((item: any, i: number) => (
+                  <div key={i} className="relative group">
+                    <span className="absolute -left-[31px] w-3 h-3 rounded-full bg-nejah-electric top-1.5 ring-4 ring-background" />
+                    
+                    <div className="bg-muted/50 p-4 rounded-2xl border hover:border-nejah-blue/30 transition-colors cursor-pointer print:border-none print:p-0 print:bg-transparent" onClick={() => setSelectedDetails(item)}>
+                      <div className="flex justify-between items-start mb-1">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold">{item.courseLevel}</Badge>
+                        <span className="text-[10px] text-muted-foreground font-medium">{new Date(item.date).toLocaleDateString()}</span>
+                      </div>
+                      <p className="font-bold text-nejah-sapphire mt-2">{item.title}</p>
+                      <p className="text-sm text-foreground/80 mt-1">{item.description}</p>
+                      
+                      {item.notes && <p className="text-xs text-muted-foreground mt-3 italic line-clamp-2 print:line-clamp-none">"{item.notes}"</p>}
+                      
+                      <div className="flex items-center justify-between mt-3 print:hidden">
+                        <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5"><User className="w-3 h-3"/> {item.teacherName}</p>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs px-2 text-nejah-sapphire">View Details <ChevronRight className="w-3 h-3 ml-1" /></Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground p-8 bg-muted/30 rounded-2xl border border-dashed">No timeline entries yet.</p>
+            )}
+          </div>
 
-        <div className="bg-card rounded-[32px] p-8 border mb-8">
-          <h3 className="text-lg font-bold text-nejah-sapphire mb-4">Tajweed Evaluation</h3>
-          {data?.tajweed?.length ? (
-            <div className="space-y-4">
-              {data.tajweed.map((t: any) => (
-                <div key={t.id} className="bg-primary/10/50 p-4 rounded-2xl border border-primary/100">
-                  <p className="text-xs font-bold text-primary">{t.teacherName} · {t.date ? new Date(t.date).toLocaleDateString() : ''}</p>
-                  <p className="text-sm mt-2">{t.notes}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">No tajweed notes yet.</p>
-          )}
-        </div>
+          <div className="space-y-8">
+            {/* 3. Attendance History */}
+            <div className="bg-card rounded-[32px] p-8 border">
+              <div className="flex justify-between items-center mb-6 print:hidden">
+                <h3 className="text-xl font-bold text-nejah-sapphire flex items-center gap-2">
+                  <CalendarCheck className="h-5 w-5" /> Attendance
+                </h3>
+                <Select value={attendanceFilter} onValueChange={setAttendanceFilter}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs rounded-lg">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="this_week">This Week</SelectItem>
+                    <SelectItem value="this_month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <h3 className="text-xl font-bold text-nejah-sapphire mb-6 hidden print:block">Attendance History</h3>
 
-        <div className="bg-card rounded-[32px] p-8 border">
-          <h3 className="text-lg font-bold text-nejah-sapphire mb-4 flex items-center gap-2">
-            <BookOpen className="h-5 w-5" /> Teacher Feedback
-          </h3>
-          {data?.teacherFeedback?.length ? (
-            <div className="space-y-4">
-              {data.teacherFeedback.map((f: any) => (
-                <div key={f.id} className="border-b pb-4 last:border-0">
-                  <p className="font-bold text-sm">{f.teacherName}</p>
-                  <p className="text-xs text-muted-foreground">{f.date ? new Date(f.date).toLocaleDateString() : ''}</p>
-                  <p className="text-sm mt-2 text-foreground">{f.content}</p>
+              {data.attendanceStats && (
+                <div className="grid grid-cols-4 gap-2 text-center mb-6 p-4 bg-muted/30 rounded-2xl border">
+                  <div><p className="text-2xl font-black text-nejah-sapphire">{data.attendanceStats.present}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Present</p></div>
+                  <div><p className="text-2xl font-black text-amber-600">{data.attendanceStats.late}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Late</p></div>
+                  <div><p className="text-2xl font-black text-rose-600">{data.attendanceStats.absent}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Absent</p></div>
+                  <div><p className="text-2xl font-black text-nejah-electric">{Math.round(data.attendanceStats.attendancePercentage || 0)}%</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Rate</p></div>
                 </div>
-              ))}
+              )}
+
+              {filteredAttendance.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredAttendance.slice(0, 10).map((ah: any) => (
+                    <div key={ah.id} className="flex items-center justify-between p-3 rounded-xl border bg-card text-sm">
+                      <div>
+                        <p className="font-bold text-nejah-sapphire">{new Date(ah.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{ah.course}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="mb-1">{getAttendanceBadge(ah.status)}</div>
+                        <p className="text-[10px] text-muted-foreground font-medium flex items-center justify-end gap-1"><Clock className="w-3 h-3"/> {ah.joinTime ? new Date(ah.joinTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—'}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground text-sm p-4">No attendance records found.</p>
+              )}
             </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">No feedback yet.</p>
-          )}
+
+            {/* 4. Teacher Daily Feedback */}
+            <div className="bg-card rounded-[32px] p-8 border print:break-inside-avoid">
+              <h3 className="text-xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
+                <BookOpen className="h-5 w-5" /> Daily Feedback
+              </h3>
+              {data.teacherFeedback?.length > 0 ? (
+                <div className="space-y-4">
+                  {data.teacherFeedback.slice(0, 5).map((f: any) => (
+                    <div key={f.id} className="border-b pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="font-bold text-sm text-nejah-sapphire flex items-center gap-1.5"><User className="w-3 h-3"/> {f.teacherName}</p>
+                        <p className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-md">{new Date(f.date).toLocaleDateString()}</p>
+                      </div>
+                      <p className="text-sm text-foreground/80 leading-relaxed bg-primary/5 p-3 rounded-xl border border-primary/10">{f.content}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground p-8 bg-muted/30 rounded-2xl border border-dashed">No daily feedback yet.</p>
+              )}
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* 7. View Details Modal */}
+      <Dialog open={!!selectedDetails} onOpenChange={(open) => !open && setSelectedDetails(null)}>
+        <DialogContent className="sm:max-w-[500px] rounded-[32px] p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-nejah-sapphire font-serif">{selectedDetails?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedDetails?.date && new Date(selectedDetails.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-muted/50 p-4 rounded-2xl border">
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Course Level</p>
+                <p className="font-bold text-nejah-sapphire">{selectedDetails?.courseLevel}</p>
+              </div>
+              <div className="bg-muted/50 p-4 rounded-2xl border">
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Teacher</p>
+                <p className="font-bold text-nejah-sapphire">{selectedDetails?.teacherName || 'Assigned Teacher'}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Lesson Details</p>
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                <p className="font-bold text-lg text-primary">{selectedDetails?.description}</p>
+              </div>
+            </div>
+
+            {selectedDetails?.notes && (
+              <div>
+                <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Teacher Notes</p>
+                <div className="bg-card p-4 rounded-2xl border shadow-sm text-sm leading-relaxed">
+                  {selectedDetails.notes}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Badge variant="outline" className="uppercase tracking-widest text-[10px]">{selectedDetails?.status || 'Completed'}</Badge>
+              <Button onClick={() => setSelectedDetails(null)} className="rounded-xl px-6">Close</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </StudentPortalLayout>
   );
 }

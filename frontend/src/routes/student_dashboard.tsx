@@ -1,7 +1,7 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare, Calendar, GraduationCap, UserCheck, Sparkles } from "lucide-react";
+import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare, Calendar, GraduationCap, UserCheck, Sparkles, Bell as BellIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,9 @@ import {
   studentPaths,
 } from "@/lib/student-portal";
 import { LearningPathCard, useLearningPath } from "@/components/progress/LearningPathCard";
+import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
+import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -80,13 +82,14 @@ function StudentDashboard() {
         .then((dash) => setData(dash))
         .catch(() => {});
       if (notif.channel === "MEETING_STARTED" && notif.data?.sessionId) {
+        const sessionId = notif.data.sessionId;
         toast(notif.title, {
           description: notif.content,
           duration: 10000,
           action: {
             label: "Join Now",
             onClick: () =>
-              navigate({ to: "/classroom/$sessionId", params: { sessionId: notif.data.sessionId! } }),
+              navigate({ to: "/classroom/$sessionId", params: { sessionId } }),
           },
         });
       }
@@ -182,7 +185,7 @@ function StudentDashboard() {
     }
   };
 
-  const firstName = welcome?.studentName?.split(" ")[0] || student?.name?.split(" ")[0] || "Student";
+  const firstName = welcome?.firstName || student?.firstName || localStorage.getItem('userName')?.split(" ")[0] || "Student";
 
   return (
     <StudentPortalLayout
@@ -247,7 +250,14 @@ function StudentDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Left column — 2/3 */}
           <div className="lg:col-span-2 space-y-5 lg:space-y-6">
-            {/* Hifz Progress */}
+            {/* Level-Aware Progress Card */}
+            {data?.levelProgress ? (
+              <LevelProgressCard
+                levelProgress={data.levelProgress}
+                legacyProgress={progress}
+                onViewProgress={() => navigate({ to: studentPaths.progress })}
+              />
+            ) : (
             <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
               <div className="gradient-accent-bar" />
               <div className="p-5 sm:p-6">
@@ -304,6 +314,7 @@ function StudentDashboard() {
                 </Button>
               </div>
             </div>
+            )}
 
             {/* Today's Lesson */}
             <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -489,21 +500,29 @@ function StudentDashboard() {
               </div>
               {data?.notifications?.length ? (
                 <ul className="space-y-2.5 text-sm">
-                  {data.notifications.slice(0, 3).map((n: any) => (
-                    <li
-                      key={n.id}
-                      className={`flex items-start gap-2 ${
-                        n.isRead
-                          ? "text-muted-foreground"
-                          : "font-medium text-foreground"
-                      }`}
-                    >
-                      {!n.isRead && (
-                        <span className="mt-1.5 w-2 h-2 rounded-full bg-nejah-electric shrink-0" />
-                      )}
-                      <span className={n.isRead ? 'pl-4' : ''}>{n.title}</span>
-                    </li>
-                  ))}
+                  {data.notifications.slice(0, 3).map((n: any) => {
+                    const Icon = NOTIFICATION_ICONS[n.type || n.channel] || BellIcon;
+                    const iconColor = NOTIFICATION_COLORS[n.type || n.channel] || "text-nejah-electric";
+                    const bgColor = NOTIFICATION_BG_COLORS[n.type || n.channel] || "";
+                    return (
+                      <li
+                        key={n.id}
+                        className={`flex items-start gap-2.5 ${
+                          n.isRead
+                            ? "text-muted-foreground"
+                            : "font-medium text-foreground"
+                        }`}
+                      >
+                        <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center relative ${bgColor}`}>
+                          <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+                          {!n.isRead && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-nejah-electric ring-2 ring-background" />
+                          )}
+                        </div>
+                        <span className="flex-1">{n.title}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">

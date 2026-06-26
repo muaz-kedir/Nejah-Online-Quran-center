@@ -1,5 +1,4 @@
 import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { ResourceCategory } from '../resources.entity';
 
 export class CreateResourceDto {
   @IsString()
@@ -9,8 +8,7 @@ export class CreateResourceDto {
   description: string;
 
   @IsString()
-  @IsEnum(ResourceCategory)
-  category: ResourceCategory;
+  category: string;
 
   @IsString()
   fileUrl: string;

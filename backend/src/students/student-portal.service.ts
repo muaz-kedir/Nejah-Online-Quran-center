@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, In, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
@@ -18,6 +18,8 @@ import { LiveSessionService } from '../zoom/live-session.service';
 import { SessionAttendanceService } from '../zoom/session-attendance.service';
 import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 import { resolveLearningTrack } from '../common/constants/learning-curricula';
+import { ProgressService } from '../progress/progress.service';
+import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -44,11 +46,14 @@ export class StudentPortalService {
     private studentAttendanceRepository: Repository<StudentAttendance>,
     @InjectRepository(ClassSession)
     private classSessionRepository: Repository<ClassSession>,
+    @InjectRepository(ExamEvaluation)
+    private examEvaluationRepository: Repository<ExamEvaluation>,
     private resourcesService: ResourcesService,
     private attendanceService: AttendanceService,
     private replacementsService: TeacherReplacementsService,
     private liveSessionService: LiveSessionService,
     private sessionAttendanceService: SessionAttendanceService,
+    private progressService: ProgressService,
   ) {}
 
   async resolveStudent(userId: string): Promise<Student> {
@@ -85,6 +90,16 @@ export class StudentPortalService {
     return DAYS[new Date().getDay()];
   }
 
+  private extractFirstName(fullName: string): string {
+    if (!fullName) return 'Student';
+    const parts = fullName.trim().split(/\s+/);
+    const titles = ['dr', 'mr', 'mrs', 'ms', 'prof', 'sheikh', 'ustadh', 'ustadha', 'shaykh'];
+    if (parts.length > 1 && titles.includes(parts[0].toLowerCase().replace(/\.$/, ''))) {
+      return parts[1];
+    }
+    return parts[0];
+  }
+
   async getDashboard(userId: string) {
     const student = await this.resolveStudent(userId);
     const studentId = student.id;
@@ -92,6 +107,14 @@ export class StudentPortalService {
     const progressRecord = await this.findCurrentProgress(student);
     const attendances = await this.attendanceRepository.find({ where: { studentId } });
     const sessionStats = await this.sessionAttendanceService.getAttendanceStats(studentId);
+
+    // Level-aware learning context for the dynamic progress card
+    let learningContext: any = null;
+    try {
+      learningContext = await this.progressService.getLearningContext(studentId);
+    } catch {
+      // Graceful fallback: proceed without learning context
+    }
 
     const effectiveTeacher = await this.replacementsService.getEffectiveTeacher(studentId);
     const schedules = await this.replacementsService.getEffectiveSchedulesForStudent(studentId);
@@ -228,6 +251,7 @@ export class StudentPortalService {
         id: student.id,
         name: student.fullName,
         fullName: student.fullName,
+        firstName: this.extractFirstName(student.fullName),
         initials: student.fullName
           .split(' ')
           .map((n) => n[0])
@@ -258,6 +282,7 @@ export class StudentPortalService {
       },
       welcome: {
         studentName: student.fullName,
+        firstName: this.extractFirstName(student.fullName),
         quranLevel: student.level || 'Quran Reading',
         assignedTeacher: effectiveTeacherEntity?.fullName
           ? effectiveTeacher.isTemporary
@@ -286,6 +311,17 @@ export class StudentPortalService {
           ? `Juz ${Math.ceil(surahsCount / 4) || 1}`
           : '-',
       },
+      levelProgress: learningContext
+        ? {
+            learningTrack: learningContext.learningTrack,
+            learningTrackLabel: learningContext.learningTrackLabel,
+            studentLevel: learningContext.studentLevel,
+            progressSummary: learningContext.progressSummary,
+            currentTopic: learningContext.currentTopic,
+            lastPosition: learningContext.lastPosition,
+            progress: learningContext.progress,
+          }
+        : null,
       attendance: {
         totalClasses: sessionStats.total || attendances.length,
         attendedClasses: sessionStats.present || attendances.filter((a) => a.isPresent).length,
@@ -366,8 +402,11 @@ export class StudentPortalService {
         title: n.title,
         content: n.content,
         type: n.channel,
+        channel: n.channel,
         isRead: n.isRead,
         createdAt: n.createdAt,
+        dataJson: n.dataJson,
+        actionUrl: n.actionUrl,
       })),
       unreadNotifications,
       pendingTasks,
@@ -464,10 +503,27 @@ export class StudentPortalService {
       order: { createdAt: 'DESC' },
     });
 
-    const surahsCount = progressRecord?.surahsCount || 0;
-    const percentage = progressRecord?.progressPercentage || Number(student.progressRate) || 0;
+    // Fetch all evaluations, not just Tajweed
+    const examEvaluations = await this.examEvaluationRepository.find({
+      where: { studentId: student.id },
+      relations: ['teacher'],
+      order: { evaluationDate: 'DESC' },
+    });
 
-    const describeLog = (log: ProgressLog): { title: string; description: string } => {
+    const attendanceHistory = await this.attendanceService.getStudentAttendanceHistory(student.id);
+    const attendanceStats = await this.attendanceService.getAttendanceStats(student.id);
+    
+    let learningContext = null;
+    try {
+      learningContext = await this.progressService.getLearningContext(student.id);
+    } catch (e) {
+      console.warn('Could not get learning context', e);
+    }
+
+    const describeLog = (log: ProgressLog): { title: string; description: string; courseLevel: string } => {
+      let courseLevel = log.learningTrack ? log.learningTrack.replace('_', ' ') : student.level;
+      courseLevel = courseLevel.charAt(0).toUpperCase() + courseLevel.slice(1);
+
       if (log.topicName) {
         const parts = [
           log.topicNameAr ? `${log.topicName} (${log.topicNameAr})` : log.topicName,
@@ -477,6 +533,7 @@ export class StudentPortalService {
         return {
           title: log.isReview ? 'Lesson reviewed' : 'Lesson completed',
           description: parts.join(' · '),
+          courseLevel,
         };
       }
 
@@ -499,6 +556,7 @@ export class StudentPortalService {
       return {
         title: 'Daily progress logged',
         description: parts.join(' · '),
+        courseLevel,
       };
     };
 
@@ -511,6 +569,9 @@ export class StudentPortalService {
           description: entry.description,
           date: log.createdAt,
           teacherName: log.teacher?.fullName,
+          courseLevel: entry.courseLevel,
+          status: log.completionStatus || (log.isReview ? 'review' : 'completed'),
+          notes: log.notes,
         };
       }),
       ...feedbackRecords.map((f) => ({
@@ -518,56 +579,67 @@ export class StudentPortalService {
         title: `Feedback from ${f.teacher?.fullName || 'Teacher'}`,
         description: f.content,
         date: f.createdAt,
+        teacherName: f.teacher?.fullName,
+        courseLevel: student.level,
+        status: 'feedback',
+        notes: f.content,
       })),
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    // Generate Dynamic Achievements
+    const achievements = [];
+    if (progressLogs.length > 0) {
+      achievements.push({
+        name: 'First Lesson Completed',
+        description: 'You completed your very first lesson!',
+        date: progressLogs[progressLogs.length - 1].createdAt,
+        icon: 'star',
+      });
+    }
+    if (progressRecord?.surahsCount >= 1) {
+      achievements.push({
+        name: 'First Surah Completed',
+        description: 'You successfully completed a full Surah.',
+        date: new Date(),
+        icon: 'book',
+      });
+    }
+    if (progressRecord?.surahsCount >= 4) {
+      achievements.push({
+        name: 'First Juz Completed',
+        description: 'MashaAllah, you completed your first Juz!',
+        date: new Date(),
+        icon: 'award',
+      });
+    }
+    if (attendanceStats.total >= 10 && attendanceStats.attendancePercentage === 100) {
+      achievements.push({
+        name: 'Perfect Attendance',
+        description: '100% Attendance for 10+ classes. Keep it up!',
+        date: new Date(),
+        icon: 'calendar',
+      });
+    }
+
     return {
-      overview: {
+      overview: learningContext ? { ...learningContext } : {
         quranLevel: student.level,
-        currentSurah: progressRecord?.lastStudiedSurah || 'Not started',
-        currentAyah: progressRecord?.lastStudiedAyah || 0,
-        currentPage: progressRecord?.lastStudiedPage || 0,
-        memorizationPercentage: percentage,
-        completedJuz: Math.floor(surahsCount / 4),
-        surahsCompleted: surahsCount,
-        ayahsMemorized: progressRecord?.ayahsCount || 0,
-        weeksActive: progressRecord?.weeksActive || 0,
+        memorizationPercentage: progressRecord?.progressPercentage || Number(student.progressRate) || 0,
         rank: progressRecord?.rank || 'Beginner',
       },
-      percentage,
-      surahs: surahsCount,
-      ayahs: progressRecord?.ayahsCount || 0,
-      weeksActive: progressRecord?.weeksActive || 0,
-      juzCompleted: Math.floor(surahsCount / 4),
-      currentJuz: progressRecord?.lastStudiedSurah ? `Juz ${Math.ceil(surahsCount / 4) || 1}` : '-',
-      rank: progressRecord?.rank || 'Beginner',
-      lastStudiedSurah: progressRecord?.lastStudiedSurah || 'N/A',
-      lastStudiedPage: progressRecord?.lastStudiedPage || 0,
-      dailyLogs: progressLogs.map((log) => ({
-        id: log.id,
-        surahName: log.surahName,
-        surahNumber: log.surahNumber,
-        topicName: log.topicName,
-        topicNameAr: log.topicNameAr,
-        lastStudiedPage: log.lastStudiedPage,
-        startAyah: log.startAyah,
-        endAyah: log.endAyah,
-        lastStudiedAyah: log.lastStudiedAyah,
-        memorizationStatus: log.memorizationStatus,
-        revisionStatus: log.revisionStatus,
-        notes: log.notes,
-        isReview: log.isReview,
-        completionStatus: log.completionStatus,
-        teacherName: log.teacher?.fullName || 'Teacher',
-        date: log.createdAt,
-      })),
+      percentage: progressRecord?.progressPercentage || Number(student.progressRate) || 0,
+      dailyLogs: progressLogs,
       timeline,
-      tajweed: feedbackRecords.slice(0, 5).map((f) => ({
-        id: f.id,
-        notes: f.content,
-        teacherName: f.teacher?.fullName,
-        date: f.createdAt,
-        recommendations: f.content,
+      evaluations: examEvaluations.map((ev) => ({
+        id: ev.id,
+        programType: ev.programType,
+        evaluationType: ev.evaluationType,
+        score: ev.score,
+        notes: ev.teacherComments,
+        teacherName: ev.teacher?.fullName || 'Teacher',
+        date: ev.evaluationDate || ev.createdAt,
+        recommendations: ev.recommendations || '',
+        criteriaRatings: ev.criteriaRatings || {},
       })),
       teacherFeedback: feedbackRecords.map((f) => ({
         id: f.id,
@@ -575,6 +647,18 @@ export class StudentPortalService {
         content: f.content,
         date: f.createdAt,
       })),
+      attendanceHistory: attendanceHistory.map((ah) => ({
+        id: ah.id,
+        date: ah.classSession?.sessionDate,
+        teacherName: ah.classSession?.teacher?.fullName || 'Unknown Teacher',
+        course: ah.classSession?.subject || ah.classSession?.classTitle || 'Quran Class',
+        scheduledTime: ah.classSession?.scheduledStartTime && ah.classSession?.scheduledEndTime ? `${ah.classSession.scheduledStartTime} - ${ah.classSession.scheduledEndTime}` : '—',
+        joinTime: ah.joinTime,
+        exitTime: ah.leaveTime,
+        status: ah.attendanceStatus,
+      })),
+      attendanceStats,
+      achievements,
     };
   }
 
@@ -638,6 +722,7 @@ export class StudentPortalService {
       student: {
         id: student.id,
         fullName: student.fullName,
+        firstName: this.extractFirstName(student.fullName),
         email: student.email,
         phone: student.phone,
         country: student.country,
@@ -683,12 +768,78 @@ export class StudentPortalService {
     });
     if (!n) throw new NotFoundException('Notification not found');
     n.isRead = true;
+    n.readAt = new Date();
     return this.notificationRepository.save(n);
   }
 
   async markAllNotificationsRead(userId: string) {
-    await this.notificationRepository.update({ userId, isRead: false }, { isRead: true });
+    await this.notificationRepository.update(
+      { userId, isRead: false },
+      { isRead: true, readAt: new Date() },
+    );
     return { success: true };
+  }
+
+  async getNotificationsSummary(userId: string) {
+    const [total, unread, read] = await Promise.all([
+      this.notificationRepository.count({ where: { userId } }),
+      this.notificationRepository.count({ where: { userId, isRead: false } }),
+      this.notificationRepository.count({ where: { userId, isRead: true } }),
+    ]);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    const today = await this.notificationRepository.count({
+      where: { userId, createdAt: Between(todayStart, todayEnd) },
+    });
+    return { total, unread, read, today };
+  }
+
+  async getFilteredNotifications(
+    userId: string,
+    filter?: string,
+    search?: string,
+    page = 1,
+    limit = 20,
+  ) {
+    const query = this.notificationRepository
+      .createQueryBuilder('n')
+      .where('n.userId = :userId', { userId });
+    if (filter === 'unread') query.andWhere('n.isRead = :isRead', { isRead: false });
+    else if (filter === 'read') query.andWhere('n.isRead = :isRead', { isRead: true });
+    if (search) {
+      query.andWhere('(n.title ILIKE :search OR n.content ILIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+    query.orderBy('n.createdAt', 'DESC');
+    const total = await query.getCount();
+    const items = await query.skip((page - 1) * limit).take(limit).getMany();
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async deleteNotification(userId: string, notificationId: string) {
+    const n = await this.notificationRepository.findOne({
+      where: { id: notificationId, userId },
+    });
+    if (!n) throw new NotFoundException('Notification not found');
+    await this.notificationRepository.remove(n);
+    return { success: true };
+  }
+
+  async deleteMultipleNotifications(userId: string, ids: string[]) {
+    const notifications = await this.notificationRepository.find({
+      where: { id: In(ids), userId },
+    });
+    if (notifications.length === 0) throw new NotFoundException('No notifications found');
+    await this.notificationRepository.remove(notifications);
+    return { success: true, deleted: notifications.length };
+  }
+
+  async clearReadNotifications(userId: string) {
+    const result = await this.notificationRepository.delete({ userId, isRead: true });
+    return { success: true, deleted: result.affected || 0 };
   }
 
   async getFeedback(userId: string) {

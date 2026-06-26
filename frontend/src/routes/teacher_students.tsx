@@ -251,6 +251,7 @@ function TeacherStudentsPage() {
                     navigate({
                       to: "/teacher_students/$studentId",
                       params: { studentId: student.id },
+                      search: {}
                     })
                   }
                 >
@@ -351,6 +352,7 @@ function TeacherStudentsPage() {
                           navigate({
                             to: "/teacher_students/$studentId",
                             params: { studentId: student.id },
+                            search: {}
                           });
                         }}
                       >
@@ -397,6 +399,7 @@ function TeacherStudentsPage() {
                         navigate({
                           to: "/teacher_students/$studentId",
                           params: { studentId: student.id },
+                          search: {}
                         })
                       }
                     >
@@ -493,6 +496,7 @@ function TeacherStudentsPage() {
                             navigate({
                               to: "/teacher_students/$studentId",
                               params: { studentId: student.id },
+                              search: {}
                             });
                           }}
                           size="sm"

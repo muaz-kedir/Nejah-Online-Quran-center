@@ -11,6 +11,8 @@ import { ZoomWebhookService } from './zoom-webhook.service';
 import { ZoomAnalyticsService } from './zoom-analytics.service';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { AttendanceReconciliationService } from './attendance-reconciliation.service';
+import { LiveSessionAttendanceReportService } from './live-session-attendance-report.service';
+import { LiveSessionAttendanceReportController } from './live-session-attendance-report.controller';
 import { LiveSessionController } from './live-session.controller';
 import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
@@ -26,6 +28,8 @@ import { SessionAttendance } from './entities/session-attendance.entity';
 import { SessionNote } from './entities/session-note.entity';
 import { ProcessedWebhook } from './entities/processed-webhook.entity';
 import { ParticipantTimelineEvent } from './entities/participant-timeline-event.entity';
+import { AttendanceSegment } from './entities/attendance-segment.entity';
+import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Parent } from '../parents/entities/parent.entity';
@@ -52,6 +56,8 @@ import { EncryptionService } from '../common/encryption.service';
       Schedule,
       ScheduleStudent,
       ParticipantTimelineEvent,
+      AttendanceSegment,
+      SessionParticipantSummary,
     ]),
     HttpModule.register({
       timeout: 15000,
@@ -75,6 +81,7 @@ import { EncryptionService } from '../common/encryption.service';
     SessionAttendanceController,
     ParentSessionController,
     AnalyticsController,
+    LiveSessionAttendanceReportController,
   ],
   providers: [
     EncryptionService,
@@ -86,6 +93,7 @@ import { EncryptionService } from '../common/encryption.service';
     ZoomAnalyticsService,
     AttendanceIntelligenceService,
     AttendanceReconciliationService,
+    LiveSessionAttendanceReportService,
     ScheduleSessionGeneratorService,
     ScheduleSessionsCron,
     {
@@ -101,6 +109,7 @@ import { EncryptionService } from '../common/encryption.service';
     ZoomAnalyticsService,
     AttendanceIntelligenceService,
     AttendanceReconciliationService,
+    LiveSessionAttendanceReportService,
     ScheduleSessionGeneratorService,
   ],
 })

@@ -7,17 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Student } from '../students/entities/student.entity';
-import { Teacher } from '../teachers/entities/teacher.entity';
 import { UserRole } from '../common/enums/user-role.enum';
-
-export enum ResourceCategory {
-  QURAN_RESOURCES = 'Quran Resources',
-  QAIDA_NOORANIYA = 'Qaida Nooraniya',
-  TAJWEED_MATERIALS = 'Tajweed Materials',
-  ISLAMIC_STUDIES = 'Islamic Studies Materials',
-  CLASS_MATERIALS = 'Class Materials',
-}
 
 export enum ResourceStatus {
   ACTIVE = 'active',
@@ -29,29 +19,56 @@ export class Resource {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  title: string;
+  @Column({ default: '' })
+  titleEn: string;
 
-  @Column({ type: 'text' })
-  description: string;
+  @Column({ nullable: true })
+  titleAr: string;
 
-  @Column({ type: 'enum', enum: ResourceCategory })
-  category: ResourceCategory;
+  @Column({ nullable: true })
+  titleAm: string;
+
+  @Column({ type: 'text', default: '' })
+  descriptionEn: string;
+
+  @Column({ type: 'text', nullable: true })
+  descriptionAr: string;
+
+  @Column({ type: 'text', nullable: true })
+  descriptionAm: string;
+
+  @Column({ default: 'Uncategorized' })
+  category: string;
+
+  @Column({ default: 'All Levels' })
+  learningLevel: string;
+
+  @Column({ default: 'PDF' })
+  resourceType: string;
 
   @Column({ type: 'varchar' })
   fileUrl: string;
 
-  @Column({ type: 'enum', enum: UserRole })
+  @Column({ type: 'varchar', nullable: true })
+  thumbnailUrl: string;
+
+  @Column({ type: 'boolean', default: false })
+  isFeatured: boolean;
+
+  @Column({ type: 'integer', default: 0 })
+  displayOrder: number;
+
+  @Column({ type: 'integer', default: 0 })
+  fileSize: number;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.SUPER_ADMIN })
   createdByRole: UserRole;
 
-  @Column()
+  @Column({ nullable: true })
   createdById: string;
 
   @Column({ type: 'enum', enum: ResourceStatus, default: ResourceStatus.ACTIVE })
   status: ResourceStatus;
-
-  @Column({ nullable: true })
-  tags: string;
 
   @Column({ type: 'integer', default: 0 })
   downloadCount: number;

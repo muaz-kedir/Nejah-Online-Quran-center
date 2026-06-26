@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useCallback } from 'react';
+import { ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import {
   LayoutDashboard,
@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { studentPaths } from '@/lib/student-portal';
+import { studentPaths, api } from '@/lib/student-portal';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const menuItems = [
@@ -62,6 +62,27 @@ export function StudentPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [liveUnread, setLiveUnread] = useState(unreadNotifications);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Sync from prop and auto-refresh from summary API
+  useEffect(() => {
+    setLiveUnread(unreadNotifications);
+  }, [unreadNotifications]);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const s = await api<any>('/student/dashboard/notifications/summary');
+        if (s && typeof s.unread === 'number') setLiveUnread(s.unread);
+      } catch { /* ignore */ }
+    };
+    fetchUnread();
+    pollingRef.current = setInterval(fetchUnread, 30000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -136,12 +157,12 @@ export function StudentPortalLayout({
                 {(!collapsed || isMobile) && (
                   <span className="flex-1 text-left truncate">{item.label}</span>
                 )}
-                {item.path === studentPaths.notifications && unreadNotifications > 0 && (
+                {item.path === studentPaths.notifications && liveUnread > 0 && (
                   <span className={cn(
                     'bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0',
                     collapsed && !isMobile ? 'absolute -top-1 -right-1 w-5 h-5' : 'px-1.5 py-0.5 min-w-[20px]',
                   )}>
-                    {unreadNotifications}
+                    {liveUnread}
                   </span>
                 )}
               </button>
@@ -149,9 +170,9 @@ export function StudentPortalLayout({
               {collapsed && !isMobile && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
                   {item.label}
-                  {item.path === studentPaths.notifications && unreadNotifications > 0 && (
+                  {item.path === studentPaths.notifications && liveUnread > 0 && (
                     <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {unreadNotifications}
+                      {liveUnread}
                     </span>
                   )}
                 </div>
@@ -286,9 +307,9 @@ export function StudentPortalLayout({
             className="relative p-2 rounded-xl hover:bg-primary/10 transition-colors"
           >
             <Bell className="h-5 w-5 text-muted-foreground" />
-            {unreadNotifications > 0 && (
+            {liveUnread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                {unreadNotifications}
+                {liveUnread}
               </span>
             )}
           </button>

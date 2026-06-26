@@ -495,7 +495,7 @@ function TeacherDashboard() {
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto">
               <Button
                 variant="outline"
-                onClick={() => navigate({ to: "/teacher_schedule" })}
+                onClick={() => navigate({ to: "/teacher_schedule", search: {} })}
                 className="h-12 flex-1 sm:flex-none rounded-xl px-6 border-border dark:border-white/10 font-bold text-muted-foreground dark:text-foreground gap-2"
               >
                 View Schedule
@@ -559,7 +559,7 @@ function TeacherDashboard() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate({ to: "/teacher_students" })}
+                  onClick={() => navigate({ to: "/teacher_students", search: {} })}
                   className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
                 >
                   View All Students <ChevronRight className="h-3 w-3" />
@@ -584,6 +584,7 @@ function TeacherDashboard() {
                         navigate({
                           to: "/teacher_students/$studentId",
                           params: { studentId: student.id },
+                          search: {}
                         })
                       }
                       className="group bg-card dark:bg-nejah-surface rounded-[20px] p-5 border border-border dark:border-white/5 shadow-sm hover:shadow-md hover:border-nejah-electric/20 transition-all cursor-pointer"
@@ -703,7 +704,7 @@ function TeacherDashboard() {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate({ to: "/teacher_students" });
+                    navigate({ to: "/teacher_students", search: {} });
                   }}
                   className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
                 >
@@ -729,6 +730,7 @@ function TeacherDashboard() {
                           navigate({
                             to: "/teacher_students/$studentId",
                             params: { studentId: student.id },
+                            search: {}
                           });
                         }}
                       >

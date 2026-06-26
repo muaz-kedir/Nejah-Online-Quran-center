@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, IsNull } from 'typeorm';
 import {
   SessionAttendance,
   AttendanceThresholds,
@@ -12,7 +12,14 @@ import {
   TimelineEventSource,
 } from './entities/participant-timeline-event.entity';
 import { LiveSession } from './entities/live-session.entity';
-import { AttendanceStatus } from './enums/live-session-status.enum';
+import { AttendanceSegment } from './entities/attendance-segment.entity';
+import { Student } from '../students/entities/student.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
+import {
+  AttendanceStatus,
+  attendanceStatusToApi,
+} from './enums/live-session-status.enum';
 
 export interface ParticipantSegment {
   joinTime: Date;
@@ -56,6 +63,14 @@ export class AttendanceIntelligenceService {
     private readonly attendanceRepository: Repository<SessionAttendance>,
     @InjectRepository(LiveSession)
     private readonly liveSessionRepository: Repository<LiveSession>,
+    @InjectRepository(AttendanceSegment)
+    private readonly segmentRepository: Repository<AttendanceSegment>,
+    @InjectRepository(SessionParticipantSummary)
+    private readonly summaryRepository: Repository<SessionParticipantSummary>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
+    @InjectRepository(Teacher)
+    private readonly teacherRepository: Repository<Teacher>,
   ) {}
 
   async appendTimelineEvent(event: {
@@ -151,30 +166,32 @@ export class AttendanceIntelligenceService {
         ))
       : 60;
 
-    let attendanceStatus: AttendanceStatus;
-    if (totalConnectedTimeMs === 0) {
-      attendanceStatus = AttendanceStatus.ABSENT;
-    } else {
-      const ratio = totalConnectedTimeMs / (scheduledMinutes * 60000);
-      if (ratio >= thresholds.presentRatio) {
-        attendanceStatus = AttendanceStatus.PRESENT;
-      } else if (ratio >= thresholds.lateRatio) {
-        attendanceStatus = AttendanceStatus.LATE;
-      } else {
-        attendanceStatus = AttendanceStatus.ABSENT;
-      }
+    const scheduledSeconds = scheduledMinutes * 60;
+    const ratio = scheduledSeconds > 0 ? totalConnectedTimeMs / (scheduledSeconds * 1000) : 0;
+    const lateThresholdMs = 5 * 60 * 1000;
+    const leftEarlyThresholdMs = 10 * 60 * 1000;
 
-      if (
+    let attendanceStatus: AttendanceStatus;
+    if (!firstJoinTime || totalConnectedTimeMs === 0) {
+      attendanceStatus = AttendanceStatus.ABSENT;
+    } else if (ratio < thresholds.lateRatio) {
+      attendanceStatus = AttendanceStatus.ABSENT;
+    } else if (ratio < thresholds.presentRatio) {
+      attendanceStatus = AttendanceStatus.PARTIAL;
+    } else {
+      const joinedLate =
+        firstJoinTime.getTime() - session.scheduledStart.getTime() > lateThresholdMs;
+      const leftEarly =
         lastLeaveTime &&
         session.scheduledEnd &&
-        lastLeaveTime < session.scheduledEnd &&
-        totalConnectedTimeMs > 0
-      ) {
-        const leftEarlyMs =
-          session.scheduledEnd.getTime() - lastLeaveTime.getTime();
-        if (leftEarlyMs > thresholds.earlyLeaveMinutes * 60000) {
-          attendanceStatus = AttendanceStatus.LEFT_EARLY;
-        }
+        session.scheduledEnd.getTime() - lastLeaveTime.getTime() > leftEarlyThresholdMs;
+
+      if (joinedLate) {
+        attendanceStatus = AttendanceStatus.LATE;
+      } else if (leftEarly) {
+        attendanceStatus = AttendanceStatus.LEFT_EARLY;
+      } else {
+        attendanceStatus = AttendanceStatus.PRESENT;
       }
     }
 
@@ -231,7 +248,258 @@ export class AttendanceIntelligenceService {
     attendance.firstJoinTime = result.firstJoinTime;
     attendance.lastLeaveTime = result.lastLeaveTime;
 
-    return this.attendanceRepository.save(attendance);
+    const saved = await this.attendanceRepository.save(attendance);
+    return saved;
+  }
+
+  async openAttendanceSegment(params: {
+    sessionId: string;
+    userId: string;
+    userEmail: string;
+    userType: string;
+    zoomParticipantId?: string;
+    joinTime: Date;
+    source?: string;
+  }): Promise<AttendanceSegment> {
+    const segment = this.segmentRepository.create({
+      sessionId: params.sessionId,
+      userId: params.userId,
+      userEmail: params.userEmail.toLowerCase(),
+      userType: params.userType,
+      zoomParticipantId: params.zoomParticipantId || null,
+      joinTime: params.joinTime,
+      source: params.source || 'webhook',
+    });
+    return this.segmentRepository.save(segment);
+  }
+
+  async closeOpenSegment(
+    sessionId: string,
+    userEmail: string,
+    leaveTime: Date,
+    durationSeconds?: number,
+  ): Promise<AttendanceSegment | null> {
+    const email = userEmail.toLowerCase();
+    const openSegment = await this.segmentRepository.findOne({
+      where: { sessionId, userEmail: email, leaveTime: IsNull() },
+      order: { joinTime: 'DESC' },
+    });
+
+    if (!openSegment) return null;
+
+    const duration =
+      durationSeconds ??
+      Math.max(0, Math.round((leaveTime.getTime() - openSegment.joinTime.getTime()) / 1000));
+
+    openSegment.leaveTime = leaveTime;
+    openSegment.durationSeconds = duration;
+    return this.segmentRepository.save(openSegment);
+  }
+
+  async closeAllOpenSegments(sessionId: string, leaveTime: Date): Promise<void> {
+    const openSegments = await this.segmentRepository.find({
+      where: { sessionId, leaveTime: IsNull() },
+    });
+
+    for (const segment of openSegments) {
+      segment.leaveTime = leaveTime;
+      segment.durationSeconds = Math.max(
+        0,
+        Math.round((leaveTime.getTime() - segment.joinTime.getTime()) / 1000),
+      );
+    }
+
+    if (openSegments.length > 0) {
+      await this.segmentRepository.save(openSegments);
+    }
+  }
+
+  async replaceWebhookSegmentsFromTimeline(sessionId: string): Promise<void> {
+    await this.segmentRepository.delete({ sessionId, source: 'webhook' });
+
+    const events = await this.getTimelineForSession(sessionId);
+    const webhookEvents = events.filter(
+      (e) => e.source === TimelineEventSource.WEBHOOK || !e.source,
+    );
+
+    const byParticipant = new Map<string, ParticipantTimelineEvent[]>();
+    for (const event of webhookEvents) {
+      const key = `${event.participantRole}:${event.participantId}`;
+      const list = byParticipant.get(key) || [];
+      list.push(event);
+      byParticipant.set(key, list);
+    }
+
+    for (const [, participantEvents] of byParticipant) {
+      const segments = this.buildSegmentsFromTimeline(participantEvents);
+      const first = participantEvents[0];
+      for (const seg of segments) {
+        if (!seg.joinTime) continue;
+        await this.segmentRepository.save(
+          this.segmentRepository.create({
+            sessionId,
+            userId: first.participantId,
+            userEmail: '',
+            userType: first.participantRole,
+            joinTime: seg.joinTime,
+            leaveTime: seg.leaveTime,
+            durationSeconds: Math.round(seg.durationMs / 1000),
+            source: 'webhook',
+          }),
+        );
+      }
+    }
+  }
+
+  async rebuildReportSegments(
+    sessionId: string,
+    rows: Array<{
+      userId: string;
+      userEmail: string;
+      userType: string;
+      zoomParticipantId?: string;
+      joinTime: Date | null;
+      leaveTime: Date | null;
+      durationSeconds: number;
+    }>,
+  ): Promise<void> {
+    await this.segmentRepository.delete({ sessionId, source: 'report' });
+
+    for (const row of rows) {
+      if (!row.joinTime) continue;
+      await this.segmentRepository.save(
+        this.segmentRepository.create({
+          sessionId,
+          userId: row.userId,
+          userEmail: row.userEmail.toLowerCase(),
+          userType: row.userType,
+          zoomParticipantId: row.zoomParticipantId || null,
+          joinTime: row.joinTime,
+          leaveTime: row.leaveTime,
+          durationSeconds: row.durationSeconds,
+          source: 'report',
+        }),
+      );
+    }
+  }
+
+  async upsertParticipantSummary(params: {
+    sessionId: string;
+    userId: string;
+    userType: string;
+    participantId?: string;
+    userName?: string;
+    userEmail?: string;
+    isReconciled?: boolean;
+  }): Promise<SessionParticipantSummary> {
+    const session = await this.liveSessionRepository.findOne({
+      where: { id: params.sessionId },
+    });
+    if (!session) {
+      throw new Error(`Session ${params.sessionId} not found`);
+    }
+
+    const email = params.userEmail?.toLowerCase() || '';
+    const segments = email
+      ? await this.segmentRepository.find({ where: { sessionId: params.sessionId, userEmail: email } })
+      : await this.segmentRepository.find({
+          where: { sessionId: params.sessionId, userId: params.userId },
+        });
+
+    const totalDurationSeconds = segments.reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
+    const joinTimes = segments.map((s) => s.joinTime?.getTime()).filter(Boolean) as number[];
+    const leaveTimes = segments
+      .map((s) => s.leaveTime?.getTime())
+      .filter(Boolean) as number[];
+
+    const firstJoinTime = joinTimes.length ? new Date(Math.min(...joinTimes)) : null;
+    const lastLeaveTime = leaveTimes.length ? new Date(Math.max(...leaveTimes)) : null;
+
+    let attendanceStatus = AttendanceStatus.ABSENT;
+    if (params.userType === 'student' && params.participantId) {
+      const timelineEvents = await this.getTimelineForParticipant(
+        params.sessionId,
+        params.participantId,
+      );
+      const builtSegments = this.buildSegmentsFromTimeline(timelineEvents);
+      const result = this.calculateAttendanceFromSegments(builtSegments, session);
+      attendanceStatus = result.attendanceStatus;
+    } else if (totalDurationSeconds > 0) {
+      const pseudoSegments: ParticipantSegment[] = segments.map((s) => ({
+        joinTime: s.joinTime,
+        leaveTime: s.leaveTime,
+        durationMs: (s.durationSeconds || 0) * 1000,
+      }));
+      attendanceStatus = this.calculateAttendanceFromSegments(pseudoSegments, session).attendanceStatus;
+    }
+
+    let summary = await this.summaryRepository.findOne({
+      where: { sessionId: params.sessionId, userId: params.userId },
+    });
+
+    if (!summary) {
+      summary = this.summaryRepository.create({
+        sessionId: params.sessionId,
+        userId: params.userId,
+        userType: params.userType,
+      });
+    }
+
+    summary.participantId = params.participantId || summary.participantId;
+    summary.userName = params.userName || summary.userName;
+    summary.userEmail = email || summary.userEmail;
+    summary.firstJoinTime = firstJoinTime;
+    summary.lastLeaveTime = lastLeaveTime;
+    summary.totalDurationSeconds = totalDurationSeconds;
+    summary.status = attendanceStatusToApi(attendanceStatus);
+    if (params.isReconciled !== undefined) {
+      summary.isReconciled = params.isReconciled;
+    }
+
+    return this.summaryRepository.save(summary);
+  }
+
+  async syncSummariesForSession(sessionId: string, isReconciled = false): Promise<void> {
+    const summaries = await this.summaryRepository.find({ where: { sessionId } });
+    for (const summary of summaries) {
+      await this.upsertParticipantSummary({
+        sessionId,
+        userId: summary.userId,
+        userType: summary.userType,
+        participantId: summary.participantId,
+        userName: summary.userName,
+        userEmail: summary.userEmail,
+        isReconciled,
+      });
+    }
+  }
+
+  async upsertAbsentSummary(params: {
+    sessionId: string;
+    userId: string;
+    userType: string;
+    participantId?: string;
+    userName?: string;
+    userEmail?: string;
+  }): Promise<SessionParticipantSummary> {
+    let summary = await this.summaryRepository.findOne({
+      where: { sessionId: params.sessionId, userId: params.userId },
+    });
+
+    if (!summary) {
+      summary = this.summaryRepository.create({
+        sessionId: params.sessionId,
+        userId: params.userId,
+        userType: params.userType,
+        participantId: params.participantId,
+        userName: params.userName,
+        userEmail: params.userEmail?.toLowerCase(),
+        status: 'absent',
+        totalDurationSeconds: 0,
+      });
+    }
+
+    return this.summaryRepository.save(summary);
   }
 
   async calculateTeacherOverlap(
@@ -298,7 +566,7 @@ export class AttendanceIntelligenceService {
   async recalculateSession(sessionId: string): Promise<void> {
     const session = await this.liveSessionRepository.findOne({
       where: { id: sessionId },
-      relations: ['attendances'],
+      relations: ['attendances', 'teacher'],
     });
     if (!session) return;
 
@@ -306,6 +574,33 @@ export class AttendanceIntelligenceService {
 
     for (const participantId of participantIds) {
       await this.calculateAndUpdateAttendance(sessionId, participantId);
+      const student = await this.studentRepository.findOne({ where: { id: participantId } });
+      if (student?.userId) {
+        await this.upsertParticipantSummary({
+          sessionId,
+          userId: student.userId,
+          userType: 'student',
+          participantId,
+          userName: student.fullName,
+          userEmail: student.email,
+        });
+      }
+    }
+
+    if (session.teacherId) {
+      const teacher =
+        session.teacher ||
+        (await this.teacherRepository.findOne({ where: { id: session.teacherId } }));
+      if (teacher?.userId) {
+        await this.upsertParticipantSummary({
+          sessionId,
+          userId: teacher.userId,
+          userType: 'teacher',
+          participantId: teacher.id,
+          userName: teacher.fullName,
+          userEmail: teacher.email,
+        });
+      }
     }
 
     const overlap = await this.calculateTeacherOverlap(sessionId);

@@ -49,4 +49,5 @@ export const studentPaths = {
   resources: '/student/resources',
   messages: '/student/messages',
   notifications: '/student/notifications',
+  evaluations: '/student/evaluations',
 } as const;
