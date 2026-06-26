@@ -23,6 +23,7 @@ import { AddUserModal } from '@/components/users/AddUserModal';
 import { EditUserModal } from '@/components/users/EditUserModal';
 import { DeleteUserModal } from '@/components/users/DeleteUserModal';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { AmbientSection, PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 

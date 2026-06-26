@@ -1,5 +1,4 @@
 import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { ResourceCategory } from '../resources.entity';
 import { ResourceStatus } from '../resources.entity';
 
 export class UpdateResourceDto {
@@ -13,8 +12,7 @@ export class UpdateResourceDto {
 
   @IsString()
   @IsOptional()
-  @IsEnum(ResourceCategory)
-  category?: ResourceCategory;
+  category?: string;
 
   @IsString()
   @IsOptional()

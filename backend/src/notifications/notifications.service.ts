@@ -21,6 +21,7 @@ export interface NotificationPayload {
   message: string;
   data: any;
   recipientIds: string[];
+  actionUrl?: string;
 }
 
 @Injectable()
@@ -194,6 +195,7 @@ export class NotificationsService {
             title: payload.title,
             content: payload.message,
             dataJson: payload.data,
+            actionUrl: payload.actionUrl,
             isRead: false,
             sentAt: new Date(),
           }),
@@ -208,6 +210,7 @@ export class NotificationsService {
           title: notif.title,
           content: notif.content,
           data: notif.dataJson,
+          actionUrl: notif.actionUrl,
           isRead: notif.isRead,
           sentAt: notif.sentAt,
           createdAt: notif.createdAt,
@@ -257,6 +260,7 @@ export class NotificationsService {
     });
     if (notification) {
       notification.isRead = true;
+      notification.readAt = new Date();
       await this.notificationRepository.save(notification);
     }
   }
@@ -270,7 +274,7 @@ export class NotificationsService {
   async markAllAsRead(userId: string): Promise<void> {
     await this.notificationRepository.update(
       { userId, isRead: false },
-      { isRead: true },
+      { isRead: true, readAt: new Date() },
     );
   }
 
@@ -281,6 +285,7 @@ export class NotificationsService {
     data?: Record<string, unknown>,
     channel?: NotificationChannel,
     skipPush = false,
+    actionUrl?: string,
   ): Promise<void> {
     if (!recipientIds.length) return;
 
@@ -306,6 +311,7 @@ export class NotificationsService {
         title,
         content: message,
         dataJson: data,
+        actionUrl,
         isRead: false,
         sentAt: new Date(),
       }),
@@ -320,6 +326,7 @@ export class NotificationsService {
         title: notif.title,
         content: notif.content,
         data: notif.dataJson,
+        actionUrl: notif.actionUrl,
         isRead: notif.isRead,
         sentAt: notif.sentAt,
         createdAt: notif.createdAt,
@@ -331,7 +338,7 @@ export class NotificationsService {
       await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
         title,
         body: message,
-        url: typeof data?.url === 'string' ? data.url : undefined,
+        url: actionUrl || (typeof data?.url === 'string' ? data.url : undefined),
         data,
         icon: '/logo.png',
         badge: '/logo.png',
@@ -443,5 +450,28 @@ export class NotificationsService {
       [UserRole.ADMIN, UserRole.SUPER_ADMIN],
       adminPayload,
     );
+  }
+
+  async notifyResourceAdded(resource: any): Promise<void> {
+    // Notify all students if "All Levels", otherwise notify only students with matching level
+    let students = [];
+    if (resource.learningLevel === 'All Levels') {
+      students = await this.studentRepository.find({ where: { user: { isActive: true } }, relations: ['user'] });
+    } else {
+      students = await this.studentRepository.find({ where: { level: resource.learningLevel, user: { isActive: true } }, relations: ['user'] });
+    }
+
+    const recipientIds = students.map(s => s.user?.id).filter(Boolean);
+    
+    if (recipientIds.length > 0) {
+      await this.sendCustomNotifications(
+        recipientIds,
+        '📚 New Learning Resource',
+        `A new ${resource.learningLevel !== 'All Levels' ? resource.learningLevel : ''} resource has been added: ${resource.titleEn || resource.titleAr || resource.titleAm || 'Resource'}`,
+        { resourceId: resource.id, type: 'resource_added' },
+        NotificationChannel.SYSTEM_ALERT,
+        false
+      );
+    }
   }
 }

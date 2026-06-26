@@ -16,6 +16,7 @@ import { Feedback } from '../progress/entities/feedback.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
 import { ClassSession } from '../attendance/entities/class-session.entity';
+import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
 import { SchedulesModule } from '../schedules/schedules.module';
 import { UsersModule } from '../users/users.module';
 import { TeachersModule } from '../teachers/teachers.module';
@@ -24,6 +25,7 @@ import { AttendanceModule } from '../attendance/attendance.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 import { ParentsModule } from '../parents/parents.module';
 import { ZoomModule } from '../zoom/zoom.module';
+import { ProgressModule } from '../progress/progress.module';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { ZoomModule } from '../zoom/zoom.module';
     TeacherReplacementsModule,
     ParentsModule,
     ZoomModule,
+    ProgressModule,
     TypeOrmModule.forFeature([
       Student,
       Parent,
@@ -47,6 +50,7 @@ import { ZoomModule } from '../zoom/zoom.module';
       Notification,
       StudentAttendance,
       ClassSession,
+      ExamEvaluation,
     ]),
   ],
   controllers: [StudentsController, StudentDashboardController, AssignmentsController],

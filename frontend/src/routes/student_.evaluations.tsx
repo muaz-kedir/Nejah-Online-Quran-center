@@ -109,7 +109,7 @@ function StudentEvaluations() {
                           <div key={crit} className="flex justify-between items-center bg-muted/10 p-3 rounded-xl border text-xs">
                             <span className="font-bold text-muted-foreground">{crit}</span>
                             <Badge variant="outline" className="font-bold text-[10px] text-primary border-primary/20 bg-primary/5">
-                              {rating}
+                              {String(rating)}
                             </Badge>
                           </div>
                         ))}

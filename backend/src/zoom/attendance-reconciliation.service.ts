@@ -5,6 +5,7 @@ import { ZoomService, ZoomReportParticipant } from './zoom.service';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionAttendance } from './entities/session-attendance.entity';
+import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import {
@@ -22,6 +23,8 @@ export class AttendanceReconciliationService {
     private readonly liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(SessionAttendance)
     private readonly attendanceRepository: Repository<SessionAttendance>,
+    @InjectRepository(SessionParticipantSummary)
+    private readonly summaryRepository: Repository<SessionParticipantSummary>,
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
     @InjectRepository(Teacher)
@@ -32,7 +35,6 @@ export class AttendanceReconciliationService {
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
   ) {}
 
-  /** Called ~2 minutes after meeting.ended to replace webhook segments with Zoom report data. */
   scheduleReconciliation(sessionId: string, meetingUUID: string): void {
     setTimeout(() => {
       this.reconcileSessionFromReport(sessionId, meetingUUID).catch((error: Error) => {
@@ -73,10 +75,46 @@ export class AttendanceReconciliationService {
       source: TimelineEventSource.WEBHOOK,
     });
 
+    const reportSegmentRows: Array<{
+      userId: string;
+      userEmail: string;
+      userType: string;
+      zoomParticipantId?: string;
+      joinTime: Date | null;
+      leaveTime: Date | null;
+      durationSeconds: number;
+    }> = [];
+
     for (const participant of participants) {
-      await this.insertReportTimelineEvents(session, participant);
+      const resolved = await this.resolveParticipant(session, participant);
+      if (!resolved) continue;
+
+      await this.insertReportTimelineEvents(session, participant, resolved);
+
+      const joinTime = participant.join_time ? new Date(participant.join_time) : null;
+      const leaveTime = participant.leave_time ? new Date(participant.leave_time) : null;
+      reportSegmentRows.push({
+        userId: resolved.userId,
+        userEmail: participant.user_email || resolved.email,
+        userType: resolved.role,
+        zoomParticipantId: participant.user_id || participant.id,
+        joinTime,
+        leaveTime,
+        durationSeconds: participant.duration || 0,
+      });
+
+      await this.attendanceIntelligence.upsertParticipantSummary({
+        sessionId: session.id,
+        userId: resolved.userId,
+        userType: resolved.role,
+        participantId: resolved.participantId,
+        userName: participant.name || resolved.name,
+        userEmail: participant.user_email || resolved.email,
+        isReconciled: true,
+      });
     }
 
+    await this.attendanceIntelligence.rebuildReportSegments(sessionId, reportSegmentRows);
     await this.attendanceIntelligence.recalculateSession(sessionId);
 
     const attendances = await this.attendanceRepository.find({ where: { sessionId } });
@@ -85,23 +123,28 @@ export class AttendanceReconciliationService {
     }
     await this.attendanceRepository.save(attendances);
 
+    const summaries = await this.summaryRepository.find({ where: { sessionId } });
+    for (const summary of summaries) {
+      summary.isReconciled = true;
+    }
+    await this.summaryRepository.save(summaries);
+
     this.logger.log(
-      `Reconciliation complete for session ${sessionId}: ${participants.length} report rows, ${attendances.length} attendance records marked reconciled`,
+      `Reconciliation complete for session ${sessionId}: ${participants.length} report rows`,
     );
   }
 
   private async insertReportTimelineEvents(
     session: LiveSession,
     participant: ZoomReportParticipant,
+    resolved: {
+      participantId: string;
+      role: 'teacher' | 'student';
+      userId: string;
+      email: string;
+      name: string;
+    },
   ): Promise<void> {
-    const email = participant.user_email?.trim().toLowerCase() || '';
-    const resolved = await this.resolveParticipant(session, email, participant.name || '');
-
-    if (!resolved) {
-      this.logger.warn(`Could not resolve report participant email=${email} name=${participant.name}`);
-      return;
-    }
-
     const joinTime = participant.join_time ? new Date(participant.join_time) : null;
     const leaveTime = participant.leave_time ? new Date(participant.leave_time) : null;
 
@@ -109,14 +152,14 @@ export class AttendanceReconciliationService {
       await this.timelineRepository.save(
         this.timelineRepository.create({
           sessionId: session.id,
-          participantId: resolved.id,
+          participantId: resolved.participantId,
           participantRole: resolved.role,
           zoomUserId: participant.user_id || participant.id || null,
           eventType: TimelineEventType.JOIN,
           timestamp: joinTime,
           source: TimelineEventSource.REPORT,
           rawPayload: participant,
-          webhookEventId: `report_${session.id}_${resolved.id}_join`,
+          webhookEventId: `report_${session.id}_${resolved.participantId}_join`,
         }),
       );
     }
@@ -125,14 +168,14 @@ export class AttendanceReconciliationService {
       await this.timelineRepository.save(
         this.timelineRepository.create({
           sessionId: session.id,
-          participantId: resolved.id,
+          participantId: resolved.participantId,
           participantRole: resolved.role,
           zoomUserId: participant.user_id || participant.id || null,
           eventType: TimelineEventType.LEAVE,
           timestamp: leaveTime,
           source: TimelineEventSource.REPORT,
           rawPayload: participant,
-          webhookEventId: `report_${session.id}_${resolved.id}_leave`,
+          webhookEventId: `report_${session.id}_${resolved.participantId}_leave`,
         }),
       );
     }
@@ -140,32 +183,64 @@ export class AttendanceReconciliationService {
 
   private async resolveParticipant(
     session: LiveSession,
-    email: string,
-    name: string,
-  ): Promise<{ id: string; role: 'teacher' | 'student' } | null> {
+    participant: ZoomReportParticipant,
+  ): Promise<{
+    participantId: string;
+    role: 'teacher' | 'student';
+    userId: string;
+    email: string;
+    name: string;
+  } | null> {
+    const email = participant.user_email?.trim().toLowerCase() || '';
+    const name = participant.name || '';
+
     if (email) {
       const student = await this.studentRepository.findOne({
         where: [{ email }, { zoomEmail: email }],
       });
-      if (student) return { id: student.id, role: 'student' };
+      if (student?.userId) {
+        return {
+          participantId: student.id,
+          role: 'student',
+          userId: student.userId,
+          email: student.email,
+          name: student.fullName,
+        };
+      }
 
       const teacher = await this.teacherRepository.findOne({ where: { email } });
-      if (teacher) return { id: teacher.id, role: 'teacher' };
+      if (teacher?.userId) {
+        return {
+          participantId: teacher.id,
+          role: 'teacher',
+          userId: teacher.userId,
+          email: teacher.email,
+          name: teacher.fullName,
+        };
+      }
     }
 
     if (session.teacher?.email && email === session.teacher.email.toLowerCase()) {
-      return { id: session.teacherId, role: 'teacher' };
+      return {
+        participantId: session.teacherId,
+        role: 'teacher',
+        userId: session.teacher.userId,
+        email: session.teacher.email,
+        name: session.teacher.fullName,
+      };
     }
 
     if (session.studentId) {
       const student = await this.studentRepository.findOne({ where: { id: session.studentId } });
-      if (student && (!email || student.email?.toLowerCase() === email)) {
-        return { id: student.id, role: 'student' };
+      if (student?.userId && (!email || student.email?.toLowerCase() === email)) {
+        return {
+          participantId: student.id,
+          role: 'student',
+          userId: student.userId,
+          email: student.email,
+          name: student.fullName,
+        };
       }
-    }
-
-    if (session.teacherId && session.teacher?.email?.toLowerCase() === email) {
-      return { id: session.teacherId, role: 'teacher' };
     }
 
     this.logger.debug(`Unresolved report participant: ${email || name}`);

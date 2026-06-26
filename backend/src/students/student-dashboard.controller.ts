@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -51,8 +52,25 @@ export class StudentDashboardController {
   }
 
   @Get('dashboard/notifications')
-  getNotifications(@Request() req) {
-    return this.portal.getNotifications(req.user.id);
+  getNotifications(
+    @Request() req,
+    @Query('filter') filter?: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.portal.getFilteredNotifications(
+      req.user.id,
+      filter,
+      search,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20,
+    );
+  }
+
+  @Get('dashboard/notifications/summary')
+  getNotificationsSummary(@Request() req) {
+    return this.portal.getNotificationsSummary(req.user.id);
   }
 
   @Patch('dashboard/notifications/:id/read')
@@ -63,6 +81,21 @@ export class StudentDashboardController {
   @Patch('dashboard/notifications/read-all')
   markAllNotificationsRead(@Request() req) {
     return this.portal.markAllNotificationsRead(req.user.id);
+  }
+
+  @Delete('dashboard/notifications/:id')
+  deleteNotification(@Request() req, @Param('id') id: string) {
+    return this.portal.deleteNotification(req.user.id, id);
+  }
+
+  @Post('dashboard/notifications/bulk-delete')
+  deleteMultipleNotifications(@Request() req, @Body() body: { ids: string[] }) {
+    return this.portal.deleteMultipleNotifications(req.user.id, body.ids);
+  }
+
+  @Delete('dashboard/notifications')
+  clearReadNotifications(@Request() req) {
+    return this.portal.clearReadNotifications(req.user.id);
   }
 
   @Get('dashboard/feedback')

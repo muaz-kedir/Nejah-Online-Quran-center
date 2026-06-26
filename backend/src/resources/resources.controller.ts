@@ -15,13 +15,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
-import { CreateResourceDto } from './dto/create-resource.dto';
-import { UpdateResourceDto } from './dto/update-resource.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('resources')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ResourcesController {
-  constructor(private readonly resourcesService: ResourcesService) {}
+  constructor(
+    private readonly resourcesService: ResourcesService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STUDENT, UserRole.TEACHER)
@@ -30,38 +32,69 @@ export class ResourcesController {
     @Query('search') search?: string,
     @Query('category') category?: string,
   ) {
-    // For students, they can only see their assigned resources
-    if (req.user.role === UserRole.STUDENT) {
-      return this.resourcesService.findAll(undefined, search, category as any);
-    }
-    return this.resourcesService.findAll(undefined, search, category as any);
+    return this.resourcesService.findAll(req.user.id, req.user.role, search, category);
+  }
+
+  @Get('featured')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STUDENT, UserRole.TEACHER)
+  async findFeatured(@Request() req) {
+    return this.resourcesService.findFeatured(req.user.id, req.user.role);
+  }
+
+  @Get('recent')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STUDENT, UserRole.TEACHER)
+  async findRecent(@Request() req) {
+    return this.resourcesService.findRecent(req.user.id, req.user.role);
+  }
+
+  @Get('categories')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STUDENT, UserRole.TEACHER)
+  async getCategories(@Request() req) {
+    return this.resourcesService.getCategories(req.user.id, req.user.role);
+  }
+
+  @Get('downloads')
+  @Roles(UserRole.STUDENT)
+  async getDownloadHistory(@Request() req) {
+    return this.resourcesService.getDownloadHistory(req.user.id);
+  }
+
+  @Post(':id/download')
+  @Roles(UserRole.STUDENT)
+  async downloadResource(@Request() req, @Param('id') id: string) {
+    return this.resourcesService.recordDownload(req.user.id, id);
   }
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STUDENT, UserRole.TEACHER)
   async findOne(@Request() req, @Param('id') id: string) {
     const resource = await this.resourcesService.findOne(id);
-    // For students, increment download count
-    if (req.user.role === UserRole.STUDENT) {
-      await this.resourcesService.incrementDownloadCount(id);
-    }
     return resource;
   }
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
-  async create(@Body() dto: CreateResourceDto) {
-    return this.resourcesService.create(dto);
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async create(@Body() dto: any) {
+    const resource = await this.resourcesService.create(dto);
+    
+    // Notify students of the new resource matching their level
+    try {
+      await this.notificationsService.notifyResourceAdded(resource);
+    } catch (err) {
+      console.warn('Failed to notify about new resource', err);
+    }
+    
+    return resource;
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
-  async update(@Param('id') id: string, @Body() dto: UpdateResourceDto) {
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async update(@Param('id') id: string, @Body() dto: any) {
     return this.resourcesService.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async remove(@Param('id') id: string) {
     await this.resourcesService.remove(id);
     return { message: 'Resource deleted successfully' };

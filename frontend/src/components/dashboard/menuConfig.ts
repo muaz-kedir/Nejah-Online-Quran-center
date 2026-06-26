@@ -51,6 +51,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     { label: 'Website Management', icon: Layout, path: '/website/home' },
+    { label: 'Learning Resources', icon: FolderOpen, path: '/website/resources' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
