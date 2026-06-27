@@ -8,6 +8,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { ClassSession } from '../attendance/entities/class-session.entity';
 import { AppGateway } from '../websocket/websocket.gateway';
 import { PushSubscriptionService } from './push-subscription.service';
+import { FcmService } from './fcm.service';
 import {
   Notification,
   NotificationType,
@@ -40,6 +41,7 @@ export class NotificationsService {
     @Inject(forwardRef(() => AppGateway))
     private appGateway: AppGateway,
     private pushSubscriptionService: PushSubscriptionService,
+    private fcmService: FcmService,
   ) {}
 
   async notifyMeetingStarted(session: ClassSession, assignedStudentIds: string[]): Promise<void> {
@@ -415,6 +417,23 @@ export class NotificationsService {
         icon: '/logo.png',
         badge: '/logo.png',
         tag: typeof data?.sessionId === 'string' ? `session-${data.sessionId}` : 'session-notification',
+      });
+
+      await this.fcmService.sendToUsers(uniqueRecipientIds, {
+        title,
+        body: message,
+        data: Object.fromEntries(
+          Object.entries({
+            ...(data || {}),
+            sessionId: typeof data?.sessionId === 'string' ? data.sessionId : undefined,
+            url: actionUrl || (typeof data?.url === 'string' ? data.url : '/'),
+            channel: inferredChannel,
+          }).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)]),
+        ),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof data?.sessionId === 'string' ? `session-${data.sessionId}` : 'session-notification',
+        clickAction: actionUrl || (typeof data?.url === 'string' ? data.url : '/'),
       });
     }
   }

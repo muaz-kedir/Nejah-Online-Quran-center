@@ -11,6 +11,8 @@ export const DashboardCards = memo(function DashboardCards() {
     totalTeachers: 0,
     activeClasses: 0,
     attendanceRate: 0,
+    avgSessionDuration: 0,
+    completedSessions: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -22,24 +24,48 @@ export const DashboardCards = memo(function DashboardCards() {
         const headers = { Authorization: `Bearer ${token}` };
         const base = API_BASE;
 
-        const [studentsRes, teachersRes] = await Promise.all([
+        const [studentsRes, teachersRes, statsRes, analyticsRes] = await Promise.all([
           fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
           fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
+          fetch(`${base}/live-sessions/stats`, { headers, signal: controller.signal }),
+          fetch(`${base}/zoom-analytics/dashboard`, { headers, signal: controller.signal }),
         ]);
 
-        const [studentsData, teachersData] = await Promise.all([
-          studentsRes.json(),
-          teachersRes.json(),
-        ]);
+        let totalStudents = 0;
+        let totalTeachers = 0;
+        let activeClasses = 0;
+        let attendanceRate = 94.5;
+        let avgSessionDuration = 0;
+        let completedSessions = 0;
 
-        const totalStudents = studentsData.meta?.total || 0;
-        const totalTeachers = teachersData.meta?.total || 0;
+        if (studentsRes.ok) {
+          const data = await studentsRes.json();
+          totalStudents = data?.meta?.total || 0;
+        }
+        if (teachersRes.ok) {
+          const data = await teachersRes.json();
+          totalTeachers = data?.meta?.total || 0;
+        }
+        if (statsRes.ok) {
+          const data = await statsRes.json();
+          activeClasses = data?.live || 0;
+          completedSessions = data?.completed || 0;
+        }
+        if (analyticsRes.ok) {
+          const data = await analyticsRes.json();
+          activeClasses = activeClasses || data?.liveSessions || 0;
+          attendanceRate = data?.attendanceRate ?? 94.5;
+          avgSessionDuration = data?.averageSessionDuration || 0;
+          completedSessions = completedSessions || data?.completedSessions || 0;
+        }
 
         setStats({
           totalStudents,
           totalTeachers,
-          activeClasses: Math.max(Math.floor(totalStudents / 10), 1),
-          attendanceRate: 94.5,
+          activeClasses,
+          attendanceRate,
+          avgSessionDuration,
+          completedSessions,
         });
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -70,9 +96,9 @@ export const DashboardCards = memo(function DashboardCards() {
         icon={<GraduationCap className="h-5 w-5" />}
       />
       <BentoStatCard
-        label={t.activeClasses}
+        label="Active Sessions"
         value={display(stats.activeClasses)}
-        sub="14 Live Now"
+        sub={`${stats.avgSessionDuration ? `${stats.avgSessionDuration} min avg` : 'Live Now'}`}
         icon={<BookOpen className="h-5 w-5" />}
         highlight
       />

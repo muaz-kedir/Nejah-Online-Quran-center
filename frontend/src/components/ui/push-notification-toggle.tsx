@@ -8,10 +8,10 @@ import {
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
   registerServiceWorker,
+  getCurrentFcmToken,
 } from "@/lib/push-notifications";
 
 interface PushNotificationToggleProps {
-  /** If true, renders as a card with more detail. Otherwise renders as a compact row. */
   variant?: "card" | "row";
 }
 
@@ -21,7 +21,6 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
 
-  // Check current subscription status on mount
   useEffect(() => {
     const checkStatus = async () => {
       setLoading(true);
@@ -36,10 +35,13 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
       try {
         await registerServiceWorker();
         const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        setPushSubscribed(!!subscription);
+
+        const hasFcm = !!getCurrentFcmToken();
+        const hasSubscription = !!await registration.pushManager.getSubscription();
+
+        setPushSubscribed(hasFcm || hasSubscription);
       } catch {
-        setPushSubscribed(false);
+        setPushSubscribed(!!getCurrentFcmToken());
       } finally {
         setLoading(false);
       }
@@ -66,7 +68,6 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
           setPushSubscribed(true);
           toast.success("Push notifications enabled! You'll now receive class updates.");
         } else {
-          // Check if permission was denied
           if ("Notification" in window && Notification.permission === "denied") {
             toast.error(
               "Notifications are blocked. Please enable them in your browser settings.",
@@ -195,7 +196,6 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
     );
   }
 
-  // Row variant - compact switch style
   return (
     <div className="flex items-center justify-between py-1">
       <div className="flex items-center gap-3">

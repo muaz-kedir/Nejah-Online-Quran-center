@@ -23,6 +23,7 @@ import { Message } from '../messages/messages.entity';
 import { Resource } from '../resources/resources.entity';
 import { ResourceDownload } from '../resources/resource-download.entity';
 import { PushSubscription } from '../notifications/entities/push-subscription.entity';
+import { FcmToken } from '../notifications/entities/fcm-token.entity';
 import { TeacherApplication } from '../teacher-applications/entities/teacher-application.entity';
 import { TeacherApplicationSettings } from '../teacher-applications/entities/teacher-application-settings.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
@@ -75,6 +76,7 @@ export const ALL_ENTITIES = [
   Resource,
   ResourceDownload,
   PushSubscription,
+  FcmToken,
   TeacherApplication,
   TeacherApplicationSettings,
   TeacherReplacement,

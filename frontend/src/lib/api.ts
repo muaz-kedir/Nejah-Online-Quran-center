@@ -73,6 +73,9 @@ export async function api<T = any>(path: string, options?: RequestInit): Promise
       !window.location.pathname.includes('/login')
     ) {
       clearAuthStorage();
+      import('./push-notifications').then(m =>
+        m.unsubscribeFromPushNotifications().catch(() => {}),
+      );
       window.location.assign('/login?reason=session_expired');
     }
     throw new Error(formatApiError(body, 'Request failed: ' + res.status));
