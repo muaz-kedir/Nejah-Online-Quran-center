@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -50,6 +50,7 @@ function LoginPage() {
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   const [pendingRole, setPendingRole] = useState<string | null>(null);
+  const dialogCloseIntentional = useRef(false);
 
   const redirectToDashboard = useCallback((role: string) => {
     const map: Record<string, string> = {
@@ -319,7 +320,13 @@ function LoginPage() {
             </AuthPageLayout>
 
       {/* Notification Permission Prompt Dialog */}
-      <Dialog open={showNotificationPrompt} onOpenChange={(open) => { if (!open && pendingRole) { setShowNotificationPrompt(false); redirectToDashboard(pendingRole); } }}>
+      <Dialog open={showNotificationPrompt} onOpenChange={(open) => {
+        if (!open && pendingRole && !dialogCloseIntentional.current) {
+          setShowNotificationPrompt(false);
+          redirectToDashboard(pendingRole);
+        }
+        dialogCloseIntentional.current = false;
+      }}>
         <DialogContent className="rounded-3xl max-w-sm" aria-describedby="notification-description">
           <DialogHeader>
             <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
@@ -337,12 +344,10 @@ function LoginPage() {
             <Button
               className="w-full gap-2 h-12 rounded-xl font-bold"
               onClick={async () => {
+                dialogCloseIntentional.current = true;
                 setShowNotificationPrompt(false);
                 const { subscribeToPushNotifications } = await import("@/lib/push-notifications");
                 const ok = await subscribeToPushNotifications();
-                if (ok) {
-                  toast.success("Push notifications enabled!");
-                }
                 if (pendingRole) redirectToDashboard(pendingRole);
               }}
             >
@@ -353,6 +358,7 @@ function LoginPage() {
               variant="ghost"
               className="w-full h-11 rounded-xl text-muted-foreground"
               onClick={() => {
+                dialogCloseIntentional.current = true;
                 setShowNotificationPrompt(false);
                 if (pendingRole) redirectToDashboard(pendingRole);
               }}

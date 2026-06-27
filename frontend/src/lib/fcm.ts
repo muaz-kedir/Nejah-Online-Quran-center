@@ -1,27 +1,31 @@
-import { getToken, onMessage, type Messaging } from 'firebase/messaging';
+import { getToken, onMessage, deleteToken } from 'firebase/messaging';
 import { api } from '@/lib/api';
-import { initFirebase, getFirebaseMessaging, isMessagingSupported } from '@/lib/firebase';
+import { initFirebase, getFirebaseMessaging } from '@/lib/firebase';
 
 let currentToken: string | null = null;
 
 function getTokenFromStorage(): string | null {
-  try {
-    return localStorage.getItem('fcmToken');
-  } catch {
-    return null;
-  }
+  try { return localStorage.getItem('fcmToken'); } catch { return null; }
 }
 
 function saveTokenToStorage(token: string) {
-  try {
-    localStorage.setItem('fcmToken', token);
-  } catch { }
+  try { localStorage.setItem('fcmToken', token); } catch { }
 }
 
 function removeTokenFromStorage() {
+  try { localStorage.removeItem('fcmToken'); } catch { }
+}
+
+async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
   try {
-    localStorage.removeItem('fcmToken');
-  } catch { }
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      if (reg.active) return reg;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function initializeFcm(): Promise<boolean> {
@@ -32,22 +36,37 @@ export async function initializeFcm(): Promise<boolean> {
 }
 
 export async function registerFcmToken(): Promise<boolean> {
+  const messaging = getFirebaseMessaging();
+  if (!messaging) return false;
+
+  const tokenStr = localStorage.getItem('token');
+  if (!tokenStr) return false;
+
+  const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (!vapidKey) {
+    console.warn('[FCM] VAPID key missing');
+    return false;
+  }
+
+  const existingFcmToken = getTokenFromStorage();
+  if (existingFcmToken) {
+    currentToken = existingFcmToken;
+    return true;
+  }
+
+  const registration = await getActiveRegistration();
+  if (!registration) {
+    console.warn('[FCM] No active service worker');
+    return false;
+  }
+
   try {
-    const messaging = getFirebaseMessaging();
-    if (!messaging || !isMessagingSupported()) return false;
-
-    const tokenStr = localStorage.getItem('token');
-    if (!tokenStr) return false;
-
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-    if (!vapidKey) return false;
-
-    const token = await getToken(messaging, { vapidKey });
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
 
     if (!token) return false;
-
-    const stored = getTokenFromStorage();
-    if (stored === token) return true;
 
     await api('/fcm/tokens', {
       method: 'POST',
@@ -61,7 +80,8 @@ export async function registerFcmToken(): Promise<boolean> {
     currentToken = token;
     saveTokenToStorage(token);
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('[FCM] getToken failed:', err);
     return false;
   }
 }
@@ -76,13 +96,13 @@ export async function unregisterFcmToken(): Promise<boolean> {
           body: JSON.stringify({ fcmToken: storedToken }),
         });
       } catch { }
+      const messaging = getFirebaseMessaging();
+      if (messaging) {
+        try { await deleteToken(messaging); } catch { }
+      }
       removeTokenFromStorage();
     }
-
-    try {
-      await api('/fcm/tokens/all', { method: 'DELETE' });
-    } catch { }
-
+    try { await api('/fcm/tokens/all', { method: 'DELETE' }); } catch { }
     currentToken = null;
     return true;
   } catch {
@@ -96,19 +116,15 @@ export function getCurrentFcmToken(): string | null {
 
 export function setupForegroundListener(
   onMessageReceived: (payload: {
-    title?: string;
-    body?: string;
-    data?: Record<string, string>;
-    clickAction?: string;
+    title?: string; body?: string; data?: Record<string, string>; clickAction?: string;
   }) => void,
 ): (() => void) | null {
   const messaging = getFirebaseMessaging();
-  if (!messaging || !isMessagingSupported()) return null;
+  if (!messaging) return null;
 
   const unsubscribe = onMessage(messaging, (payload) => {
     const notification = payload.notification;
     const data = payload.data || {};
-
     onMessageReceived({
       title: notification?.title || data.title || 'Nejah',
       body: notification?.body || data.body || '',
