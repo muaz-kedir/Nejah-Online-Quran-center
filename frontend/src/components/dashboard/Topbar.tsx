@@ -59,6 +59,9 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
   }, [fetchNotifCount]);
 
   const handleLogout = () => {
+    import('@/lib/push-notifications').then(m =>
+      m.unsubscribeFromPushNotifications().catch(() => {}),
+    );
     localStorage.clear();
     navigate({ to: '/login' });
   };
