@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
+import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 
 export const Route = createFileRoute('/finance_settings')({
   component: FinanceSettingsPage,
@@ -78,6 +80,13 @@ function FinanceSettingsPage() {
           <div><Label>Current Password</Label><Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></div>
           <div><Label>New Password</Label><Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></div>
           <Button variant="outline" onClick={changePassword} disabled={saving}>Update Password</Button>
+        </div>
+        <div className="space-y-3 border-t border-white/10 pt-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Bell className="h-5 w-5 text-nejah-electric" />
+            <p className="font-medium">Notification Settings</p>
+          </div>
+          <PushNotificationToggle variant="card" />
         </div>
       </div>
     </DashboardLayout>

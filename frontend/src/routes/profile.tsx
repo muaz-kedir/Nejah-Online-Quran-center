@@ -9,9 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { API_BASE, apiUrl } from "@/lib/api";
-import { User, Key, Save, Loader2, Camera } from 'lucide-react';
+import { User, Key, Save, Loader2, Camera, Bell } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { RoleBadge } from '@/components/ui/role-badge';
+import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -222,6 +223,20 @@ function ProfilePage() {
                   Save Changes
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Notification Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Notifications
+              </CardTitle>
+              <CardDescription>Manage your push notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PushNotificationToggle variant="card" />
             </CardContent>
           </Card>
 
