@@ -61,7 +61,8 @@ export class TeachersController {
     );
     const page = parseInt(query.page, 10) || 1;
     const limit = parseInt(query.limit, 10) || 10;
-    return this.teachersService.getTeacherStudents(teacher.id, page, limit);
+    const search = query.search || '';
+    return this.teachersService.getTeacherStudents(teacher.id, page, limit, search);
   }
 
   @Get('students/:studentId')
@@ -70,7 +71,7 @@ export class TeachersController {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(
       this.authenticatedUserId(req),
     );
-    return this.teachersService.assertTeacherCanViewStudent(teacher.id, studentId);
+    return this.teachersService.getFullStudentProfile(teacher.id, studentId);
   }
 
   @Get('schedule')

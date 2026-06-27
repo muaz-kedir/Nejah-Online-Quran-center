@@ -6,12 +6,13 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { In } from 'typeorm';
+import { In, IsNull, LessThan } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Teacher } from './entities/teacher.entity';
 import { Student } from '../students/entities/student.entity';
 import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { UsersService } from '../users/users.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
@@ -20,7 +21,13 @@ import { QueryTeacherDto } from './dto/query-teacher.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationChannel } from '../notifications/entities/notification.entity';
 import { Homework } from '../homework/entities/homework.entity';
+import { HomeworkStatus } from '../homework/entities/homework.entity';
+import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
+import { ClassSession, SessionStatus } from '../attendance/entities/class-session.entity';
+import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
+import { Resource } from '../resources/resources.entity';
 import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
 
 @Injectable()
@@ -32,10 +39,20 @@ export class TeachersService {
     private studentsRepository: Repository<Student>,
     @InjectRepository(Progress)
     private progressRepository: Repository<Progress>,
+    @InjectRepository(ProgressLog)
+    private progressLogRepository: Repository<ProgressLog>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
     @InjectRepository(Homework)
     private homeworkRepository: Repository<Homework>,
+    @InjectRepository(ExamEvaluation)
+    private examEvaluationRepository: Repository<ExamEvaluation>,
+    @InjectRepository(ClassSession)
+    private classSessionRepository: Repository<ClassSession>,
+    @InjectRepository(StudentAttendance)
+    private studentAttendanceRepository: Repository<StudentAttendance>,
+    @InjectRepository(Resource)
+    private resourceRepository: Repository<Resource>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => TeacherReplacementsService))
@@ -198,6 +215,26 @@ export class TeachersService {
     return this.replacementsService.assertTeacherCanViewStudent(teacherId, studentId);
   }
 
+  async getFullStudentProfile(teacherId: string, studentId: string) {
+    const student = await this.replacementsService.assertTeacherCanViewStudent(teacherId, studentId);
+    const fullStudent = await this.studentsRepository.findOne({
+      where: { id: studentId },
+      relations: ['parent'],
+    });
+    if (!fullStudent) throw new NotFoundException('Student not found');
+
+    const temporaryAssignments =
+      await this.replacementsService.getTemporaryStudentsForTeacher(teacherId);
+    const tempMap = new Map(temporaryAssignments.map((r) => [r.studentId, r]));
+    const isTemporaryAssignment = fullStudent.teacherId !== teacherId && tempMap.has(fullStudent.id);
+
+    return {
+      ...fullStudent,
+      isTemporaryAssignment,
+      temporaryReplacement: tempMap.get(fullStudent.id) || null,
+    };
+  }
+
   async assertScheduleBelongsToTeacher(teacherId: string, scheduleId: string): Promise<Schedule> {
     const schedule = await this.schedulesRepository.findOne({ where: { id: scheduleId } });
     if (!schedule) {
@@ -280,29 +317,56 @@ export class TeachersService {
         .set({ teacherId: teacher.id, isAssigned: true })
         .whereInIds(studentIds)
         .execute();
+
+      // Notify teacher about newly assigned students
+      const students = await this.studentsRepository.find({ where: { id: In(studentIds) } });
+      const studentNames = students.map((s) => s.fullName).filter(Boolean);
+      if (teacher.userId && studentNames.length > 0) {
+        const title = studentNames.length === 1 ? 'New Student Assigned' : 'New Students Assigned';
+        const message = studentNames.length === 1
+          ? `${studentNames[0]} has been assigned to you`
+          : `${studentNames.length} students have been assigned to you: ${studentNames.join(', ')}`;
+
+        await this.notificationsService.sendCustomNotifications(
+          [teacher.userId],
+          title,
+          message,
+          { studentIds, teacherId: teacher.id },
+          NotificationChannel.STUDENT_JOINED,
+          true,
+          '/teacher_students',
+        );
+      }
     }
 
     return this.findOne(teacherId);
   }
 
   async getTeacherDashboardStats(teacherId: string) {
-    const totalStudents = await this.studentsRepository.count({
-      where: { teacherId },
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[new Date().getDay()];
+
+    const totalStudents = await this.studentsRepository.count({ where: { teacherId } });
+    const todayClassesCount = await this.schedulesRepository.count({
+      where: { teacherId, status: 'active', dayOfWeek: todayName },
     });
 
-    // Compute realistic stats or average progress rates
-    const students = await this.studentsRepository.find({
-      where: { teacherId },
-    });
-
+    const students = await this.studentsRepository.find({ where: { teacherId } });
     const totalAttendance = students.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0);
-    const avgAttendance = students.length > 0 ? totalAttendance / students.length : 95.0;
+    const avgAttendance = students.length > 0 ? totalAttendance / students.length : 0;
+
+    const studentIds = students.map((s) => s.id);
+    const homeworkPending = studentIds.length > 0
+      ? await this.homeworkRepository.count({
+          where: { studentId: In(studentIds), status: HomeworkStatus.PENDING },
+        })
+      : 0;
 
     return {
       totalStudents,
-      todayClassesCount: students.length > 0 ? Math.ceil(students.length * 0.4) : 0,
+      todayClassesCount,
       attendanceRate: Number(avgAttendance.toFixed(1)),
-      homeworkPending: students.length > 0 ? Math.ceil(students.length * 0.6) : 0,
+      homeworkPending,
     };
   }
 
@@ -367,7 +431,7 @@ export class TeachersService {
     };
   }
 
-  // Teacher Dashboard Data - Real Data from Database
+  // ─── Teacher Dashboard Data ──────────────────────────────────────────────────
   async getTeacherDashboardData(teacherId: string) {
     const teacher = await this.teachersRepository.findOne({
       where: { id: teacherId },
@@ -378,55 +442,96 @@ export class TeachersService {
       throw new NotFoundException('Teacher not found');
     }
 
-    // Get assigned students
+    // Students
     const students = await this.studentsRepository.find({
       where: { teacherId },
-      relations: ['user', 'parent'],
     });
 
-    // Get today's schedules
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }); // e.g., "Monday"
+    const studentIds = students.map((s) => s.id);
+
+    // Schedules
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[new Date().getDay()];
+
     const todaySchedules = await this.schedulesRepository.find({
-      where: {
-        teacherId,
-        status: 'active',
-        dayOfWeek: today,
-      },
+      where: { teacherId, status: 'active', dayOfWeek: todayName },
       relations: ['student'],
     });
 
-    // Count today's classes
-    const todayClassesCount = todaySchedules.length;
-
-    // Count upcoming classes (tomorrow and next few days)
-    const upcomingDays = ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const tomorrowIndex = upcomingDays.indexOf(today) + 1;
+    const upcomingDayNames = days.filter((d) => d !== todayName);
     const upcomingSchedules = await this.schedulesRepository.find({
-      where: {
-        teacherId,
-        status: 'active',
-        dayOfWeek: In(upcomingDays),
-      },
+      where: { teacherId, status: 'active', dayOfWeek: In(upcomingDayNames) },
     });
 
-    // Calculate average attendance
+    // Active students
+    const activeStudents = students.filter((s) => s.status !== 'inactive').length;
+
+    // Completed classes today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    const completedClassesToday = studentIds.length > 0
+      ? await this.classSessionRepository.count({
+          where: {
+            teacherId,
+            status: SessionStatus.COMPLETED,
+            sessionDate: todayStart,
+          },
+        })
+      : 0;
+
+    // Pending homework
+    const pendingHomeworkReviews = studentIds.length > 0
+      ? await this.homeworkRepository.count({
+          where: { studentId: In(studentIds), status: HomeworkStatus.PENDING },
+        })
+      : 0;
+
+    // Pending evaluations (no score recorded)
+    const pendingEvaluations = studentIds.length > 0
+      ? await this.examEvaluationRepository.count({
+          where: { teacherId, score: IsNull() },
+        })
+      : 0;
+
+    // Attendance rate from student records
     const totalAttendanceRate =
       students.length > 0
         ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
         : 0;
 
-    const homeworkPending = await this.homeworkRepository.count({
-      where: { student: { teacherId }, status: 'Pending' as any },
-    });
-
-    // Calculate average progress
+    // Average progress
     const totalProgressRate =
       students.length > 0
         ? students.reduce((sum, s) => sum + (Number(s.progressRate) || 0), 0) / students.length
         : 0;
 
-    // Get notification count
-    const notificationCount = students.length * 2; // Estimate
+    // Progress records for student progress data
+    const progressRecords = studentIds.length > 0
+      ? await this.progressRepository.find({
+          where: { studentId: In(studentIds) },
+          order: { updatedAt: 'ASC' },
+        })
+      : [];
+
+    const progressMap = new Map(progressRecords.map((p) => [p.studentId, p]));
+
+    const studentProgress = students.map((s) => {
+      const prog = progressMap.get(s.id);
+      const rate = prog?.progressPercentage ?? Number(s.progressRate) ?? 0;
+      return {
+        id: s.id,
+        name: s.fullName,
+        initials: s.fullName
+          .split(' ')
+          .map((n) => n[0])
+          .join(''),
+        currentSurah: prog?.lastStudiedSurah || null,
+        status: rate >= 80 ? 'EXCEEDING' : rate >= 50 ? 'ON TRACK' : 'NEEDS REVIEW',
+        progress: Number(rate),
+      };
+    });
 
     return {
       teacher: {
@@ -451,51 +556,317 @@ export class TeachersService {
         status: teacher.status,
         monthlySalary: teacher.monthlySalary,
         notes: teacher.notes,
+        userId: teacher.userId,
+        teacherCode: teacher.id?.slice(0, 8).toUpperCase(),
       },
       stats: {
         totalStudents: students.length,
-        todayClassesCount,
-        upcomingClassesCount: upcomingSchedules.length,
-        pendingHomeworkReviews: homeworkPending,
-        averageAttendanceRate: Number(totalAttendanceRate.toFixed(1)),
+        activeStudents,
+        todayClasses: todaySchedules.length,
+        upcomingClasses: upcomingSchedules.length,
+        completedClassesToday,
+        pendingHomeworkReviews,
+        pendingEvaluations,
+        attendanceRate: Number(totalAttendanceRate.toFixed(1)),
         averageProgressRate: Number(totalProgressRate.toFixed(1)),
-        notificationCount,
       },
+      recentActivities: await this.getRecentActivities(teacherId, studentIds, 20),
+      upcomingTasks: await this.getUpcomingTasks(teacherId, studentIds),
       temporaryStudents: await this.replacementsService.getTemporaryStudentsForTeacher(teacherId),
       reassignedAwayStudents: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
-      todaySchedules: todaySchedules.map((s) => ({
-        id: s.id,
-        studentName: s.student?.fullName || 'Unknown',
-        quranLevel: s.student?.level || 'N/A',
-        startTime: s.startTimeString || 'N/A',
-        endTime: s.endTimeString || 'N/A',
-        status: s.status || 'active',
-        meetingLink: s.meetingLink,
-      })),
-      upcomingSchedules: upcomingSchedules.slice(0, 5).map((s) => ({
-        id: s.id,
-        studentName: s.student?.fullName || 'Unknown',
-        quranLevel: s.student?.level || 'N/A',
-        dayOfWeek: s.dayOfWeek || 'N/A',
-        startTime: s.startTimeString || 'N/A',
-        endTime: s.endTimeString || 'N/A',
-        status: s.status || 'active',
-      })),
-      students: students.map((s) => ({
-        id: s.id,
-        fullName: s.fullName,
-        gender: s.gender,
-        level: s.level,
-        status: s.status,
-        attendanceRate: Number(s.attendanceRate) || 0,
-        progressRate: Number(s.progressRate) || 0,
-        nextClassTime: null, // Can be calculated from schedules
-      })),
+      studentProgress,
     };
   }
 
+  // ─── Recent Activities ───────────────────────────────────────────────────────
+  async getRecentActivities(teacherId: string, studentIds: string[], limit = 20) {
+    const activities: any[] = [];
+
+    // Progress logs (lesson completed)
+    if (studentIds.length > 0) {
+      const logs = await this.progressLogRepository.find({
+        where: { teacherId },
+        relations: ['student'],
+        order: { createdAt: 'DESC' },
+        take: limit,
+      });
+      for (const log of logs) {
+        activities.push({
+          id: `log-${log.id}`,
+          type: 'LESSON_COMPLETED',
+          studentName: log.student?.fullName || 'Unknown',
+          studentId: log.studentId,
+          date: log.createdAt,
+          description: log.notes || log.topicName || 'Lesson completed',
+        });
+      }
+
+      // Homework submissions/reviews
+      const homeworks = await this.homeworkRepository.find({
+        where: { studentId: In(studentIds), assignedByTeacherId: teacherId },
+        relations: ['student'],
+        order: { updatedAt: 'DESC' },
+        take: limit,
+      });
+      for (const hw of homeworks) {
+        const type = hw.status === HomeworkStatus.COMPLETED ? 'HOMEWORK_SUBMITTED' : 'HOMEWORK_REVIEWED';
+        activities.push({
+          id: `hw-${hw.id}`,
+          type,
+          studentName: hw.student?.fullName || 'Unknown',
+          studentId: hw.studentId,
+          date: hw.updatedAt,
+          description: hw.title,
+        });
+      }
+
+      // Evaluations
+      const evaluations = await this.examEvaluationRepository.find({
+        where: { teacherId },
+        relations: ['student'],
+        order: { createdAt: 'DESC' },
+        take: limit,
+      });
+      for (const ev of evaluations) {
+        activities.push({
+          id: `eval-${ev.id}`,
+          type: 'EVALUATION_SUBMITTED',
+          studentName: ev.student?.fullName || 'Unknown',
+          studentId: ev.studentId,
+          date: ev.createdAt,
+          description: `${ev.programType} - ${ev.evaluationType}`,
+        });
+      }
+
+      // Student attendance via class sessions
+      const sessions = await this.classSessionRepository.find({
+        where: { teacherId },
+        relations: ['studentAttendances', 'studentAttendances.student'],
+        order: { sessionDate: 'DESC' },
+        take: 20,
+      });
+      for (const session of sessions) {
+        for (const att of (session.studentAttendances || []).slice(0, 5)) {
+          const type = att.attendanceStatus === 'PRESENT' || att.attendanceStatus === 'LATE'
+            ? 'STUDENT_JOINED'
+            : 'STUDENT_MISSED';
+          activities.push({
+            id: `att-${att.id}`,
+            type,
+            studentName: att.student?.fullName || 'Unknown',
+            studentId: att.studentId,
+            date: att.createdAt || session.sessionDate,
+            description: `${att.attendanceStatus} - ${session.classTitle || 'Class'}`,
+          });
+        }
+      }
+    }
+
+    // Sort by newest first, limit
+    activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return activities.slice(0, limit);
+  }
+
+  // ─── Upcoming Tasks ──────────────────────────────────────────────────────────
+  async getUpcomingTasks(teacherId: string, studentIds: string[]) {
+    const tasks: any[] = [];
+    if (studentIds.length === 0) return tasks;
+
+    // Get student names for lookups
+    const students = await this.studentsRepository.find({
+      where: { id: In(studentIds) },
+      select: ['id', 'fullName'],
+    });
+    const studentNameMap = new Map(students.map((s) => [s.id, s.fullName]));
+
+    // Pending homework reviews
+    const pendingHomeworks = await this.homeworkRepository.find({
+      where: { studentId: In(studentIds), status: HomeworkStatus.PENDING },
+      relations: ['student'],
+      order: { dueDate: 'ASC' },
+      take: 20,
+    });
+    for (const hw of pendingHomeworks) {
+      const dueDays = hw.dueDate
+        ? Math.ceil((new Date(hw.dueDate).getTime() - Date.now()) / 86400000)
+        : null;
+      tasks.push({
+        type: 'HOMEWORK_REVIEW',
+        title: hw.title,
+        studentName: hw.student?.fullName || studentNameMap.get(hw.studentId) || 'Unknown',
+        studentId: hw.studentId,
+        homeworkId: hw.id,
+        dueDate: hw.dueDate,
+        urgency: dueDays !== null && dueDays <= 0 ? 'overdue' : dueDays !== null && dueDays <= 2 ? 'soon' : 'normal',
+        daysRemaining: dueDays,
+      });
+    }
+
+    // Pending evaluations
+    const pendingEvals = await this.examEvaluationRepository.find({
+      where: { teacherId, score: IsNull() },
+      relations: ['student'],
+      order: { createdAt: 'ASC' },
+      take: 20,
+    });
+    for (const ev of pendingEvals) {
+      tasks.push({
+        type: 'EVALUATION_PENDING',
+        title: `${ev.programType} Evaluation`,
+        studentName: ev.student?.fullName || studentNameMap.get(ev.studentId) || 'Unknown',
+        studentId: ev.studentId,
+        evaluationId: ev.id,
+        createdAt: ev.createdAt,
+        urgency: 'normal',
+      });
+    }
+
+    // Classes starting within 1 hour
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[now.getDay()];
+    const soonSchedules = await this.schedulesRepository.find({
+      where: { teacherId, status: 'active', dayOfWeek: todayName },
+      relations: ['student'],
+    });
+    for (const sched of soonSchedules) {
+      if (!sched.startTimeString) continue;
+      const [h, m] = sched.startTimeString.split(':').map(Number);
+      const schedMinutes = h * 60 + m;
+      const diff = schedMinutes - currentMinutes;
+      if (diff >= 0 && diff <= 60) {
+        tasks.push({
+          type: 'CLASS_STARTING_SOON',
+          title: sched.className || 'Quran Class',
+          studentName: sched.student?.fullName || studentNameMap.get(sched.studentId) || 'Student',
+          studentId: sched.studentId,
+          scheduleId: sched.id,
+          startTime: sched.startTimeString,
+          minutesUntilStart: diff,
+          urgency: diff <= 15 ? 'critical' : 'soon',
+        });
+      }
+    }
+
+    // Students without progress log in 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    for (const studentId of studentIds) {
+      const latestLog = await this.progressLogRepository.findOne({
+        where: { studentId, teacherId },
+        order: { createdAt: 'DESC' },
+      });
+      if (!latestLog || latestLog.createdAt < sevenDaysAgo) {
+        const studentName = studentNameMap.get(studentId) || 'Unknown';
+        tasks.push({
+          type: 'PROGRESS_NOT_UPDATED',
+          title: 'Progress not updated',
+          studentName,
+          studentId,
+          lastActivity: latestLog?.createdAt || null,
+          daysSinceLastUpdate: latestLog
+            ? Math.ceil((Date.now() - latestLog.createdAt.getTime()) / 86400000)
+            : null,
+          urgency: 'normal',
+        });
+      }
+    }
+
+    // Sort: overdue/critical first, then by date
+    const urgencyRank: Record<string, number> = { overdue: 0, critical: 1, soon: 2, normal: 3 };
+    tasks.sort((a, b) => (urgencyRank[a.urgency] || 3) - (urgencyRank[b.urgency] || 3));
+
+    return tasks;
+  }
+
+  // ─── Search Teacher Data ─────────────────────────────────────────────────────
+  async searchTeacherData(teacherId: string, query: string) {
+    if (!query || query.trim().length < 2) return [];
+
+    const results: any[] = [];
+    const searchTerm = `%${query.trim()}%`;
+
+    // Students
+    const students = await this.studentsRepository
+      .createQueryBuilder('s')
+      .where('s.teacherId = :teacherId', { teacherId })
+      .andWhere(
+        '(LOWER(s.fullName) LIKE LOWER(:q) OR LOWER(s.email) LIKE LOWER(:q) OR LOWER(s.studentCode) LIKE LOWER(:q))',
+        { q: searchTerm },
+      )
+      .limit(10)
+      .getMany();
+    for (const s of students) {
+      results.push({
+        type: 'student',
+        id: s.id,
+        label: s.fullName,
+        subtitle: `${s.studentCode || 'No code'} · ${s.level || 'Beginner'}`,
+        route: `/teacher_students/${s.id}`,
+      });
+    }
+
+    // Homework
+    const homeworks = await this.homeworkRepository
+      .createQueryBuilder('hw')
+      .leftJoinAndSelect('hw.student', 'student')
+      .where('hw.assignedByTeacherId = :teacherId', { teacherId })
+      .andWhere('LOWER(hw.title) LIKE LOWER(:q)', { q: searchTerm })
+      .limit(10)
+      .getMany();
+    for (const hw of homeworks) {
+      results.push({
+        type: 'homework',
+        id: hw.id,
+        label: hw.title,
+        subtitle: `${hw.student?.fullName || 'Unknown'} · ${hw.status}`,
+        route: `/teacher_students/${hw.studentId}`,
+      });
+    }
+
+    // Progress log notes
+    const logs = await this.progressLogRepository
+      .createQueryBuilder('pl')
+      .leftJoinAndSelect('pl.student', 'student')
+      .where('pl.teacherId = :teacherId', { teacherId })
+      .andWhere('LOWER(pl.notes) LIKE LOWER(:q)', { q: searchTerm })
+      .limit(10)
+      .getMany();
+    for (const log of logs) {
+      results.push({
+        type: 'note',
+        id: log.id,
+        label: `Daily Progress Note`,
+        subtitle: `${log.student?.fullName || 'Unknown'} · ${log.createdAt ? new Date(log.createdAt).toLocaleDateString() : ''}`,
+        route: `/teacher_students/${log.studentId}`,
+      });
+    }
+
+    // Resources (shared, not teacher-scoped — but limited for relevance)
+    const resources = await this.resourceRepository
+      .createQueryBuilder('r')
+      .where(
+        '(LOWER(r.titleEn) LIKE LOWER(:q) OR LOWER(r.titleAr) LIKE LOWER(:q) OR LOWER(r.category) LIKE LOWER(:q))',
+        { q: searchTerm },
+      )
+      .limit(10)
+      .getMany();
+    for (const r of resources) {
+      results.push({
+        type: 'resource',
+        id: r.id,
+        label: r.titleEn || r.titleAr || 'Resource',
+        subtitle: r.category || 'Uncategorized',
+        route: `/student/resources`,
+      });
+    }
+
+    return results;
+  }
+
   // Get teacher's students list (permanent + temporary assignments)
-  async getTeacherStudents(teacherId: string, page = 1, limit = 10) {
+  async getTeacherStudents(teacherId: string, page = 1, limit = 10, search = '') {
     const temporaryAssignments =
       await this.replacementsService.getTemporaryStudentsForTeacher(teacherId);
     const tempStudentIds = temporaryAssignments.map((r) => r.studentId);
@@ -508,8 +879,16 @@ export class TeachersService {
         tempStudentIds: tempStudentIds.length
           ? tempStudentIds
           : ['00000000-0000-0000-0000-000000000000'],
-      })
-      .skip((page - 1) * limit)
+      });
+
+    if (search) {
+      qb.andWhere(
+        '(LOWER(student.fullName) LIKE LOWER(:search) OR LOWER(student.email) LIKE LOWER(:search) OR LOWER(student.level) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    qb.skip((page - 1) * limit)
       .take(limit)
       .orderBy('student.createdAt', 'DESC');
 

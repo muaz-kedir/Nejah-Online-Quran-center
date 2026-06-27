@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import { apiUrl } from '@/lib/api';
 
 const menuItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
@@ -60,6 +61,26 @@ export function TeacherPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [liveUnread, setLiveUnread] = useState(0);
+
+  // Poll unread count from API
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(apiUrl('/notifications/unread-count'), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLiveUnread(data.count || 0);
+        }
+      } catch { /* silent */ }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -100,7 +121,8 @@ export function TeacherPortalLayout({
   };
 
   const displayName = teacher?.fullName || teacher?.name || 'Teacher';
-  const displayTitle = teacher?.title || 'Instructor';
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
+  const displayTitle = userRole === 'teacher' ? 'Teacher' : userRole === 'admin' ? 'Admin' : 'Teacher';
   const avatarUrl = teacher?.avatarUrl || teacher?.avatar;
   const initials = teacher?.initials || displayName.charAt(0);
 
@@ -151,12 +173,12 @@ export function TeacherPortalLayout({
                 {(!collapsed || isMobile) && (
                   <span className="flex-1 text-left truncate font-semibold">{item.label}</span>
                 )}
-                {item.path === '/teacher_notifications' && unreadNotifications > 0 && (
+                {item.path === '/teacher_notifications' && (liveUnread || unreadNotifications) > 0 && (
                   <span className={cn(
                     'bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0',
                     collapsed && !isMobile ? 'absolute -top-1 -right-1 w-5 h-5' : 'px-1.5 py-0.5 min-w-[20px]',
                   )}>
-                    {unreadNotifications}
+                    {liveUnread || unreadNotifications}
                   </span>
                 )}
               </button>
@@ -164,9 +186,9 @@ export function TeacherPortalLayout({
               {collapsed && !isMobile && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
                   {item.label}
-                  {item.path === '/teacher_notifications' && unreadNotifications > 0 && (
+                  {item.path === '/teacher_notifications' && (liveUnread || unreadNotifications) > 0 && (
                     <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {unreadNotifications}
+                      {liveUnread || unreadNotifications}
                     </span>
                   )}
                 </div>

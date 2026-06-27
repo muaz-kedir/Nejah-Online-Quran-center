@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
-import { ChevronLeft, User, Mail, BookOpen, ClipboardList, TrendingUp, Video, Loader2, Sparkles, X } from 'lucide-react';
+import { ChevronLeft, User, BookOpen, ClipboardList, TrendingUp, Video, Loader2, Sparkles, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TeacherStudentHomeworkPanel } from '@/components/teachers/TeacherStudentHomeworkPanel';
@@ -152,9 +152,7 @@ function TeacherStudentDetailContent() {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Mail className="h-4 w-4" /> {student.email || '—'}
-            </p>
+
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric px-3 py-1">
@@ -252,10 +250,6 @@ function TeacherStudentDetailContent() {
                 <dd className="font-medium text-nejah-sapphire text-foreground mt-1">{student.fullName || '—'}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Email</dt>
-                <dd className="font-medium mt-1">{student.email || '—'}</dd>
-              </div>
-              <div>
                 <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Gender</dt>
                 <dd className="font-medium mt-1">
                   {student.gender === 'MALE' ? 'Male' : student.gender === 'FEMALE' ? 'Female' : '—'}
@@ -272,14 +266,6 @@ function TeacherStudentDetailContent() {
               <div>
                 <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Student Code</dt>
                 <dd className="font-medium mt-1">{student.studentCode || '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Parent</dt>
-                <dd className="font-medium mt-1">{student.parent?.fullName || student.parentName || '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Parent Phone</dt>
-                <dd className="font-medium mt-1">{student.parent?.phone || '—'}</dd>
               </div>
               {student.temporaryReplacement && (
                 <div className="md:col-span-2 bg-amber-50 dark:bg-amber-950/20 rounded-xl p-4 border border-amber-100">

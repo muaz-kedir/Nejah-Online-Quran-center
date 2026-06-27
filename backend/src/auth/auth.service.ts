@@ -18,6 +18,9 @@ import { RegisterDto } from './dto/register.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { Gender } from '../common/enums/gender.enum';
 import { AgeRange, QuranLevel, StudentStatus } from '../students/entities/student.entity';
+import { EmailService } from '../email/email.service';
+import * as crypto from 'crypto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +29,7 @@ export class AuthService {
     private parentsService: ParentsService,
     private studentsService: StudentsService,
     private jwtService: JwtService,
+    private emailService: EmailService,
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
   ) {}
@@ -389,20 +393,73 @@ export class AuthService {
     return { exists: false, parent: null, conflict: false, message: null };
   }
 
-  async forgotPassword(email: string) {
-    const user = await this.usersService.findByEmail(email);
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.findUserByEmailForPasswordReset(email);
     if (!user) {
-      // For security, don't reveal if user exists, but the user specifically asked for "automatically they get the password"
-      // In a production app, we'd say "If an account exists, a link has been sent"
-      throw new BadRequestException('User with this email does not exist');
+      return;
     }
 
-    // Mock sending email
-    console.log(`Sending password reset link to ${email}`);
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
 
-    return {
-      message: 'Password recovery instructions have been sent to your email.',
-    };
+    await this.usersService.setPasswordResetToken(user.id, hashedToken, expires);
+
+    await this.emailService.sendPasswordResetEmail(user.email, user.name, rawToken);
+  }
+
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const user = await this.usersService.findByPasswordResetToken(hashedToken);
+
+    if (!user) {
+      throw new BadRequestException(
+        'Reset link is invalid or has expired. Please request a new one.',
+      );
+    }
+
+    if (!user.passwordResetExpires || new Date() > user.passwordResetExpires) {
+      throw new BadRequestException('Reset link has expired. Please request a new one.');
+    }
+
+    if (newPassword.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long.');
+    }
+
+    await this.usersService.resetPasswordWithToken(user.id, newPassword);
+
+    await this.emailService.sendPasswordChangedConfirmation(user.email, user.name);
+  }
+
+  async validateResetToken(rawToken: string): Promise<boolean> {
+    if (!rawToken) {
+      return false;
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const user = await this.usersService.findByPasswordResetToken(hashedToken);
+
+    if (!user || !user.passwordResetExpires) {
+      return false;
+    }
+
+    return new Date() <= user.passwordResetExpires;
+  }
+
+  private async findUserByEmailForPasswordReset(email: string): Promise<User | null> {
+    let user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      const student = await this.studentsRepository.findOne({
+        where: { email },
+        relations: ['user'],
+      });
+      if (student?.userId) {
+        user = await this.usersService.findOne(student.userId);
+      }
+    }
+
+    return user;
   }
 
   async validateUser(userId: string) {

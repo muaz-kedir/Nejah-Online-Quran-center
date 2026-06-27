@@ -287,4 +287,30 @@ export class UsersService {
     Object.assign(user, updateDto);
     return this.usersRepository.save(user);
   }
+
+  async setPasswordResetToken(
+    userId: string,
+    hashedToken: string,
+    expires: Date,
+  ): Promise<void> {
+    await this.usersRepository.update(userId, {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: expires,
+    });
+  }
+
+  async findByPasswordResetToken(hashedToken: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { passwordResetToken: hashedToken },
+    });
+  }
+
+  async resetPasswordWithToken(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(userId, {
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+    });
+  }
 }

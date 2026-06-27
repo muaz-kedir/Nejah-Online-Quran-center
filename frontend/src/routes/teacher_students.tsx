@@ -70,12 +70,11 @@ function TeacherStudentsPage() {
   useEffect(() => {
     fetchStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta.page]);
+  }, [meta.page, search]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setMeta({ ...meta, page: 1 });
-    fetchStudents();
   };
 
   const activeStudents = useMemo(
