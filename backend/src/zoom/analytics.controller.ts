@@ -15,6 +15,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
+import { AttendanceReconciliationService } from './attendance-reconciliation.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { LiveSession } from './entities/live-session.entity';
 
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,7 +26,10 @@ export class AnalyticsController {
   constructor(
     private readonly zoomAnalytics: ZoomAnalyticsService,
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
+    private readonly reconciliationService: AttendanceReconciliationService,
     private readonly teachersService: TeachersService,
+    @InjectRepository(LiveSession)
+    private readonly liveSessionRepository: Repository<LiveSession>,
   ) {}
 
   @Get('teacher/teaching-time')
@@ -102,7 +109,20 @@ export class AnalyticsController {
   @Post('session/:sessionId/reconcile')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async reconcileSession(@Param('sessionId') sessionId: string) {
+    const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
+    if (!session) {
+      return { status: false, message: 'Session not found' };
+    }
+
+    if (session.zoomMeetingUUID) {
+      await this.reconciliationService.reconcileSessionFromReport(
+        sessionId,
+        session.zoomMeetingUUID,
+      );
+      return { status: true, message: 'Session attendance reconciled from Zoom report' };
+    }
+
     await this.attendanceIntelligence.recalculateSession(sessionId);
-    return { status: true, message: 'Session analytics recalculated' };
+    return { status: true, message: 'Session analytics recalculated from timeline data' };
   }
 }

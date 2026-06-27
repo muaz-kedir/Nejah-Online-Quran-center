@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
+import { AttendanceReconciliationService } from './attendance-reconciliation.service';
 import { LiveSession } from './entities/live-session.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -16,6 +17,7 @@ export class ScheduleSessionsCron {
 
   constructor(
     private readonly generator: ScheduleSessionGeneratorService,
+    private readonly reconciliationService: AttendanceReconciliationService,
     @InjectRepository(LiveSession)
     private readonly liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(Student)
@@ -38,6 +40,15 @@ export class ScheduleSessionsCron {
       await this.generator.generateUpcomingSessions(0);
     } catch (error) {
       this.logger.error(`Today session generation failed: ${error.message}`, error.stack);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async retryPendingReconciliations() {
+    try {
+      await this.reconciliationService.processPendingReconciliations();
+    } catch (error) {
+      this.logger.error(`Reconciliation retry cron failed: ${error.message}`, error.stack);
     }
   }
 

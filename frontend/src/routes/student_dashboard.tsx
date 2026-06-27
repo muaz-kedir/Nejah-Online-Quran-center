@@ -316,45 +316,222 @@ function StudentDashboard() {
             </div>
             )}
 
-            {/* Today's Lesson */}
+            {/* Today's Lesson - Level-Aware */}
             <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <div className="p-5 sm:p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="h-5 w-5 text-nejah-electric" />
                   <h3 className="text-lg font-bold text-foreground">
-                    Today&apos;s Lesson
+                    {data?.todaysLesson?.level === 'Qaida Nooraniya'
+                      ? "Today's Qaida Lesson"
+                      : data?.todaysLesson?.level === 'Tajweed Program'
+                        ? "Today's Tajweed Lesson"
+                        : data?.todaysLesson?.level === 'Hifz Program' || data?.todaysLesson?.level === "Hifz Muraja'a"
+                          ? "Today's Hifz Lesson"
+                          : "Today's Lesson"}
                   </h3>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                      Surah
-                    </p>
-                    <p className="font-semibold text-foreground">{data?.todaysLesson?.surah || '—'}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                      Ayah Range
-                    </p>
-                    <p className="font-semibold text-foreground">
-                      {data?.todaysLesson?.ayahRange || '—'}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                      Revision
-                    </p>
-                    <p className="font-semibold text-foreground">{data?.todaysLesson?.revision || 'Complete your daily revision.'}</p>
-                  </div>
-                  {data?.todaysLesson?.homework && (
-                    <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                      <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">
-                        Homework
+
+                {(() => {
+                  const lesson = data?.todaysLesson;
+                  if (!lesson || lesson === '—') {
+                    return (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        No lesson has been assigned for today. Please check back later or contact your teacher.
                       </p>
-                      <p className="font-semibold text-amber-900 dark:text-amber-100">{data.todaysLesson.homework.title}</p>
+                    );
+                  }
+
+                  const level = lesson.level;
+
+                  // Qaida Nooraniya Layout
+                  if (level === 'Qaida Nooraniya') {
+                    return (
+                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                        {lesson.lessonNumber && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lesson</p>
+                            <p className="font-semibold text-foreground">Lesson {lesson.lessonNumber}</p>
+                          </div>
+                        )}
+                        {lesson.topicName && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Topic</p>
+                            <p className="font-semibold text-foreground">{lesson.topicName}</p>
+                          </div>
+                        )}
+                        {lesson.lines && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lines</p>
+                            <p className="font-semibold text-foreground">{lesson.lines}</p>
+                          </div>
+                        )}
+                        {lesson.page && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Page</p>
+                            <p className="font-semibold text-foreground">{lesson.page}</p>
+                          </div>
+                        )}
+                        {lesson.teacherNotes && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
+                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
+                          </div>
+                        )}
+                        {lesson.homework && (
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
+                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Quran Reading Layout
+                  if (level === 'Quran Reading') {
+                    return (
+                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                        {lesson.surahName && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
+                            <p className="font-semibold text-foreground">{lesson.surahName}</p>
+                          </div>
+                        )}
+                        {lesson.startAyah && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{lesson.endAyah ? 'Read From' : 'Ayah'}</p>
+                            <p className="font-semibold text-foreground">Ayah {lesson.startAyah}</p>
+                          </div>
+                        )}
+                        {lesson.endAyah && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Read To</p>
+                            <p className="font-semibold text-foreground">Ayah {lesson.endAyah}</p>
+                          </div>
+                        )}
+                        {lesson.teacherNotes && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
+                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
+                          </div>
+                        )}
+                        {lesson.homework && (
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
+                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Tajweed Layout
+                  if (level === 'Tajweed Program') {
+                    return (
+                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                        {lesson.rule && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Rule</p>
+                            <p className="font-semibold text-foreground">{lesson.rule}</p>
+                          </div>
+                        )}
+                        {lesson.lessonTitle && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lesson</p>
+                            <p className="font-semibold text-foreground">{lesson.lessonTitle}</p>
+                          </div>
+                        )}
+                        {lesson.practice && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Practice</p>
+                            <p className="font-semibold text-foreground">{lesson.practice}</p>
+                          </div>
+                        )}
+                        {lesson.teacherNotes && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
+                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
+                          </div>
+                        )}
+                        {lesson.homework && (
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
+                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Hifz Layout
+                  if (level === 'Hifz Program' || level === "Hifz Muraja'a") {
+                    return (
+                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                        {lesson.surahName && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
+                            <p className="font-semibold text-foreground">{lesson.surahName}</p>
+                          </div>
+                        )}
+                        {lesson.memorizationRange && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{level === "Hifz Muraja'a" ? 'Revision Range' : 'New Memorization'}</p>
+                            <p className="font-semibold text-foreground">{lesson.memorizationRange}</p>
+                          </div>
+                        )}
+                        {lesson.revisionPortion && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Revision</p>
+                            <p className="font-semibold text-foreground">{lesson.revisionPortion}</p>
+                          </div>
+                        )}
+                        {lesson.dailyTarget && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Daily Target</p>
+                            <p className="font-semibold text-foreground">{lesson.dailyTarget}</p>
+                          </div>
+                        )}
+                        {lesson.teacherNotes && (
+                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
+                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
+                          </div>
+                        )}
+                        {lesson.homework && (
+                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
+                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Fallback: show whatever fields are available
+                  return (
+                    <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                      {lesson.surahName && (
+                        <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
+                          <p className="font-semibold text-foreground">{lesson.surahName}</p>
+                        </div>
+                      )}
+                      {lesson.teacherNotes && (
+                        <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
+                          <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
+                        </div>
+                      )}
+                      {lesson.homework && (
+                        <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
+                          <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
+                          <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             </div>
 

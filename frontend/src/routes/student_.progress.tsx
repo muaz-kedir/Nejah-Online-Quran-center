@@ -197,27 +197,6 @@ function StudentProgress() {
           {renderAcademicOverview()}
         </div>
 
-        {/* 6. Achievement Summary */}
-        {data.achievements?.length > 0 && (
-          <div className="bg-card rounded-[32px] p-8 border mb-8 print:break-inside-avoid">
-            <h3 className="text-xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
-              <Star className="h-5 w-5 text-amber-500" /> Achievement Summary
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {data.achievements.map((ach: any, i: number) => (
-                <div key={i} className="bg-amber-50/50 border border-amber-100 rounded-2xl p-5 text-center flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-                    <Award className="w-6 h-6 text-amber-600" />
-                  </div>
-                  <h4 className="font-bold text-sm text-amber-950">{ach.name}</h4>
-                  <p className="text-[11px] text-amber-700/80 mt-1">{ach.description}</p>
-                  <p className="text-[10px] text-amber-600/60 mt-2">{new Date(ach.date).toLocaleDateString()}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* 5. Level-Based Evaluation */}
         {data.evaluations?.length > 0 && (
           <div className="bg-card rounded-[32px] p-8 border mb-8 print:break-inside-avoid">
@@ -282,7 +261,7 @@ function StudentProgress() {
                         <Badge variant="outline" className="text-[10px] uppercase font-bold">{item.courseLevel}</Badge>
                         <span className="text-[10px] text-muted-foreground font-medium">{new Date(item.date).toLocaleDateString()}</span>
                       </div>
-                      <p className="font-bold text-nejah-sapphire mt-2">{item.title}</p>
+                      <p className="font-bold text-nejah-sapphire mt-2">Lesson completed</p>
                       <p className="text-sm text-foreground/80 mt-1">{item.description}</p>
                       
                       {item.notes && <p className="text-xs text-muted-foreground mt-3 italic line-clamp-2 print:line-clamp-none">"{item.notes}"</p>}
@@ -378,7 +357,7 @@ function StudentProgress() {
       <Dialog open={!!selectedDetails} onOpenChange={(open) => !open && setSelectedDetails(null)}>
         <DialogContent className="sm:max-w-[500px] rounded-[32px] p-8">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-nejah-sapphire font-serif">{selectedDetails?.title}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-nejah-sapphire font-serif">Lesson Details</DialogTitle>
             <DialogDescription>
               {selectedDetails?.date && new Date(selectedDetails.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </DialogDescription>

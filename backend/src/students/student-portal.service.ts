@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, In, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import { Student } from './entities/student.entity';
+import { Student, QuranLevel } from './entities/student.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
 import { Progress } from '../progress/entities/progress.entity';
@@ -17,7 +17,7 @@ import { TeacherReplacementsService } from '../teacher-replacements/teacher-repl
 import { LiveSessionService } from '../zoom/live-session.service';
 import { SessionAttendanceService } from '../zoom/session-attendance.service';
 import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
-import { resolveLearningTrack } from '../common/constants/learning-curricula';
+import { resolveLearningTrack, getTopicsForTrack, getNextTopic, QAIDAH_LESSONS, TAJWEED_TOPICS } from '../common/constants/learning-curricula';
 import { ProgressService } from '../progress/progress.service';
 import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
 
@@ -100,6 +100,97 @@ export class StudentPortalService {
     return parts[0];
   }
 
+  private buildTodaysLesson(
+    student: Student,
+    progressRecord: Progress | null,
+    todayProgressLog: ProgressLog | null,
+    learningContext: any,
+    latestFeedback: Feedback | null,
+    pendingHomework: Homework | null,
+  ) {
+    const level = student.level;
+    const teacherNotes = latestFeedback?.content || null;
+    const log = todayProgressLog;
+    const homework = pendingHomework
+      ? { title: pendingHomework.title, description: pendingHomework.description, dueDate: pendingHomework.dueDate }
+      : null;
+
+    switch (level) {
+      case QuranLevel.QAIDA_NOORANIYA: {
+        const topic = learningContext?.currentTopic;
+        const lessonNumber = topic ? QAIDAH_LESSONS.findIndex(t => t.id === topic.id) + 1 : null;
+        const lines = log?.startAyah && log?.endAyah
+          ? `${log.startAyah}–${log.endAyah}`
+          : log?.notes?.match(/lines?\s*(\d+)\s*[-–]\s*(\d+)/i)?.[0]
+            || null;
+        return {
+          level,
+          lessonNumber: lessonNumber || null,
+          topicName: topic?.nameEn || progressRecord?.lastStudiedSurah || null,
+          topicNameAr: topic?.nameAr || null,
+          lines,
+          page: progressRecord?.lastStudiedPage || log?.lastStudiedPage || null,
+          teacherNotes,
+          homework,
+        };
+      }
+
+      case QuranLevel.QURAN_READING: {
+        return {
+          level,
+          surahName: progressRecord?.lastStudiedSurah || log?.surahName || null,
+          startAyah: log?.startAyah || progressRecord?.lastStudiedAyah || null,
+          endAyah: log?.endAyah || null,
+          teacherNotes,
+          homework,
+        };
+      }
+
+      case QuranLevel.TAJWEED_PROGRAM: {
+        const topic = learningContext?.currentTopic;
+        return {
+          level,
+          rule: topic?.nameEn || progressRecord?.lastStudiedSurah || null,
+          ruleAr: topic?.nameAr || null,
+          lessonTitle: topic?.nameEn || null,
+          practice: log?.notes || null,
+          teacherNotes,
+          homework,
+        };
+      }
+
+      case QuranLevel.HIFZ_PROGRAM:
+      case QuranLevel.HIFZ_MURAJAA: {
+        const revisionPortion = log?.revisionStatus || null;
+        const memRange = log?.startAyah && log?.endAyah
+          ? `${log.startAyah}–${log.endAyah}`
+          : log?.lastStudiedAyah
+            ? `Ayah ${log.lastStudiedAyah}`
+            : null;
+        return {
+          level,
+          surahName: progressRecord?.lastStudiedSurah || log?.surahName || null,
+          memorizationRange: memRange || null,
+          revisionPortion,
+          dailyTarget: log?.notes || null,
+          teacherNotes,
+          homework,
+        };
+      }
+
+      default: {
+        // Fallback for any unrecognized level
+        return {
+          level,
+          surahName: progressRecord?.lastStudiedSurah || null,
+          ayahRange: progressRecord?.lastStudiedAyah ? `Ayah ${progressRecord.lastStudiedAyah}` : null,
+          teacherNotes,
+          homework,
+        };
+      }
+    }
+  }
+
   async getDashboard(userId: string) {
     const student = await this.resolveStudent(userId);
     const studentId = student.id;
@@ -151,6 +242,19 @@ export class StudentPortalService {
 
     const pendingHomework = homeworkAssignments.find((h) => h.status === HomeworkStatus.PENDING);
     const latestFeedback = feedbackRecords[0];
+
+    // Today's progress log (teacher's submitted lesson for today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    const todayProgressLog = await this.progressLogRepository.findOne({
+      where: {
+        studentId,
+        createdAt: Between(todayStart, todayEnd),
+      },
+      order: { createdAt: 'DESC' },
+    });
 
     const notifications = await this.notificationRepository.find({
       where: { userId },
@@ -359,14 +463,7 @@ export class StudentPortalService {
                 : null,
             }
           : null,
-      todaysLesson: {
-        surah: progressRecord?.lastStudiedSurah || pendingHomework?.title || '—',
-        ayahRange: progressRecord?.lastStudiedAyah ? `Ayah ${progressRecord.lastStudiedAyah}` : '—',
-        revision: latestFeedback?.content?.slice(0, 120) || 'Complete your daily revision.',
-        homework: pendingHomework
-          ? { title: pendingHomework.title, dueDate: pendingHomework.dueDate }
-          : null,
-      },
+      todaysLesson: this.buildTodaysLesson(student, progressRecord, todayProgressLog, learningContext, latestFeedback, pendingHomework),
       homework: {
         overdue: homeworkOverdue,
         completed: homeworkCompleted,
@@ -586,32 +683,162 @@ export class StudentPortalService {
       })),
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Generate Dynamic Achievements
+    // Generate Dynamic Achievements based on student level
     const achievements = [];
-    if (progressLogs.length > 0) {
+    const firstLogDate = progressLogs.length > 0 ? progressLogs[progressLogs.length - 1].createdAt : new Date();
+
+    switch (student.level) {
+      case QuranLevel.QAIDA_NOORANIYA:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Letter Mastered',
+            description: 'You mastered your first Arabic letter!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.progressPercentage >= 100) {
+          achievements.push({
+            name: 'Completed Qaida Book',
+            description: 'MashaAllah! You completed the entire Qaida Nooraniya book!',
+            date: new Date(),
+            icon: 'book',
+          });
+        }
+        break;
+
+      case QuranLevel.QURAN_READING:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Page Read',
+            description: 'You read your first page of the Quran!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.surahsCount >= 1) {
+          achievements.push({
+            name: 'Completed a Surah',
+            description: 'You successfully completed reading a full Surah.',
+            date: new Date(),
+            icon: 'book',
+          });
+        }
+        break;
+
+      case QuranLevel.HIFZ_PROGRAM:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Surah Memorized',
+            description: 'You memorized your first Surah!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.surahsCount >= 4) {
+          achievements.push({
+            name: 'First Juz Memorized',
+            description: 'MashaAllah, you completed memorizing your first Juz!',
+            date: new Date(),
+            icon: 'award',
+          });
+        }
+        break;
+
+      case QuranLevel.TAJWEED_PROGRAM:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Rule Mastered',
+            description: 'You mastered your first Tajweed rule!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.progressPercentage >= 100) {
+          achievements.push({
+            name: 'Completed Tajweed Rules',
+            description: 'MashaAllah! You completed all Tajweed rules!',
+            date: new Date(),
+            icon: 'book',
+          });
+        }
+        break;
+
+      case QuranLevel.HIFZ_MURAJAA:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Surah Reviewed',
+            description: 'You completed your first Muraja\'a session!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.surahsCount >= 4) {
+          achievements.push({
+            name: 'Completed Juz Revision',
+            description: 'MashaAllah! You completed the revision of one full Juz!',
+            date: new Date(),
+            icon: 'award',
+          });
+        }
+        break;
+
+      default:
+        if (progressLogs.length > 0) {
+          achievements.push({
+            name: 'First Lesson Completed',
+            description: 'You completed your very first lesson!',
+            date: firstLogDate,
+            icon: 'star',
+          });
+        }
+        if (progressRecord?.surahsCount >= 1) {
+          achievements.push({
+            name: 'First Surah Completed',
+            description: 'You successfully completed a full Surah.',
+            date: new Date(),
+            icon: 'book',
+          });
+        }
+        if (progressRecord?.surahsCount >= 4) {
+          achievements.push({
+            name: 'First Juz Completed',
+            description: 'MashaAllah, you completed your first Juz!',
+            date: new Date(),
+            icon: 'award',
+          });
+        }
+        break;
+    }
+
+    // Universal achievements: Progress milestones (all levels)
+    const pct = progressRecord?.progressPercentage ?? 0;
+    if (pct >= 25) {
       achievements.push({
-        name: 'First Lesson Completed',
-        description: 'You completed your very first lesson!',
-        date: progressLogs[progressLogs.length - 1].createdAt,
+        name: '25% Complete',
+        description: 'You are a quarter of the way through your current level!',
+        date: new Date(),
         icon: 'star',
       });
     }
-    if (progressRecord?.surahsCount >= 1) {
+    if (pct >= 50) {
       achievements.push({
-        name: 'First Surah Completed',
-        description: 'You successfully completed a full Surah.',
+        name: '50% Complete',
+        description: 'Halfway through! Keep up the great effort!',
         date: new Date(),
-        icon: 'book',
+        icon: 'star',
       });
     }
-    if (progressRecord?.surahsCount >= 4) {
+    if (pct >= 75) {
       achievements.push({
-        name: 'First Juz Completed',
-        description: 'MashaAllah, you completed your first Juz!',
+        name: '75% Complete',
+        description: 'Almost there! You are three-quarters of the way through!',
         date: new Date(),
-        icon: 'award',
+        icon: 'star',
       });
     }
+
+    // Universal achievement: Perfect Attendance (all levels)
     if (attendanceStats.total >= 10 && attendanceStats.attendancePercentage === 100) {
       achievements.push({
         name: 'Perfect Attendance',

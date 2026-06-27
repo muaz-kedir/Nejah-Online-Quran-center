@@ -14,6 +14,7 @@ import { Schedule } from '../../schedules/entities/schedule.entity';
 import { SessionAttendance } from './session-attendance.entity';
 import { SessionNote } from './session-note.entity';
 import { LiveSessionStatus } from '../enums/live-session-status.enum';
+import { ReconciliationStatus } from '../enums/reconciliation-status.enum';
 
 @Entity('live_sessions')
 export class LiveSession {
@@ -100,6 +101,16 @@ export class LiveSession {
 
   @Column({ type: 'timestamp', nullable: true })
   completedAt: Date;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    default: ReconciliationStatus.PENDING,
+  })
+  reconciliationStatus: ReconciliationStatus;
+
+  @Column({ type: 'int', default: 0 })
+  reconciliationAttempts: number;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: any;
