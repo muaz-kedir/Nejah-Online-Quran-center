@@ -1,13 +1,20 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 import { loadFirebaseServiceAccount } from './firebase-config.util';
+import { FcmToken } from './entities/fcm-token.entity';
 
 export type FcmMessage = {
   title: string;
   body: string;
   data?: Record<string, string>;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  clickAction?: string;
 };
 
 @Injectable()
@@ -16,13 +23,21 @@ export class FcmService implements OnModuleInit {
   private ready = false;
   private initError: string | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(FcmToken)
+    private readonly fcmTokenRepository: Repository<FcmToken>,
+  ) {}
 
   onModuleInit(): void {
     this.initialize();
   }
 
   isReady(): boolean {
+    return this.ready;
+  }
+
+  isConfigured(): boolean {
     return this.ready;
   }
 
@@ -87,23 +102,91 @@ export class FcmService implements OnModuleInit {
     }
   }
 
+  async registerToken(
+    userId: string,
+    fcmToken: string,
+    deviceInfo?: string,
+    platform?: string,
+  ): Promise<FcmToken> {
+    const existing = await this.fcmTokenRepository.findOne({ where: { fcmToken } });
+
+    if (existing) {
+      existing.userId = userId;
+      existing.deviceInfo = deviceInfo ?? existing.deviceInfo;
+      existing.platform = platform ?? existing.platform;
+      existing.isActive = true;
+      return this.fcmTokenRepository.save(existing);
+    }
+
+    const record = this.fcmTokenRepository.create({
+      userId,
+      fcmToken,
+      deviceInfo,
+      platform,
+      isActive: true,
+    });
+    return this.fcmTokenRepository.save(record);
+  }
+
+  async unregisterToken(userId: string, fcmToken: string): Promise<void> {
+    await this.fcmTokenRepository.update({ userId, fcmToken }, { isActive: false });
+  }
+
+  async unregisterAllUserTokens(userId: string): Promise<void> {
+    await this.fcmTokenRepository.update({ userId }, { isActive: false });
+  }
+
+  async getUserTokens(userId: string): Promise<FcmToken[]> {
+    return this.fcmTokenRepository.find({
+      where: { userId, isActive: true },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  async sendToUsers(userIds: string[], message: FcmMessage): Promise<number> {
+    if (!this.ready || !userIds.length) return 0;
+
+    const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
+    const records = await this.fcmTokenRepository.find({
+      where: { userId: In(uniqueUserIds), isActive: true },
+    });
+
+    if (!records.length) return 0;
+
+    const tokens = [...new Set(records.map((r) => r.fcmToken).filter(Boolean))];
+    return this.sendToTokens(tokens, message);
+  }
+
   async sendToToken(token: string, message: FcmMessage): Promise<boolean> {
     if (!this.ready) {
-      this.logger.warn('FCM send skipped — Firebase not initialized');
       return false;
     }
 
     try {
       await getMessaging().send({
         token,
-        notification: { title: message.title, body: message.body },
-        data: message.data || {},
+        notification: {
+          title: message.title,
+          body: message.body,
+          imageUrl: message.icon,
+        },
+        data: this.stringifyData(message),
+        webpush: message.clickAction
+          ? {
+              fcmOptions: { link: message.clickAction },
+            }
+          : undefined,
       });
       return true;
     } catch (error) {
-      this.logger.warn(
-        `FCM send failed for token ${token.slice(0, 12)}…: ${(error as Error).message}`,
-      );
+      const errMsg = (error as Error).message || '';
+      if (
+        errMsg.includes('registration-token-not-registered') ||
+        errMsg.includes('not a valid FCM registration token')
+      ) {
+        await this.fcmTokenRepository.update({ fcmToken: token }, { isActive: false });
+      }
+      this.logger.warn(`FCM send failed for token ${token.slice(0, 12)}…: ${errMsg}`);
       return false;
     }
   }
@@ -119,5 +202,16 @@ export class FcmService implements OnModuleInit {
     }
 
     return sent;
+  }
+
+  private stringifyData(message: FcmMessage): Record<string, string> {
+    const data: Record<string, string> = { ...(message.data || {}) };
+    if (message.tag) data.tag = message.tag;
+    if (message.clickAction) data.url = message.clickAction;
+    if (message.icon) data.icon = message.icon;
+    if (message.badge) data.badge = message.badge;
+    return Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]),
+    );
   }
 }
