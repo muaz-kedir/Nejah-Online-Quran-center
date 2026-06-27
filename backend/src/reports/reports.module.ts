@@ -15,6 +15,8 @@ import { Homework } from '../homework/entities/homework.entity';
 import { Exam } from '../exams/entities/exam.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
 import { Notification } from '../notifications/entities/notification.entity';
+import { LiveSession } from '../zoom/entities/live-session.entity';
+import { SessionParticipantSummary } from '../zoom/entities/session-participant-summary.entity';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { Notification } from '../notifications/entities/notification.entity';
       Exam,
       TeacherReplacement,
       Notification,
+      LiveSession,
+      SessionParticipantSummary,
     ]),
   ],
   controllers: [ReportsController],

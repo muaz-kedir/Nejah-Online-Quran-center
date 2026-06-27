@@ -50,6 +50,21 @@ export class LiveSessionAttendanceReportController {
     });
   }
 
+  @Get('admin/teachers')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminTeacherSummaries(@Query('period') period?: 'day' | 'week' | 'month') {
+    return this.reportService.getAdminTeacherSummaries(period || 'month');
+  }
+
+  @Get('admin/teachers/:teacherId')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminTeacherDetail(
+    @Param('teacherId') teacherId: string,
+    @Query('period') period?: 'day' | 'week' | 'month',
+  ) {
+    return this.reportService.getAdminTeacherDetail(teacherId, period || 'month');
+  }
+
   @Get('admin/sessions')
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getAdminSessionsOverview(@Query('limit') limit?: string) {

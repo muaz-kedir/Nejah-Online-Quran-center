@@ -385,6 +385,240 @@ export class LiveSessionAttendanceReportService {
     });
   }
 
+  resolvePeriodRange(period: 'day' | 'week' | 'month' = 'month') {
+    const endDate = new Date();
+    let startDate: Date;
+
+    if (period === 'day') {
+      startDate = new Date();
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === 'week') {
+      startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else {
+      startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    return { startDate, endDate, period };
+  }
+
+  private aggregateSummaryStats(records: SessionParticipantSummary[]) {
+    const present = records.filter((r) => r.status === 'present').length;
+    const late = records.filter((r) => r.status === 'late').length;
+    const leftEarly = records.filter((r) => r.status === 'left_early').length;
+    const partial = records.filter((r) => r.status === 'partial').length;
+    const absent = records.filter((r) => r.status === 'absent').length;
+    const total = records.length;
+    const attendanceRate =
+      total > 0 ? Math.round(((present + late + leftEarly) / total) * 100) : 0;
+
+    return { present, late, leftEarly, partial, absent, total, attendanceRate };
+  }
+
+  async getAdminTeacherSummaries(period: 'day' | 'week' | 'month' = 'month') {
+    const { startDate, endDate } = this.resolvePeriodRange(period);
+
+    const teachers = await this.teacherRepository.find({
+      where: { status: 'active' as any },
+      order: { fullName: 'ASC' },
+    });
+
+    const sessions = await this.sessionRepository.find({
+      where: {
+        status: LiveSessionStatus.COMPLETED,
+        scheduledStart: Between(startDate, endDate),
+      },
+      relations: ['teacher', 'schedule'],
+    });
+
+    const sessionIds = sessions.map((s) => s.id);
+    const summaries =
+      sessionIds.length > 0
+        ? await this.summaryRepository.find({
+            where: { sessionId: In(sessionIds), userType: 'student' },
+          })
+        : [];
+
+    const summariesBySession = new Map<string, SessionParticipantSummary[]>();
+    for (const summary of summaries) {
+      const list = summariesBySession.get(summary.sessionId) || [];
+      list.push(summary);
+      summariesBySession.set(summary.sessionId, list);
+    }
+
+    const sessionsByTeacher = new Map<string, LiveSession[]>();
+    for (const session of sessions) {
+      if (!session.teacherId) continue;
+      const list = sessionsByTeacher.get(session.teacherId) || [];
+      list.push(session);
+      sessionsByTeacher.set(session.teacherId, list);
+    }
+
+    const teacherIdsWithSessions = new Set(sessions.map((s) => s.teacherId).filter(Boolean));
+    const teachersToShow =
+      teachers.length > 0
+        ? teachers
+        : teacherIdsWithSessions.size > 0
+          ? await this.teacherRepository.find({
+              where: { id: In([...teacherIdsWithSessions]) },
+            })
+          : [];
+
+    const seen = new Set<string>();
+    const result = [];
+
+    for (const teacher of teachersToShow) {
+      if (seen.has(teacher.id)) continue;
+      seen.add(teacher.id);
+
+      const teacherSessions = sessionsByTeacher.get(teacher.id) || [];
+      const teacherRecords: SessionParticipantSummary[] = [];
+      for (const session of teacherSessions) {
+        const recs = summariesBySession.get(session.id) || [];
+        teacherRecords.push(...recs);
+      }
+
+      const stats = this.aggregateSummaryStats(teacherRecords);
+
+      result.push({
+        teacherId: teacher.id,
+        teacherName: teacher.fullName,
+        email: teacher.email,
+        sessionCount: teacherSessions.length,
+        totalStudents: stats.total,
+        present: stats.present,
+        late: stats.late,
+        absent: stats.absent,
+        leftEarly: stats.leftEarly,
+        partial: stats.partial,
+        attendanceRate: stats.attendanceRate,
+        period,
+        startDate,
+        endDate,
+      });
+    }
+
+    // Teachers with sessions but not in active list
+    for (const teacherId of teacherIdsWithSessions) {
+      if (seen.has(teacherId)) continue;
+      const teacher = await this.teacherRepository.findOne({ where: { id: teacherId } });
+      if (!teacher) continue;
+
+      const teacherSessions = sessionsByTeacher.get(teacherId) || [];
+      const teacherRecords: SessionParticipantSummary[] = [];
+      for (const session of teacherSessions) {
+        teacherRecords.push(...(summariesBySession.get(session.id) || []));
+      }
+      const stats = this.aggregateSummaryStats(teacherRecords);
+
+      result.push({
+        teacherId: teacher.id,
+        teacherName: teacher.fullName,
+        email: teacher.email,
+        sessionCount: teacherSessions.length,
+        totalStudents: stats.total,
+        present: stats.present,
+        late: stats.late,
+        absent: stats.absent,
+        leftEarly: stats.leftEarly,
+        partial: stats.partial,
+        attendanceRate: stats.attendanceRate,
+        period,
+        startDate,
+        endDate,
+      });
+    }
+
+    return result.sort((a, b) => b.sessionCount - a.sessionCount || a.teacherName.localeCompare(b.teacherName));
+  }
+
+  async getAdminTeacherDetail(
+    teacherId: string,
+    period: 'day' | 'week' | 'month' = 'month',
+  ) {
+    const teacher = await this.teacherRepository.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    const { startDate, endDate } = this.resolvePeriodRange(period);
+
+    const sessions = await this.sessionRepository.find({
+      where: {
+        teacherId,
+        status: LiveSessionStatus.COMPLETED,
+        scheduledStart: Between(startDate, endDate),
+      },
+      relations: ['schedule'],
+      order: { scheduledStart: 'DESC' },
+    });
+
+    const sessionIds = sessions.map((s) => s.id);
+    const summaries =
+      sessionIds.length > 0
+        ? await this.summaryRepository.find({
+            where: { sessionId: In(sessionIds), userType: 'student' },
+          })
+        : [];
+
+    const summariesBySession = new Map<string, SessionParticipantSummary[]>();
+    for (const summary of summaries) {
+      const list = summariesBySession.get(summary.sessionId) || [];
+      list.push(summary);
+      summariesBySession.set(summary.sessionId, list);
+    }
+
+    const overallStats = this.aggregateSummaryStats(summaries);
+
+    const sessionRows = sessions.map((session) => {
+      const records = summariesBySession.get(session.id) || [];
+      const stats = this.aggregateSummaryStats(records);
+      return {
+        sessionId: session.id,
+        classTitle: session.schedule?.className || session.metadata?.className || 'Live Session',
+        scheduledStart: session.scheduledStart,
+        scheduledEnd: session.scheduledEnd,
+        actualStart: session.actualStart,
+        actualEnd: session.actualEnd,
+        durationMinutes: session.durationMinutes,
+        totalStudentsPresent: stats.present,
+        totalStudentsLate: stats.late,
+        totalStudentsAbsent: stats.absent,
+        totalStudentsLeftEarly: stats.leftEarly,
+        totalStudentsPartial: stats.partial,
+        attendanceRate: stats.attendanceRate,
+      };
+    });
+
+    const records = await this.getAdminAttendanceReport({
+      teacherId,
+      startDate,
+      endDate,
+    });
+
+    return {
+      teacher: {
+        id: teacher.id,
+        fullName: teacher.fullName,
+        email: teacher.email,
+      },
+      period,
+      startDate,
+      endDate,
+      summary: {
+        sessionCount: sessions.length,
+        totalStudents: overallStats.total,
+        present: overallStats.present,
+        late: overallStats.late,
+        absent: overallStats.absent,
+        leftEarly: overallStats.leftEarly,
+        partial: overallStats.partial,
+        attendanceRate: overallStats.attendanceRate,
+      },
+      sessions: sessionRows,
+      records,
+    };
+  }
+
   async getSessionAttendanceSummary(sessionId: string) {
     const records = await this.summaryRepository.find({
       where: { sessionId, userType: 'student' },
