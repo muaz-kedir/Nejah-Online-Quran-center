@@ -7,6 +7,7 @@ import { StudentPortalService } from './student-portal.service';
 import { AssignmentsController } from './assignments.controller';
 import { Student } from './entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Homework } from '../homework/entities/homework.entity';
@@ -23,6 +24,7 @@ import { TeachersModule } from '../teachers/teachers.module';
 import { ResourcesModule } from '../resources/resources.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ParentsModule } from '../parents/parents.module';
 import { ZoomModule } from '../zoom/zoom.module';
 import { ProgressModule } from '../progress/progress.module';
@@ -35,11 +37,13 @@ import { ProgressModule } from '../progress/progress.module';
     ResourcesModule,
     AttendanceModule,
     TeacherReplacementsModule,
+    NotificationsModule,
     ParentsModule,
     ZoomModule,
     ProgressModule,
     TypeOrmModule.forFeature([
       Student,
+      Teacher,
       Parent,
       Progress,
       ProgressLog,

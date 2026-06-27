@@ -10,7 +10,12 @@ import { UsersModule } from '../users/users.module';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { Homework } from '../homework/entities/homework.entity';
 import { Progress } from '../progress/entities/progress.entity';
+import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Attendance } from '../attendance/entities/attendance.entity';
+import { ClassSession } from '../attendance/entities/class-session.entity';
+import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
+import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
+import { Resource } from '../resources/resources.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 import { ZoomModule } from '../zoom/zoom.module';
@@ -24,7 +29,12 @@ import { ZoomModule } from '../zoom/zoom.module';
       Schedule,
       Homework,
       Progress,
+      ProgressLog,
       Attendance,
+      ClassSession,
+      StudentAttendance,
+      ExamEvaluation,
+      Resource,
     ]),
     UsersModule,
     NotificationsModule,

@@ -1,6 +1,6 @@
-import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, Like } from 'typeorm';
 import { Student } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
@@ -269,6 +269,78 @@ export class NotificationsService {
     return this.notificationRepository.count({
       where: { userId, isRead: false },
     });
+  }
+
+  async getNotificationsPaginated(
+    userId: string,
+    options: { page?: number; limit?: number; search?: string; filter?: string },
+  ) {
+    const page = options.page || 1;
+    const limit = options.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = { userId };
+
+    if (options.search) {
+      where.title = Like(`%${options.search}%`);
+    }
+
+    if (options.filter && options.filter !== 'all') {
+      if (options.filter === 'unread') {
+        where.isRead = false;
+      } else {
+        where.channel = options.filter;
+      }
+    }
+
+    const [notifications, total] = await this.notificationRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      notifications,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getSummary(userId: string) {
+    const [total, unread, byChannel] = await Promise.all([
+      this.notificationRepository.count({ where: { userId } }),
+      this.notificationRepository.count({ where: { userId, isRead: false } }),
+      this.notificationRepository
+        .createQueryBuilder('n')
+        .select('n.channel', 'channel')
+        .addSelect('COUNT(*)', 'count')
+        .where('n.userId = :userId', { userId })
+        .groupBy('n.channel')
+        .getRawMany(),
+    ]);
+
+    return { total, unread, byChannel };
+  }
+
+  async deleteNotification(id: string, userId: string): Promise<void> {
+    const notification = await this.notificationRepository.findOne({ where: { id, userId } });
+    if (!notification) {
+      throw new BadRequestException('Notification not found');
+    }
+    await this.notificationRepository.remove(notification);
+  }
+
+  async deleteMultiple(ids: string[], userId: string): Promise<void> {
+    await this.notificationRepository.delete({ id: In(ids), userId });
+  }
+
+  async clearRead(userId: string): Promise<void> {
+    await this.notificationRepository.delete({ userId, isRead: true });
   }
 
   async markAllAsRead(userId: string): Promise<void> {

@@ -8,12 +8,14 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { TeachersModule } from '../teachers/teachers.module';
 import { ZoomModule } from '../zoom/zoom.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Schedule, ScheduleStudent, Student, Teacher]),
     TeachersModule,
     forwardRef(() => ZoomModule),
+    NotificationsModule,
   ],
   controllers: [SchedulesController],
   providers: [SchedulesService],

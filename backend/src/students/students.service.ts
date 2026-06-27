@@ -10,17 +10,23 @@ import { DelegateStudentDto } from './dto/delegate-student.dto';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../common/enums/user-role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationChannel } from '../notifications/entities/notification.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
 
 @Injectable()
 export class StudentsService {
   constructor(
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
+    @InjectRepository(Teacher)
+    private teachersRepository: Repository<Teacher>,
     @InjectRepository(Parent)
     private parentsRepository: Repository<Parent>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
     private usersService: UsersService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private async generateStudentCode(): Promise<string> {
@@ -242,11 +248,34 @@ export class StudentsService {
   }
 
   async unassignFromTeacher(id: string): Promise<void> {
-    // Explicit update to handle nulls more reliably than generic update DTOs
+    // Get student info before unassigning
+    const student = await this.studentsRepository.findOne({ where: { id } });
+    const previousTeacherId = student?.teacherId;
+
     await this.studentsRepository.update(id, {
       teacherId: null,
       isAssigned: false,
     });
+
+    // Notify previous teacher
+    if (previousTeacherId && student) {
+      try {
+        const teacher = await this.teachersRepository.findOne({ where: { id: previousTeacherId }, relations: ['user'] });
+        if (teacher?.userId) {
+          await this.notificationsService.sendCustomNotifications(
+            [teacher.userId],
+            'Student Removed',
+            `${student.fullName || 'A student'} has been removed from your roster`,
+            { studentId: id, studentName: student.fullName },
+            NotificationChannel.STUDENT_LEFT,
+            true,
+            '/teacher_students',
+          );
+        }
+      } catch (error) {
+        console.error('Failed to notify teacher about student removal:', error.message);
+      }
+    }
   }
 
   async remove(id: string): Promise<void> {
