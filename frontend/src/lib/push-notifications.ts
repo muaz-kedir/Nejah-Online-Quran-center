@@ -1,4 +1,26 @@
-import { api, apiUrl } from '@/lib/api';
+import { api } from '@/lib/api';
+import {
+  initializeFcm,
+  registerFcmToken,
+  unregisterFcmToken,
+  getCurrentFcmToken,
+  setupForegroundListener,
+} from '@/lib/fcm';
+
+function getFirebaseConfig(): Record<string, string> | null {
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  if (!apiKey || !projectId) return null;
+
+  return {
+    apiKey,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
+    projectId,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  };
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -7,22 +29,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-async function fetchVapidPublicKey(): Promise<string | null> {
-  try {
-    const response = await fetch(apiUrl('/push-notifications/vapid-public-key'));
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.publicKey || null;
-  } catch {
-    return import.meta.env.VITE_VAPID_PUBLIC_KEY || null;
-  }
-}
-
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
 
   try {
-    return await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    const config = getFirebaseConfig();
+    const configParam = config
+      ? '?config=' + encodeURIComponent(JSON.stringify(config))
+      : '';
+    return await navigator.serviceWorker.register('/firebase-messaging-sw.js' + configParam, {
+      scope: '/',
+    });
   } catch (error) {
     console.warn('Service worker registration failed', error);
     return null;
@@ -42,11 +59,14 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
     return false;
   }
 
-  const publicKey = await fetchVapidPublicKey();
-  if (!publicKey) {
-    console.warn('VAPID public key unavailable');
-    return false;
-  }
+  await registerServiceWorker();
+
+  const fcmOk = await registerFcmToken();
+  if (fcmOk) return true;
+
+  // Fallback: if FCM not configured, use standard web push
+  const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (!vapidKey) return false;
 
   const registration = await navigator.serviceWorker.ready;
   const existing = await registration.pushManager.getSubscription();
@@ -56,7 +76,7 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
 
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey),
+    applicationServerKey: urlBase64ToUint8Array(vapidKey) as unknown as BufferSource,
   });
 
   const subscriptionJson = subscription.toJSON();
@@ -83,6 +103,8 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
 
 export async function unsubscribeFromPushNotifications(): Promise<boolean> {
   try {
+    await unregisterFcmToken();
+
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) return true;
@@ -106,7 +128,11 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
 export async function initializePwaPush(): Promise<boolean> {
   await registerServiceWorker();
   if (localStorage.getItem('token')) {
+    const fcmOk = await initializeFcm();
+    if (fcmOk) return true;
     return await subscribeToPushNotifications();
   }
   return false;
 }
+
+export { setupForegroundListener, getCurrentFcmToken };
