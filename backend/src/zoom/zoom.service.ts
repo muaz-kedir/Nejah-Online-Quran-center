@@ -685,15 +685,21 @@ export class ZoomService implements OnModuleInit {
     return `${header}.${body}.${signature}`;
   }
 
-  async getUserZakToken(zoomUserId: string): Promise<string | null> {
+  async getUserZakToken(zoomUserIdOrEmail: string): Promise<string | null> {
     try {
+      const resolved = await this.resolveZoomUser(
+        zoomUserIdOrEmail,
+        zoomUserIdOrEmail.includes('@') ? zoomUserIdOrEmail : undefined,
+      );
       const data = await this.zoomRequest<{ token?: string }>(
         'GET',
-        `/users/${this.encodeZoomUserId(zoomUserId)}/token?type=zak`,
+        `/users/${this.encodeZoomUserId(resolved.id)}/token?type=zak`,
       );
       return data.token || null;
     } catch (error) {
-      this.logger.warn(`Failed to fetch ZAK token for ${zoomUserId}: ${error.message}`);
+      this.logger.warn(
+        `Failed to fetch ZAK token for ${zoomUserIdOrEmail}: ${(error as Error).message}`,
+      );
       return null;
     }
   }

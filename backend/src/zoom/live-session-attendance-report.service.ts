@@ -16,6 +16,7 @@ import { Teacher } from '../teachers/entities/teacher.entity';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
 import { LiveSessionLookupService } from './live-session-lookup.service';
+import { buildWebhookEventId } from './webhook-event-id.util';
 
 export type ZoomParticipantPayload = {
   userId?: string;
@@ -93,7 +94,7 @@ export class LiveSessionAttendanceReportService {
       eventType: TimelineEventType.JOIN,
       timestamp: joinTime,
       source: TimelineEventSource.APP,
-      webhookEventId: `app_teacher_join_${sessionId}_${joinTime.getTime()}`,
+      webhookEventId: buildWebhookEventId('app_teacher_join', sessionId, teacher.id, String(joinTime.getTime())),
     });
 
     await this.attendanceIntelligence.openAttendanceSegment({
@@ -213,7 +214,13 @@ export class LiveSessionAttendanceReportService {
       zoomUserId: participant.zoomParticipantId,
       eventType: TimelineEventType.JOIN,
       timestamp: participant.joinTime,
-      webhookEventId: `${zoomMeetingId}_${resolved.participantId}_join_${participant.joinTime.getTime()}`,
+      webhookEventId: buildWebhookEventId(
+        'webhook_join',
+        session.id,
+        resolved.participantId,
+        String(participant.joinTime.getTime()),
+        zoomMeetingId,
+      ),
     });
 
     await this.attendanceIntelligence.openAttendanceSegment({
@@ -280,7 +287,13 @@ export class LiveSessionAttendanceReportService {
       zoomUserId: participant.zoomParticipantId,
       eventType: TimelineEventType.LEAVE,
       timestamp: leaveTime,
-      webhookEventId: `${zoomMeetingId}_${resolved.participantId}_leave_${leaveTime.getTime()}`,
+      webhookEventId: buildWebhookEventId(
+        'webhook_leave',
+        session.id,
+        resolved.participantId,
+        String(leaveTime.getTime()),
+        zoomMeetingId,
+      ),
     });
 
     await this.attendanceIntelligence.closeOpenSegment(

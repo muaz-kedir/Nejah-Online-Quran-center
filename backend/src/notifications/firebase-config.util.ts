@@ -115,28 +115,49 @@ export function loadFirebaseServiceAccount(env: {
 
   const base64 = sanitizeEnv(env.FIREBASE_SERVICE_ACCOUNT_BASE64);
   if (base64) {
-    const decoded = Buffer.from(base64, 'base64').toString('utf8');
-    return {
-      account: parseServiceAccountJson(decoded),
-      source: 'service_account_base64',
-    };
+    try {
+      const decoded = Buffer.from(base64, 'base64').toString('utf8');
+      return {
+        account: parseServiceAccountJson(decoded),
+        source: 'service_account_base64',
+      };
+    } catch (error) {
+      logger.warn(
+        `Invalid FIREBASE_SERVICE_ACCOUNT_BASE64: ${(error as Error).message}. ` +
+          'Use FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY instead.',
+      );
+    }
   }
 
   const json = sanitizeEnv(env.FIREBASE_SERVICE_ACCOUNT_JSON);
   if (json) {
-    return {
-      account: parseServiceAccountJson(json),
-      source: 'service_account_json',
-    };
+    try {
+      return {
+        account: parseServiceAccountJson(json),
+        source: 'service_account_json',
+      };
+    } catch (error) {
+      logger.warn(
+        `Invalid FIREBASE_SERVICE_ACCOUNT_JSON: ${(error as Error).message}. ` +
+          'Remove it on Render or use FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY, ' +
+          'or FIREBASE_SERVICE_ACCOUNT_BASE64.',
+      );
+    }
   }
 
   const credentialsPath = sanitizeEnv(env.GOOGLE_APPLICATION_CREDENTIALS);
   if (credentialsPath && existsSync(credentialsPath)) {
-    const fileContents = readFileSync(credentialsPath, 'utf8');
-    return {
-      account: parseServiceAccountJson(fileContents),
-      source: 'google_application_credentials',
-    };
+    try {
+      const fileContents = readFileSync(credentialsPath, 'utf8');
+      return {
+        account: parseServiceAccountJson(fileContents),
+        source: 'google_application_credentials',
+      };
+    } catch (error) {
+      logger.warn(
+        `Failed to read GOOGLE_APPLICATION_CREDENTIALS file: ${(error as Error).message}`,
+      );
+    }
   }
 
   return null;

@@ -7,6 +7,7 @@ import { Student } from '../students/entities/student.entity';
 import { AttendanceStatus } from './enums/live-session-status.enum';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { TimelineEventType, TimelineEventSource } from './entities/participant-timeline-event.entity';
+import { buildWebhookEventId } from './webhook-event-id.util';
 
 @Injectable()
 export class SessionAttendanceService {
@@ -49,7 +50,9 @@ export class SessionAttendanceService {
       device: metadata?.device,
       clientType: metadata?.clientType,
       rawPayload: metadata?.rawPayload,
-      webhookEventId: metadata?.webhookEventId || `app_join_${sessionId}_${studentId}_${now.getTime()}`,
+      webhookEventId:
+        metadata?.webhookEventId ||
+        buildWebhookEventId('app_join', sessionId, studentId, String(now.getTime())),
       source: TimelineEventSource.APP,
     });
 
@@ -106,7 +109,9 @@ export class SessionAttendanceService {
       device: metadata?.device,
       clientType: metadata?.clientType,
       rawPayload: metadata?.rawPayload,
-      webhookEventId: metadata?.webhookEventId || `app_leave_${sessionId}_${studentId}_${now.getTime()}`,
+      webhookEventId:
+        metadata?.webhookEventId ||
+        buildWebhookEventId('app_leave', sessionId, studentId, String(now.getTime())),
       source: TimelineEventSource.APP,
     });
 

@@ -16,6 +16,7 @@ import {
 } from './entities/participant-timeline-event.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { ReconciliationStatus } from './enums/reconciliation-status.enum';
+import { buildWebhookEventId } from './webhook-event-id.util';
 
 @Injectable()
 export class AttendanceReconciliationService {
@@ -117,7 +118,17 @@ export class AttendanceReconciliationService {
     try {
       participants = await this.zoomService.getMeetingParticipantsReport(uuid);
     } catch (error) {
-      await this.incrementReconciliationAttempt(sessionId, (error as Error).message);
+      const message = (error as Error).message || '';
+      if (this.isMissingReportScope(message)) {
+        await this.liveSessionRepository.update(sessionId, {
+          reconciliationStatus: ReconciliationStatus.DONE,
+        });
+        this.logger.warn(
+          `Reconciliation skipped for session ${sessionId}: Zoom report scope not granted — using webhook/app timeline data only`,
+        );
+        return;
+      }
+      await this.incrementReconciliationAttempt(sessionId, message);
       throw error;
     }
 
@@ -194,6 +205,15 @@ export class AttendanceReconciliationService {
     );
   }
 
+  private isMissingReportScope(message: string): boolean {
+    const lower = message.toLowerCase();
+    return (
+      lower.includes('report:read') ||
+      lower.includes('list_meeting_participants') ||
+      lower.includes('does not contain scopes')
+    );
+  }
+
   private async incrementReconciliationAttempt(sessionId: string, reason: string): Promise<void> {
     const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
     if (!session) return;
@@ -255,7 +275,7 @@ export class AttendanceReconciliationService {
           timestamp: joinTime,
           source: TimelineEventSource.REPORT,
           rawPayload: participant,
-          webhookEventId: `report_${session.id}_${resolved.participantId}_join`,
+          webhookEventId: buildWebhookEventId('report_join', session.id, resolved.participantId),
         }),
       );
     }
@@ -271,7 +291,7 @@ export class AttendanceReconciliationService {
           timestamp: leaveTime,
           source: TimelineEventSource.REPORT,
           rawPayload: participant,
-          webhookEventId: `report_${session.id}_${resolved.participantId}_leave`,
+          webhookEventId: buildWebhookEventId('report_leave', session.id, resolved.participantId),
         }),
       );
     }

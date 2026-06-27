@@ -40,21 +40,31 @@ export class FcmService implements OnModuleInit {
     }
 
     const credentials = loadFirebaseServiceAccount({
-      FIREBASE_PROJECT_ID: this.configService.get<string>('FIREBASE_PROJECT_ID'),
-      FIREBASE_CLIENT_EMAIL: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
-      FIREBASE_PRIVATE_KEY: this.configService.get<string>('FIREBASE_PRIVATE_KEY'),
+      FIREBASE_PROJECT_ID:
+        process.env.FIREBASE_PROJECT_ID ||
+        this.configService.get<string>('FIREBASE_PROJECT_ID'),
+      FIREBASE_CLIENT_EMAIL:
+        process.env.FIREBASE_CLIENT_EMAIL ||
+        this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
+      FIREBASE_PRIVATE_KEY:
+        process.env.FIREBASE_PRIVATE_KEY ||
+        this.configService.get<string>('FIREBASE_PRIVATE_KEY'),
       FIREBASE_SERVICE_ACCOUNT_JSON:
+        process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
         this.configService.get<string>('FIREBASE_SERVICE_ACCOUNT_JSON'),
       FIREBASE_SERVICE_ACCOUNT_BASE64:
+        process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ||
         this.configService.get<string>('FIREBASE_SERVICE_ACCOUNT_BASE64'),
       GOOGLE_APPLICATION_CREDENTIALS:
+        process.env.GOOGLE_APPLICATION_CREDENTIALS ||
         this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS'),
     });
 
     if (!credentials) {
-      this.initError = 'Firebase credentials not configured';
+      this.initError = 'Firebase credentials not configured or invalid';
       this.logger.warn(
-        'Firebase Admin SDK not configured — set FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY, or FIREBASE_SERVICE_ACCOUNT_BASE64',
+        'Firebase Admin SDK disabled — configure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY on Render. ' +
+          'Remove broken FIREBASE_SERVICE_ACCOUNT_JSON if present.',
       );
       return;
     }
@@ -71,9 +81,8 @@ export class FcmService implements OnModuleInit {
       );
     } catch (error) {
       this.initError = (error as Error).message;
-      this.logger.error(
-        `Failed to initialize Firebase Admin SDK: ${this.initError}`,
-        (error as Error).stack,
+      this.logger.warn(
+        `Firebase Admin SDK not initialized: ${this.initError}. Push notifications will use web-push (VAPID) only.`,
       );
     }
   }
