@@ -19,6 +19,8 @@ import {
   X,
   Save,
   ArrowRight,
+  Timer,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,6 +278,9 @@ function TeacherDashboard() {
   const [todaySessions, setTodaySessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [endingSessionId, setEndingSessionId] = useState<string | null>(null);
+  const [completedToday, setCompletedToday] = useState(0);
+  const [completedSessions, setCompletedSessions] = useState<any[]>([]);
+  const [teacherAnalytics, setTeacherAnalytics] = useState<any>(null);
   const [noteModal, setNoteModal] = useState<{ open: boolean; note: any }>({
     open: false,
     note: null,
@@ -404,8 +409,33 @@ function TeacherDashboard() {
           const err = await dashRes.json().catch(() => ({}));
           toast.error(err.message || "Teacher profile not found for your account");
         }
-        if (sessRes.ok) setTodaySessions(await sessRes.json());
+        if (sessRes.ok) {
+          const todayData = await sessRes.json();
+          setTodaySessions(todayData);
+        }
         if (notesRes.ok) setNotes(await notesRes.json());
+
+        // Fetch completed sessions for today
+        try {
+          const completedRes = await fetch(`${API}/live-sessions/today`, { headers: authHeaders() });
+          if (completedRes.ok) {
+            const allToday: any[] = await completedRes.json();
+            const completed = allToday.filter(
+              (s: any) => s.status === 'COMPLETED' || s.status === 'completed',
+            );
+            setCompletedToday(completed.length);
+            setCompletedSessions(completed);
+          }
+        } catch {}
+
+        // Also fetch teacher analytics for duration stats
+        try {
+          const analyticsRes = await fetch(`${API}/zoom-analytics/teacher`, { headers: authHeaders() });
+          if (analyticsRes.ok) {
+            const analytics = await analyticsRes.json();
+            setTeacherAnalytics(analytics);
+          }
+        } catch {}
       } catch {
         console.error("Dashboard load failed");
       } finally {
@@ -538,6 +568,13 @@ function TeacherDashboard() {
               label="Homework Pending"
               color="text-red-700"
               bgColor="bg-red-50/50"
+            />
+            <StatCard
+              icon={CheckCircle2}
+              value={completedToday}
+              label="Today's Completed"
+              color="text-emerald-600"
+              bgColor="bg-emerald-50/50"
             />
           </div>
 
@@ -983,6 +1020,87 @@ function TeacherDashboard() {
               </div>
             )}
           </div>
+
+          {/* Recently Completed Sessions */}
+          {completedSessions.length > 0 && (
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-500/10 rounded-xl">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground font-serif">
+                      Recently Completed
+                    </h3>
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider">
+                      {completedToday} session{completedToday !== 1 ? 's' : ''} completed today
+                      {teacherAnalytics?.averageSessionDuration
+                        ? ` · Avg ${teacherAnalytics.averageSessionDuration} min`
+                        : ''}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/live-sessions' })}
+                  className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
+                >
+                  View All Sessions <ChevronRight className="h-3 w-3" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {completedSessions.slice(0, 5).map((session: any) => (
+                  <div
+                    key={session.id || session.scheduleId}
+                    onClick={() => navigate({ to: '/live-sessions/$id', params: { id: session.id } })}
+                    className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm hover:shadow-md hover:border-emerald-500/20 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-foreground truncate group-hover:text-emerald-600 transition-colors">
+                            {session.metadata?.className || 'Quran Class'}
+                          </p>
+                          <p className="text-[10px] font-semibold text-muted-foreground dark:text-nejah-slate-blue truncate">
+                            {session.student?.fullName || session.studentName || '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-5 shrink-0 ml-4">
+                        {session.actualStart && (
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                            <span className="text-xs font-bold tabular-nums text-foreground">
+                              {new Date(session.actualStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {session.actualEnd && ` - ${new Date(session.actualEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                          <Timer className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                          <span className="text-xs font-bold tabular-nums text-foreground">
+                            {session.durationMinutes || '—'}m
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                          <span className="text-xs font-bold tabular-nums text-foreground">
+                            {session.attendances?.length || session.participantCount || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
 
       {/* Floating Add Note button */}
