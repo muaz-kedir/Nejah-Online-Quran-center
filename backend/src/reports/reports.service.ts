@@ -624,6 +624,9 @@ export class ReportsService {
     }
 
     for (const summary of summaries) {
+      const actuallyJoined =
+        summary.firstJoinTime != null || summary.totalDurationSeconds > 0;
+
       switch (summary.status) {
         case 'present':
           presentCount++;
@@ -634,8 +637,13 @@ export class ReportsService {
           attendanceByStatus.late++;
           break;
         case 'absent':
-          absentCount++;
-          attendanceByStatus.absent++;
+          if (actuallyJoined) {
+            presentCount++;
+            attendanceByStatus.present++;
+          } else {
+            absentCount++;
+            attendanceByStatus.absent++;
+          }
           break;
         case 'left_early':
           leftEarlyCount++;
@@ -646,8 +654,13 @@ export class ReportsService {
           attendanceByStatus.present++;
           break;
         default:
-          absentCount++;
-          attendanceByStatus.absent++;
+          if (actuallyJoined) {
+            presentCount++;
+            attendanceByStatus.present++;
+          } else {
+            absentCount++;
+            attendanceByStatus.absent++;
+          }
           break;
       }
     }

@@ -195,6 +195,22 @@ export class LiveSessionController {
     return this.liveSessionService.joinSession(id, { studentId: student.id, isTeacher: false });
   }
 
+  @Post(':id/leave')
+  @Roles(UserRole.TEACHER, UserRole.STUDENT)
+  async leaveSession(@Param('id') id: string, @Request() req) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      return this.liveSessionService.leaveSession(id, {
+        teacherId: teacher.id,
+        isTeacher: true,
+      });
+    }
+
+    const student = await this.studentRepository.findOne({ where: { userId: req.user.id } });
+    if (!student) throw new ForbiddenException('Student profile not found');
+    return this.liveSessionService.leaveSession(id, { studentId: student.id, isTeacher: false });
+  }
+
   @Get(':id/classroom')
   @Roles(UserRole.TEACHER, UserRole.STUDENT)
   async getClassroomAccess(@Param('id') id: string, @Request() req) {

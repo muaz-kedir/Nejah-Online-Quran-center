@@ -175,7 +175,8 @@ export class AttendanceIntelligenceService {
     if (!firstJoinTime || totalConnectedTimeMs === 0) {
       attendanceStatus = AttendanceStatus.ABSENT;
     } else if (ratio < thresholds.lateRatio) {
-      attendanceStatus = AttendanceStatus.ABSENT;
+      // Any verified join counts as at least partial attendance
+      attendanceStatus = AttendanceStatus.PARTIAL;
     } else if (ratio < thresholds.presentRatio) {
       attendanceStatus = AttendanceStatus.PARTIAL;
     } else {
@@ -319,7 +320,10 @@ export class AttendanceIntelligenceService {
 
     const events = await this.getTimelineForSession(sessionId);
     const webhookEvents = events.filter(
-      (e) => e.source === TimelineEventSource.WEBHOOK || !e.source,
+      (e) =>
+        e.source === TimelineEventSource.WEBHOOK ||
+        e.source === TimelineEventSource.APP ||
+        !e.source,
     );
 
     const byParticipant = new Map<string, ParticipantTimelineEvent[]>();
@@ -391,6 +395,7 @@ export class AttendanceIntelligenceService {
     userName?: string;
     userEmail?: string;
     isReconciled?: boolean;
+    sessionEndTime?: Date;
   }): Promise<SessionParticipantSummary> {
     const session = await this.liveSessionRepository.findOne({
       where: { id: params.sessionId },
@@ -400,37 +405,94 @@ export class AttendanceIntelligenceService {
     }
 
     const email = params.userEmail?.toLowerCase() || '';
-    const segments = email
-      ? await this.segmentRepository.find({ where: { sessionId: params.sessionId, userEmail: email } })
+    const dbSegments = email
+      ? await this.segmentRepository.find({
+          where: { sessionId: params.sessionId, userEmail: email },
+        })
       : await this.segmentRepository.find({
           where: { sessionId: params.sessionId, userId: params.userId },
         });
 
-    const totalDurationSeconds = segments.reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
-    const joinTimes = segments.map((s) => s.joinTime?.getTime()).filter(Boolean) as number[];
-    const leaveTimes = segments
-      .map((s) => s.leaveTime?.getTime())
-      .filter(Boolean) as number[];
+    let timelineSegments: ParticipantSegment[] = [];
+    let timelineResult: AttendanceCalculationResult | null = null;
 
-    const firstJoinTime = joinTimes.length ? new Date(Math.min(...joinTimes)) : null;
-    const lastLeaveTime = leaveTimes.length ? new Date(Math.max(...leaveTimes)) : null;
-
-    let attendanceStatus = AttendanceStatus.ABSENT;
-    if (params.userType === 'student' && params.participantId) {
+    if (params.participantId) {
       const timelineEvents = await this.getTimelineForParticipant(
         params.sessionId,
         params.participantId,
       );
-      const builtSegments = this.buildSegmentsFromTimeline(timelineEvents);
-      const result = this.calculateAttendanceFromSegments(builtSegments, session);
-      attendanceStatus = result.attendanceStatus;
-    } else if (totalDurationSeconds > 0) {
-      const pseudoSegments: ParticipantSegment[] = segments.map((s) => ({
-        joinTime: s.joinTime,
-        leaveTime: s.leaveTime,
-        durationMs: (s.durationSeconds || 0) * 1000,
-      }));
-      attendanceStatus = this.calculateAttendanceFromSegments(pseudoSegments, session).attendanceStatus;
+      timelineSegments = this.buildSegmentsFromTimeline(
+        timelineEvents,
+        params.sessionEndTime,
+      );
+      if (timelineSegments.length > 0) {
+        timelineResult = this.calculateAttendanceFromSegments(timelineSegments, session);
+      }
+    }
+
+    let firstJoinTime: Date | null = null;
+    let lastLeaveTime: Date | null = null;
+    let totalDurationSeconds = 0;
+    let attendanceStatus = AttendanceStatus.ABSENT;
+
+    if (dbSegments.length > 0) {
+      totalDurationSeconds = dbSegments.reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
+      const joinTimes = dbSegments.map((s) => s.joinTime?.getTime()).filter(Boolean) as number[];
+      const leaveTimes = dbSegments.map((s) => s.leaveTime?.getTime()).filter(Boolean) as number[];
+      firstJoinTime = joinTimes.length ? new Date(Math.min(...joinTimes)) : null;
+      lastLeaveTime = leaveTimes.length ? new Date(Math.max(...leaveTimes)) : null;
+    }
+
+    if (timelineSegments.length > 0) {
+      const tlJoin = timelineSegments[0].joinTime;
+      const tlLeave = timelineSegments.reduce(
+        (max, s) => (s.leaveTime && (!max || s.leaveTime > max) ? s.leaveTime : max),
+        null as Date | null,
+      );
+      const tlDuration = Math.round(
+        timelineSegments.reduce((sum, s) => sum + s.durationMs, 0) / 1000,
+      );
+
+      if (!firstJoinTime || tlJoin < firstJoinTime) firstJoinTime = tlJoin;
+      if (tlLeave && (!lastLeaveTime || tlLeave > lastLeaveTime)) lastLeaveTime = tlLeave;
+      if (tlDuration > totalDurationSeconds) totalDurationSeconds = tlDuration;
+      if (timelineResult) attendanceStatus = timelineResult.attendanceStatus;
+    }
+
+    if (params.userType === 'student' && params.participantId) {
+      const attendance = await this.attendanceRepository.findOne({
+        where: { sessionId: params.sessionId, studentId: params.participantId },
+      });
+      if (attendance) {
+        if (!firstJoinTime && attendance.firstJoinTime) firstJoinTime = attendance.firstJoinTime;
+        if (!firstJoinTime && attendance.joinTime) firstJoinTime = attendance.joinTime;
+        if (!lastLeaveTime && attendance.lastLeaveTime) lastLeaveTime = attendance.lastLeaveTime;
+        if (!lastLeaveTime && attendance.leaveTime) lastLeaveTime = attendance.leaveTime;
+
+        const attDurationSec = attendance.totalConnectedTimeMs
+          ? Math.round(Number(attendance.totalConnectedTimeMs) / 1000)
+          : (attendance.duration || 0) * 60;
+        if (attDurationSec > totalDurationSeconds) totalDurationSeconds = attDurationSec;
+
+        if (attendance.attendanceStatus && attendance.attendanceStatus !== AttendanceStatus.ABSENT) {
+          attendanceStatus = attendance.attendanceStatus;
+        }
+      }
+    }
+
+    if (
+      attendanceStatus === AttendanceStatus.ABSENT &&
+      totalDurationSeconds > 0 &&
+      firstJoinTime
+    ) {
+      const pseudo: ParticipantSegment[] = [
+        {
+          joinTime: firstJoinTime,
+          leaveTime: lastLeaveTime,
+          durationMs: totalDurationSeconds * 1000,
+        },
+      ];
+      attendanceStatus = this.calculateAttendanceFromSegments(pseudo, session).attendanceStatus;
     }
 
     let summary = await this.summaryRepository.findOne({
@@ -563,14 +625,90 @@ export class AttendanceIntelligenceService {
     };
   }
 
-  async recalculateSession(sessionId: string): Promise<void> {
+  async closeOpenTimelineJoins(sessionId: string, endTime: Date): Promise<void> {
+    const events = await this.getTimelineForSession(sessionId);
+    const byParticipant = new Map<string, ParticipantTimelineEvent[]>();
+
+    for (const event of events) {
+      const list = byParticipant.get(event.participantId) || [];
+      list.push(event);
+      byParticipant.set(event.participantId, list);
+    }
+
+    for (const [participantId, participantEvents] of byParticipant) {
+      const sorted = [...participantEvents].sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+      );
+      const lastEvent = sorted[sorted.length - 1];
+      if (lastEvent?.eventType === TimelineEventType.JOIN) {
+        await this.appendTimelineEvent({
+          sessionId,
+          participantId,
+          participantRole: lastEvent.participantRole,
+          zoomUserId: lastEvent.zoomUserId || undefined,
+          eventType: TimelineEventType.LEAVE,
+          timestamp: endTime,
+          source: TimelineEventSource.APP,
+          webhookEventId: `session_end_${sessionId}_${participantId}`,
+        });
+      }
+    }
+
+    await this.closeAllOpenSegments(sessionId, endTime);
+    await this.replaceWebhookSegmentsFromTimeline(sessionId);
+  }
+
+  async healStaleSummariesForSessions(sessionIds: string[]): Promise<void> {
+    if (!sessionIds.length) return;
+
+    const attendances = await this.attendanceRepository.find({
+      where: { sessionId: In(sessionIds) },
+      relations: ['student'],
+    });
+
+    for (const attendance of attendances) {
+      if (!attendance.student?.userId) continue;
+      if (!attendance.joinTime && !attendance.firstJoinTime) continue;
+
+      const summary = await this.summaryRepository.findOne({
+        where: { sessionId: attendance.sessionId, userId: attendance.student.userId },
+      });
+
+      const needsHeal =
+        !summary ||
+        summary.totalDurationSeconds === 0 ||
+        (summary.status === 'absent' && (attendance.joinTime || attendance.firstJoinTime));
+
+      if (needsHeal) {
+        await this.upsertParticipantSummary({
+          sessionId: attendance.sessionId,
+          userId: attendance.student.userId,
+          userType: 'student',
+          participantId: attendance.studentId,
+          userName: attendance.student.fullName,
+          userEmail: attendance.student.email,
+        });
+      }
+    }
+  }
+
+  async recalculateSession(sessionId: string, endTime?: Date): Promise<void> {
     const session = await this.liveSessionRepository.findOne({
       where: { id: sessionId },
       relations: ['attendances', 'teacher'],
     });
     if (!session) return;
 
-    const participantIds = await this.getDistinctParticipants(sessionId);
+    if (endTime) {
+      await this.closeOpenTimelineJoins(sessionId, endTime);
+    }
+
+    const participantIds = new Set(await this.getDistinctParticipants(sessionId));
+
+    const allAttendances = await this.attendanceRepository.find({ where: { sessionId } });
+    for (const att of allAttendances) {
+      participantIds.add(att.studentId);
+    }
 
     for (const participantId of participantIds) {
       await this.calculateAndUpdateAttendance(sessionId, participantId);
@@ -583,6 +721,7 @@ export class AttendanceIntelligenceService {
           participantId,
           userName: student.fullName,
           userEmail: student.email,
+          sessionEndTime: endTime,
         });
       }
     }
@@ -636,6 +775,7 @@ export class AttendanceIntelligenceService {
 
   buildSegmentsFromTimeline(
     events: ParticipantTimelineEvent[],
+    sessionEndTime?: Date,
   ): ParticipantSegment[] {
     const sorted = [...events].sort(
       (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
@@ -667,10 +807,11 @@ export class AttendanceIntelligenceService {
     }
 
     if (currentJoin) {
+      const end = sessionEndTime || new Date();
       segments.push({
         joinTime: currentJoin,
-        leaveTime: null,
-        durationMs: Date.now() - currentJoin.getTime(),
+        leaveTime: end,
+        durationMs: end.getTime() - currentJoin.getTime(),
       });
     }
 

@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { LiveSession } from './entities/live-session.entity';
+import { Student } from '../students/entities/student.entity';
 import { AttendanceStatus } from './enums/live-session-status.enum';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
-import { TimelineEventType } from './entities/participant-timeline-event.entity';
+import { TimelineEventType, TimelineEventSource } from './entities/participant-timeline-event.entity';
 
 @Injectable()
 export class SessionAttendanceService {
@@ -16,6 +17,8 @@ export class SessionAttendanceService {
     private readonly attendanceRepository: Repository<SessionAttendance>,
     @InjectRepository(LiveSession)
     private readonly liveSessionRepository: Repository<LiveSession>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
   ) {}
 
@@ -27,6 +30,11 @@ export class SessionAttendanceService {
     const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
     if (!session) {
       throw new NotFoundException('Live session not found');
+    }
+
+    const student = await this.studentRepository.findOne({ where: { id: studentId } });
+    if (!student) {
+      throw new NotFoundException('Student not found');
     }
 
     const now = new Date();
@@ -41,10 +49,34 @@ export class SessionAttendanceService {
       device: metadata?.device,
       clientType: metadata?.clientType,
       rawPayload: metadata?.rawPayload,
-      webhookEventId: metadata?.webhookEventId,
+      webhookEventId: metadata?.webhookEventId || `app_join_${sessionId}_${studentId}_${now.getTime()}`,
+      source: TimelineEventSource.APP,
     });
 
-    return this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
+    await this.attendanceIntelligence.openAttendanceSegment({
+      sessionId,
+      userId: student.userId,
+      userEmail: student.email || student.zoomEmail || '',
+      userType: 'student',
+      zoomParticipantId: metadata?.zoomUserId,
+      joinTime: now,
+      source: 'app',
+    });
+
+    const attendance = await this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
+
+    if (student.userId) {
+      await this.attendanceIntelligence.upsertParticipantSummary({
+        sessionId,
+        userId: student.userId,
+        userType: 'student',
+        participantId: studentId,
+        userName: student.fullName,
+        userEmail: student.email || student.zoomEmail,
+      });
+    }
+
+    return attendance;
   }
 
   async recordLeave(
@@ -55,6 +87,11 @@ export class SessionAttendanceService {
     const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
     if (!session) {
       throw new NotFoundException('Live session not found');
+    }
+
+    const student = await this.studentRepository.findOne({ where: { id: studentId } });
+    if (!student) {
+      throw new NotFoundException('Student not found');
     }
 
     const now = new Date();
@@ -69,10 +106,30 @@ export class SessionAttendanceService {
       device: metadata?.device,
       clientType: metadata?.clientType,
       rawPayload: metadata?.rawPayload,
-      webhookEventId: metadata?.webhookEventId,
+      webhookEventId: metadata?.webhookEventId || `app_leave_${sessionId}_${studentId}_${now.getTime()}`,
+      source: TimelineEventSource.APP,
     });
 
-    return this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
+    await this.attendanceIntelligence.closeOpenSegment(
+      sessionId,
+      student.email || student.zoomEmail || '',
+      now,
+    );
+
+    const attendance = await this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
+
+    if (student.userId) {
+      await this.attendanceIntelligence.upsertParticipantSummary({
+        sessionId,
+        userId: student.userId,
+        userType: 'student',
+        participantId: studentId,
+        userName: student.fullName,
+        userEmail: student.email || student.zoomEmail,
+      });
+    }
+
+    return attendance;
   }
 
   /** 80%+ = Present, 50–79% = Late, <50% = Absent */
