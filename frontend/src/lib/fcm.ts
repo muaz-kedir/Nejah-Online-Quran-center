@@ -16,13 +16,18 @@ function removeTokenFromStorage() {
   try { localStorage.removeItem('fcmToken'); } catch { }
 }
 
-async function getActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
+async function waitForActiveSw(ms = 30000): Promise<ServiceWorkerRegistration | null> {
   try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of registrations) {
-      if (reg.active) return reg;
-    }
-    return null;
+    const ready = await navigator.serviceWorker.ready;
+    if (ready.active) return ready;
+    return new Promise<ServiceWorkerRegistration | null>((resolve) => {
+      const worker = ready.installing || ready.waiting;
+      if (!worker) return resolve(null);
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'activated') resolve(ready);
+      });
+      setTimeout(() => resolve(ready.active ? ready : null), ms);
+    });
   } catch {
     return null;
   }
@@ -39,8 +44,7 @@ export async function registerFcmToken(): Promise<boolean> {
   const messaging = getFirebaseMessaging();
   if (!messaging) return false;
 
-  const tokenStr = localStorage.getItem('token');
-  if (!tokenStr) return false;
+  if (!localStorage.getItem('token')) return false;
 
   const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
   if (!vapidKey) {
@@ -48,15 +52,15 @@ export async function registerFcmToken(): Promise<boolean> {
     return false;
   }
 
-  const existingFcmToken = getTokenFromStorage();
-  if (existingFcmToken) {
-    currentToken = existingFcmToken;
+  const existing = getTokenFromStorage();
+  if (existing) {
+    currentToken = existing;
     return true;
   }
 
-  const registration = await getActiveRegistration();
+  const registration = await waitForActiveSw(30000);
   if (!registration) {
-    console.warn('[FCM] No active service worker');
+    console.warn('[FCM] No active SW after waiting');
     return false;
   }
 

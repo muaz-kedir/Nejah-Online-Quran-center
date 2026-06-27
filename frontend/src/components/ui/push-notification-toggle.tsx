@@ -85,7 +85,7 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
             toast.error("Notification permission was not granted. Please try again.");
           } else {
             toast.error(
-              "Failed to enable push notifications. Your browser may not support this feature.",
+              "Failed to enable push notifications. Check console for details or try again.",
               { duration: 5000 }
             );
           }

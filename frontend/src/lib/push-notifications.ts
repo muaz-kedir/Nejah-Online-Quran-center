@@ -7,25 +7,25 @@ import {
 } from '@/lib/fcm';
 import { initFirebase } from '@/lib/firebase';
 
-function getFirebaseConfig(): Record<string, string> | null {
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-  if (!apiKey || !projectId) return null;
-  return {
-    apiKey,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
-    projectId,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-  };
-}
-
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+}
+
+function getFirebaseConfigForSw(): string {
+  const config: Record<string, string> = {};
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  if (!apiKey || !projectId) return '';
+  config.apiKey = apiKey;
+  config.authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`;
+  config.projectId = projectId;
+  config.storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`;
+  config.messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '';
+  config.appId = import.meta.env.VITE_FIREBASE_APP_ID || '';
+  return encodeURIComponent(JSON.stringify(config));
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -35,27 +35,29 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
+async function waitForServiceWorkerReady(ms = 30000): Promise<ServiceWorkerRegistration | null> {
+  try {
+    const registration = await withTimeout(navigator.serviceWorker.ready, ms);
+    if (registration.active) return registration;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
 
   try {
-    const config = getFirebaseConfig();
-    const configParam = config
-      ? '?config=' + encodeURIComponent(JSON.stringify(config))
-      : '';
-
-    const existing = await navigator.serviceWorker.getRegistration('/');
-    if (existing) {
-      const swUrl = existing.active?.scriptURL || '';
-      if (swUrl.includes('firebase-messaging-sw.js')) {
-        return existing;
-      }
-    }
-    return await navigator.serviceWorker.register('/firebase-messaging-sw.js' + configParam, {
+    const isDev = import.meta.env.DEV;
+    const query = isDev ? '?config=' + getFirebaseConfigForSw() : '';
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js' + query, {
       scope: '/',
     });
+    const swReady = await waitForServiceWorkerReady(30000);
+    return swReady;
   } catch (error) {
-    console.warn('Service worker registration failed', error);
+    console.warn('SW registration failed', error);
     return null;
   }
 }
@@ -67,19 +69,18 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
   if (!localStorage.getItem('token')) return false;
 
   try {
-    const permission = await withTimeout(Notification.requestPermission(), 15000);
+    const permission = await withTimeout(Notification.requestPermission(), 30000);
     if (permission !== 'granted') return false;
 
-    await withTimeout(registerServiceWorker(), 10000).catch(() => null);
+    const registration = await registerServiceWorker();
+    if (!registration) return false;
 
-    const fcmOk = await withTimeout(registerFcmToken(), 15000);
+    const fcmOk = await withTimeout(registerFcmToken(), 30000);
     if (fcmOk) return true;
 
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!vapidKey) return false;
 
-    const registration = await withTimeout(navigator.serviceWorker.ready, 10000).catch(() => null);
-    if (!registration) return false;
     const existing = await registration.pushManager.getSubscription();
     if (existing) await existing.unsubscribe();
 
@@ -110,8 +111,9 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
   try {
     await unregisterFcmToken();
 
-    const registration = await withTimeout(navigator.serviceWorker.ready, 10000).catch(() => null);
+    const registration = await waitForServiceWorkerReady(10000);
     if (!registration) return true;
+
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) return true;
 
@@ -133,30 +135,28 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
 
 export async function initializePwaPush(): Promise<boolean> {
   await initFirebase();
-  await withTimeout(registerServiceWorker(), 10000).catch(() => null);
+  await registerServiceWorker();
   if (!localStorage.getItem('token')) return false;
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
 
   const existingFcm = getCurrentFcmToken();
   if (existingFcm) return true;
 
-  try {
-    const registration = await withTimeout(navigator.serviceWorker.ready, 10000).catch(() => null);
-    if (registration) {
-      const existingSub = await registration.pushManager.getSubscription();
-      if (existingSub) return true;
-    }
-  } catch { }
+  const registration = await waitForServiceWorkerReady(15000);
+  if (registration) {
+    const existingSub = await registration.pushManager.getSubscription();
+    if (existingSub) return true;
+  }
 
-  const fcmOk = await withTimeout(registerFcmToken(), 15000).catch(() => false);
+  const fcmOk = await registerFcmToken();
   if (fcmOk) return true;
+
+  if (!registration) return false;
 
   try {
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!vapidKey) return false;
-    const reg = await withTimeout(navigator.serviceWorker.ready, 10000).catch(() => null);
-    if (!reg) return false;
-    const sub = await reg.pushManager.subscribe({
+    const sub = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey) as unknown as BufferSource,
     });
