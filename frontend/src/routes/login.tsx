@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Loader2, Mail, Lock, Eye, EyeOff, LogIn,
+  Loader2, Mail, Lock, Eye, EyeOff, LogIn, Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,7 +19,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { API_BASE, apiUrl } from "@/lib/api";
-import { subscribeToPushNotifications } from "@/lib/push-notifications";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
@@ -42,6 +48,21 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [pendingRole, setPendingRole] = useState<string | null>(null);
+  const dialogCloseIntentional = useRef(false);
+
+  const redirectToDashboard = useCallback((role: string) => {
+    const map: Record<string, string> = {
+      student: "/student_dashboard",
+      teacher: "/teacher_dashboard",
+      parent: "/parent_dashboard",
+      finance_manager: "/finance_dashboard",
+      qirat_manager: "/qirat_dashboard",
+    };
+    window.location.href = map[role] || "/dashboard";
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reason') === 'session_expired') {
@@ -108,22 +129,24 @@ function LoginPage() {
 
       toast.success("Welcome back, " + data.user.name + "!");
 
-      subscribeToPushNotifications().catch(() => {});
-
       const role = data.user.role;
-      if (role === "student") {
-        window.location.href = "/student_dashboard";
-      } else if (role === "teacher") {
-        window.location.href = "/teacher_dashboard";
-      } else if (role === "parent") {
-        window.location.href = "/parent_dashboard";
-      } else if (role === "finance_manager") {
-        window.location.href = "/finance_dashboard";
-      } else if (role === "qirat_manager") {
-        window.location.href = "/qirat_dashboard";
-      } else {
-        window.location.href = "/dashboard";
+      const hasPush = "PushManager" in window && "serviceWorker" in navigator;
+      const notificationGranted = "Notification" in window && Notification.permission === "granted";
+
+      if (hasPush && !notificationGranted) {
+        setPendingRole(role);
+        setShowNotificationPrompt(true);
+        setIsLoading(false);
+        return;
       }
+
+      if (hasPush && notificationGranted) {
+        await import("@/lib/push-notifications").then((m) =>
+          m.subscribeToPushNotifications().catch(() => {}),
+        );
+      }
+
+      redirectToDashboard(role);
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {
@@ -295,6 +318,59 @@ function LoginPage() {
                 </form>
               </Form>
             </AuthPageLayout>
+
+      {/* Notification Permission Prompt Dialog */}
+      <Dialog open={showNotificationPrompt} onOpenChange={(open) => {
+        if (!open && pendingRole && !dialogCloseIntentional.current) {
+          setShowNotificationPrompt(false);
+          redirectToDashboard(pendingRole);
+        }
+        dialogCloseIntentional.current = false;
+      }}>
+        <DialogContent className="rounded-3xl max-w-sm" aria-describedby="notification-description">
+          <DialogHeader>
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+              <Bell className="h-7 w-7 text-nejah-electric" />
+            </div>
+            <DialogTitle className="text-center text-xl font-serif font-bold">
+              Stay Updated
+            </DialogTitle>
+            <DialogDescription id="notification-description" className="text-center">
+              Get instant push notifications for class sessions, homework, and important updates.
+              Would you like to enable notifications?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              className="w-full gap-2 h-12 rounded-xl font-bold"
+              onClick={async () => {
+                dialogCloseIntentional.current = true;
+                setShowNotificationPrompt(false);
+                const { subscribeToPushNotifications } = await import("@/lib/push-notifications");
+                const ok = await subscribeToPushNotifications();
+                if (pendingRole) redirectToDashboard(pendingRole);
+              }}
+            >
+              <Bell className="h-5 w-5" />
+              Yes, Enable Notifications
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full h-11 rounded-xl text-muted-foreground"
+              onClick={() => {
+                dialogCloseIntentional.current = true;
+                setShowNotificationPrompt(false);
+                if (pendingRole) redirectToDashboard(pendingRole);
+              }}
+            >
+              Not now
+            </Button>
+          </div>
+          <p className="text-[10px] text-center text-muted-foreground mt-1">
+            You can always change this later in your profile settings.
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

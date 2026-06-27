@@ -24,6 +24,9 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
   }, [isOpen]);
 
   const handleLogout = useCallback(() => {
+    import('@/lib/push-notifications').then(m =>
+      m.unsubscribeFromPushNotifications().catch(() => {}),
+    );
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');

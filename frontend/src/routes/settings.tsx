@@ -12,6 +12,7 @@ import { Save, Bell, Shield, Database, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { AmbientSection, PageHeader } from '@/components/dashboard/design-system';
+import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -19,7 +20,6 @@ export const Route = createFileRoute('/settings')({
 });
 
 function SettingsPage() {
-  const [notifications, setNotifications] = useState(true);
   const [emailReports, setEmailReports] = useState(true);
   const [autoAttendance, setAutoAttendance] = useState(false);
 
@@ -77,29 +77,25 @@ function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Manage email and in-app notifications</CardDescription>
+                <CardDescription>Manage push, email, and in-app notifications</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Push Notifications</Label>
-                    <p className="text-sm text-nejah-slate-blue">Receive in-app notifications</p>
+                <PushNotificationToggle variant="card" />
+                <div className="border-t border-border pt-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="font-medium">Email Reports</Label>
+                      <p className="text-sm text-nejah-slate-blue">Receive weekly reports via email</p>
+                    </div>
+                    <Switch checked={emailReports} onCheckedChange={setEmailReports} />
                   </div>
-                  <Switch checked={notifications} onCheckedChange={setNotifications} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Email Reports</Label>
-                    <p className="text-sm text-nejah-slate-blue">Receive weekly reports via email</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="font-medium">Auto Attendance Alerts</Label>
+                      <p className="text-sm text-nejah-slate-blue">Alert parents when student is absent</p>
+                    </div>
+                    <Switch checked={autoAttendance} onCheckedChange={setAutoAttendance} />
                   </div>
-                  <Switch checked={emailReports} onCheckedChange={setEmailReports} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Auto Attendance Alerts</Label>
-                    <p className="text-sm text-nejah-slate-blue">Alert parents when student is absent</p>
-                  </div>
-                  <Switch checked={autoAttendance} onCheckedChange={setAutoAttendance} />
                 </div>
                 <Button onClick={handleSave}>
                   <Save className="mr-2 h-4 w-4" /> Save Preferences

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "build:app": "vite build",
+    "build:app": "node scripts/generate-sw.mjs && vite build",
     "build:vercel": "node scripts/vercel-build.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -52,6 +52,7 @@
     "country-state-city": "^3.2.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^12.15.0",
     "framer-motion": "^12.38.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",

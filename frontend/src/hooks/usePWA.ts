@@ -3,6 +3,7 @@ import {
   initializePwaPush,
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
+  getCurrentFcmToken,
 } from "@/lib/push-notifications";
 
 export function usePWA() {
@@ -19,7 +20,7 @@ export function usePWA() {
     setPushSupported("serviceWorker" in navigator && "PushManager" in window);
 
     initializePwaPush()
-      .then((ok) => setPushSubscribed(ok))
+      .then((ok) => setPushSubscribed(ok || !!getCurrentFcmToken()))
       .catch(() => setPushSubscribed(false));
 
     const handler = (e: Event) => {
@@ -53,7 +54,7 @@ export function usePWA() {
   const subscribeToPush = useCallback(async () => {
     if (!pushSupported) return false;
     const ok = await subscribeToPushNotifications();
-    setPushSubscribed(ok);
+    setPushSubscribed(ok || !!getCurrentFcmToken());
     return ok;
   }, [pushSupported]);
 

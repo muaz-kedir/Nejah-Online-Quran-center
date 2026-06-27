@@ -49,8 +49,10 @@ export const TeacherSidebar = memo(function TeacherSidebar({ activePath }: Teach
 
       <div className="px-4 py-3 border-t border-white/10">
         <button
-          onClick={() => {
+          onClick={async () => {
             if (typeof window !== 'undefined') {
+              const { unsubscribeFromPushNotifications } = await import('@/lib/push-notifications');
+              await unsubscribeFromPushNotifications().catch(() => {});
               localStorage.removeItem('token');
               localStorage.removeItem('userRole');
               window.location.href = '/login';

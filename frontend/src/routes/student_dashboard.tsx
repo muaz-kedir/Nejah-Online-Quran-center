@@ -27,6 +27,7 @@ import { LearningPathCard, useLearningPath } from "@/components/progress/Learnin
 import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
 import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
+import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -724,17 +725,22 @@ function StudentDashboard() {
           <DialogHeader>
             <DialogTitle>Settings</DialogTitle>
           </DialogHeader>
-          <button
-            type="button"
-            className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
-            onClick={() => {
-              setSettingsOpen(false);
-              setChangePasswordOpen(true);
-            }}
-          >
-            <Lock className="h-5 w-5 text-nejah-electric" />
-            <span className="font-bold text-sm">Change Password</span>
-          </button>
+          <div className="space-y-3">
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
+              onClick={() => {
+                setSettingsOpen(false);
+                setChangePasswordOpen(true);
+              }}
+            >
+              <Lock className="h-5 w-5 text-nejah-electric" />
+              <span className="font-bold text-sm">Change Password</span>
+            </button>
+            <div className="border-t border-border pt-3">
+              <PushNotificationToggle variant="card" />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
