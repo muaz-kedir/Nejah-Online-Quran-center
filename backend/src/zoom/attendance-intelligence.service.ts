@@ -20,6 +20,7 @@ import {
   AttendanceStatus,
   attendanceStatusToApi,
 } from './enums/live-session-status.enum';
+import { buildWebhookEventId } from './webhook-event-id.util';
 
 export interface ParticipantSegment {
   joinTime: Date;
@@ -96,7 +97,11 @@ export class AttendanceIntelligenceService {
       device: event.device || null,
       clientType: event.clientType || null,
       rawPayload: event.rawPayload || null,
-      webhookEventId: event.webhookEventId || null,
+      webhookEventId: event.webhookEventId
+        ? event.webhookEventId.length > 64
+          ? buildWebhookEventId('legacy', event.webhookEventId)
+          : event.webhookEventId
+        : null,
       source: event.source || TimelineEventSource.WEBHOOK,
     });
     return this.timelineRepository.save(entity);
@@ -649,7 +654,7 @@ export class AttendanceIntelligenceService {
           eventType: TimelineEventType.LEAVE,
           timestamp: endTime,
           source: TimelineEventSource.APP,
-          webhookEventId: `session_end_${sessionId}_${participantId}`,
+          webhookEventId: buildWebhookEventId('session_end', sessionId, participantId),
         });
       }
     }

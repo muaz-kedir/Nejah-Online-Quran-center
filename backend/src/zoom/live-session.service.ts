@@ -515,8 +515,9 @@ export class LiveSessionService {
       const integration = await this.zoomIntegrationRepository.findOne({
         where: { teacherId: options.teacherId, connectionStatus: 'connected' },
       });
-      if (integration?.zoomUserId) {
-        zak = await this.zoomService.getUserZakToken(integration.zoomUserId);
+      const zakTarget = integration?.zoomUserId || integration?.zoomEmail;
+      if (zakTarget) {
+        zak = await this.zoomService.getUserZakToken(zakTarget);
       }
     }
 
