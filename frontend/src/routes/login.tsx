@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Loader2, Mail, Lock, Eye, EyeOff, LogIn,
+  Loader2, Mail, Lock, Eye, EyeOff, LogIn, Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,7 +19,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { API_BASE, apiUrl } from "@/lib/api";
-import { subscribeToPushNotifications } from "@/lib/push-notifications";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
@@ -42,6 +48,7 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reason') === 'session_expired') {
@@ -108,7 +115,18 @@ function LoginPage() {
 
       toast.success("Welcome back, " + data.user.name + "!");
 
-      subscribeToPushNotifications().catch(() => {});
+      // Check if we should ask for notification permission
+      const hasPush = "PushManager" in window && "serviceWorker" in navigator;
+      const notificationGranted = "Notification" in window && Notification.permission === "granted";
+      if (hasPush && !notificationGranted) {
+        // Show prompt asking user if they want notifications
+        setShowNotificationPrompt(true);
+      } else if (hasPush && notificationGranted) {
+        // Already granted, silently subscribe
+        import("@/lib/push-notifications").then((m) =>
+          m.subscribeToPushNotifications().catch(() => {}),
+        );
+      }
 
       const role = data.user.role;
       if (role === "student") {
@@ -295,6 +313,52 @@ function LoginPage() {
                 </form>
               </Form>
             </AuthPageLayout>
+
+      {/* Notification Permission Prompt Dialog */}
+      <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
+        <DialogContent className="rounded-3xl max-w-sm" aria-describedby="notification-description">
+          <DialogHeader>
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+              <Bell className="h-7 w-7 text-nejah-electric" />
+            </div>
+            <DialogTitle className="text-center text-xl font-serif font-bold">
+              Stay Updated
+            </DialogTitle>
+            <DialogDescription id="notification-description" className="text-center">
+              Get instant push notifications for class sessions, homework, and important updates.
+              Would you like to enable notifications?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              className="w-full gap-2 h-12 rounded-xl font-bold"
+              onClick={async () => {
+                setShowNotificationPrompt(false);
+                const { subscribeToPushNotifications } = await import("@/lib/push-notifications");
+                const ok = await subscribeToPushNotifications();
+                if (ok) {
+                  toast.success("Push notifications enabled!");
+                }
+              }}
+            >
+              <Bell className="h-5 w-5" />
+              Yes, Enable Notifications
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full h-11 rounded-xl text-muted-foreground"
+              onClick={() => {
+                setShowNotificationPrompt(false);
+              }}
+            >
+              Not now
+            </Button>
+          </div>
+          <p className="text-[10px] text-center text-muted-foreground mt-1">
+            You can always change this later in your profile settings.
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
