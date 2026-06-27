@@ -518,6 +518,17 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
+      await this.fcmService.sendToUsers(studentParentIds, {
+        title: learnerPayload.title,
+        body: learnerPayload.body,
+        icon: learnerPayload.icon,
+        badge: learnerPayload.badge,
+        tag: learnerPayload.tag,
+        clickAction: learnerPayload.url,
+        data: Object.fromEntries(
+          Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
+        ),
+      });
     }
 
     const admins = await this.userRepository.find({
@@ -535,6 +546,17 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+      await this.fcmService.sendToUsers(adminUserIds, {
+        title: adminPayload.title,
+        body: adminPayload.body,
+        icon: adminPayload.icon,
+        badge: adminPayload.badge,
+        tag: adminPayload.tag,
+        clickAction: adminPayload.url,
+        data: Object.fromEntries(
+          Object.entries(adminPayload.data || {}).map(([k, v]) => [k, String(v)]),
+        ),
+      });
     }
 
     await this.pushSubscriptionService.sendToUserTypes(

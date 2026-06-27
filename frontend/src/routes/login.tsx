@@ -49,6 +49,19 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [pendingRole, setPendingRole] = useState<string | null>(null);
+
+  const redirectToDashboard = useCallback((role: string) => {
+    const map: Record<string, string> = {
+      student: "/student_dashboard",
+      teacher: "/teacher_dashboard",
+      parent: "/parent_dashboard",
+      finance_manager: "/finance_dashboard",
+      qirat_manager: "/qirat_dashboard",
+    };
+    window.location.href = map[role] || "/dashboard";
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('reason') === 'session_expired') {
@@ -115,33 +128,24 @@ function LoginPage() {
 
       toast.success("Welcome back, " + data.user.name + "!");
 
-      // Check if we should ask for notification permission
+      const role = data.user.role;
       const hasPush = "PushManager" in window && "serviceWorker" in navigator;
       const notificationGranted = "Notification" in window && Notification.permission === "granted";
+
       if (hasPush && !notificationGranted) {
-        // Show prompt asking user if they want notifications
+        setPendingRole(role);
         setShowNotificationPrompt(true);
-      } else if (hasPush && notificationGranted) {
-        // Already granted, silently subscribe
-        import("@/lib/push-notifications").then((m) =>
+        setIsLoading(false);
+        return;
+      }
+
+      if (hasPush && notificationGranted) {
+        await import("@/lib/push-notifications").then((m) =>
           m.subscribeToPushNotifications().catch(() => {}),
         );
       }
 
-      const role = data.user.role;
-      if (role === "student") {
-        window.location.href = "/student_dashboard";
-      } else if (role === "teacher") {
-        window.location.href = "/teacher_dashboard";
-      } else if (role === "parent") {
-        window.location.href = "/parent_dashboard";
-      } else if (role === "finance_manager") {
-        window.location.href = "/finance_dashboard";
-      } else if (role === "qirat_manager") {
-        window.location.href = "/qirat_dashboard";
-      } else {
-        window.location.href = "/dashboard";
-      }
+      redirectToDashboard(role);
     } catch (error: any) {
       toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {
@@ -315,7 +319,7 @@ function LoginPage() {
             </AuthPageLayout>
 
       {/* Notification Permission Prompt Dialog */}
-      <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
+      <Dialog open={showNotificationPrompt} onOpenChange={(open) => { if (!open && pendingRole) { setShowNotificationPrompt(false); redirectToDashboard(pendingRole); } }}>
         <DialogContent className="rounded-3xl max-w-sm" aria-describedby="notification-description">
           <DialogHeader>
             <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
@@ -339,6 +343,7 @@ function LoginPage() {
                 if (ok) {
                   toast.success("Push notifications enabled!");
                 }
+                if (pendingRole) redirectToDashboard(pendingRole);
               }}
             >
               <Bell className="h-5 w-5" />
@@ -349,6 +354,7 @@ function LoginPage() {
               className="w-full h-11 rounded-xl text-muted-foreground"
               onClick={() => {
                 setShowNotificationPrompt(false);
+                if (pendingRole) redirectToDashboard(pendingRole);
               }}
             >
               Not now
