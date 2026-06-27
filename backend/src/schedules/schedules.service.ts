@@ -17,6 +17,8 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
 import { ScheduleSessionGeneratorService } from '../zoom/schedule-session-generator.service';
 import { LiveSessionService } from '../zoom/live-session.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationChannel } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class SchedulesService {
@@ -35,6 +37,7 @@ export class SchedulesService {
     private scheduleSessionGenerator: ScheduleSessionGeneratorService,
     @Inject(forwardRef(() => LiveSessionService))
     private liveSessionService: LiveSessionService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private isOverlap(existingStart: string, existingEnd: string, newStart: string, newEnd: string) {
@@ -129,6 +132,8 @@ export class SchedulesService {
     });
 
     const saved = await this.schedulesRepository.save(schedule);
+
+    await this.notifyTeacherScheduleEvent(data.teacherId, 'created', saved);
 
     if (isGroupSession && data.studentIds) {
       const rows = data.studentIds.map((studentId) =>
@@ -239,6 +244,8 @@ export class SchedulesService {
     Object.assign(schedule, rest);
     const updated = await this.schedulesRepository.save(schedule);
 
+    await this.notifyTeacherScheduleEvent(schedule.teacherId, 'updated', updated);
+
     try {
       await this.liveSessionService.updateScheduledSessionsForSchedule(schedule.id, {
         startTimeString: updateData.startTimeString || schedule.startTimeString,
@@ -299,5 +306,40 @@ export class SchedulesService {
     const nextDate = new Date(today);
     nextDate.setDate(today.getDate() + daysUntil);
     return nextDate;
+  }
+
+  private async notifyTeacherScheduleEvent(
+    teacherId: string,
+    event: 'created' | 'updated',
+    schedule: Schedule,
+  ) {
+    try {
+      const teacher = await this.teachersRepository.findOne({ where: { id: teacherId }, relations: ['user'] });
+      if (!teacher?.userId) return;
+
+      const title = event === 'created' ? 'New Class Schedule' : 'Schedule Updated';
+      const message = event === 'created'
+        ? `A new class "${schedule.className || 'Quran Class'}" has been scheduled on ${schedule.dayOfWeek} at ${schedule.startTimeString}`
+        : `Your class "${schedule.className || 'Quran Class'}" on ${schedule.dayOfWeek} at ${schedule.startTimeString} has been updated`;
+
+      await this.notificationsService.sendCustomNotifications(
+        [teacher.userId],
+        title,
+        message,
+        {
+          scheduleId: schedule.id,
+          dayOfWeek: schedule.dayOfWeek,
+          startTime: schedule.startTimeString,
+          endTime: schedule.endTimeString,
+          className: schedule.className,
+          teacherId: schedule.teacherId,
+        },
+        NotificationChannel.SCHEDULE_CHANGED,
+        true,
+        `/teacher_schedule`,
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to notify teacher about schedule event: ${error.message}`);
+    }
   }
 }

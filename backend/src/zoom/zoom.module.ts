@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ZoomService } from './zoom.service';
 import { LiveSessionService } from './live-session.service';
 import { SessionAttendanceService } from './session-attendance.service';
@@ -63,12 +61,6 @@ import { EncryptionService } from '../common/encryption.service';
       timeout: 15000,
       maxRedirects: 3,
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
     NotificationsModule,
     forwardRef(() => TeachersModule),
   ],
@@ -96,10 +88,6 @@ import { EncryptionService } from '../common/encryption.service';
     LiveSessionAttendanceReportService,
     ScheduleSessionGeneratorService,
     ScheduleSessionsCron,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
   ],
   exports: [
     ZoomService,

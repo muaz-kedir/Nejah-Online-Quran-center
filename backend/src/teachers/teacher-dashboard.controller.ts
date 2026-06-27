@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   NotFoundException,
@@ -15,16 +16,11 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Teacher } from './entities/teacher.entity';
-import { Student, QuranLevel } from '../students/entities/student.entity';
-import { Schedule } from '../schedules/entities/schedule.entity';
-import { Homework } from '../homework/entities/homework.entity';
 import { TeacherNote } from './entities/teacher-note.entity';
-import { Progress } from '../progress/entities/progress.entity';
+import { Schedule } from '../schedules/entities/schedule.entity';
 import { TeachersService } from './teachers.service';
-import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
-import { LiveSessionService } from '../zoom/live-session.service';
 import { ScheduleSessionGeneratorService } from '../zoom/schedule-session-generator.service';
 import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 
@@ -33,19 +29,11 @@ import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 @Roles(UserRole.TEACHER)
 export class TeacherDashboardController {
   constructor(
-    @InjectRepository(Student)
-    private studentsRepository: Repository<Student>,
-    @InjectRepository(Schedule)
-    private schedulesRepository: Repository<Schedule>,
-    @InjectRepository(Homework)
-    private homeworkRepository: Repository<Homework>,
     @InjectRepository(TeacherNote)
     private notesRepository: Repository<TeacherNote>,
-    @InjectRepository(Progress)
-    private progressRepository: Repository<Progress>,
+    @InjectRepository(Schedule)
+    private schedulesRepository: Repository<Schedule>,
     private teachersService: TeachersService,
-    private replacementsService: TeacherReplacementsService,
-    private liveSessionService: LiveSessionService,
     private scheduleSessionGenerator: ScheduleSessionGeneratorService,
   ) {}
 
@@ -56,96 +44,17 @@ export class TeacherDashboardController {
   @Get()
   async getDashboardData(@Request() req) {
     const teacher = await this.requireTeacher(req);
-    const teacherId = teacher.id;
+    const data = await this.teachersService.getTeacherDashboardData(teacher.id);
 
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentDay = days[new Date().getDay()];
-
-    const totalStudents = await this.studentsRepository.count({ where: { teacherId } });
-    const todayClassesCount = await this.schedulesRepository.count({
-      where: { teacherId, dayOfWeek: currentDay, status: 'active' },
-    });
-
-    const studentsRes = await this.studentsRepository.find({ where: { teacherId } });
-    const avgAttendance =
-      studentsRes.length > 0
-        ? studentsRes.reduce((acc, s) => acc + Number(s.attendanceRate || 0), 0) /
-          studentsRes.length
-        : 0;
-
-    const homeworkPending = await this.homeworkRepository.count({
-      where: { student: { teacherId }, status: 'Pending' as any },
-    });
-
-    const studentIds = studentsRes.map((s) => s.id);
-    const progressRecords =
-      studentIds.length > 0
-        ? await this.progressRepository.find({
-            where: { studentId: In(studentIds) },
-            // ASC so the most recently updated record wins in the map below
-            // (students may have one progress row per learning track).
-            order: { updatedAt: 'ASC' },
-          })
-        : [];
-
-    const progressMap = new Map(progressRecords.map((p) => [p.studentId, p]));
-
-    const studentProgress = studentsRes.map((s) => {
-      const prog = progressMap.get(s.id);
-      const rate = prog?.progressPercentage ?? s.progressRate ?? 0;
-      return {
-        id: s.id,
-        name: s.fullName,
-        initials: s.fullName
-          .split(' ')
-          .map((n) => n[0])
-          .join(''),
-        currentSurah:
-          prog?.lastStudiedSurah ||
-          (s.level === QuranLevel.HIFZ_PROGRAM ? 'Surah Al-Kahf (Juz 15)' : 'Juz Amma (Revision)'),
-        status: rate >= 80 ? 'EXCEEDING' : rate >= 50 ? 'ON TRACK' : 'NEEDS REVIEW',
-        progress: rate,
-      };
-    });
-
+    // Add notes (kept separately for simpler query)
     const notes = await this.notesRepository.find({
-      where: { teacherId },
+      where: { teacherId: teacher.id },
       order: { createdAt: 'DESC' },
       take: 3,
     });
 
-    const sessions = await this.schedulesRepository.find({
-      where: { teacherId, dayOfWeek: currentDay, status: 'active' },
-      order: { startTimeString: 'ASC' },
-      relations: ['student'],
-      take: 5,
-    });
-
-    const formattedSessions = sessions.map((s) => ({
-      id: s.id,
-      time: s.startTimeString && s.endTimeString ? `${s.startTimeString} - ${s.endTimeString}` : '',
-      title: s.className,
-      type: s.classType || (s.student ? 'Private Hifz • 1:1 Session' : 'Group Session'),
-      students: s.student ? [s.student.fullName] : [],
-      status: s.status === 'active' ? 'READY TO START' : null,
-    }));
-
     return {
-      teacher: {
-        id: teacher.id,
-        name: teacher.fullName,
-        title: teacher.specialization || 'Teacher',
-        avatar: teacher.avatarUrl ? `http://localhost:3000${teacher.avatarUrl}` : null,
-      },
-      stats: {
-        totalStudents,
-        todayClasses: todayClassesCount,
-        overallAttendance: Number(avgAttendance.toFixed(1)),
-        homeworkPending,
-      },
-      temporaryStudents: await this.replacementsService.getTemporaryStudentsForTeacher(teacherId),
-      reassignedAwayStudents: await this.replacementsService.getReassignedAwayForTeacher(teacherId),
-      studentProgress,
+      ...data,
       notes: notes.map((n) => ({
         id: n.id,
         type: n.type,
@@ -153,8 +62,39 @@ export class TeacherDashboardController {
         content: n.content,
         createdAt: n.createdAt ? n.createdAt.toISOString() : null,
       })),
-      sessions: formattedSessions,
+      teacher: {
+        ...data.teacher,
+        name: data.teacher.fullName,
+        title: data.teacher.specialization || 'Teacher',
+        avatar: data.teacher.avatarUrl
+          ? data.teacher.avatarUrl.startsWith('http')
+            ? data.teacher.avatarUrl
+            : `http://localhost:3000${data.teacher.avatarUrl}`
+          : null,
+      },
     };
+  }
+
+  @Get('search')
+  async searchData(@Request() req, @Query('q') query: string) {
+    const teacher = await this.requireTeacher(req);
+    return this.teachersService.searchTeacherData(teacher.id, query);
+  }
+
+  @Get('recent-activities')
+  async getRecentActivities(@Request() req) {
+    const teacher = await this.requireTeacher(req);
+    const students = await this.teachersService.getTeacherStudents(teacher.id, 1, 1000);
+    const studentIds = students.data.map((s: any) => s.id);
+    return this.teachersService.getRecentActivities(teacher.id, studentIds, 20);
+  }
+
+  @Get('upcoming-tasks')
+  async getUpcomingTasks(@Request() req) {
+    const teacher = await this.requireTeacher(req);
+    const students = await this.teachersService.getTeacherStudents(teacher.id, 1, 1000);
+    const studentIds = students.data.map((s: any) => s.id);
+    return this.teachersService.getUpcomingTasks(teacher.id, studentIds);
   }
 
   @Get('today-sessions')

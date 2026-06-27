@@ -56,6 +56,9 @@ function TeacherZoomPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
   const [scheduling, setScheduling] = useState(false);
+  const [detailSessionId, setDetailSessionId] = useState<string | null>(null);
+  const [detailSession, setDetailSession] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     studentId: "",
     scheduledStart: new Date().toISOString().slice(0, 16),
@@ -342,7 +345,15 @@ function TeacherZoomPage() {
           </>
         )}
         <Button
-          onClick={() => navigate({ to: "/live-sessions/$id", params: { id: session.id } })}
+          onClick={() => {
+            setDetailSessionId(session.id);
+            setDetailLoading(true);
+            setDetailSession(null);
+            api<any>(`/live-sessions/${session.id}`)
+              .then((data) => setDetailSession(data))
+              .catch(() => toast.error("Failed to load session details"))
+              .finally(() => setDetailLoading(false));
+          }}
           variant="outline"
           className="rounded-xl h-9 text-xs font-bold gap-1.5"
         >
@@ -410,7 +421,7 @@ function TeacherZoomPage() {
           />
           <StatCard
             label="Avg Duration"
-            value={analytics?.averageDuration ? `${analytics.averageDuration} min` : "—"}
+            value={analytics?.averageSessionDuration ? `${analytics.averageSessionDuration} min` : "—"}
             icon={<Clock className="h-4 w-4" />}
           />
         </div>
@@ -572,6 +583,126 @@ function TeacherZoomPage() {
                   <Sparkles className="h-4 w-4" />
                 )}
                 {scheduling ? "Scheduling..." : "Create & Notify Student"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {detailSessionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDetailSessionId(null)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
+              <div>
+                <h3 className="text-xl font-extrabold text-foreground font-serif">Session Details</h3>
+                <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium mt-0.5">
+                  {detailSession?.student?.fullName || 'Session'} &middot; {detailSession?.status || ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setDetailSessionId(null)}
+                className="p-2 rounded-xl text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-nejah-electric" />
+              </div>
+            ) : detailSession ? (
+              <div className="px-8 py-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-1">Date</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {new Date(detailSession.scheduledStart).toLocaleDateString('en-US', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(detailSession.scheduledStart).getDay()]}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-1">Duration</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {detailSession.durationMinutes ? `${detailSession.durationMinutes} min` : '—'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {detailSession.actualStart && detailSession.actualEnd
+                        ? `Actual: ${Math.round((new Date(detailSession.actualEnd).getTime() - new Date(detailSession.actualStart).getTime()) / 60000)} min`
+                        : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
+                  <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-2">Start & End Times</p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Scheduled Start</p>
+                      <p className="font-bold text-foreground mt-0.5">
+                        {new Date(detailSession.scheduledStart).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Scheduled End</p>
+                      <p className="font-bold text-foreground mt-0.5">
+                        {new Date(detailSession.scheduledEnd).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                  {detailSession.actualStart && (
+                    <div className="flex items-center gap-4 text-sm mt-3 pt-3 border-t border-border dark:border-white/5">
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Actual Start</p>
+                        <p className="font-bold text-foreground mt-0.5">
+                          {new Date(detailSession.actualStart).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Actual End</p>
+                        <p className="font-bold text-foreground mt-0.5">
+                          {detailSession.actualEnd
+                            ? new Date(detailSession.actualEnd).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                  <p className="text-sm font-bold text-foreground">Status</p>
+                  <Badge className={cn(
+                    'rounded-full border-none px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider',
+                    detailSession.status === 'LIVE' ? 'bg-red-100 text-red-700' :
+                    detailSession.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                    'bg-muted text-muted-foreground',
+                  )}>
+                    {detailSession.status}
+                  </Badge>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-16">
+                <p className="text-sm text-muted-foreground">Failed to load session details.</p>
+              </div>
+            )}
+
+            <div className="flex justify-end px-8 pb-8 pt-2">
+              <Button
+                onClick={() => setDetailSessionId(null)}
+                className="rounded-xl px-6 h-10 text-sm font-bold"
+              >
+                Close
               </Button>
             </div>
           </motion.div>

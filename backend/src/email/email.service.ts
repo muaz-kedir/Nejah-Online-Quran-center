@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import { getFrontendUrl } from '../config/frontend-url';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter | null = null;
   private fromAddress: string;
+  private resend: Resend | null = null;
+  private resendFromAddress: string;
 
   constructor(private configService: ConfigService) {
     const host = this.configService.get('SMTP_HOST');
@@ -26,7 +30,19 @@ export class EmailService {
       });
       this.logger.log('SMTP transporter configured');
     } else {
-      this.logger.warn('SMTP not configured – emails will be logged to console only');
+      this.logger.warn('SMTP not configured – application emails will be logged to console only');
+    }
+
+    const resendApiKey = this.configService.get('RESEND_API_KEY');
+    this.resendFromAddress =
+      this.configService.get('EMAIL_FROM') ||
+      'Nejah Online Quran Center <noreply@nejah-center.com>';
+
+    if (resendApiKey) {
+      this.resend = new Resend(resendApiKey);
+      this.logger.log('Resend client configured');
+    } else {
+      this.logger.warn('RESEND_API_KEY not configured – password reset emails will be logged to console only');
     }
   }
 
@@ -48,6 +64,25 @@ export class EmailService {
     }
   }
 
+  private async sendViaResend(to: string, subject: string, html: string) {
+    if (this.resend) {
+      try {
+        await this.resend.emails.send({
+          from: this.resendFromAddress,
+          to,
+          subject,
+          html,
+        });
+        this.logger.log(`Resend email sent to ${to}: ${subject}`);
+      } catch (err) {
+        this.logger.error(`Failed to send Resend email to ${to}: ${err.message}`);
+        throw err;
+      }
+    } else {
+      this.logger.log(`[RESEND LOG] To: ${to} | Subject: ${subject}\n${html}`);
+    }
+  }
+
   // ── Template helpers ──────────────────────────────────────────────
 
   private wrap(body: string): string {
@@ -65,6 +100,66 @@ export class EmailService {
         </div>
       </div>
     `;
+  }
+
+  private passwordResetWrap(body: string): string {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #1D9E75; padding: 24px; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">
+            Nejah Online Quran Center
+          </h1>
+        </div>
+        <div style="background: #f9f9f9; padding: 32px; border-radius: 0 0 8px 8px;">
+          ${body}
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Password reset emails (Resend) ──────────────────────────────
+
+  async sendPasswordResetEmail(toEmail: string, userName: string, resetToken: string) {
+    const resetUrl = `${getFrontendUrl()}/reset-password?token=${resetToken}`;
+
+    const html = this.passwordResetWrap(`
+      <h2 style="color: #333;">Reset Your Password</h2>
+      <p style="color: #666;">Assalamu Alaikum ${userName},</p>
+      <p style="color: #666;">
+        We received a request to reset your password.
+        Click the button below to create a new password.
+        This link expires in <strong>15 minutes</strong>.
+      </p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${resetUrl}"
+          style="background: #1D9E75; color: white; padding: 14px 32px;
+                 border-radius: 8px; text-decoration: none; font-size: 16px;
+                 font-weight: bold; display: inline-block;">
+          Reset My Password
+        </a>
+      </div>
+      <p style="color: #999; font-size: 13px;">
+        If you did not request this, ignore this email.
+        Your password will not change.
+      </p>
+      <p style="color: #999; font-size: 12px;">
+        Or copy this link: <br/>
+        <a href="${resetUrl}" style="color: #1D9E75;">${resetUrl}</a>
+      </p>
+    `);
+
+    await this.sendViaResend(toEmail, 'Reset Your Nejah Password', html);
+  }
+
+  async sendPasswordChangedConfirmation(toEmail: string, userName: string) {
+    const html = this.passwordResetWrap(`
+      <h2 style="color: #333;">Password Changed Successfully</h2>
+      <p style="color: #666;">Assalamu Alaikum ${userName},</p>
+      <p style="color: #666;">Your password has been changed successfully.</p>
+      <p style="color: #666;">If you did not make this change, contact support immediately.</p>
+    `);
+
+    await this.sendViaResend(toEmail, 'Your Nejah Password Was Changed', html);
   }
 
   // ── Application lifecycle emails ──────────────────────────────────
@@ -91,19 +186,19 @@ export class EmailService {
     temporaryPassword: string,
   ) {
     const html = this.wrap(`
-      <h2 style="color: #065f46; margin: 0 0 16px;">🎉 Application Approved!</h2>
+      <h2 style="color: #065f46; margin: 0 0 16px;">Application Approved!</h2>
       <p style="color: #374151; line-height: 1.6;">Assalamu Alaikum <strong>${applicantName}</strong>,</p>
       <p style="color: #374151; line-height: 1.6;">Alhamdulillah! We are pleased to inform you that your application to teach at Nejah Online Quran &amp; Islamic Center has been <strong style="color: #059669;">approved</strong>.</p>
       <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 16px; margin: 20px 0;">
         <p style="color: #065f46; margin: 0 0 8px; font-size: 14px;"><strong>Your Login Credentials:</strong></p>
-        <p style="color: #047857; margin: 4px 0; font-size: 14px;">📧 Email: <strong>${loginEmail}</strong></p>
-        <p style="color: #047857; margin: 4px 0; font-size: 14px;">🔑 Temporary Password: <strong>${temporaryPassword}</strong></p>
+        <p style="color: #047857; margin: 4px 0; font-size: 14px;">Email: <strong>${loginEmail}</strong></p>
+        <p style="color: #047857; margin: 4px 0; font-size: 14px;">Temporary Password: <strong>${temporaryPassword}</strong></p>
       </div>
       <p style="color: #dc2626; font-size: 13px;"><strong>Important:</strong> Please change your password after your first login.</p>
       <p style="color: #374151; line-height: 1.6;">Welcome to the Nejah family! We look forward to working with you.</p>
       <p style="color: #6b7280; font-size: 13px; margin-top: 24px;">JazakAllahu Khairan,<br>Nejah Admissions Team</p>
     `);
-    await this.send(to, '🎉 Application Approved – Welcome to Nejah!', html);
+    await this.send(to, 'Application Approved – Welcome to Nejah!', html);
   }
 
   async sendApplicationRejected(to: string, applicantName: string, reason: string) {
