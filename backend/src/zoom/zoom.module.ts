@@ -37,6 +37,7 @@ import { ScheduleSessionGeneratorService } from './schedule-session-generator.se
 import { ScheduleSessionsCron } from './schedule-sessions.cron';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
+import { LiveSessionLookupService } from './live-session-lookup.service';
 import { EncryptionService } from '../common/encryption.service';
 
 @Module({
@@ -86,6 +87,7 @@ import { EncryptionService } from '../common/encryption.service';
     AttendanceIntelligenceService,
     AttendanceReconciliationService,
     LiveSessionAttendanceReportService,
+    LiveSessionLookupService,
     ScheduleSessionGeneratorService,
     ScheduleSessionsCron,
   ],
@@ -98,6 +100,7 @@ import { EncryptionService } from '../common/encryption.service';
     AttendanceIntelligenceService,
     AttendanceReconciliationService,
     LiveSessionAttendanceReportService,
+    LiveSessionLookupService,
     ScheduleSessionGeneratorService,
   ],
 })

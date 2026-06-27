@@ -298,6 +298,16 @@ export class LiveSessionService {
 
     if (session.status !== LiveSessionStatus.LIVE) {
       const now = new Date();
+      const windowMs = (session.joinWindowOpenMinutes || 15) * 60 * 1000;
+      const windowOpen = new Date(session.scheduledStart.getTime() - windowMs);
+
+      if (now < windowOpen) {
+        const minutesUntil = Math.ceil((windowOpen.getTime() - now.getTime()) / 60000);
+        throw new BadRequestException(
+          `Session cannot start yet. The start window opens in ${minutesUntil} minute(s).`,
+        );
+      }
+
       const gracePeriodMs = 30 * 60 * 1000;
       if (session.scheduledEnd && now > new Date(session.scheduledEnd.getTime() + gracePeriodMs)) {
         session.status = LiveSessionStatus.EXPIRED;
@@ -330,6 +340,13 @@ export class LiveSessionService {
     session.teacherJoinTime = session.teacherJoinTime || new Date();
 
     await this.liveSessionRepository.save(session);
+
+    this.logger.log(
+      `Live session started — liveSessionId=${id}, teacherId=${teacherId}, ` +
+        `studentId=${session.studentId || 'n/a'}, scheduleId=${session.scheduleId || 'n/a'}, ` +
+        `zoomMeetingId=${session.zoomMeetingId}, zoomMeetingUUID=${session.zoomMeetingUUID || 'n/a'}, ` +
+        `status=${session.status}, timestamp=${session.actualStart?.toISOString()}`,
+    );
 
     try {
       await this.attendanceReportService.seedEnrollmentOnStart(id);
@@ -701,6 +718,11 @@ export class LiveSessionService {
     session.zoomStartUrl = meeting.startUrl;
     session.zoomPassword = meeting.password || null;
     await this.liveSessionRepository.save(session);
+
+    this.logger.log(
+      `Zoom meeting provisioned — liveSessionId=${session.id}, zoomMeetingId=${session.zoomMeetingId}, ` +
+        `zoomMeetingUUID=${session.zoomMeetingUUID || 'n/a'}, teacherId=${session.teacherId}`,
+    );
   }
 
   private async registerStudentForMeeting(
