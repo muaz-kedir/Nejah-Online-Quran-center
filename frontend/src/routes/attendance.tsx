@@ -45,12 +45,65 @@ function AdminAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+  const [teacherDetail, setTeacherDetail] = useState<any | null>(null);
+  const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
   
   // Search & filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchTeachers = async (p: 'day' | 'week' | 'month') => {
+    setLoadingTeachers(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(apiUrl(`/attendance/admin/teachers?period=${p}`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTeachers(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error('[Attendance] Failed to fetch teachers', e);
+    } finally {
+      setLoadingTeachers(false);
+    }
+  };
+
+  const fetchTeacherDetail = async (teacherId: string, p: 'day' | 'week' | 'month') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(
+        apiUrl(`/attendance/admin/teachers/${teacherId}?period=${p}`),
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (res.ok) {
+        setTeacherDetail(await res.json());
+      } else {
+        toast.error('Failed to load teacher attendance');
+      }
+    } catch {
+      toast.error('Error loading teacher attendance');
+    }
+  };
+
+  const mapSummaryToStudentRecords = (summary: any) =>
+    (summary?.records || []).map((r: any, idx: number) => ({
+      id: r.userId || `rec-${idx}`,
+      student: { fullName: r.userName, email: r.userEmail, studentCode: r.userId?.slice(0, 8) },
+      attendanceStatus: (r.status || 'absent').toUpperCase(),
+      joinTime: r.joinTime || r.firstJoinTime,
+      leaveTime: r.leaveTime || r.lastLeaveTime,
+      durationMinutes: r.durationMinutes ?? Math.round((r.totalDurationSeconds || 0) / 60),
+      isReconciled: r.isReconciled,
+    }));
 
   const fetchAttendanceData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -128,7 +181,15 @@ function AdminAttendancePage() {
       setRefreshing(false);
       console.log('[Attendance] Data fetch completed');
     }
+    await fetchTeachers(period);
   };
+
+  useEffect(() => {
+    fetchTeachers(period);
+    if (selectedTeacherId) {
+      fetchTeacherDetail(selectedTeacherId, period);
+    }
+  }, [period, selectedTeacherId]);
 
   useEffect(() => {
     // Initial fetch
@@ -156,19 +217,19 @@ function AdminAttendancePage() {
       });
       if (res.ok) {
         const summary = await res.json();
+        const sessionMeta = sessions.find((s) => s.id === sessionId);
+        const studentAttendances = mapSummaryToStudentRecords(summary);
         setSelectedSession({
           id: sessionId,
-          classTitle: sessions.find((s) => s.id === sessionId)?.classTitle || 'Live Session',
-          teacher: sessions.find((s) => s.id === sessionId)?.teacher,
-          sessionDate: sessions.find((s) => s.id === sessionId)?.sessionDate,
-          attendances: (summary.records || []).map((r: any) => ({
-            student: { fullName: r.userName, email: r.userEmail },
-            attendanceStatus: r.status?.toUpperCase(),
-            joinTime: r.joinTime,
-            leaveTime: r.leaveTime,
-            duration: r.durationMinutes,
-            isReconciled: r.isReconciled,
-          })),
+          classTitle: sessionMeta?.classTitle || 'Live Session',
+          subject: sessionMeta?.subject || 'Quran Class',
+          teacher: sessionMeta?.teacher,
+          sessionDate: sessionMeta?.sessionDate || sessionMeta?.scheduledStart,
+          status: sessionMeta?.status || 'COMPLETED',
+          teacherAttendanceStatus: sessionMeta?.teacherAttendanceStatus,
+          teacherJoinTime: sessionMeta?.actualStart,
+          studentAttendances,
+          attendances: studentAttendances,
           summary,
         });
       } else {
@@ -291,6 +352,187 @@ function AdminAttendancePage() {
             <p className="text-[10px] text-nejah-slate-blue font-bold uppercase tracking-wide mt-2">Requires parent notification</p>
           </Card>
         </div>
+
+        {/* Teacher attendance — grouped by instructor */}
+        <section className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border dark:border-white/5 pb-4">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">Teacher Attendance</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Click a teacher to view daily, weekly, or monthly session records with join/leave times.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {(['day', 'week', 'month'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={cn(
+                    'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all',
+                    period === p
+                      ? 'bg-nejah-sapphire text-white shadow-md'
+                      : 'bg-background/50 dark:bg-nejah-surface text-nejah-slate-blue hover:bg-muted',
+                  )}
+                >
+                  {p === 'day' ? 'Today' : p === 'week' ? 'This Week' : 'This Month'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[2rem] border border-border dark:border-white/5 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-background/50 dark:bg-nejah-surface/50 border-b border-border dark:border-white/5">
+                    <th className="py-4 px-6 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Teacher</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Sessions</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Present</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Late</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Absent</th>
+                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
+                  {loadingTeachers ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse"><td colSpan={6} className="h-14" /></tr>
+                    ))
+                  ) : teachers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-nejah-slate-blue italic">
+                        No completed sessions in this period.
+                      </td>
+                    </tr>
+                  ) : (
+                    teachers.map((t) => (
+                      <tr
+                        key={t.teacherId}
+                        onClick={() => setSelectedTeacherId(t.teacherId)}
+                        className={cn(
+                          'cursor-pointer hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all',
+                          selectedTeacherId === t.teacherId && 'bg-primary/5',
+                        )}
+                      >
+                        <td className="py-4 px-6">
+                          <p className="font-bold text-nejah-sapphire dark:text-foreground text-sm">{t.teacherName}</p>
+                          <p className="text-[10px] text-muted-foreground">{t.email}</p>
+                        </td>
+                        <td className="py-4 px-4 font-bold text-sm tabular-nums">{t.sessionCount}</td>
+                        <td className="py-4 px-4 font-bold text-sm text-nejah-electric tabular-nums">{t.present}</td>
+                        <td className="py-4 px-4 font-bold text-sm text-amber-600 tabular-nums">{t.late}</td>
+                        <td className="py-4 px-4 font-bold text-sm text-red-500 tabular-nums">{t.absent}</td>
+                        <td className="py-4 px-4 font-bold text-sm tabular-nums">{t.attendanceRate}%</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {selectedTeacherId && teacherDetail && (
+            <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[2rem] border border-primary/20 p-6 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">{teacherDetail.teacher?.fullName}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {period === 'day' ? 'Today' : period === 'week' ? 'Last 7 days' : 'Last 30 days'} —{' '}
+                    {teacherDetail.summary?.sessionCount} sessions · {teacherDetail.summary?.attendanceRate}% rate
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedTeacherId(null); setTeacherDetail(null); }}>
+                  Close
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {[
+                  { label: 'Sessions', value: teacherDetail.summary?.sessionCount ?? 0 },
+                  { label: 'Present', value: teacherDetail.summary?.present ?? 0 },
+                  { label: 'Late', value: teacherDetail.summary?.late ?? 0 },
+                  { label: 'Absent', value: teacherDetail.summary?.absent ?? 0 },
+                  { label: 'Rate', value: `${teacherDetail.summary?.attendanceRate ?? 0}%` },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-2xl border border-border p-4 text-center">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.label}</p>
+                    <p className="text-2xl font-bold mt-1">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <h4 className="text-xs font-black uppercase text-nejah-slate-blue tracking-wider mb-3">Sessions</h4>
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="p-3 text-left">Date</th>
+                        <th className="p-3 text-left">Class</th>
+                        <th className="p-3 text-right">Present</th>
+                        <th className="p-3 text-right">Absent</th>
+                        <th className="p-3 text-right">Rate</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(teacherDetail.sessions || []).map((s: any) => (
+                        <tr key={s.sessionId} className="border-t border-border">
+                          <td className="p-3">{new Date(s.scheduledStart).toLocaleDateString()}</td>
+                          <td className="p-3 font-medium">{s.classTitle}</td>
+                          <td className="p-3 text-right tabular-nums">{s.totalStudentsPresent}</td>
+                          <td className="p-3 text-right tabular-nums text-red-500">{s.totalStudentsAbsent}</td>
+                          <td className="p-3 text-right tabular-nums">{s.attendanceRate}%</td>
+                          <td className="p-3 text-right">
+                            <Button size="sm" variant="outline" onClick={() => handleRowClick(s.sessionId)}>
+                              Details
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-black uppercase text-nejah-slate-blue tracking-wider mb-3">All student records</h4>
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="p-3 text-left">Student</th>
+                        <th className="p-3 text-left">Session</th>
+                        <th className="p-3 text-left">Status</th>
+                        <th className="p-3 text-left">Join</th>
+                        <th className="p-3 text-left">Leave</th>
+                        <th className="p-3 text-right">Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(teacherDetail.records || []).map((r: any, idx: number) => (
+                        <tr key={idx} className="border-t border-border">
+                          <td className="p-3">{r.userName}</td>
+                          <td className="p-3 text-muted-foreground">{r.sessionTitle}</td>
+                          <td className="p-3">
+                            <Badge variant="outline" className="text-[10px] uppercase">{r.status}</Badge>
+                          </td>
+                          <td className="p-3 tabular-nums">
+                            {r.firstJoinTime ? new Date(r.firstJoinTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </td>
+                          <td className="p-3 tabular-nums">
+                            {r.lastLeaveTime ? new Date(r.lastLeaveTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </td>
+                          <td className="p-3 text-right tabular-nums">{r.durationMinutes ?? 0} min</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Live Meeting Supervision Grid */}
         <section className="space-y-6">
@@ -585,8 +827,13 @@ function AdminAttendancePage() {
                 <div className="space-y-3">
                   <h4 className="text-xs font-black uppercase text-nejah-slate-blue tracking-wider">Assigned Students Attendance Records</h4>
                   <div className="space-y-2">
-                    {selectedSession.studentAttendances && selectedSession.studentAttendances.length > 0 ? (
-                      selectedSession.studentAttendances.map((rec: any) => (
+                    {(() => {
+                      const studentRows =
+                        selectedSession.studentAttendances ||
+                        selectedSession.attendances ||
+                        [];
+                      return studentRows.length > 0 ? (
+                      studentRows.map((rec: any) => (
                         <div key={rec.id} className="p-4 border border-border dark:border-white/5 rounded-2xl flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-background/50 flex items-center justify-center font-bold text-xs text-nejah-slate-blue">
@@ -616,7 +863,8 @@ function AdminAttendancePage() {
                       ))
                     ) : (
                       <div className="py-4 text-center text-xs text-nejah-slate-blue font-medium italic border border-dashed rounded-2xl">No students assigned to this session.</div>
-                    )}
+                    );
+                    })()}
                   </div>
                 </div>
 

@@ -20,6 +20,9 @@ import { ReplacementStatus } from '../common/enums/replacement-status.enum';
 import { ReplacementReason } from '../common/enums/replacement-reason.enum';
 import { Notification, NotificationChannel } from '../notifications/entities/notification.entity';
 import { UserRole } from '../common/enums/user-role.enum';
+import { LiveSession } from '../zoom/entities/live-session.entity';
+import { SessionParticipantSummary } from '../zoom/entities/session-participant-summary.entity';
+import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
 
 export interface DateRangeFilter {
   startDate?: string;
@@ -166,6 +169,10 @@ export class ReportsService {
     private replacementsRepository: Repository<TeacherReplacement>,
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+    @InjectRepository(LiveSession)
+    private liveSessionRepository: Repository<LiveSession>,
+    @InjectRepository(SessionParticipantSummary)
+    private sessionParticipantSummaryRepository: Repository<SessionParticipantSummary>,
   ) {}
 
   // ────────────────────────────────────────────────────────────────────────────────
@@ -555,32 +562,47 @@ export class ReportsService {
   async getAttendanceAnalytics(
     filters: DateRangeFilter & { teacherId?: string; studentId?: string },
   ): Promise<AttendanceAnalytics> {
-    const where: any = {};
+    const sessionWhere: Record<string, unknown> = {
+      status: LiveSessionStatus.COMPLETED,
+    };
 
     if (filters.startDate && filters.endDate) {
-      where.sessionDate = Between(filters.startDate, filters.endDate);
+      sessionWhere.scheduledStart = Between(
+        new Date(filters.startDate),
+        new Date(filters.endDate),
+      );
     } else if (filters.startDate) {
-      where.sessionDate = MoreThan(filters.startDate);
+      sessionWhere.scheduledStart = MoreThan(new Date(filters.startDate));
     } else if (filters.endDate) {
-      where.sessionDate = LessThan(filters.endDate);
+      sessionWhere.scheduledStart = LessThan(new Date(filters.endDate));
     }
 
     if (filters.teacherId) {
-      where.teacherId = filters.teacherId;
+      sessionWhere.teacherId = filters.teacherId;
     }
 
-    const sessions = await this.classSessionRepository.find({
-      where,
-      relations: ['studentAttendances'],
+    const sessions = await this.liveSessionRepository.find({
+      where: sessionWhere,
     });
 
     const totalSessions = sessions.length;
-    const totalStudentsAssigned = sessions.reduce(
-      (sum, s) => sum + (s.totalStudentsAssigned || 0),
-      0,
-    );
+    const sessionIds = sessions.map((s) => s.id);
 
-    // Count attendance by status
+    const summaryWhere: Record<string, unknown> = { userType: 'student' };
+    if (sessionIds.length > 0) {
+      summaryWhere.sessionId = In(sessionIds);
+    }
+    if (filters.studentId) {
+      summaryWhere.participantId = filters.studentId;
+    }
+
+    const summaries =
+      sessionIds.length > 0
+        ? await this.sessionParticipantSummaryRepository.find({ where: summaryWhere })
+        : [];
+
+    const totalStudentsAssigned = summaries.length;
+
     let presentCount = 0;
     let lateCount = 0;
     let absentCount = 0;
@@ -595,36 +617,47 @@ export class ReportsService {
     };
 
     for (const session of sessions) {
-      // Day of week
-      const day = new Date(session.sessionDate).toLocaleDateString('en-US', { weekday: 'long' });
+      const day = new Date(session.scheduledStart).toLocaleDateString('en-US', {
+        weekday: 'long',
+      });
       sessionsByDay[day] = (sessionsByDay[day] || 0) + 1;
+    }
 
-      // Count attendance
-      for (const attendance of session.studentAttendances || []) {
-        switch (attendance.attendanceStatus) {
-          case StudentAttendanceStatus.PRESENT:
-            presentCount++;
-            attendanceByStatus.present++;
-            break;
-          case StudentAttendanceStatus.LATE:
-            lateCount++;
-            attendanceByStatus.late++;
-            break;
-          case StudentAttendanceStatus.ABSENT:
-            absentCount++;
-            attendanceByStatus.absent++;
-            break;
-          case StudentAttendanceStatus.LEFT_EARLY:
-            leftEarlyCount++;
-            attendanceByStatus.leftEarly++;
-            break;
-        }
+    for (const summary of summaries) {
+      switch (summary.status) {
+        case 'present':
+          presentCount++;
+          attendanceByStatus.present++;
+          break;
+        case 'late':
+          lateCount++;
+          attendanceByStatus.late++;
+          break;
+        case 'absent':
+          absentCount++;
+          attendanceByStatus.absent++;
+          break;
+        case 'left_early':
+          leftEarlyCount++;
+          attendanceByStatus.leftEarly++;
+          break;
+        case 'partial':
+          presentCount++;
+          attendanceByStatus.present++;
+          break;
+        default:
+          absentCount++;
+          attendanceByStatus.absent++;
+          break;
       }
     }
 
-    const totalAttended = presentCount + lateCount + absentCount + leftEarlyCount;
     const overallAttendanceRate =
-      totalStudentsAssigned > 0 ? ((totalAttended / totalStudentsAssigned) * 100).toFixed(2) : '0';
+      totalStudentsAssigned > 0
+        ? parseFloat(
+            (((presentCount + lateCount + leftEarlyCount) / totalStudentsAssigned) * 100).toFixed(2),
+          )
+        : 0;
 
     return {
       totalSessions,
@@ -633,7 +666,7 @@ export class ReportsService {
       totalLate: lateCount,
       totalAbsent: absentCount,
       totalLeftEarly: leftEarlyCount,
-      overallAttendanceRate: parseFloat(overallAttendanceRate),
+      overallAttendanceRate,
       sessionsByDay,
       attendanceByStatus,
     };
