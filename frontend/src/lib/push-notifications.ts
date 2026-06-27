@@ -127,12 +127,42 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
 
 export async function initializePwaPush(): Promise<boolean> {
   await registerServiceWorker();
-  if (localStorage.getItem('token')) {
-    const fcmOk = await initializeFcm();
-    if (fcmOk) return true;
-    return await subscribeToPushNotifications();
+  if (!localStorage.getItem('token')) return false;
+
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    return false;
   }
-  return false;
+
+  const fcmOk = await initializeFcm();
+  if (fcmOk) return true;
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const existingSub = await registration.pushManager.getSubscription();
+    if (existingSub) return true;
+  } catch { }
+
+  const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (!vapidKey) return false;
+
+  const reg = await navigator.serviceWorker.ready;
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(vapidKey) as unknown as BufferSource,
+  });
+
+  const json = subscription.toJSON();
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
+
+  await api('/push-notifications/subscribe', {
+    method: 'POST',
+    body: JSON.stringify({
+      subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+      deviceInfo: navigator.userAgent,
+    }),
+  });
+
+  return true;
 }
 
 export { setupForegroundListener, getCurrentFcmToken };

@@ -22,12 +22,17 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
   const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    const timeout = setTimeout(() => { if (!cancelled) setLoading(false); }, 5000);
+
     const checkStatus = async () => {
       setLoading(true);
       const supported = "serviceWorker" in navigator && "PushManager" in window;
+      if (cancelled) return;
       setPushSupported(supported);
 
       if (!supported) {
+        clearTimeout(timeout);
         setLoading(false);
         return;
       }
@@ -39,14 +44,17 @@ export function PushNotificationToggle({ variant = "row" }: PushNotificationTogg
         const hasFcm = !!getCurrentFcmToken();
         const hasSubscription = !!await registration.pushManager.getSubscription();
 
-        setPushSubscribed(hasFcm || hasSubscription);
+        if (!cancelled) setPushSubscribed(hasFcm || hasSubscription);
       } catch {
-        setPushSubscribed(!!getCurrentFcmToken());
+        if (!cancelled) setPushSubscribed(!!getCurrentFcmToken());
       } finally {
-        setLoading(false);
+        clearTimeout(timeout);
+        if (!cancelled) setLoading(false);
       }
     };
     checkStatus();
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, []);
 
   const handleToggle = useCallback(async () => {
