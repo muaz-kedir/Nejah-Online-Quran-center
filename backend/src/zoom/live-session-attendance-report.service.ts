@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { LiveSession } from './entities/live-session.entity';
 import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
-import { LiveSessionStatus } from './enums/live-session-status.enum';
+import { LiveSessionStatus, AttendanceStatus } from './enums/live-session-status.enum';
+import { ReconciliationStatus } from './enums/reconciliation-status.enum';
 import { TimelineEventType } from './entities/participant-timeline-event.entity';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { AttendanceReconciliationService } from './attendance-reconciliation.service';
@@ -69,6 +70,17 @@ export class LiveSessionAttendanceReportService {
       if (meetingUUID) session.zoomMeetingUUID = meetingUUID;
       await this.sessionRepository.save(session);
     }
+
+    await this.seedEnrollmentOnStart(session.id);
+  }
+
+  /** Pre-create absent attendance rows for all enrolled students when a session goes live. */
+  async seedEnrollmentOnStart(sessionId: string): Promise<void> {
+    const session = await this.sessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ['teacher', 'schedule', 'schedule.scheduleStudents'],
+    });
+    if (!session) return;
 
     const studentIds = await this.getEnrolledStudentIds(session);
     if (studentIds.length > 0) {
@@ -207,16 +219,38 @@ export class LiveSessionAttendanceReportService {
     });
     if (!session) return;
 
-    session.status = LiveSessionStatus.COMPLETED;
-    session.actualEnd = endTime;
-    session.completedAt = endTime;
-    session.teacherLeaveTime = session.teacherLeaveTime || endTime;
     if (meetingUUID) session.zoomMeetingUUID = meetingUUID;
+    await this.finalizeSessionAttendance(session.id, endTime, {
+      completionReason: session.completionReason,
+    });
+  }
 
-    if (session.actualStart) {
-      session.durationMinutes = Math.floor(
-        (endTime.getTime() - session.actualStart.getTime()) / 60000,
-      );
+  /**
+   * Shared end-of-session pipeline used by Zoom webhooks and teacher "End Session" API.
+   */
+  async finalizeSessionAttendance(
+    sessionId: string,
+    endTime: Date,
+    options?: { completionReason?: string; skipNotifications?: boolean },
+  ): Promise<LiveSession | null> {
+    const session = await this.sessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ['teacher', 'schedule'],
+    });
+    if (!session) return null;
+
+    if (session.status !== LiveSessionStatus.COMPLETED) {
+      session.status = LiveSessionStatus.COMPLETED;
+      session.actualEnd = endTime;
+      session.completedAt = endTime;
+      session.teacherLeaveTime = session.teacherLeaveTime || endTime;
+      if (options?.completionReason) session.completionReason = options.completionReason;
+
+      if (session.actualStart) {
+        session.durationMinutes = Math.floor(
+          (endTime.getTime() - session.actualStart.getTime()) / 60000,
+        );
+      }
     }
 
     await this.sessionRepository.save(session);
@@ -232,26 +266,123 @@ export class LiveSessionAttendanceReportService {
       this.reconciliationService.scheduleReconciliation(session.id, session.zoomMeetingUUID);
     }
 
-    const attendances = await this.attendanceRepository.find({
-      where: { sessionId: session.id },
-      relations: ['student'],
-    });
-    const studentUserIds = attendances
-      .map((a) => a.student?.userId)
-      .filter((id): id is string => !!id);
+    await this.syncStudentAttendanceRates(session.id);
 
-    if (studentUserIds.length > 0) {
-      try {
-        await this.notificationsService.sendCustomNotifications(
-          studentUserIds,
-          'Class Completed',
-          `Your class has ended. Duration: ${session.durationMinutes || 'N/A'} minutes.`,
-          { sessionId: session.id, durationMinutes: session.durationMinutes },
-        );
-      } catch (err) {
-        this.logger.error('Failed to send completion notification', err);
+    if (!options?.skipNotifications) {
+      const attendances = await this.attendanceRepository.find({
+        where: { sessionId: session.id },
+        relations: ['student'],
+      });
+      const studentUserIds = attendances
+        .map((a) => a.student?.userId)
+        .filter((id): id is string => !!id);
+
+      if (studentUserIds.length > 0) {
+        try {
+          await this.notificationsService.sendCustomNotifications(
+            studentUserIds,
+            'Class Completed',
+            `Your class has ended. Duration: ${session.durationMinutes || 'N/A'} minutes.`,
+            { sessionId: session.id, durationMinutes: session.durationMinutes },
+          );
+        } catch (err) {
+          this.logger.error('Failed to send completion notification', err);
+        }
       }
     }
+
+    return session;
+  }
+
+  private async syncStudentAttendanceRates(sessionId: string): Promise<void> {
+    const attendances = await this.attendanceRepository.find({
+      where: { sessionId },
+      relations: ['student'],
+    });
+
+    const studentIds = [...new Set(attendances.map((a) => a.studentId).filter(Boolean))];
+    for (const studentId of studentIds) {
+      const allAttendances = await this.attendanceRepository.find({ where: { studentId } });
+      if (!allAttendances.length) continue;
+
+      const presentCount = allAttendances.filter(
+        (a) =>
+          a.attendanceStatus === AttendanceStatus.PRESENT ||
+          a.attendanceStatus === AttendanceStatus.LATE ||
+          a.attendanceStatus === AttendanceStatus.PARTIAL,
+      ).length;
+      const rate = Math.round((presentCount / allAttendances.length) * 100);
+      await this.studentRepository.update(studentId, { attendanceRate: rate });
+    }
+  }
+
+  async getAdminSessionsOverview(limit = 100) {
+    const sessions = await this.sessionRepository.find({
+      where: { status: LiveSessionStatus.COMPLETED },
+      relations: ['teacher', 'schedule'],
+      order: { scheduledStart: 'DESC' },
+      take: limit,
+    });
+
+    if (!sessions.length) return [];
+
+    const sessionIds = sessions.map((s) => s.id);
+    const summaries = await this.summaryRepository.find({
+      where: { sessionId: In(sessionIds), userType: 'student' },
+    });
+
+    const bySession = new Map<string, SessionParticipantSummary[]>();
+    for (const summary of summaries) {
+      const list = bySession.get(summary.sessionId) || [];
+      list.push(summary);
+      bySession.set(summary.sessionId, list);
+    }
+
+    return sessions.map((session) => {
+      const records = bySession.get(session.id) || [];
+      const present = records.filter((r) => r.status === 'present').length;
+      const late = records.filter((r) => r.status === 'late').length;
+      const leftEarly = records.filter((r) => r.status === 'left_early').length;
+      const partial = records.filter((r) => r.status === 'partial').length;
+      const absent = records.filter((r) => r.status === 'absent').length;
+
+      return {
+        id: session.id,
+        sessionId: session.id,
+        classTitle: session.schedule?.className || session.metadata?.className || 'Live Session',
+        subject: session.schedule?.className || 'Quran Class',
+        quranLevel: session.metadata?.level,
+        status: session.status,
+        sessionDate: session.scheduledStart,
+        scheduledStart: session.scheduledStart,
+        scheduledEnd: session.scheduledEnd,
+        actualStart: session.actualStart,
+        actualEnd: session.actualEnd,
+        durationMinutes: session.durationMinutes,
+        teacher: session.teacher
+          ? { id: session.teacher.id, fullName: session.teacher.fullName }
+          : null,
+        totalStudentsPresent: present,
+        totalStudentsLate: late,
+        totalStudentsAbsent: absent,
+        totalStudentsLeftEarly: leftEarly,
+        totalStudentsPartial: partial,
+        attendanceRate:
+          records.length > 0
+            ? Math.round(((present + late + leftEarly) / records.length) * 100)
+            : 0,
+        attendances: records.map((r) => ({
+          studentId: r.participantId,
+          student: { fullName: r.userName, email: r.userEmail },
+          attendanceStatus: r.status?.toUpperCase(),
+          joinTime: r.firstJoinTime,
+          leaveTime: r.lastLeaveTime,
+          duration: Math.round(r.totalDurationSeconds / 60),
+          isReconciled: r.isReconciled,
+        })),
+        isLiveSession: true,
+      };
+    });
   }
 
   async getSessionAttendanceSummary(sessionId: string) {
@@ -470,6 +601,10 @@ export class LiveSessionAttendanceReportService {
     return Array.from(ids);
   }
 
+  private normalizeName(name: string): string {
+    return name.trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
   private async resolveParticipant(
     participant: ZoomParticipantPayload,
     session: LiveSession,
@@ -479,6 +614,7 @@ export class LiveSessionAttendanceReportService {
     role: 'teacher' | 'student';
   }> {
     const email = participant.email?.trim().toLowerCase() || '';
+    const participantName = this.normalizeName(participant.name || '');
 
     if (email) {
       const student = await this.studentRepository.findOne({
@@ -517,6 +653,35 @@ export class LiveSessionAttendanceReportService {
       }
     }
 
+    const enrolledIds = await this.getEnrolledStudentIds(session);
+    if (enrolledIds.length > 0) {
+      const enrolledStudents = await this.studentRepository.find({
+        where: { id: In(enrolledIds) },
+      });
+
+      if (participantName) {
+        const byName = enrolledStudents.find(
+          (s) => this.normalizeName(s.fullName) === participantName,
+        );
+        if (byName?.userId) {
+          return { participantId: byName.id, userId: byName.userId, role: 'student' };
+        }
+
+        const fuzzy = enrolledStudents.find((s) => {
+          const full = this.normalizeName(s.fullName);
+          return full.includes(participantName) || participantName.includes(full);
+        });
+        if (fuzzy?.userId) {
+          return { participantId: fuzzy.id, userId: fuzzy.userId, role: 'student' };
+        }
+      }
+
+      if (enrolledStudents.length === 1 && enrolledStudents[0].userId) {
+        const only = enrolledStudents[0];
+        return { participantId: only.id, userId: only.userId, role: 'student' };
+      }
+    }
+
     if (session.studentId) {
       const student = await this.studentRepository.findOne({ where: { id: session.studentId } });
       if (student?.userId) {
@@ -531,6 +696,10 @@ export class LiveSessionAttendanceReportService {
         role: 'teacher',
       };
     }
+
+    this.logger.warn(
+      `Unresolved participant for session ${session.id}: email=${email || 'none'} name=${participant.name || 'none'}`,
+    );
 
     return {
       participantId: participant.zoomParticipantId || 'unknown',

@@ -12,6 +12,7 @@ import { ZoomService } from './zoom.service';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SessionAttendanceService } from './session-attendance.service';
+import { LiveSessionAttendanceReportService } from './live-session-attendance-report.service';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 
@@ -33,6 +34,7 @@ export class LiveSessionService {
     private readonly zoomService: ZoomService,
     private readonly notificationsService: NotificationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
+    private readonly attendanceReportService: LiveSessionAttendanceReportService,
   ) {}
 
   async create(dto: CreateLiveSessionDto): Promise<LiveSession> {
@@ -328,6 +330,12 @@ export class LiveSessionService {
     session.teacherJoinTime = session.teacherJoinTime || new Date();
 
     await this.liveSessionRepository.save(session);
+
+    try {
+      await this.attendanceReportService.seedEnrollmentOnStart(id);
+    } catch (err) {
+      this.logger.error(`Failed to seed attendance for session ${id}`, err);
+    }
 
     const fullSession = await this.findById(id);
 
@@ -733,56 +741,9 @@ export class LiveSessionService {
       throw new BadRequestException('Only live sessions can be completed');
     }
 
-    const now = new Date();
-    session.status = LiveSessionStatus.COMPLETED;
-    session.actualEnd = now;
-    session.completedAt = now;
-    session.teacherLeaveTime = session.teacherLeaveTime || now;
-    if (completionReason) session.completionReason = completionReason;
-
-    if (session.actualStart) {
-      const durationMs = session.actualEnd.getTime() - session.actualStart.getTime();
-      session.durationMinutes = Math.floor(durationMs / 60000);
-    }
-
-    await this.liveSessionRepository.save(session);
-
-    const attendances = await this.attendanceRepository.find({
-      where: { sessionId: id },
-      relations: ['session'],
+    await this.attendanceReportService.finalizeSessionAttendance(id, new Date(), {
+      completionReason,
     });
-
-    const scheduledDuration = this.getScheduledDurationMinutes(session);
-
-    for (const attendance of attendances) {
-      if (!attendance.joinTime) {
-        attendance.attendanceStatus = AttendanceStatus.ABSENT;
-      } else {
-        if (!attendance.leaveTime) {
-          attendance.leaveTime = session.actualEnd;
-        }
-        attendance.duration = Math.floor(
-          (attendance.leaveTime.getTime() - attendance.joinTime.getTime()) / 60000,
-        );
-        attendance.attendanceStatus = this.sessionAttendanceService.calculateAttendanceStatus(
-          attendance.duration,
-          scheduledDuration,
-        );
-      }
-    }
-    await this.attendanceRepository.save(attendances);
-
-    try {
-      const studentIds = attendances.map((a) => a.studentId);
-      await this.notificationsService.sendCustomNotifications(
-        studentIds,
-        `Class Completed: ${session.schedule?.className || 'Quran Class'}`,
-        `Your class has ended. Duration: ${session.durationMinutes} minutes.`,
-        { sessionId: id, durationMinutes: session.durationMinutes },
-      );
-    } catch (err) {
-      this.logger.error('Failed to send meeting ended notifications', err);
-    }
 
     return this.findById(id);
   }

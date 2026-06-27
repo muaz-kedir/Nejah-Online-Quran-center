@@ -50,6 +50,12 @@ export class LiveSessionAttendanceReportController {
     });
   }
 
+  @Get('admin/sessions')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminSessionsOverview(@Query('limit') limit?: string) {
+    return this.reportService.getAdminSessionsOverview(limit ? parseInt(limit, 10) : 100);
+  }
+
   @Get('admin/sessions/:sessionId/summary')
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async getAdminSessionSummary(@Param('sessionId') sessionId: string) {

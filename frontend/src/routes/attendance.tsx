@@ -88,26 +88,25 @@ function AdminAttendancePage() {
         // Don't fail completely, continue to fetch other data
       }
 
-      // 2. Fetch all sessions (recent 100 sessions ordered by date)
+      // 2. Fetch completed live sessions with attendance (primary source)
       try {
-        console.log('[Attendance] Fetching all sessions...');
-        const sessionsRes = await fetch(apiUrl(`/attendance/all-sessions?limit=100`), {
+        console.log('[Attendance] Fetching live session attendance...');
+        const sessionsRes = await fetch(apiUrl(`/attendance/admin/sessions?limit=100`), {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
-        console.log('[Attendance] Sessions response status:', sessionsRes.status);
-        
+
+        console.log('[Attendance] Live sessions response status:', sessionsRes.status);
+
         if (sessionsRes.ok) {
           const sessionsData = await sessionsRes.json();
-          console.log('[Attendance] Sessions fetched successfully:', sessionsData?.length || 0, 'sessions');
+          console.log('[Attendance] Live sessions fetched:', sessionsData?.length || 0);
           setSessions(Array.isArray(sessionsData) ? sessionsData : []);
         } else if (sessionsRes.status === 401) {
           console.error('[Attendance] Unauthorized - token may be invalid');
           toast.error('Session expired. Please log in again.');
         } else {
           const errorText = await sessionsRes.text();
-          console.error('[Attendance] Failed to fetch sessions:', sessionsRes.status, sessionsRes.statusText, errorText);
-          // Only show error on initial load, not on refresh
+          console.error('[Attendance] Failed to fetch live sessions:', sessionsRes.status, errorText);
           if (showLoading) {
             toast.error('Failed to load attendance sessions');
           }
@@ -152,12 +151,26 @@ function AdminAttendancePage() {
   const handleRowClick = async (sessionId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/attendance/sessions/${sessionId}`), {
+      const res = await fetch(apiUrl(`/attendance/admin/sessions/${sessionId}/summary`), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const data = await res.json();
-        setSelectedSession(data);
+        const summary = await res.json();
+        setSelectedSession({
+          id: sessionId,
+          classTitle: sessions.find((s) => s.id === sessionId)?.classTitle || 'Live Session',
+          teacher: sessions.find((s) => s.id === sessionId)?.teacher,
+          sessionDate: sessions.find((s) => s.id === sessionId)?.sessionDate,
+          attendances: (summary.records || []).map((r: any) => ({
+            student: { fullName: r.userName, email: r.userEmail },
+            attendanceStatus: r.status?.toUpperCase(),
+            joinTime: r.joinTime,
+            leaveTime: r.leaveTime,
+            duration: r.durationMinutes,
+            isReconciled: r.isReconciled,
+          })),
+          summary,
+        });
       } else {
         toast.error('Failed to load session details');
       }

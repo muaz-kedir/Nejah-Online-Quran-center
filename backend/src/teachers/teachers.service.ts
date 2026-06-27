@@ -29,6 +29,9 @@ import { ClassSession, SessionStatus } from '../attendance/entities/class-sessio
 import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
 import { Resource } from '../resources/resources.entity';
 import { TeacherReplacementsService } from '../teacher-replacements/teacher-replacements.service';
+import { LiveSession } from '../zoom/entities/live-session.entity';
+import { SessionAttendance } from '../zoom/entities/session-attendance.entity';
+import { AttendanceStatus } from '../zoom/enums/live-session-status.enum';
 
 @Injectable()
 export class TeachersService {
@@ -53,6 +56,10 @@ export class TeachersService {
     private studentAttendanceRepository: Repository<StudentAttendance>,
     @InjectRepository(Resource)
     private resourceRepository: Repository<Resource>,
+    @InjectRepository(LiveSession)
+    private liveSessionRepository: Repository<LiveSession>,
+    @InjectRepository(SessionAttendance)
+    private sessionAttendanceRepository: Repository<SessionAttendance>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => TeacherReplacementsService))
@@ -495,11 +502,8 @@ export class TeachersService {
         })
       : 0;
 
-    // Attendance rate from student records
-    const totalAttendanceRate =
-      students.length > 0
-        ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
-        : 0;
+    // Attendance rate from live session records (last 30 days), fallback to student profile field
+    const totalAttendanceRate = await this.computeTeacherLiveAttendanceRate(teacherId, studentIds);
 
     // Average progress
     const totalProgressRate =
@@ -578,6 +582,38 @@ export class TeachersService {
     };
   }
 
+  private async computeTeacherLiveAttendanceRate(
+    teacherId: string,
+    studentIds: string[],
+  ): Promise<number> {
+    if (!studentIds.length) return 0;
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const attendances = await this.sessionAttendanceRepository
+      .createQueryBuilder('sa')
+      .innerJoin('sa.session', 'session')
+      .where('session.teacherId = :teacherId', { teacherId })
+      .andWhere('sa.studentId IN (:...studentIds)', { studentIds })
+      .andWhere('session.scheduledStart >= :since', { since: thirtyDaysAgo })
+      .getMany();
+
+    if (!attendances.length) {
+      const students = await this.studentsRepository.find({ where: { id: In(studentIds) } });
+      return students.length > 0
+        ? students.reduce((sum, s) => sum + (Number(s.attendanceRate) || 0), 0) / students.length
+        : 0;
+    }
+
+    const presentCount = attendances.filter(
+      (a) =>
+        a.attendanceStatus === AttendanceStatus.PRESENT ||
+        a.attendanceStatus === AttendanceStatus.LATE ||
+        a.attendanceStatus === AttendanceStatus.PARTIAL,
+    ).length;
+
+    return Math.round((presentCount / attendances.length) * 1000) / 10;
+  }
+
   // ─── Recent Activities ───────────────────────────────────────────────────────
   async getRecentActivities(teacherId: string, studentIds: string[], limit = 20) {
     const activities: any[] = [];
@@ -638,7 +674,37 @@ export class TeachersService {
         });
       }
 
-      // Student attendance via class sessions
+      // Live session attendance (Zoom module)
+      const liveSessions = await this.liveSessionRepository.find({
+        where: { teacherId },
+        relations: ['schedule'],
+        order: { scheduledStart: 'DESC' },
+        take: 10,
+      });
+      for (const liveSession of liveSessions) {
+        const liveAttendances = await this.sessionAttendanceRepository.find({
+          where: { sessionId: liveSession.id },
+          relations: ['student'],
+        });
+        for (const att of liveAttendances.slice(0, 5)) {
+          const type =
+            att.attendanceStatus === AttendanceStatus.PRESENT ||
+            att.attendanceStatus === AttendanceStatus.LATE ||
+            att.attendanceStatus === AttendanceStatus.PARTIAL
+              ? 'STUDENT_JOINED'
+              : 'STUDENT_MISSED';
+          activities.push({
+            id: `live-att-${att.id}`,
+            type,
+            studentName: att.student?.fullName || 'Unknown',
+            studentId: att.studentId,
+            date: att.leaveTime || att.joinTime || liveSession.scheduledStart,
+            description: `${att.attendanceStatus} - ${liveSession.schedule?.className || 'Live Session'}`,
+          });
+        }
+      }
+
+      // Legacy class session attendance
       const sessions = await this.classSessionRepository.find({
         where: { teacherId },
         relations: ['studentAttendances', 'studentAttendances.student'],

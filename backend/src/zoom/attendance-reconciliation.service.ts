@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, LessThanOrEqual, Repository } from 'typeorm';
 import { ZoomService, ZoomReportParticipant } from './zoom.service';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { LiveSession } from './entities/live-session.entity';
@@ -8,15 +8,19 @@ import { SessionAttendance } from './entities/session-attendance.entity';
 import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
 import {
   ParticipantTimelineEvent,
   TimelineEventSource,
   TimelineEventType,
 } from './entities/participant-timeline-event.entity';
+import { LiveSessionStatus } from './enums/live-session-status.enum';
+import { ReconciliationStatus } from './enums/reconciliation-status.enum';
 
 @Injectable()
 export class AttendanceReconciliationService {
   private readonly logger = new Logger(AttendanceReconciliationService.name);
+  private readonly MAX_ATTEMPTS = 5;
 
   constructor(
     @InjectRepository(LiveSession)
@@ -29,6 +33,8 @@ export class AttendanceReconciliationService {
     private readonly studentRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private readonly teacherRepository: Repository<Teacher>,
+    @InjectRepository(ScheduleStudent)
+    private readonly scheduleStudentRepository: Repository<ScheduleStudent>,
     @InjectRepository(ParticipantTimelineEvent)
     private readonly timelineRepository: Repository<ParticipantTimelineEvent>,
     private readonly zoomService: ZoomService,
@@ -36,6 +42,12 @@ export class AttendanceReconciliationService {
   ) {}
 
   scheduleReconciliation(sessionId: string, meetingUUID: string): void {
+    this.liveSessionRepository
+      .update(sessionId, {
+        reconciliationStatus: ReconciliationStatus.PENDING,
+      })
+      .catch((err) => this.logger.error(`Failed to mark reconciliation pending for ${sessionId}`, err));
+
     setTimeout(() => {
       this.reconcileSessionFromReport(sessionId, meetingUUID).catch((error: Error) => {
         this.logger.error(
@@ -44,6 +56,36 @@ export class AttendanceReconciliationService {
         );
       });
     }, 2 * 60 * 1000);
+  }
+
+  async processPendingReconciliations(): Promise<void> {
+    const cutoff = new Date(Date.now() - 3 * 60 * 1000);
+    const pending = await this.liveSessionRepository.find({
+      where: {
+        status: LiveSessionStatus.COMPLETED,
+        reconciliationStatus: ReconciliationStatus.PENDING,
+        completedAt: LessThanOrEqual(cutoff),
+        reconciliationAttempts: LessThanOrEqual(this.MAX_ATTEMPTS - 1),
+      },
+      take: 20,
+    });
+
+    for (const session of pending) {
+      if (!session.zoomMeetingUUID) {
+        await this.liveSessionRepository.update(session.id, {
+          reconciliationStatus: ReconciliationStatus.FAILED,
+        });
+        continue;
+      }
+
+      try {
+        await this.reconcileSessionFromReport(session.id, session.zoomMeetingUUID);
+      } catch (error) {
+        this.logger.warn(
+          `Retry reconciliation failed for session ${session.id}: ${(error as Error).message}`,
+        );
+      }
+    }
   }
 
   async reconcileSessionFromReport(
@@ -63,12 +105,26 @@ export class AttendanceReconciliationService {
     const uuid = meetingUUID || session.zoomMeetingUUID;
     if (!uuid) {
       this.logger.warn(`Reconciliation skipped — no meeting UUID for session ${sessionId}`);
+      await this.liveSessionRepository.update(sessionId, {
+        reconciliationStatus: ReconciliationStatus.FAILED,
+      });
       return;
     }
 
     this.logger.log(`Starting attendance reconciliation for session ${sessionId}`);
 
-    const participants = await this.zoomService.getMeetingParticipantsReport(uuid);
+    let participants: ZoomReportParticipant[];
+    try {
+      participants = await this.zoomService.getMeetingParticipantsReport(uuid);
+    } catch (error) {
+      await this.incrementReconciliationAttempt(sessionId, (error as Error).message);
+      throw error;
+    }
+
+    if (!participants.length) {
+      await this.incrementReconciliationAttempt(sessionId, 'empty participant report');
+      return;
+    }
 
     await this.timelineRepository.delete({
       sessionId,
@@ -129,9 +185,49 @@ export class AttendanceReconciliationService {
     }
     await this.summaryRepository.save(summaries);
 
+    await this.liveSessionRepository.update(sessionId, {
+      reconciliationStatus: ReconciliationStatus.DONE,
+    });
+
     this.logger.log(
       `Reconciliation complete for session ${sessionId}: ${participants.length} report rows`,
     );
+  }
+
+  private async incrementReconciliationAttempt(sessionId: string, reason: string): Promise<void> {
+    const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
+    if (!session) return;
+
+    const attempts = (session.reconciliationAttempts || 0) + 1;
+    await this.liveSessionRepository.update(sessionId, {
+      reconciliationAttempts: attempts,
+      reconciliationStatus:
+        attempts >= this.MAX_ATTEMPTS
+          ? ReconciliationStatus.FAILED
+          : ReconciliationStatus.PENDING,
+    });
+
+    this.logger.warn(
+      `Reconciliation attempt ${attempts}/${this.MAX_ATTEMPTS} for session ${sessionId}: ${reason}`,
+    );
+  }
+
+  private normalizeName(name: string): string {
+    return name.trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  private async getEnrolledStudentIds(session: LiveSession): Promise<string[]> {
+    const ids = new Set<string>();
+    if (session.studentId) ids.add(session.studentId);
+
+    if (session.scheduleId) {
+      const scheduleStudents = await this.scheduleStudentRepository.find({
+        where: { scheduleId: session.scheduleId },
+      });
+      for (const ss of scheduleStudents) ids.add(ss.studentId);
+    }
+
+    return Array.from(ids);
   }
 
   private async insertReportTimelineEvents(
@@ -193,6 +289,7 @@ export class AttendanceReconciliationService {
   } | null> {
     const email = participant.user_email?.trim().toLowerCase() || '';
     const name = participant.name || '';
+    const participantName = this.normalizeName(name);
 
     if (email) {
       const student = await this.studentRepository.findOne({
@@ -230,9 +327,42 @@ export class AttendanceReconciliationService {
       };
     }
 
+    const enrolledIds = await this.getEnrolledStudentIds(session);
+    if (enrolledIds.length > 0) {
+      const enrolledStudents = await this.studentRepository.find({
+        where: { id: In(enrolledIds) },
+      });
+
+      if (participantName) {
+        const byName = enrolledStudents.find(
+          (s) => this.normalizeName(s.fullName) === participantName,
+        );
+        if (byName?.userId) {
+          return {
+            participantId: byName.id,
+            role: 'student',
+            userId: byName.userId,
+            email: byName.email,
+            name: byName.fullName,
+          };
+        }
+      }
+
+      if (enrolledStudents.length === 1 && enrolledStudents[0].userId) {
+        const only = enrolledStudents[0];
+        return {
+          participantId: only.id,
+          role: 'student',
+          userId: only.userId,
+          email: only.email,
+          name: only.fullName,
+        };
+      }
+    }
+
     if (session.studentId) {
       const student = await this.studentRepository.findOne({ where: { id: session.studentId } });
-      if (student?.userId && (!email || student.email?.toLowerCase() === email)) {
+      if (student?.userId) {
         return {
           participantId: student.id,
           role: 'student',

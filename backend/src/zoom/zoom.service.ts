@@ -223,11 +223,11 @@ export class ZoomService implements OnModuleInit {
     }
 
     if (!applied) {
-      this.accountId = '';
-      this.clientId = '';
-      this.clientSecret = '';
-      this.credentialsSource = 'none';
-    }
+    this.accountId = '';
+    this.clientId = '';
+    this.clientSecret = '';
+    this.credentialsSource = 'none';
+  }
 
     if (
       this.isCompleteCredentialSet(this.envCredentials) &&
@@ -399,10 +399,10 @@ export class ZoomService implements OnModuleInit {
           method,
           url,
           data: body,
-          headers: {
+            headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-          },
+            },
         }),
       );
       return response.data as T;
@@ -820,7 +820,7 @@ export class ZoomService implements OnModuleInit {
 
         if (result.ok === false) {
           if (result.status === 403) {
-            throw new HttpException(
+    throw new HttpException(
               'Zoom denied listing users. Add the user:read:admin scope to your Server-to-Server OAuth app and activate it.',
               HttpStatus.BAD_GATEWAY,
             );
@@ -913,10 +913,10 @@ export class ZoomService implements OnModuleInit {
         this.httpService.request({
           method,
           url,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
         }),
       );
       return { ok: true, data: response.data as T };
@@ -941,7 +941,7 @@ export class ZoomService implements OnModuleInit {
       }>('GET', `/users/${encoded}`);
 
       if (result.ok && result.data?.id) {
-        return {
+      return {
           id: result.data.id,
           email: result.data.email,
           type: result.data.type,
@@ -950,7 +950,7 @@ export class ZoomService implements OnModuleInit {
 
       if (result.ok === false) {
         if (result.status === 403) {
-          throw new HttpException(
+        throw new HttpException(
             'Zoom API denied user lookup. Add the user:read:admin scope to your Server-to-Server OAuth app and activate it.',
             HttpStatus.BAD_GATEWAY,
           );
@@ -987,7 +987,7 @@ export class ZoomService implements OnModuleInit {
           zoomUser = { id: resolved.id, email: resolved.email };
         }
       } catch {
-        throw new HttpException(
+      throw new HttpException(
           'Your email is not registered as a licensed Zoom user. Please contact your admin.',
           HttpStatus.BAD_REQUEST,
         );
@@ -1117,7 +1117,7 @@ export class ZoomService implements OnModuleInit {
       } while (nextPageToken && pagesScanned < maxPages);
     }
 
-    return null;
+      return null;
   }
 
   async resolveZoomUser(
@@ -1254,8 +1254,8 @@ export class ZoomService implements OnModuleInit {
     const integration = await this.zoomIntegrationRepository.findOne({ where: { teacherId } });
 
     if (integration) {
-      integration.connectionStatus = 'disconnected';
-      integration.disconnectedAt = new Date();
+    integration.connectionStatus = 'disconnected';
+    integration.disconnectedAt = new Date();
       await this.zoomIntegrationRepository.save(integration);
     }
 
