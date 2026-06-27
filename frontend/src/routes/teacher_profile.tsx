@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
-import { User, Mail, Phone, MapPin, GraduationCap, Clock, Calendar, ChevronRight, Pencil, Globe, BookOpen, Star, Languages, DollarSign, Users, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, MapPin, GraduationCap, Clock, Calendar, ChevronRight, Pencil, Globe, BookOpen, Star, Languages, DollarSign, Users, CheckCircle, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 
 export const Route = createFileRoute('/teacher_profile')({
   component: TeacherProfilePage,
@@ -392,6 +393,18 @@ function TeacherProfilePage() {
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* Notification Settings */}
+      <div className="bg-card dark:bg-nejah-surface rounded-3xl shadow-sm border border-border dark:border-nejah-border-blue overflow-hidden p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="h-5 w-5 text-nejah-electric" />
+          <h3 className="text-lg font-bold text-foreground">Notification Settings</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Manage your push notification preferences to stay updated on class sessions and student activities.
+        </p>
+        <PushNotificationToggle variant="card" />
       </div>
 
       {/* Edit Teacher Modal */}

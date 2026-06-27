@@ -41,6 +41,7 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
 import { ParentPortalLayout } from "@/components/parents/ParentPortalLayout";
+import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
 
 
 // --- Stat Card Component ---
@@ -1791,6 +1792,17 @@ text-nejah-electric"
                     Save Changes
                   </Button>
                 </form>
+              </div>
+
+              <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm p-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bell className="h-5 w-5 text-nejah-electric" />
+                  <h3 className="text-xl font-black text-foreground font-serif">Notification Settings</h3>
+                </div>
+                <p className="text-sm text-muted-foreground font-medium mb-4">
+                  Manage push notifications to receive instant updates about your children's classes and activities.
+                </p>
+                <PushNotificationToggle variant="card" />
               </div>
             </div>
           )}

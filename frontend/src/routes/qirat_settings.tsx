@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
+import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 
 export const Route = createFileRoute('/qirat_settings')({
   component: QiratSettingsPage,
@@ -46,6 +48,13 @@ function QiratSettingsPage() {
         <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div><Label>Email</Label><Input value={email} disabled /></div>
         <Button onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Profile'}</Button>
+      </div>
+      <div className="glass-panel max-w-lg space-y-4 rounded-2xl p-6 mt-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Bell className="h-5 w-5 text-nejah-electric" />
+          <p className="font-medium">Notification Settings</p>
+        </div>
+        <PushNotificationToggle variant="card" />
       </div>
     </DashboardLayout>
   );

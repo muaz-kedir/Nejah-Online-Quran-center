@@ -7,6 +7,9 @@ import { PushSubscription } from './entities/push-subscription.entity';
 import { PushSubscriptionService } from './push-subscription.service';
 import { FcmService } from './fcm.service';
 import { PushSubscriptionController } from './push-subscription.controller';
+import { FcmToken } from './entities/fcm-token.entity';
+import { FcmService } from './fcm.service';
+import { FcmController } from './fcm.controller';
 import { Student } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
@@ -14,7 +17,7 @@ import { WebsocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, PushSubscription, Student, Parent, User]),
+    TypeOrmModule.forFeature([Notification, PushSubscription, FcmToken, Student, Parent, User]),
     forwardRef(() => WebsocketModule),
   ],
   controllers: [NotificationsController, PushSubscriptionController],
