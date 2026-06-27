@@ -5,6 +5,7 @@ import { NotificationsController } from './notifications.controller';
 import { Notification } from './entities/notification.entity';
 import { PushSubscription } from './entities/push-subscription.entity';
 import { PushSubscriptionService } from './push-subscription.service';
+import { FcmService } from './fcm.service';
 import { PushSubscriptionController } from './push-subscription.controller';
 import { Student } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
@@ -17,7 +18,7 @@ import { WebsocketModule } from '../websocket/websocket.module';
     forwardRef(() => WebsocketModule),
   ],
   controllers: [NotificationsController, PushSubscriptionController],
-  providers: [NotificationsService, PushSubscriptionService],
-  exports: [NotificationsService, PushSubscriptionService, TypeOrmModule],
+  providers: [NotificationsService, PushSubscriptionService, FcmService],
+  exports: [NotificationsService, PushSubscriptionService, FcmService, TypeOrmModule],
 })
 export class NotificationsModule {}

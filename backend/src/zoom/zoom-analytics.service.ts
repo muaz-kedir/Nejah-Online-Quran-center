@@ -374,11 +374,40 @@ export class ZoomAnalyticsService {
     const attendanceRate =
       allAttendances.length > 0 ? Math.round((presentCount / allAttendances.length) * 100) : 0;
 
-    const sessionsByDay: Record<string, number> = {};
-    sessions.forEach((s) => {
-      const day = s.scheduledStart.toLocaleDateString('en-US', { weekday: 'long' });
-      sessionsByDay[day] = (sessionsByDay[day] || 0) + 1;
-    });
+    const sessionsByDayMap: Record<
+      string,
+      { total: number; completed: number; cancelled: number; durations: number[] }
+    > = {};
+
+    for (const s of sessions) {
+      const dateKey = s.scheduledStart.toISOString().split('T')[0];
+      if (!sessionsByDayMap[dateKey]) {
+        sessionsByDayMap[dateKey] = { total: 0, completed: 0, cancelled: 0, durations: [] };
+      }
+      sessionsByDayMap[dateKey].total++;
+      if (s.status === LiveSessionStatus.COMPLETED) {
+        sessionsByDayMap[dateKey].completed++;
+        if (s.durationMinutes) sessionsByDayMap[dateKey].durations.push(s.durationMinutes);
+      }
+      if (s.status === LiveSessionStatus.CANCELLED) {
+        sessionsByDayMap[dateKey].cancelled++;
+      }
+    }
+
+    const sessionsByDay = Object.entries(sessionsByDayMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, stats]) => ({
+        date,
+        day: date,
+        total: stats.total,
+        completed: stats.completed,
+        cancelled: stats.cancelled,
+        avgDuration:
+          stats.durations.length > 0
+            ? Math.round(stats.durations.reduce((sum, d) => sum + d, 0) / stats.durations.length)
+            : 0,
+        maxDuration: stats.durations.length > 0 ? Math.max(...stats.durations) : 0,
+      }));
 
     const teachingHours = sessions
       .filter((s) => s.status === LiveSessionStatus.COMPLETED)

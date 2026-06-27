@@ -53,6 +53,57 @@ export const Route = createFileRoute('/live-sessions/analytics')({
 
 const COLORS = ['#10b981', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'];
 
+/** API may return sessionsByDay as an array or legacy weekday object map. */
+function normalizeSessionsByDay(monthly: any): Array<{
+  day: string;
+  date?: string;
+  total: number;
+  completed: number;
+  cancelled: number;
+  avgDuration: number;
+  maxDuration: number;
+}> {
+  const raw = monthly?.sessionsByDay;
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw.map((d: any) => ({
+      day: d.day || d.date || '',
+      date: d.date || d.day,
+      total: d.total ?? 0,
+      completed: d.completed ?? 0,
+      cancelled: d.cancelled ?? 0,
+      avgDuration: d.avgDuration ?? 0,
+      maxDuration: d.maxDuration ?? 0,
+    }));
+  }
+  if (typeof raw === 'object') {
+    return Object.entries(raw).map(([key, value]) => {
+      if (typeof value === 'number') {
+        return {
+          day: key,
+          date: key,
+          total: value,
+          completed: value,
+          cancelled: 0,
+          avgDuration: 0,
+          maxDuration: 0,
+        };
+      }
+      const v = value as Record<string, number>;
+      return {
+        day: key,
+        date: key,
+        total: v.total ?? 0,
+        completed: v.completed ?? 0,
+        cancelled: v.cancelled ?? 0,
+        avgDuration: v.avgDuration ?? 0,
+        maxDuration: v.maxDuration ?? 0,
+      };
+    });
+  }
+  return [];
+}
+
 function ZoomAnalyticsPage() {
   const [dashboard, setDashboard] = useState<any>(null);
   const [monthly, setMonthly] = useState<any>(null);
@@ -77,19 +128,41 @@ function ZoomAnalyticsPage() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  const sessionsByDay = monthly?.sessionsByDay || [];
-  const attendanceTrend = sessionsByDay.map((d: any) => ({
-    day: new Date(d.date || d.day).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }),
+  const sessionsByDay = normalizeSessionsByDay(monthly);
+  const formatDayLabel = (d: { day: string; date?: string }, short = false) => {
+    const raw = d.date || d.day;
+    if (!raw) return '';
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString(
+        'en',
+        short
+          ? { weekday: 'short' }
+          : { weekday: 'short', month: 'short', day: 'numeric' },
+      );
+    }
+    return raw;
+  };
+
+  const attendanceTrend = sessionsByDay.map((d) => ({
+    day: formatDayLabel(d),
     completed: d.completed || 0,
     cancelled: d.cancelled || 0,
     total: d.total || 0,
   }));
 
-  const durationData = sessionsByDay.map((d: any) => ({
-    day: new Date(d.date || d.day).toLocaleDateString('en', { weekday: 'short' }),
+  const durationData = sessionsByDay.map((d) => ({
+    day: formatDayLabel(d, true),
     avgDuration: d.avgDuration || 0,
     maxDuration: d.maxDuration || 0,
   }));
+
+  const statusDistribution = [
+    { name: 'Completed', value: overview?.completedSessions ?? dashboard?.completedSessions ?? 0 },
+    { name: 'Cancelled', value: overview?.cancelledSessions ?? 0 },
+    { name: 'Live', value: dashboard?.liveSessions ?? overview?.liveSessions ?? 0 },
+    { name: 'Scheduled', value: overview?.scheduledSessions ?? overview?.scheduled ?? 0 },
+  ];
 
   const teacherUtilization = dashboard?.teacherUtilization != null
     ? [{ name: 'Utilized', value: Math.round(dashboard.teacherUtilization) }, { name: 'Available', value: 100 - Math.round(dashboard.teacherUtilization) }]
@@ -115,7 +188,7 @@ function ZoomAnalyticsPage() {
   };
 
   const kpis = [
-    { label: 'Total Sessions', value: overview?.total ?? dashboard?.totalSessions ?? 0, icon: <Activity className="h-5 w-5" />, sub: `${overview?.completed ?? 0} completed` },
+    { label: 'Total Sessions', value: overview?.totalSessions ?? overview?.total ?? dashboard?.totalSessions ?? 0, icon: <Activity className="h-5 w-5" />, sub: `${overview?.completedSessions ?? overview?.completed ?? 0} completed` },
     { label: 'Attendance Rate', value: dashboard?.attendanceRate != null ? `${Math.round(dashboard.attendanceRate)}%` : '—', icon: <Target className="h-5 w-5" />, progress: dashboard?.attendanceRate ?? 0 },
     { label: 'Avg Duration', value: dashboard?.averageSessionDuration ? `${dashboard.averageSessionDuration} min` : '—', icon: <Clock className="h-5 w-5" /> },
     { label: 'Active Teachers', value: dashboard?.totalTeachers ?? overview?.totalTeachers ?? 0, icon: <Users className="h-5 w-5" /> },
@@ -240,23 +313,13 @@ function ZoomAnalyticsPage() {
                       <ResponsiveContainer>
                         <PieChart>
                           <Pie
-                            data={[
-                              { name: 'Completed', value: overview?.completed ?? dashboard?.completedSessions ?? 0 },
-                              { name: 'Cancelled', value: overview?.cancelled ?? 0 },
-                              { name: 'Live', value: dashboard?.liveSessions ?? 0 },
-                              { name: 'Scheduled', value: overview?.scheduled ?? 0 },
-                            ]}
+                            data={statusDistribution}
                             cx="50%" cy="50%"
                             innerRadius={60} outerRadius={100}
                             paddingAngle={3}
                             dataKey="value"
                           >
-                            {(overview ? [
-                              { name: 'Completed', value: 1 },
-                              { name: 'Cancelled', value: 1 },
-                              { name: 'Live', value: 1 },
-                              { name: 'Scheduled', value: 1 },
-                            ] : []).map((_, idx) => (
+                            {statusDistribution.map((_, idx) => (
                               <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                             ))}
                           </Pie>

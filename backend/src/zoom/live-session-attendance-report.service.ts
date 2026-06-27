@@ -15,6 +15,7 @@ import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
+import { LiveSessionLookupService } from './live-session-lookup.service';
 
 export type ZoomParticipantPayload = {
   userId?: string;
@@ -49,7 +50,39 @@ export class LiveSessionAttendanceReportService {
     private readonly reconciliationService: AttendanceReconciliationService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly notificationsService: NotificationsService,
+    private readonly liveSessionLookup: LiveSessionLookupService,
   ) {}
+
+  private async resolveSessionForWebhook(
+    meetingId: string,
+    options?: { meetingUUID?: string; hostId?: string; eventType?: string },
+  ): Promise<LiveSession | null> {
+    const result = await this.liveSessionLookup.resolve({
+      meetingId,
+      meetingUUID: options?.meetingUUID,
+      hostId: options?.hostId,
+      eventType: options?.eventType,
+    });
+
+    if (result.session) {
+      this.logger.log(
+        `Zoom ${options?.eventType || 'event'} matched liveSession=${result.session.id} ` +
+          `via ${result.matchedBy} (meetingId=${meetingId}, teacherId=${result.session.teacherId})`,
+      );
+      return result.session;
+    }
+
+    this.liveSessionLookup.logLookupFailure(
+      {
+        meetingId,
+        meetingUUID: options?.meetingUUID,
+        hostId: options?.hostId,
+        eventType: options?.eventType,
+      },
+      result,
+    );
+    return null;
+  }
 
   /** Record teacher entrance when they join/start via the app (not only Zoom webhooks). */
   async recordTeacherJoin(sessionId: string, teacher: Teacher, joinTime: Date): Promise<void> {
@@ -84,15 +117,18 @@ export class LiveSessionAttendanceReportService {
     }
   }
 
-  async handleMeetingStarted(zoomMeetingId: string, startTime: Date, meetingUUID?: string) {
-    const session = await this.sessionRepository.findOne({
-      where: { zoomMeetingId },
-      relations: ['teacher', 'schedule', 'schedule.scheduleStudents'],
+  async handleMeetingStarted(
+    zoomMeetingId: string,
+    startTime: Date,
+    meetingUUID?: string,
+    hostId?: string,
+  ) {
+    const session = await this.resolveSessionForWebhook(zoomMeetingId, {
+      meetingUUID,
+      hostId,
+      eventType: 'meeting.started',
     });
-    if (!session) {
-      this.logger.warn(`No live session for Zoom meeting ${zoomMeetingId}`);
-      return;
-    }
+    if (!session) return;
 
     if (
       session.status === LiveSessionStatus.SCHEDULED ||
@@ -146,11 +182,29 @@ export class LiveSessionAttendanceReportService {
     }
   }
 
-  async handleParticipantJoined(zoomMeetingId: string, participant: ZoomParticipantPayload) {
-    const session = await this.findSessionByZoomMeetingId(zoomMeetingId);
+  async handleParticipantJoined(
+    zoomMeetingId: string,
+    participant: ZoomParticipantPayload,
+    meetingUUID?: string,
+    hostId?: string,
+  ) {
+    const session = await this.resolveSessionForWebhook(zoomMeetingId, {
+      meetingUUID,
+      hostId,
+      eventType: 'meeting.participant_joined',
+    });
     if (!session) return;
 
-    const resolved = await this.resolveParticipant(participant, session);
+    const sessionWithTeacher =
+      session.teacher
+        ? session
+        : await this.sessionRepository.findOne({
+            where: { id: session.id },
+            relations: ['teacher'],
+          });
+    if (!sessionWithTeacher) return;
+
+    const resolved = await this.resolveParticipant(participant, sessionWithTeacher);
 
     await this.attendanceIntelligence.appendTimelineEvent({
       sessionId: session.id,
@@ -194,11 +248,29 @@ export class LiveSessionAttendanceReportService {
     });
   }
 
-  async handleParticipantLeft(zoomMeetingId: string, participant: ZoomParticipantPayload) {
-    const session = await this.findSessionByZoomMeetingId(zoomMeetingId);
+  async handleParticipantLeft(
+    zoomMeetingId: string,
+    participant: ZoomParticipantPayload,
+    meetingUUID?: string,
+    hostId?: string,
+  ) {
+    const session = await this.resolveSessionForWebhook(zoomMeetingId, {
+      meetingUUID,
+      hostId,
+      eventType: 'meeting.participant_left',
+    });
     if (!session) return;
 
-    const resolved = await this.resolveParticipant(participant, session);
+    const sessionWithTeacher =
+      session.teacher
+        ? session
+        : await this.sessionRepository.findOne({
+            where: { id: session.id },
+            relations: ['teacher'],
+          });
+    if (!sessionWithTeacher) return;
+
+    const resolved = await this.resolveParticipant(participant, sessionWithTeacher);
     const leaveTime = participant.leaveTime || new Date();
 
     await this.attendanceIntelligence.appendTimelineEvent({
@@ -246,9 +318,16 @@ export class LiveSessionAttendanceReportService {
     });
   }
 
-  async handleMeetingEnded(zoomMeetingId: string, endTime: Date, meetingUUID?: string) {
-    const session = await this.sessionRepository.findOne({
-      where: { zoomMeetingId },
+  async handleMeetingEnded(
+    zoomMeetingId: string,
+    endTime: Date,
+    meetingUUID?: string,
+    hostId?: string,
+  ) {
+    const session = await this.resolveSessionForWebhook(zoomMeetingId, {
+      meetingUUID,
+      hostId,
+      eventType: 'meeting.ended',
     });
     if (!session) return;
 
@@ -911,13 +990,6 @@ export class LiveSessionAttendanceReportService {
       isReconciled: r.isReconciled,
       sessionId: r.sessionId,
     }));
-  }
-
-  private async findSessionByZoomMeetingId(zoomMeetingId: string) {
-    return this.sessionRepository.findOne({
-      where: { zoomMeetingId },
-      relations: ['teacher'],
-    });
   }
 
   private async getEnrolledStudentIds(session: LiveSession): Promise<string[]> {
