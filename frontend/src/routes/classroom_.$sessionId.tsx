@@ -178,7 +178,19 @@ function ClassroomPage() {
     }
   };
 
-  const handleLeave = () => {
+  const recordLeave = async () => {
+    try {
+      await fetch(apiUrl(`/live-sessions/${sessionId}/leave`), {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+    } catch {
+      // Non-blocking — session end will still finalize attendance
+    }
+  };
+
+  const handleLeave = async () => {
+    await recordLeave();
     setSessionEnded(true);
     goToDashboard();
     toast.success("Session completed successfully");

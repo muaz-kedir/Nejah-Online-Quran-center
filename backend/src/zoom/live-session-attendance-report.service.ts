@@ -5,7 +5,7 @@ import { LiveSession } from './entities/live-session.entity';
 import { SessionParticipantSummary } from './entities/session-participant-summary.entity';
 import { LiveSessionStatus, AttendanceStatus } from './enums/live-session-status.enum';
 import { ReconciliationStatus } from './enums/reconciliation-status.enum';
-import { TimelineEventType } from './entities/participant-timeline-event.entity';
+import { TimelineEventType, TimelineEventSource } from './entities/participant-timeline-event.entity';
 import { AttendanceIntelligenceService } from './attendance-intelligence.service';
 import { AttendanceReconciliationService } from './attendance-reconciliation.service';
 import { SessionAttendanceService } from './session-attendance.service';
@@ -50,6 +50,39 @@ export class LiveSessionAttendanceReportService {
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  /** Record teacher entrance when they join/start via the app (not only Zoom webhooks). */
+  async recordTeacherJoin(sessionId: string, teacher: Teacher, joinTime: Date): Promise<void> {
+    await this.attendanceIntelligence.appendTimelineEvent({
+      sessionId,
+      participantId: teacher.id,
+      participantRole: 'teacher',
+      eventType: TimelineEventType.JOIN,
+      timestamp: joinTime,
+      source: TimelineEventSource.APP,
+      webhookEventId: `app_teacher_join_${sessionId}_${joinTime.getTime()}`,
+    });
+
+    await this.attendanceIntelligence.openAttendanceSegment({
+      sessionId,
+      userId: teacher.userId,
+      userEmail: teacher.email,
+      userType: 'teacher',
+      joinTime,
+      source: 'app',
+    });
+
+    if (teacher.userId) {
+      await this.attendanceIntelligence.upsertParticipantSummary({
+        sessionId,
+        userId: teacher.userId,
+        userType: 'teacher',
+        participantId: teacher.id,
+        userName: teacher.fullName,
+        userEmail: teacher.email,
+      });
+    }
+  }
 
   async handleMeetingStarted(zoomMeetingId: string, startTime: Date, meetingUUID?: string) {
     const session = await this.sessionRepository.findOne({
@@ -257,7 +290,8 @@ export class LiveSessionAttendanceReportService {
     await this.attendanceIntelligence.closeAllOpenSegments(session.id, endTime);
 
     try {
-      await this.attendanceIntelligence.recalculateSession(session.id);
+      await this.attendanceIntelligence.recalculateSession(session.id, endTime);
+      await this.attendanceIntelligence.healStaleSummariesForSessions([session.id]);
     } catch (err) {
       this.logger.error(`Failed to recalculate session ${session.id}`, err);
     }
@@ -327,6 +361,8 @@ export class LiveSessionAttendanceReportService {
     if (!sessions.length) return [];
 
     const sessionIds = sessions.map((s) => s.id);
+    await this.attendanceIntelligence.healStaleSummariesForSessions(sessionIds);
+
     const summaries = await this.summaryRepository.find({
       where: { sessionId: In(sessionIds), userType: 'student' },
     });
@@ -340,11 +376,15 @@ export class LiveSessionAttendanceReportService {
 
     return sessions.map((session) => {
       const records = bySession.get(session.id) || [];
-      const present = records.filter((r) => r.status === 'present').length;
+      const present = records.filter(
+        (r) => r.status === 'present' || (r.totalDurationSeconds > 0 && r.status !== 'absent'),
+      ).length;
       const late = records.filter((r) => r.status === 'late').length;
       const leftEarly = records.filter((r) => r.status === 'left_early').length;
       const partial = records.filter((r) => r.status === 'partial').length;
-      const absent = records.filter((r) => r.status === 'absent').length;
+      const absent = records.filter(
+        (r) => r.status === 'absent' && r.totalDurationSeconds === 0 && !r.firstJoinTime,
+      ).length;
 
       return {
         id: session.id,
@@ -369,7 +409,9 @@ export class LiveSessionAttendanceReportService {
         totalStudentsPartial: partial,
         attendanceRate:
           records.length > 0
-            ? Math.round(((present + late + leftEarly) / records.length) * 100)
+            ? Math.round(
+                ((present + late + leftEarly + partial) / records.length) * 100,
+              )
             : 0,
         attendances: records.map((r) => ({
           studentId: r.participantId,
@@ -402,16 +444,33 @@ export class LiveSessionAttendanceReportService {
   }
 
   private aggregateSummaryStats(records: SessionParticipantSummary[]) {
+    const joined = records.filter(
+      (r) => r.firstJoinTime != null || r.totalDurationSeconds > 0,
+    );
     const present = records.filter((r) => r.status === 'present').length;
     const late = records.filter((r) => r.status === 'late').length;
     const leftEarly = records.filter((r) => r.status === 'left_early').length;
     const partial = records.filter((r) => r.status === 'partial').length;
-    const absent = records.filter((r) => r.status === 'absent').length;
+    const absent = records.filter(
+      (r) =>
+        r.status === 'absent' &&
+        !r.firstJoinTime &&
+        r.totalDurationSeconds === 0,
+    ).length;
     const total = records.length;
     const attendanceRate =
-      total > 0 ? Math.round(((present + late + leftEarly) / total) * 100) : 0;
+      total > 0 ? Math.round((joined.length / total) * 100) : 0;
 
-    return { present, late, leftEarly, partial, absent, total, attendanceRate };
+    return {
+      present: present + partial + late + leftEarly,
+      late,
+      leftEarly,
+      partial,
+      absent,
+      total,
+      attendanceRate,
+      attended: joined.length,
+    };
   }
 
   async getAdminTeacherSummaries(period: 'day' | 'week' | 'month' = 'month') {
@@ -431,6 +490,8 @@ export class LiveSessionAttendanceReportService {
     });
 
     const sessionIds = sessions.map((s) => s.id);
+    await this.attendanceIntelligence.healStaleSummariesForSessions(sessionIds);
+
     const summaries =
       sessionIds.length > 0
         ? await this.summaryRepository.find({
@@ -553,6 +614,8 @@ export class LiveSessionAttendanceReportService {
     });
 
     const sessionIds = sessions.map((s) => s.id);
+    await this.attendanceIntelligence.healStaleSummariesForSessions(sessionIds);
+
     const summaries =
       sessionIds.length > 0
         ? await this.summaryRepository.find({
@@ -620,17 +683,49 @@ export class LiveSessionAttendanceReportService {
   }
 
   async getSessionAttendanceSummary(sessionId: string) {
+    await this.attendanceIntelligence.healStaleSummariesForSessions([sessionId]);
+
     const records = await this.summaryRepository.find({
       where: { sessionId, userType: 'student' },
       order: { userName: 'ASC' },
     });
 
-    const total = records.length;
-    const present = records.filter((r) => r.status === 'present').length;
-    const late = records.filter((r) => r.status === 'late').length;
-    const leftEarly = records.filter((r) => r.status === 'left_early').length;
-    const partial = records.filter((r) => r.status === 'partial').length;
-    const absent = records.filter((r) => r.status === 'absent').length;
+    // Fallback: merge session_attendances when summaries still lack join times
+    const attendances = await this.attendanceRepository.find({
+      where: { sessionId },
+      relations: ['student'],
+    });
+
+    const summaryByUserId = new Map(records.map((r) => [r.userId, r]));
+    for (const att of attendances) {
+      if (!att.student?.userId) continue;
+      const existing = summaryByUserId.get(att.student.userId);
+      const hasJoin = att.joinTime || att.firstJoinTime;
+      if (hasJoin && (!existing || !existing.firstJoinTime)) {
+        await this.attendanceIntelligence.upsertParticipantSummary({
+          sessionId,
+          userId: att.student.userId,
+          userType: 'student',
+          participantId: att.studentId,
+          userName: att.student.fullName,
+          userEmail: att.student.email,
+        });
+      }
+    }
+
+    const refreshedRecords = await this.summaryRepository.find({
+      where: { sessionId, userType: 'student' },
+      order: { userName: 'ASC' },
+    });
+
+    const total = refreshedRecords.length;
+    const present = refreshedRecords.filter((r) => r.status === 'present').length;
+    const late = refreshedRecords.filter((r) => r.status === 'late').length;
+    const leftEarly = refreshedRecords.filter((r) => r.status === 'left_early').length;
+    const partial = refreshedRecords.filter((r) => r.status === 'partial').length;
+    const absent = refreshedRecords.filter(
+      (r) => r.status === 'absent' && !r.firstJoinTime && r.totalDurationSeconds === 0,
+    ).length;
 
     return {
       total,
@@ -640,15 +735,22 @@ export class LiveSessionAttendanceReportService {
       partial,
       absent,
       attendanceRate:
-        total > 0 ? Math.round(((present + late + leftEarly) / total) * 100) : 0,
-      records: records.map((r) => ({
+        total > 0
+          ? Math.round(
+              ((present + late + leftEarly + partial) / total) * 100,
+            )
+          : 0,
+      records: refreshedRecords.map((r) => ({
         userId: r.userId,
         userName: r.userName,
         userEmail: r.userEmail,
         status: r.status,
         joinTime: r.firstJoinTime,
         leaveTime: r.lastLeaveTime,
+        firstJoinTime: r.firstJoinTime,
+        lastLeaveTime: r.lastLeaveTime,
         durationMinutes: Math.round(r.totalDurationSeconds / 60),
+        totalDurationSeconds: r.totalDurationSeconds,
         isReconciled: r.isReconciled,
       })),
     };
@@ -704,7 +806,10 @@ export class LiveSessionAttendanceReportService {
     if (!sessions.length) return [];
 
     const sessionIds = sessions.map((s) => s.id);
-    const summaryWhere: any = { sessionId: In(sessionIds) };
+    const summaryWhere: Record<string, unknown> = {
+      sessionId: In(sessionIds),
+      userType: 'student',
+    };
     if (filters.studentId) summaryWhere.participantId = filters.studentId;
     if (filters.status) summaryWhere.status = filters.status.toLowerCase();
 

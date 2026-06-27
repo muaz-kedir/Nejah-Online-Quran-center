@@ -333,6 +333,14 @@ export class LiveSessionService {
 
     try {
       await this.attendanceReportService.seedEnrollmentOnStart(id);
+      const teacher = await this.teacherRepository.findOne({ where: { id: teacherId } });
+      if (teacher?.userId) {
+        await this.attendanceReportService.recordTeacherJoin(
+          id,
+          teacher,
+          session.teacherJoinTime,
+        );
+      }
     } catch (err) {
       this.logger.error(`Failed to seed attendance for session ${id}`, err);
     }
@@ -369,8 +377,15 @@ export class LiveSessionService {
         session.status = LiveSessionStatus.LIVE;
         session.actualStart = session.actualStart || new Date();
       }
-      session.teacherJoinTime = session.teacherJoinTime || new Date();
+      const now = new Date();
+      session.teacherJoinTime = session.teacherJoinTime || now;
       await this.liveSessionRepository.save(session);
+
+      const teacher = await this.teacherRepository.findOne({ where: { id: options.teacherId } });
+      if (teacher?.userId) {
+        await this.attendanceReportService.recordTeacherJoin(sessionId, teacher, now);
+      }
+
       return this.findById(sessionId);
     }
 
@@ -402,6 +417,27 @@ export class LiveSessionService {
     }
 
     await this.sessionAttendanceService.recordJoin(sessionId, options.studentId);
+    return this.findById(sessionId);
+  }
+
+  async leaveSession(
+    sessionId: string,
+    options: { studentId?: string; teacherId?: string; isTeacher?: boolean },
+  ): Promise<LiveSession> {
+    const session = await this.findById(sessionId);
+
+    if (options.isTeacher) {
+      if (session.teacherId !== options.teacherId) {
+        throw new ForbiddenException('You are not assigned to this session');
+      }
+      return session;
+    }
+
+    if (!options.studentId) {
+      throw new BadRequestException('Student ID required');
+    }
+
+    await this.sessionAttendanceService.recordLeave(sessionId, options.studentId);
     return this.findById(sessionId);
   }
 

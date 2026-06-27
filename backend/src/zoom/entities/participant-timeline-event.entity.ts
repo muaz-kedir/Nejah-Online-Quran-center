@@ -18,6 +18,7 @@ export enum TimelineEventType {
 export enum TimelineEventSource {
   WEBHOOK = 'webhook',
   REPORT = 'report',
+  APP = 'app',
 }
 
 @Entity('participant_timeline_events')

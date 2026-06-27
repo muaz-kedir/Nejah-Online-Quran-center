@@ -99,9 +99,11 @@ function AdminAttendancePage() {
       id: r.userId || `rec-${idx}`,
       student: { fullName: r.userName, email: r.userEmail, studentCode: r.userId?.slice(0, 8) },
       attendanceStatus: (r.status || 'absent').toUpperCase(),
-      joinTime: r.joinTime || r.firstJoinTime,
-      leaveTime: r.leaveTime || r.lastLeaveTime,
-      durationMinutes: r.durationMinutes ?? Math.round((r.totalDurationSeconds || 0) / 60),
+      joinTime: r.firstJoinTime || r.joinTime,
+      leaveTime: r.lastLeaveTime || r.leaveTime,
+      durationMinutes:
+        r.durationMinutes ??
+        (r.totalDurationSeconds != null ? Math.round(r.totalDurationSeconds / 60) : 0),
       isReconciled: r.isReconciled,
     }));
 
