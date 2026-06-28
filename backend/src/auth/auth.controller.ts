@@ -14,29 +14,34 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   // Public availability check for the student email before submission.
   @Post('check-email')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   checkEmail(@Body() dto: CheckEmailDto) {
     return this.authService.checkStudentEmail(dto.email);
   }
 
   // Public, registration-scoped parent search (limited projection).
   @Post('parent-lookup')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   parentLookup(@Body() dto: ParentLookupDto) {
     return this.authService.lookupParentsForRegistration(dto.query);
   }
 
   // Public duplicate detection by exact email/phone for the parent form.
   @Post('parent-duplicate-check')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   parentDuplicateCheck(@Body() dto: ParentDuplicateCheckDto) {
     return this.authService.checkParentDuplicate(dto.email, dto.phoneNumber);
   }
