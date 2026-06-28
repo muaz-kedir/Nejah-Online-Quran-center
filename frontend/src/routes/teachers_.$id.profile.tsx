@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronLeft,
@@ -19,7 +19,9 @@ import {
   AlertTriangle,
   Plus,
   Search,
-  Filter
+  Filter,
+  Users,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -336,6 +338,15 @@ function TeacherProfilePage() {
 
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
+                asChild
+                className="h-10 rounded-xl px-4 bg-primary hover:bg-nejah-azure text-white gap-1.5 text-xs font-bold uppercase tracking-wider"
+              >
+                <Link to="/teachers/$id/students" params={{ id }}>
+                  <Users className="h-4 w-4" /> View Assigned Students
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+              <Button
                 variant="outline"
                 className="h-10 rounded-xl px-4 dark:border-nejah-border-blue gap-1.5 hover:bg-muted text-xs font-bold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground"
               >
@@ -364,6 +375,29 @@ function TeacherProfilePage() {
                 <Plus className="h-4 w-4" /> Add Schedule
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Assigned Students Summary */}
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-extrabold text-foreground font-serif">Assigned Students</h2>
+                <p className="text-sm text-muted-foreground">
+                  {teacher.students?.length || 0} student{(teacher.students?.length || 0) !== 1 ? 's' : ''} under this teacher
+                </p>
+              </div>
+            </div>
+            <Button asChild className="rounded-xl gap-2">
+              <Link to="/teachers/$id/students" params={{ id }}>
+                View Details
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
 

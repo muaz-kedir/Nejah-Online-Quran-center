@@ -248,12 +248,12 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
           <div className="pt-2">
             <Button
               onClick={() => {
-                window.location.href = `/teachers/${teacher.id}/students`;
+                window.location.href = `/teachers/${teacher.id}`;
               }}
               variant="outline"
               className="w-full rounded-xl border-primary/200 dark:border-nejah-border-blue text-primary text-nejah-electric hover:bg-primary/10 dark:hover:bg-nejah-sapphire/30 gap-1.5"
             >
-              View Assigned Students <ArrowRight className="h-4 w-4" />
+              View Full Profile <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
