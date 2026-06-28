@@ -22,7 +22,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { TeacherReplacementsModule } from '../teacher-replacements/teacher-replacements.module';
 import { ZoomModule } from '../zoom/zoom.module';
 import { StudentsModule } from '../students/students.module';
-import { ProgressModule } from '../progress/progress.module';
 
 @Module({
   imports: [
@@ -47,7 +46,6 @@ import { ProgressModule } from '../progress/progress.module';
     forwardRef(() => TeacherReplacementsModule),
     forwardRef(() => ZoomModule),
     forwardRef(() => StudentsModule),
-    ProgressModule,
   ],
   controllers: [TeachersController, TeacherDashboardController],
   providers: [TeachersService],
