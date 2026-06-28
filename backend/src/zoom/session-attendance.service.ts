@@ -23,6 +23,22 @@ export class SessionAttendanceService {
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
   ) {}
 
+  async hasJoined(sessionId: string, studentId: string): Promise<boolean> {
+    const attendance = await this.attendanceRepository.findOne({
+      where: { sessionId, studentId },
+    });
+    return !!(attendance?.joinTime || attendance?.firstJoinTime);
+  }
+
+  async getStudentAttendance(
+    sessionId: string,
+    studentId: string,
+  ): Promise<SessionAttendance | null> {
+    return this.attendanceRepository.findOne({
+      where: { sessionId, studentId },
+    });
+  }
+
   async recordJoin(
     sessionId: string,
     studentId: string,
@@ -38,7 +54,25 @@ export class SessionAttendanceService {
       throw new NotFoundException('Student not found');
     }
 
+    const existing = await this.attendanceRepository.findOne({
+      where: { sessionId, studentId },
+    });
+    if (existing?.joinTime || existing?.firstJoinTime) {
+      if (student.userId) {
+        await this.attendanceIntelligence.upsertParticipantSummary({
+          sessionId,
+          userId: student.userId,
+          userType: 'student',
+          participantId: studentId,
+          userName: student.fullName,
+          userEmail: student.email || student.zoomEmail,
+        });
+      }
+      return existing;
+    }
+
     const now = new Date();
+    const segmentEmail = (student.email || student.zoomEmail || `${studentId}@student.local`).toLowerCase();
 
     await this.attendanceIntelligence.appendTimelineEvent({
       sessionId,
@@ -58,15 +92,26 @@ export class SessionAttendanceService {
 
     await this.attendanceIntelligence.openAttendanceSegment({
       sessionId,
-      userId: student.userId,
-      userEmail: student.email || student.zoomEmail || '',
+      userId: student.userId || studentId,
+      userEmail: segmentEmail,
       userType: 'student',
       zoomParticipantId: metadata?.zoomUserId,
       joinTime: now,
       source: 'app',
     });
 
-    const attendance = await this.attendanceIntelligence.calculateAndUpdateAttendance(sessionId, studentId);
+    let attendance = existing;
+    if (!attendance) {
+      attendance = this.attendanceRepository.create({
+        sessionId,
+        studentId,
+      });
+    }
+
+    attendance.joinTime = now;
+    attendance.firstJoinTime = now;
+    attendance.attendanceStatus = AttendanceStatus.PRESENT;
+    attendance = await this.attendanceRepository.save(attendance);
 
     if (student.userId) {
       await this.attendanceIntelligence.upsertParticipantSummary({
@@ -78,6 +123,10 @@ export class SessionAttendanceService {
         userEmail: student.email || student.zoomEmail,
       });
     }
+
+    this.logger.log(
+      `Student join recorded — sessionId=${sessionId}, studentId=${studentId}, joinTime=${now.toISOString()}`,
+    );
 
     return attendance;
   }

@@ -28,6 +28,7 @@ import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
 import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { joinLiveSessionAsStudent, openZoomMeeting } from "@/lib/live-session";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -169,14 +170,17 @@ function StudentDashboard() {
     const sessionId = data?.liveClass?.id || data?.upcomingClass?.sessionId;
     if (data?.liveClass?.status === "LIVE" && sessionId) {
       try {
-        await fetch(apiUrl(`/live-sessions/${sessionId}/join`), {
-          method: "POST",
-          headers: apiHeaders(),
-        });
-      } catch {
-        /* join may fail if already joined */
+        const result = await joinLiveSessionAsStudent(sessionId);
+        openZoomMeeting(result.joinUrl);
+        toast.success(
+          result.alreadyJoined
+            ? "Rejoined session — attendance already recorded"
+            : "Attendance recorded — opening Zoom",
+        );
+      } catch (e: any) {
+        toast.error(e.message || "Could not join session. Attendance was not recorded.");
+        return;
       }
-      navigate({ to: "/classroom/$sessionId", params: { sessionId } });
     } else if (sessionId) {
       toast.info("Your teacher has not started the session yet.");
     } else if (data?.upcomingClass?.meetingLink) {

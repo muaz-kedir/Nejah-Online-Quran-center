@@ -51,6 +51,7 @@ import { getScheduleSearchText, getScheduleStudentLabel } from '@/lib/schedule-d
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
+import { TeacherRecentlyCompletedSessions } from '@/components/teachers/TeacherRecentlyCompletedSessions';
 
 export const Route = createFileRoute('/teachers_/$id')({
   component: TeacherProfilePage,
@@ -364,6 +365,11 @@ function TeacherProfilePage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Recently Completed Sessions (same as teacher dashboard) */}
+        <div className="bg-card dark:bg-nejah-surface rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm p-6">
+          <TeacherRecentlyCompletedSessions teacherId={id} teacherName={teacher.fullName} />
         </div>
 
         {/* Schedule Detail Section (Redesigned) */}

@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { joinLiveSessionAsStudent, openZoomMeeting } from "@/lib/live-session";
 
 const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
@@ -217,11 +218,23 @@ function ClassroomPage() {
 
     setJoining(true);
     try {
-      await fetch(`${API}/live-sessions/${sessionId}/join`, {
-        method: "POST",
-        headers: authHeaders(),
-      });
-      openExternalZoom(classroom);
+      if (role === "student") {
+        const result = await joinLiveSessionAsStudent(sessionId);
+        openZoomMeeting(result.joinUrl);
+        toast.success(
+          result.alreadyJoined ? "Rejoined session — attendance already recorded" : "Attendance recorded — opening Zoom",
+        );
+      } else {
+        const res = await fetch(`${API}/live-sessions/${sessionId}/join`, {
+          method: "POST",
+          headers: authHeaders(),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || "Failed to join session");
+        }
+        openExternalZoom(classroom);
+      }
       loadClassroom();
     } catch (e: any) {
       toast.error(e.message || "Failed to join session");

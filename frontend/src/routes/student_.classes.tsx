@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import { joinLiveSessionAsStudent, openZoomMeeting } from '@/lib/live-session';
+import { toast } from 'sonner';
 
 function StudentClasses() {
   const [data, setData] = useState<any>({ current: [], upcoming: [], previous: [], liveClass: null });
@@ -42,12 +44,22 @@ function StudentClasses() {
 
   if (loading) return <StudentPageLoader />;
 
-  const joinClass = (link?: string, sessionId?: string) => {
-    if (sessionId) {
-      window.location.href = `/class-session/${sessionId}`;
+  const joinClass = async (sessionId?: string) => {
+    if (!sessionId) {
+      toast.error('No live session available');
       return;
     }
-    if (link) window.open(link, '_blank');
+    try {
+      const result = await joinLiveSessionAsStudent(sessionId);
+      openZoomMeeting(result.joinUrl);
+      toast.success(
+        result.alreadyJoined
+          ? 'Rejoined session — attendance already recorded'
+          : 'Attendance recorded — opening Zoom',
+      );
+    } catch (err: any) {
+      toast.error(err.message || 'Could not join session. Attendance was not recorded.');
+    }
   };
 
   const getAttendanceBadge = (status: string) => {
@@ -98,7 +110,7 @@ function StudentClasses() {
           </div>
           <div className="flex items-center gap-2">
             {showJoin && isLive && (
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white rounded-full font-bold shadow-lg shadow-red-600/20" onClick={() => joinClass(cls.meetingLink, data.liveClass?.id)}>
+              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white rounded-full font-bold shadow-lg shadow-red-600/20" onClick={() => joinClass(data.liveClass?.id)}>
                 <Play className="h-4 w-4 mr-2" /> Enter Class
               </Button>
             )}
@@ -156,7 +168,7 @@ function StudentClasses() {
                 <Button 
                   size="lg" 
                   className="bg-white text-red-600 hover:bg-red-50 text-lg rounded-full px-8 h-14 font-bold shadow-lg" 
-                  onClick={() => joinClass(data.liveClass.meetingLink, data.liveClass.id)}
+                  onClick={() => joinClass(data.liveClass?.id)}
                 >
                   <Play className="h-5 w-5 mr-2" /> Enter Live Class
                 </Button>

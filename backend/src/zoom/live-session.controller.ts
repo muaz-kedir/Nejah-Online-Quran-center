@@ -91,11 +91,13 @@ export class LiveSessionController {
 
   @Get('today')
   @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async getTodaysSessions(@Request() req) {
+  async getTodaysSessions(@Request() req, @Query('teacherId') queryTeacherId?: string) {
     let teacherId: string | undefined;
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       teacherId = teacher.id;
+    } else if (queryTeacherId) {
+      teacherId = queryTeacherId;
     }
     return this.liveSessionService.getTodaysSessions(teacherId);
   }
@@ -184,15 +186,43 @@ export class LiveSessionController {
   async joinSession(@Param('id') id: string, @Request() req) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      return this.liveSessionService.joinSession(id, {
+      const session = await this.liveSessionService.joinSession(id, {
         teacherId: teacher.id,
         isTeacher: true,
       });
+      return {
+        sessionId: id,
+        joinUrl: session.zoomJoinUrl,
+        zoomJoinUrl: session.zoomJoinUrl,
+        startUrl: session.zoomStartUrl,
+        status: session.status,
+      };
     }
 
     const student = await this.studentRepository.findOne({ where: { userId: req.user.id } });
     if (!student) throw new ForbiddenException('Student profile not found');
-    return this.liveSessionService.joinSession(id, { studentId: student.id, isTeacher: false });
+
+    const alreadyJoined = await this.sessionAttendanceService.hasJoined(id, student.id);
+    const session = await this.liveSessionService.joinSession(id, {
+      studentId: student.id,
+      isTeacher: false,
+    });
+    const attendance = await this.sessionAttendanceService.getStudentAttendance(id, student.id);
+
+    return {
+      sessionId: id,
+      joinUrl: session.zoomJoinUrl,
+      zoomJoinUrl: session.zoomJoinUrl,
+      status: session.status,
+      alreadyJoined,
+      attendance: attendance
+        ? {
+            id: attendance.id,
+            joinTime: attendance.joinTime,
+            attendanceStatus: attendance.attendanceStatus,
+          }
+        : null,
+    };
   }
 
   @Post(':id/leave')
