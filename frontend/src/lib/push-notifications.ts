@@ -53,7 +53,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     const query = isDev ? '?config=' + getFirebaseConfigForSw() : '';
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js' + query, {
       scope: '/',
+      updateViaCache: 'none',
     });
+    registration.update().catch(() => {});
     const swReady = await waitForServiceWorkerReady(30000);
     return swReady;
   } catch (error) {
