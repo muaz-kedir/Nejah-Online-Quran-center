@@ -23,6 +23,7 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { TeachersService } from './teachers.service';
 import { ScheduleSessionGeneratorService } from '../zoom/schedule-session-generator.service';
 import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
+import { getDayNameInZone } from '../common/utils/app-timezone.util';
 
 @Controller('teacher/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -101,8 +102,7 @@ export class TeacherDashboardController {
   async getTodaySessions(@Request() req) {
     const teacher = await this.requireTeacher(req);
 
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentDay = days[new Date().getDay()];
+    const currentDay = getDayNameInZone(new Date());
 
     const sessions = await this.schedulesRepository.find({
       where: { teacherId: teacher.id, dayOfWeek: currentDay, status: 'active' },
@@ -129,12 +129,15 @@ export class TeacherDashboardController {
         const scheduledStart = liveSession?.scheduledStart ? new Date(liveSession.scheduledStart) : null;
         const msUntilStart = scheduledStart ? scheduledStart.getTime() - now.getTime() : null;
 
+        const joinWindowMinutes = liveSession?.joinWindowOpenMinutes ?? 15;
+        const readyThresholdMs = joinWindowMinutes * 60 * 1000;
+
         let sessionPhase: 'upcoming' | 'ready' | 'live' | 'completed' = 'upcoming';
         if (liveSession?.status === LiveSessionStatus.LIVE) {
           sessionPhase = 'live';
         } else if (liveSession?.status === LiveSessionStatus.COMPLETED) {
           sessionPhase = 'completed';
-        } else if (msUntilStart !== null && msUntilStart <= 15 * 60 * 1000) {
+        } else if (msUntilStart !== null && msUntilStart <= readyThresholdMs) {
           sessionPhase = 'ready';
         }
 

@@ -6,9 +6,13 @@ import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
 import { LiveSession } from './entities/live-session.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
+import {
+  getAppTimezone,
+  getDayNameInZone,
+  startOfDayInZone,
+  wallClockOnDateToUtc,
+} from '../common/utils/app-timezone.util';
 import { SessionAttendanceService } from './session-attendance.service';
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 @Injectable()
 export class ScheduleSessionGeneratorService {
@@ -32,12 +36,11 @@ export class ScheduleSessionGeneratorService {
     });
 
     let created = 0;
-    const today = this.startOfDay(new Date());
+    const today = startOfDayInZone(new Date(), getAppTimezone());
 
     for (let offset = 0; offset <= daysAhead; offset++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + offset);
-      const dayName = DAYS[date.getDay()];
+      const date = new Date(today.getTime() + offset * 86400000);
+      const dayName = getDayNameInZone(date, getAppTimezone());
 
       for (const schedule of schedules) {
         if (!matchesDayOfWeek(schedule.dayOfWeek, dayName)) continue;
@@ -57,7 +60,7 @@ export class ScheduleSessionGeneratorService {
     schedule: Schedule,
     date: Date,
   ): Promise<LiveSession | null> {
-    const dayStart = this.startOfDay(date);
+    const dayStart = startOfDayInZone(date, getAppTimezone());
     const dayEnd = new Date(dayStart);
     dayEnd.setDate(dayEnd.getDate() + 1);
 
@@ -92,7 +95,7 @@ export class ScheduleSessionGeneratorService {
   }
 
   async getTodaySessionForSchedule(scheduleId: string): Promise<LiveSession | null> {
-    const today = this.startOfDay(new Date());
+    const today = startOfDayInZone(new Date(), getAppTimezone());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -110,7 +113,7 @@ export class ScheduleSessionGeneratorService {
         where: { id: scheduleId, status: 'active' },
         relations: ['scheduleStudents'],
       });
-      if (schedule && matchesDayOfWeek(schedule.dayOfWeek, DAYS[new Date().getDay()])) {
+      if (schedule && matchesDayOfWeek(schedule.dayOfWeek, getDayNameInZone(new Date()))) {
         session = await this.ensureSessionForSchedule(schedule, new Date());
         if (session) {
           session = await this.liveSessionRepository.findOne({
@@ -119,6 +122,33 @@ export class ScheduleSessionGeneratorService {
           });
         }
       }
+    } else if (session.schedule) {
+      session = await this.resyncSessionScheduleTimes(session);
+    }
+
+    return session;
+  }
+
+  /** Fix sessions stored with server-local hours instead of app timezone wall clock. */
+  async resyncSessionScheduleTimes(session: LiveSession): Promise<LiveSession> {
+    const schedule = session.schedule;
+    if (!schedule?.startTimeString || !schedule?.endTimeString || !session.scheduledStart) {
+      return session;
+    }
+
+    const tz = getAppTimezone();
+    const anchor = session.scheduledStart;
+    const newStart = wallClockOnDateToUtc(anchor, schedule.startTimeString, tz);
+    const newEnd = wallClockOnDateToUtc(anchor, schedule.endTimeString, tz);
+
+    if (Math.abs(newStart.getTime() - session.scheduledStart.getTime()) > 60_000) {
+      session.scheduledStart = newStart;
+      session.scheduledEnd = newEnd;
+      await this.liveSessionRepository.save(session);
+      this.logger.log(
+        `Resynced live session ${session.id} schedule times to ${tz} ` +
+          `(${schedule.startTimeString}–${schedule.endTimeString})`,
+      );
     }
 
     return session;
@@ -145,18 +175,9 @@ export class ScheduleSessionGeneratorService {
     schedule: Schedule,
     date: Date,
   ): { scheduledStart: Date; scheduledEnd: Date } {
-    const [startHour, startMin] = schedule.startTimeString.split(':').map(Number);
-    const [endHour, endMin] = schedule.endTimeString.split(':').map(Number);
-    const scheduledStart = new Date(date);
-    scheduledStart.setHours(startHour, startMin, 0, 0);
-    const scheduledEnd = new Date(date);
-    scheduledEnd.setHours(endHour, endMin, 0, 0);
+    const tz = getAppTimezone();
+    const scheduledStart = wallClockOnDateToUtc(date, schedule.startTimeString, tz);
+    const scheduledEnd = wallClockOnDateToUtc(date, schedule.endTimeString, tz);
     return { scheduledStart, scheduledEnd };
-  }
-
-  private startOfDay(date: Date): Date {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
   }
 }

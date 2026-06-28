@@ -15,6 +15,12 @@ import { SessionAttendanceService } from './session-attendance.service';
 import { LiveSessionAttendanceReportService } from './live-session-attendance-report.service';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import {
+  getAppTimezone,
+  startOfDayInZone,
+  wallClockOnDateToUtc,
+} from '../common/utils/app-timezone.util';
+import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
 
 @Injectable()
 export class LiveSessionService {
@@ -35,6 +41,7 @@ export class LiveSessionService {
     private readonly notificationsService: NotificationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly attendanceReportService: LiveSessionAttendanceReportService,
+    private readonly scheduleSessionGenerator: ScheduleSessionGeneratorService,
   ) {}
 
   async create(dto: CreateLiveSessionDto): Promise<LiveSession> {
@@ -297,6 +304,10 @@ export class LiveSessionService {
     }
 
     if (session.status !== LiveSessionStatus.LIVE) {
+      if (session.schedule) {
+        await this.scheduleSessionGenerator.resyncSessionScheduleTimes(session);
+      }
+
       const now = new Date();
       const windowMs = (session.joinWindowOpenMinutes || 15) * 60 * 1000;
       const windowOpen = new Date(session.scheduledStart.getTime() - windowMs);
@@ -638,13 +649,10 @@ export class LiveSessionService {
     });
 
     for (const session of sessions) {
-      const date = new Date(session.scheduledStart);
-      const [startHour, startMin] = data.startTimeString.split(':').map(Number);
-      const [endHour, endMin] = data.endTimeString.split(':').map(Number);
-      session.scheduledStart = new Date(date);
-      session.scheduledStart.setHours(startHour, startMin, 0, 0);
-      session.scheduledEnd = new Date(date);
-      session.scheduledEnd.setHours(endHour, endMin, 0, 0);
+      const tz = getAppTimezone();
+      const anchor = session.scheduledStart;
+      session.scheduledStart = wallClockOnDateToUtc(anchor, data.startTimeString, tz);
+      session.scheduledEnd = wallClockOnDateToUtc(anchor, data.endTimeString, tz);
       if (data.className) {
         session.metadata = { ...(session.metadata || {}), className: data.className };
       }
