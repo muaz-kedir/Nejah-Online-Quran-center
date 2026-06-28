@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
 import { AttendanceReconciliationService } from './attendance-reconciliation.service';
+import { LiveSessionService } from './live-session.service';
 import { LiveSession } from './entities/live-session.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -17,6 +18,7 @@ export class ScheduleSessionsCron {
 
   constructor(
     private readonly generator: ScheduleSessionGeneratorService,
+    private readonly liveSessionService: LiveSessionService,
     private readonly reconciliationService: AttendanceReconciliationService,
     @InjectRepository(LiveSession)
     private readonly liveSessionRepository: Repository<LiveSession>,
@@ -38,8 +40,21 @@ export class ScheduleSessionsCron {
   async ensureTodaySessions() {
     try {
       await this.generator.generateUpcomingSessions(0);
+      await this.generator.resyncScheduledSessionsForToday();
     } catch (error) {
       this.logger.error(`Today session generation failed: ${error.message}`, error.stack);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async expireStaleScheduledSessions() {
+    try {
+      const count = await this.liveSessionService.expireStaleSessions();
+      if (count > 0) {
+        this.logger.log(`Auto-expired ${count} stale session(s) after grace window`);
+      }
+    } catch (error) {
+      this.logger.error(`Stale session expiry cron failed: ${error.message}`, error.stack);
     }
   }
 
