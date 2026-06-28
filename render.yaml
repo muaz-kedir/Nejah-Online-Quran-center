@@ -1,10 +1,9 @@
-# Render Blueprint for Nejah Backend
-# Prefer repo-root render.yaml; this file mirrors settings when rootDir is backend.
-
+# Render Blueprint — repo root (monorepo: backend service lives in backend/)
 services:
   - type: web
     name: nejah-backend
     runtime: node
+    rootDir: backend
     region: oregon
     plan: free
     buildCommand: npm run build:render
