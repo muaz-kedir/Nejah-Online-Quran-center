@@ -1034,7 +1034,15 @@ export class LiveSessionService {
 
     return this.liveSessionRepository.find({
       where,
-      relations: ['teacher', 'student', 'attendances', 'attendances.student'],
+      relations: [
+        'teacher',
+        'student',
+        'schedule',
+        'schedule.scheduleStudents',
+        'schedule.scheduleStudents.student',
+        'attendances',
+        'attendances.student',
+      ],
       order: { scheduledStart: 'ASC' },
     });
   }

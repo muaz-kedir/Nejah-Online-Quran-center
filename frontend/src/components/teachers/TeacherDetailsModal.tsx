@@ -22,6 +22,7 @@ import {
   MapPin,
   Globe,
 } from 'lucide-react';
+import { TeacherRecentlyCompletedSessions } from '@/components/teachers/TeacherRecentlyCompletedSessions';
 
 const API = API_BASE;
 
@@ -234,6 +235,13 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="border-t border-border dark:border-nejah-border-blue pt-4">
+            <TeacherRecentlyCompletedSessions
+              teacherId={teacher.id}
+              teacherName={teacher.fullName}
+            />
           </div>
 
           {/* Navigate to Full Profile */}
