@@ -13,7 +13,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Schedule, ScheduleStudent, Student, Teacher]),
-    TeachersModule,
+    forwardRef(() => TeachersModule),
     forwardRef(() => ZoomModule),
     NotificationsModule,
   ],

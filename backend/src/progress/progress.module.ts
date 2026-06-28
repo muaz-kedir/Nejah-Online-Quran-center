@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Progress } from './entities/progress.entity';
 import { ProgressLog } from './entities/progress-log.entity';
@@ -28,7 +28,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       Parent,
       User,
     ]),
-    TeachersModule,
+    forwardRef(() => TeachersModule),
     NotificationsModule,
   ],
   controllers: [ProgressController],

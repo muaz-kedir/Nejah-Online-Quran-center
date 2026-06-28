@@ -44,7 +44,7 @@ import { SessionAttendance } from '../zoom/entities/session-attendance.entity';
     NotificationsModule,
     ParentsModule,
     ZoomModule,
-    ProgressModule,
+    forwardRef(() => ProgressModule),
     TypeOrmModule.forFeature([
       Student,
       Teacher,
