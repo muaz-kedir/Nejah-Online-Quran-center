@@ -376,9 +376,9 @@ const StudentClassesRoute = StudentClassesRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => LiveSessionsRoute,
+  id: '/live-sessions/analytics',
+  path: '/live-sessions/analytics',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ClassroomSessionIdRoute = ClassroomSessionIdRouteImport.update({
   id: '/classroom_/$sessionId',
@@ -847,6 +847,7 @@ export interface RootRouteChildren {
   ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
+  LiveSessionsAnalyticsRoute: typeof LiveSessionsAnalyticsRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
@@ -1285,10 +1286,10 @@ declare module '@tanstack/react-router' {
     }
     '/live-sessions/analytics': {
       id: '/live-sessions/analytics'
-      path: '/analytics'
+      path: '/live-sessions/analytics'
       fullPath: '/live-sessions/analytics'
       preLoaderRoute: typeof LiveSessionsAnalyticsRouteImport
-      parentRoute: typeof LiveSessionsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/classroom_/$sessionId': {
       id: '/classroom_/$sessionId'
@@ -1377,6 +1378,7 @@ const rootRouteChildren: RootRouteChildren = {
   ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
+  LiveSessionsAnalyticsRoute: LiveSessionsAnalyticsRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
