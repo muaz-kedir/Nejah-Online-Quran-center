@@ -72,6 +72,58 @@ export class SchedulesService {
     }
   }
 
+  private async validateStudentNoOverlap(
+    studentId: string,
+    dayOfWeek: string,
+    startTimeString: string,
+    endTimeString: string,
+    excludeId?: string,
+  ) {
+    const individualSchedules = await this.schedulesRepository.find({
+      where: { studentId, dayOfWeek, status: 'active' },
+    });
+
+    for (const existing of individualSchedules) {
+      if (excludeId && existing.id === excludeId) continue;
+      if (
+        this.isOverlap(
+          existing.startTimeString,
+          existing.endTimeString,
+          startTimeString,
+          endTimeString,
+        )
+      ) {
+        throw new BadRequestException(
+          `Student already has a class on ${dayOfWeek} from ${existing.startTimeString} to ${existing.endTimeString}`,
+        );
+      }
+    }
+
+    const groupMemberships = await this.scheduleStudentsRepository.find({
+      where: { studentId },
+      relations: ['schedule'],
+    });
+
+    for (const membership of groupMemberships) {
+      const existing = membership.schedule;
+      if (!existing || existing.status !== 'active') continue;
+      if (!matchesDayOfWeek(existing.dayOfWeek, dayOfWeek)) continue;
+      if (excludeId && existing.id === excludeId) continue;
+      if (
+        this.isOverlap(
+          existing.startTimeString,
+          existing.endTimeString,
+          startTimeString,
+          endTimeString,
+        )
+      ) {
+        throw new BadRequestException(
+          `Student already has a group class on ${dayOfWeek} from ${existing.startTimeString} to ${existing.endTimeString}`,
+        );
+      }
+    }
+  }
+
   private async validateGroupStudents(teacherId: string, studentIds: string[]) {
     const students = await this.studentsRepository.find({
       where: { id: In(studentIds) },
@@ -116,6 +168,15 @@ export class SchedulesService {
     }
 
     await this.validateNoOverlap(teacherId, dayOfWeek, startTimeString, endTimeString);
+
+    if (!isGroupSession && data.studentId) {
+      await this.validateStudentNoOverlap(
+        data.studentId,
+        dayOfWeek,
+        startTimeString,
+        endTimeString,
+      );
+    }
 
     const schedule = this.schedulesRepository.create({
       teacherId,
@@ -238,6 +299,16 @@ export class SchedulesService {
         endTimeString,
         id,
       );
+
+      if (schedule.studentId) {
+        await this.validateStudentNoOverlap(
+          schedule.studentId,
+          dayOfWeek,
+          startTimeString,
+          endTimeString,
+          id,
+        );
+      }
     }
 
     const { studentIds, isGroupSession, studentId, ...rest } = updateData;

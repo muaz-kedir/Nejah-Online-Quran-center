@@ -40,6 +40,8 @@ interface AssignTemporaryTeacherModalProps {
   originalTeacherId?: string;
   originalTeacherName?: string;
   preselectedStudentIds?: string[];
+  /** When set, POST temporary schedule via /students/:id/temporary-schedule */
+  scopedStudentId?: string;
 }
 
 export function AssignTemporaryTeacherModal({
@@ -49,6 +51,7 @@ export function AssignTemporaryTeacherModal({
   originalTeacherId: initialTeacherId,
   originalTeacherName: initialTeacherName,
   preselectedStudentIds,
+  scopedStudentId,
 }: AssignTemporaryTeacherModalProps) {
   const [loading, setLoading] = useState(false);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -157,22 +160,36 @@ export function AssignTemporaryTeacherModal({
 
     setLoading(true);
     try {
-      await api('/teacher-replacements', {
-        method: 'POST',
-        body: JSON.stringify({
-          originalTeacherId,
-          replacementTeacherId,
-          studentIds: selectAllStudents ? undefined : selectedStudentIds,
-          selectAllStudents,
-          startDate,
-          endDate,
-          startTime,
-          endTime,
-          reason,
-          customReason: reason === 'other' ? customReason : undefined,
-          notes: notes || undefined,
-        }),
-      });
+      const body = {
+        originalTeacherId,
+        replacementTeacherId,
+        studentIds: selectAllStudents ? undefined : selectedStudentIds,
+        selectAllStudents,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        reason,
+        customReason: reason === 'other' ? customReason : undefined,
+        notes: notes || undefined,
+      };
+
+      if (
+        scopedStudentId &&
+        !selectAllStudents &&
+        selectedStudentIds.length === 1 &&
+        selectedStudentIds[0] === scopedStudentId
+      ) {
+        await api(`/students/${scopedStudentId}/temporary-schedule`, {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+      } else {
+        await api('/teacher-replacements', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+      }
       toast.success('Temporary teacher assignment created');
       onSuccess();
       onClose();
