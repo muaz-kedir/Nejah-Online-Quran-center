@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { joinLiveSessionAsStudent, openZoomMeeting } from "@/lib/live-session";
+import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 
 const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
@@ -216,11 +216,15 @@ function ClassroomPage() {
       return;
     }
 
+    if (role === "student" && !isLiveSessionActive(classroom.session?.status)) {
+      toast.info("Your teacher has not started the session yet. Please wait.");
+      return;
+    }
+
     setJoining(true);
     try {
       if (role === "student") {
-        const result = await joinLiveSessionAsStudent(sessionId);
-        openZoomMeeting(result.joinUrl);
+        const result = await joinLiveSessionWhenActive(sessionId, classroom.session?.status);
         toast.success(
           result.alreadyJoined ? "Rejoined session — attendance already recorded" : "Attendance recorded — opening Zoom",
         );
@@ -355,7 +359,10 @@ function ClassroomPage() {
   const isTerminal = ["COMPLETED", "CANCELLED", "NO_SHOW", "EXPIRED"].includes(
     classroom?.session?.status,
   );
-  const canJoin = isLive || (isScheduled && classroom?.classroomStatus !== "not_available");
+  const canJoin =
+    role === "student"
+      ? isLive
+      : isLive || (isScheduled && classroom?.classroomStatus !== "not_available");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white">
