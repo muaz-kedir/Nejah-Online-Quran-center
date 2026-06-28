@@ -18,6 +18,9 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
 import { DelegateStudentDto } from './dto/delegate-student.dto';
+import { StudentManagementService } from './student-management.service';
+import { CreateScheduleDto } from '../schedules/dto/create-schedule.dto';
+import { CreateTeacherReplacementDto } from '../teacher-replacements/dto/create-teacher-replacement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -29,6 +32,7 @@ export class StudentsController {
   constructor(
     private readonly studentsService: StudentsService,
     private readonly teachersService: TeachersService,
+    private readonly studentManagementService: StudentManagementService,
   ) {}
 
   @Post()
@@ -69,6 +73,53 @@ export class StudentsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   getUnassigned() {
     return this.studentsService.findAllUnassigned();
+  }
+
+  @Get(':id/management-profile')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  getManagementProfile(@Param('id') id: string) {
+    return this.studentManagementService.getStudentAdminProfile(id);
+  }
+
+  @Get(':id/schedule')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  getStudentSchedule(@Param('id') id: string) {
+    return this.studentManagementService.getStudentSchedules(id);
+  }
+
+  @Post(':id/schedule')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  createStudentSchedule(
+    @Param('id') id: string,
+    @Body() dto: CreateScheduleDto,
+    @Request() req,
+  ) {
+    return this.studentManagementService.createPermanentSchedule(id, dto, req.user.id);
+  }
+
+  @Post(':id/temporary-schedule')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  createTemporarySchedule(
+    @Param('id') id: string,
+    @Body() dto: CreateTeacherReplacementDto,
+    @Request() req,
+  ) {
+    return this.studentManagementService.createTemporarySchedule(id, dto, req.user.id);
+  }
+
+  @Get(':id/attendance')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  getStudentAttendance(
+    @Param('id') id: string,
+    @Query('period') period?: 'daily' | 'weekly' | 'monthly' | 'annual',
+  ) {
+    return this.studentManagementService.getStudentAttendance(id, period || 'monthly');
+  }
+
+  @Get(':id/progress')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  getStudentProgress(@Param('id') id: string) {
+    return this.studentManagementService.getStudentProgress(id);
   }
 
   @Get(':id')

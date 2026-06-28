@@ -27,6 +27,9 @@ interface EditScheduleModalProps {
   teacher: any;
   schedule?: any;
   defaultDay?: string;
+  defaultStudentId?: string;
+  /** POST to /students/:id/schedule when creating from admin student details */
+  studentScheduleApi?: boolean;
   unassignedStudents?: any[];
 }
 
@@ -46,6 +49,8 @@ export function EditScheduleModal({
   teacher,
   schedule,
   defaultDay,
+  defaultStudentId,
+  studentScheduleApi = false,
   unassignedStudents = [],
 }: EditScheduleModalProps) {
   const [saving, setSaving] = useState(false);
@@ -62,14 +67,16 @@ export function EditScheduleModal({
     notes: '',
   });
 
+  const isEdit = Boolean(schedule?.id);
+
   useEffect(() => {
     if (open) {
-      if (schedule) {
+      if (isEdit && schedule) {
         const isGroup = !!schedule.isGroupSession;
         setSessionMode(isGroup ? 'group' : 'individual');
         setSelectedStudentIds(getScheduleStudentIds(schedule));
         setFormData({
-          studentId: schedule.studentId || '',
+          studentId: schedule.studentId || defaultStudentId || '',
           dayOfWeek: schedule.dayOfWeek || 'Monday',
           startTimeString: schedule.startTimeString || '',
           endTimeString: schedule.endTimeString || '',
@@ -81,7 +88,7 @@ export function EditScheduleModal({
         setSessionMode('individual');
         setSelectedStudentIds([]);
         setFormData({
-          studentId: '',
+          studentId: defaultStudentId || '',
           dayOfWeek: defaultDay || 'Monday',
           startTimeString: '',
           endTimeString: '',
@@ -91,7 +98,7 @@ export function EditScheduleModal({
         });
       }
     }
-  }, [open, schedule, defaultDay]);
+  }, [open, schedule, isEdit, defaultDay, defaultStudentId]);
 
   const toggleStudent = (studentId: string) => {
     setSelectedStudentIds((prev) =>
@@ -107,7 +114,7 @@ export function EditScheduleModal({
       return;
     }
 
-    if (sessionMode === 'individual' && !formData.studentId) {
+    if (sessionMode === 'individual' && !formData.studentId && !defaultStudentId) {
       toast.error('Please select a student');
       return;
     }
@@ -125,10 +132,6 @@ export function EditScheduleModal({
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const url = schedule
-        ? apiUrl(`/schedules/${schedule.id}`)
-        : apiUrl(`/schedules`);
-
       const payload =
         sessionMode === 'group'
           ? {
@@ -140,22 +143,38 @@ export function EditScheduleModal({
               endTimeString: formData.endTimeString,
               meetingLink: formData.meetingLink,
               classType: formData.classType,
+              className: formData.classType,
               notes: formData.notes,
             }
           : {
               teacherId: teacher.id,
               isGroupSession: false,
-              studentId: formData.studentId,
+              studentId: formData.studentId || defaultStudentId,
               dayOfWeek: formData.dayOfWeek,
               startTimeString: formData.startTimeString,
               endTimeString: formData.endTimeString,
               meetingLink: formData.meetingLink,
               classType: formData.classType,
+              className: formData.classType,
               notes: formData.notes,
             };
 
+      let url: string;
+      let method: string;
+      if (isEdit) {
+        url = apiUrl(`/schedules/${schedule.id}`);
+        method = 'PATCH';
+      } else if (studentScheduleApi && (defaultStudentId || formData.studentId)) {
+        const sid = defaultStudentId || formData.studentId;
+        url = apiUrl(`/students/${sid}/schedule`);
+        method = 'POST';
+      } else {
+        url = apiUrl('/schedules');
+        method = 'POST';
+      }
+
       const response = await fetch(url, {
-        method: schedule ? 'PATCH' : 'POST',
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -168,7 +187,7 @@ export function EditScheduleModal({
         throw new Error(data.message || 'Failed to save schedule');
       }
 
-      toast.success(`Schedule ${schedule ? 'updated' : 'created'} successfully`);
+      toast.success(`Schedule ${isEdit ? 'updated' : 'created'} successfully`);
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -204,7 +223,7 @@ export function EditScheduleModal({
 
         <form onSubmit={handleSubmit} className="py-4 space-y-4">
           {/* Session Mode Toggle */}
-          {!schedule && (
+          {!isEdit && !studentScheduleApi && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" /> Session Type
@@ -245,11 +264,17 @@ export function EditScheduleModal({
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <User className="h-3.5 w-3.5" /> Student
                 </label>
-                <Select
-                  value={formData.studentId}
-                  onValueChange={(val) => setFormData({ ...formData, studentId: val })}
-                  disabled={!!schedule}
-                >
+                {studentScheduleApi && defaultStudentId ? (
+                  <div className="bg-muted dark:bg-nejah-surface rounded-xl p-3 text-sm font-medium">
+                    {assignedStudents.find((s: any) => s.id === defaultStudentId)?.fullName ||
+                      'Selected student'}
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.studentId}
+                    onValueChange={(val) => setFormData({ ...formData, studentId: val })}
+                    disabled={isEdit}
+                  >
                   <SelectTrigger className="bg-muted dark:bg-nejah-surface border-none rounded-xl h-11">
                     <SelectValue placeholder="Select student" />
                   </SelectTrigger>
@@ -277,8 +302,9 @@ export function EditScheduleModal({
                     ))}
                   </SelectContent>
                 </Select>
+                )}
               </div>
-            ) : schedule ? (
+            ) : isEdit ? (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" /> Group Students

@@ -1,6 +1,6 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -34,7 +34,6 @@ import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/compone
 import { AddTeacherModal } from '@/components/teachers/AddTeacherModal';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
-import { TeacherDetailsModal } from '@/components/teachers/TeacherDetailsModal';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 
@@ -135,6 +134,7 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
 });
 
 function TeachersPage() {
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -153,7 +153,6 @@ function TeachersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
-  const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
 
   const fetchTeachers = useCallback(async (pageOverride?: number) => {
     setLoading(true);
@@ -229,7 +228,12 @@ function TeachersPage() {
     setMeta(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleViewTeacher = useCallback((teacher: any) => setViewingTeacher(teacher), []);
+  const handleViewTeacher = useCallback(
+    (teacher: any) => {
+      navigate({ to: '/teachers/$id/students', params: { id: teacher.id } });
+    },
+    [navigate],
+  );
   const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
   const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
 
@@ -432,12 +436,6 @@ function TeachersPage() {
         onSuccess={fetchTeachers}
         teacherId={deletingTeacher?.id}
         teacherName={deletingTeacher?.fullName}
-      />
-
-      <TeacherDetailsModal
-        open={!!viewingTeacher}
-        onClose={() => setViewingTeacher(null)}
-        teacher={viewingTeacher}
       />
     </DashboardLayout>
   );
