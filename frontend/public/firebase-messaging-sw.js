@@ -2,7 +2,17 @@ importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js');
 
 var CACHE_NAME = 'nejah-pwa-v3';
-var STATIC_URLS = ['/', '/offline'];
+var STATIC_URLS = ['/', '/offline.html'];
+
+function cacheStaticUrls(cache, urls) {
+  return Promise.all(
+    urls.map(function (url) {
+      return cache.add(url).catch(function (err) {
+        console.warn('[FCM SW] Could not cache:', url, err);
+      });
+    }),
+  );
+}
 
 var FIREBASE_CONFIG_JSON = '__FIREBASE_CONFIG_JSON__';
 var firebaseInitialized = false;
@@ -30,7 +40,7 @@ if (!firebaseInitialized) {
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) { return cache.addAll(STATIC_URLS); })
+    caches.open(CACHE_NAME).then(function (cache) { return cacheStaticUrls(cache, STATIC_URLS); })
   );
   self.skipWaiting();
 });
@@ -55,7 +65,7 @@ self.addEventListener('fetch', function (event) {
         }
         return response;
       });
-    }).catch(function () { return caches.match('/offline'); })
+    }).catch(function () { return caches.match('/offline.html'); })
   );
 });
 

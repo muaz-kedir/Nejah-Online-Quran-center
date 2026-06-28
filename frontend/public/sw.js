@@ -1,9 +1,19 @@
-const CACHE_NAME = "nejah-pwa-v2";
-const STATIC_URLS = ["/", "/offline"];
+const CACHE_NAME = "nejah-pwa-v3";
+const STATIC_URLS = ["/", "/offline.html"];
+
+function cacheStaticUrls(cache, urls) {
+  return Promise.all(
+    urls.map((url) =>
+      cache.add(url).catch((err) => {
+        console.warn("[SW] Could not cache:", url, err);
+      }),
+    ),
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_URLS)),
+    caches.open(CACHE_NAME).then((cache) => cacheStaticUrls(cache, STATIC_URLS)),
   );
   self.skipWaiting();
 });
@@ -28,7 +38,7 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       });
-    }).catch(() => caches.match("/offline")),
+    }).catch(() => caches.match("/offline.html")),
   );
 });
 
