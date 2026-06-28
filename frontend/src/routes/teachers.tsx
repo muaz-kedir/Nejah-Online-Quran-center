@@ -109,7 +109,7 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
           <button
             onClick={() => onView(teacher)}
             className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
-            title="View Assigned Students"
+            title="View Teacher Profile"
           >
             <Eye className="h-4.5 w-4.5" />
           </button>
@@ -228,7 +228,7 @@ function TeachersPage() {
   };
 
   const handleViewTeacher = useCallback((teacher: any) => {
-    window.location.assign(`/teachers/${teacher.id}/students`);
+    window.location.assign(`/teachers/${teacher.id}`);
   }, []);
   const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
   const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
