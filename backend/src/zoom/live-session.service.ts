@@ -20,6 +20,11 @@ import {
   startOfDayInZone,
   wallClockOnDateToUtc,
 } from '../common/utils/app-timezone.util';
+import {
+  getLateStartGraceMs,
+  isWithinLateStartWindow,
+  normalizeScheduledEnd,
+} from '../common/utils/session-window.util';
 import { ScheduleSessionGeneratorService } from './schedule-session-generator.service';
 
 @Injectable()
@@ -299,16 +304,27 @@ export class LiveSessionService {
       throw new BadRequestException('Cannot start a cancelled session');
     }
 
-    if (session.status === LiveSessionStatus.NO_SHOW || session.status === LiveSessionStatus.EXPIRED) {
-      throw new BadRequestException(`Cannot start a session with status: ${session.status}`);
+    if (session.schedule) {
+      const synced = await this.scheduleSessionGenerator.resyncSessionScheduleTimes(session);
+      session.scheduledStart = synced.scheduledStart;
+      session.scheduledEnd = synced.scheduledEnd;
+    }
+
+    const now = new Date();
+    const graceMs = getLateStartGraceMs();
+
+    if (
+      session.status === LiveSessionStatus.NO_SHOW ||
+      session.status === LiveSessionStatus.EXPIRED
+    ) {
+      if (!isWithinLateStartWindow(session.scheduledStart, session.scheduledEnd, now, graceMs)) {
+        throw new BadRequestException(`Cannot start a session with status: ${session.status}`);
+      }
+      session.status = LiveSessionStatus.SCHEDULED;
+      session.cancellationReason = null;
     }
 
     if (session.status !== LiveSessionStatus.LIVE) {
-      if (session.schedule) {
-        await this.scheduleSessionGenerator.resyncSessionScheduleTimes(session);
-      }
-
-      const now = new Date();
       const windowMs = (session.joinWindowOpenMinutes || 15) * 60 * 1000;
       const windowOpen = new Date(session.scheduledStart.getTime() - windowMs);
 
@@ -319,10 +335,7 @@ export class LiveSessionService {
         );
       }
 
-      const gracePeriodMs = 30 * 60 * 1000;
-      if (session.scheduledEnd && now > new Date(session.scheduledEnd.getTime() + gracePeriodMs)) {
-        session.status = LiveSessionStatus.EXPIRED;
-        await this.liveSessionRepository.save(session);
+      if (!isWithinLateStartWindow(session.scheduledStart, session.scheduledEnd, now, graceMs)) {
         throw new BadRequestException(
           'This session has expired because its scheduled time window has passed. Create a new session or reschedule.',
         );
@@ -440,8 +453,11 @@ export class LiveSessionService {
       );
     }
 
-    if (session.scheduledEnd && now > session.scheduledEnd) {
-      throw new BadRequestException('This session has already ended');
+    if (session.scheduledEnd && session.status !== LiveSessionStatus.LIVE) {
+      const graceMs = getLateStartGraceMs();
+      if (!isWithinLateStartWindow(session.scheduledStart, session.scheduledEnd, now, graceMs)) {
+        throw new BadRequestException('This session has already ended');
+      }
     }
 
     await this.sessionAttendanceService.recordJoin(sessionId, options.studentId);
@@ -613,8 +629,7 @@ export class LiveSessionService {
   }
 
   async getStudentUpcomingTodaySession(studentId: string): Promise<LiveSession | null> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDayInZone(new Date(), getAppTimezone());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -990,19 +1005,29 @@ export class LiveSessionService {
 
   async expireStaleSessions(): Promise<number> {
     const now = new Date();
+    const graceMs = getLateStartGraceMs();
+    const expireCutoff = new Date(now.getTime() - graceMs);
+
     const staleSessions = await this.liveSessionRepository.find({
       where: {
         status: LiveSessionStatus.SCHEDULED,
-        scheduledEnd: LessThanOrEqual(now),
+        scheduledEnd: LessThanOrEqual(expireCutoff),
       },
+      relations: ['schedule'],
     });
 
     let expiredCount = 0;
     for (const session of staleSessions) {
-      session.status = LiveSessionStatus.EXPIRED;
-      session.cancellationReason = 'Auto-expired: session window passed without activation';
-      await this.liveSessionRepository.save(session);
-      expiredCount++;
+      if (session.schedule) {
+        await this.scheduleSessionGenerator.resyncSessionScheduleTimes(session);
+      }
+      const end = normalizeScheduledEnd(session.scheduledStart, session.scheduledEnd);
+      if (now.getTime() > end.getTime() + graceMs) {
+        session.status = LiveSessionStatus.EXPIRED;
+        session.cancellationReason = 'Auto-expired: session window passed without activation';
+        await this.liveSessionRepository.save(session);
+        expiredCount++;
+      }
     }
 
     if (expiredCount > 0) {
@@ -1021,8 +1046,7 @@ export class LiveSessionService {
   }
 
   async getTodaysSessions(teacherId?: string): Promise<LiveSession[]> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDayInZone(new Date(), getAppTimezone());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 

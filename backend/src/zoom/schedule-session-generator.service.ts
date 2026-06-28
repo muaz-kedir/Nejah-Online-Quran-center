@@ -140,10 +140,19 @@ export class ScheduleSessionGeneratorService {
     const anchor = session.scheduledStart;
     const newStart = wallClockOnDateToUtc(anchor, schedule.startTimeString, tz);
     const newEnd = wallClockOnDateToUtc(anchor, schedule.endTimeString, tz);
+    const normalizedEnd =
+      newEnd.getTime() <= newStart.getTime()
+        ? new Date(newStart.getTime() + 60 * 60 * 1000)
+        : newEnd;
 
-    if (Math.abs(newStart.getTime() - session.scheduledStart.getTime()) > 60_000) {
+    const startDrift = Math.abs(newStart.getTime() - session.scheduledStart.getTime());
+    const endDrift = session.scheduledEnd
+      ? Math.abs(normalizedEnd.getTime() - session.scheduledEnd.getTime())
+      : Number.POSITIVE_INFINITY;
+
+    if (startDrift > 60_000 || endDrift > 60_000 || !session.scheduledEnd) {
       session.scheduledStart = newStart;
-      session.scheduledEnd = newEnd;
+      session.scheduledEnd = normalizedEnd;
       await this.liveSessionRepository.save(session);
       this.logger.log(
         `Resynced live session ${session.id} schedule times to ${tz} ` +
@@ -152,6 +161,35 @@ export class ScheduleSessionGeneratorService {
     }
 
     return session;
+  }
+
+  /** Re-align today's scheduled sessions with their schedule wall-clock times. */
+  async resyncScheduledSessionsForToday(): Promise<number> {
+    const today = startOfDayInZone(new Date(), getAppTimezone());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sessions = await this.liveSessionRepository.find({
+      where: {
+        status: LiveSessionStatus.SCHEDULED,
+        scheduledStart: Between(today, tomorrow),
+      },
+      relations: ['schedule'],
+    });
+
+    let count = 0;
+    for (const session of sessions) {
+      if (session.schedule) {
+        await this.resyncSessionScheduleTimes(session);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      this.logger.log(`Resynced schedule times for ${count} session(s) today`);
+    }
+
+    return count;
   }
 
   private async seedAttendanceRecords(schedule: Schedule, sessionId: string): Promise<void> {
@@ -177,7 +215,10 @@ export class ScheduleSessionGeneratorService {
   ): { scheduledStart: Date; scheduledEnd: Date } {
     const tz = getAppTimezone();
     const scheduledStart = wallClockOnDateToUtc(date, schedule.startTimeString, tz);
-    const scheduledEnd = wallClockOnDateToUtc(date, schedule.endTimeString, tz);
+    let scheduledEnd = wallClockOnDateToUtc(date, schedule.endTimeString, tz);
+    if (scheduledEnd.getTime() <= scheduledStart.getTime()) {
+      scheduledEnd = new Date(scheduledStart.getTime() + 60 * 60 * 1000);
+    }
     return { scheduledStart, scheduledEnd };
   }
 }
