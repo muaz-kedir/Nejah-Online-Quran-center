@@ -9,8 +9,10 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider } from '@/context/AppContext';
+import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -149,6 +151,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    setupChunkLoadRecovery();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

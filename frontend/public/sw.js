@@ -1,5 +1,7 @@
-const CACHE_NAME = "nejah-pwa-v3";
-const STATIC_URLS = ["/", "/offline.html"];
+importScripts("/sw-shared.js");
+
+const CACHE_NAME = "nejah-pwa-v4";
+const STATIC_URLS = ["/offline.html"];
 
 function cacheStaticUrls(cache, urls) {
   return Promise.all(
@@ -10,6 +12,8 @@ function cacheStaticUrls(cache, urls) {
     ),
   );
 }
+
+registerSafeFetchHandler();
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -25,21 +29,6 @@ self.addEventListener("activate", (event) => {
     ),
   );
   self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        if (response.status === 200 && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      });
-    }).catch(() => caches.match("/offline.html")),
-  );
 });
 
 self.addEventListener("push", (event) => {
