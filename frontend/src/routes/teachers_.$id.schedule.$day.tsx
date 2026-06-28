@@ -142,7 +142,7 @@ function TeacherDailySchedulePage() {
         {/* Back Button */}
         <div>
           <button
-            onClick={() => navigate({ to: `/teachers/${id}` })}
+            onClick={() => navigate({ to: '/teachers/$id/profile', params: { id } })}
             className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Teacher Profile

@@ -1,6 +1,6 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -109,7 +109,7 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
           <button
             onClick={() => onView(teacher)}
             className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
-            title="View Faculty Profile"
+            title="View Assigned Students"
           >
             <Eye className="h-4.5 w-4.5" />
           </button>
@@ -134,7 +134,6 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
 });
 
 function TeachersPage() {
-  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -228,12 +227,9 @@ function TeachersPage() {
     setMeta(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleViewTeacher = useCallback(
-    (teacher: any) => {
-      navigate({ to: '/teachers/$id/students', params: { id: teacher.id } });
-    },
-    [navigate],
-  );
+  const handleViewTeacher = useCallback((teacher: any) => {
+    window.location.assign(`/teachers/${teacher.id}/students`);
+  }, []);
   const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
   const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
 
