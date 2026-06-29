@@ -33,7 +33,6 @@ import {
   Calendar,
   Users,
   ExternalLink,
-  Eye,
   RefreshCw,
   CheckCircle2,
   XCircle,
@@ -355,20 +354,12 @@ function LiveSessionsPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            onClick={() => navigate({ to: '/live-sessions/$id', params: { id: s.id } })}
-                            className="flex-1 bg-nejah-sapphire hover:bg-nejah-azure text-white rounded-xl h-10 text-xs font-bold gap-1"
-                          >
-                            <Eye className="h-3.5 w-3.5" /> Details
-                          </Button>
                           {s.zoomJoinUrl && (
                             <Button
                               onClick={() => window.open(s.zoomJoinUrl, '_blank')}
-                              variant="outline"
-                              className="h-10 w-10 rounded-xl p-0"
-                              title="Join Meeting"
+                              className="flex-1 bg-nejah-sapphire hover:bg-nejah-azure text-white rounded-xl h-10 text-xs font-bold gap-1"
                             >
-                              <ExternalLink className="h-4 w-4" />
+                              <ExternalLink className="h-3.5 w-3.5" /> Join Meeting
                             </Button>
                           )}
                         </div>
@@ -451,8 +442,7 @@ function LiveSessionsPage() {
                     filteredSessions.map((s: any) => (
                       <tr
                         key={s.id}
-                        className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all cursor-pointer"
-                        onClick={() => navigate({ to: '/live-sessions/$id', params: { id: s.id } })}
+                        className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all"
                       >
                         <td className="py-4 px-6">
                           <p className="font-bold text-sm text-nejah-sapphire dark:text-foreground">
@@ -506,9 +496,6 @@ function LiveSessionsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="rounded-xl min-w-[160px]">
-                              <DropdownMenuItem onClick={() => navigate({ to: '/live-sessions/$id', params: { id: s.id } })}>
-                                <Eye className="h-4 w-4 mr-2" /> View Details
-                              </DropdownMenuItem>
                               {s.zoomJoinUrl && (
                                 <DropdownMenuItem onClick={() => window.open(s.zoomJoinUrl, '_blank')}>
                                   <ExternalLink className="h-4 w-4 mr-2" /> Join Session

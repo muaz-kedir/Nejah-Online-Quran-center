@@ -137,8 +137,7 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
         {completedSessions.slice(0, 5).map((session) => (
           <div
             key={session.id}
-            onClick={() => navigate({ to: '/live-sessions/$id', params: { id: session.id } })}
-            className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm hover:shadow-md hover:border-emerald-500/20 transition-all cursor-pointer"
+            className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm"
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0 flex-1">

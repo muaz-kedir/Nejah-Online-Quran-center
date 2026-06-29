@@ -15,7 +15,6 @@ import {
   Wifi,
   FileText,
   BookOpen,
-  ListChecks,
   GraduationCap,
   MessageSquare,
 } from "lucide-react";
@@ -576,14 +575,6 @@ function ClassroomPage() {
             <Button className="rounded-2xl" onClick={() => setShowNoteForm(!showNoteForm)}>
               <FileText className="h-4 w-4 mr-2" />
               {showNoteForm ? "Close Note Form" : "Post-Class Summary"}
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-2xl border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate({ to: `/live-sessions/${sessionId}` })}
-            >
-              <ListChecks className="h-4 w-4 mr-2" />
-              Session Details
             </Button>
           </div>
         )}

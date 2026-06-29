@@ -80,7 +80,7 @@ function QiratDashboardPage() {
           {[
             { to: '/students', label: 'Students' },
             { to: '/teachers', label: 'Teachers' },
-            { to: '/attendance', label: 'Attendance' },
+            { to: '/live-sessions', label: 'Live Sessions' },
             { to: '/schedules', label: 'Schedules' },
             { to: '/progress', label: 'Quran Progress' },
             { to: '/reports', label: 'Academic Reports' },
