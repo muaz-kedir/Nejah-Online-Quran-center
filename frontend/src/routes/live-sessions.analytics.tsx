@@ -57,17 +57,20 @@ const tooltipStyle = {
 
 function SessionAnalyticsPage() {
   const [dashboard, setDashboard] = useState<any>(null);
+  const [overview, setOverview] = useState<any>(null);
   const [monthly, setMonthly] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [dash, mon] = await Promise.all([
-        api<any>('/sessions-analytics/dashboard').catch(() => null),
-        api<any>('/sessions-analytics/monthly').catch(() => null),
+      const [dash, ov, mon] = await Promise.all([
+        api<any>('/zoom-analytics/dashboard').catch(() => null),
+        api<any>('/zoom-analytics/overview').catch(() => null),
+        api<any>('/zoom-analytics/monthly').catch(() => null),
       ]);
       setDashboard(dash);
+      setOverview(ov);
       setMonthly(mon);
     } finally {
       setLoading(false);
@@ -114,13 +117,13 @@ function SessionAnalyticsPage() {
   }));
 
   const statusDistribution = [
-    { name: 'Completed', value: dashboard?.completedSessions ?? 0 },
-    { name: 'Cancelled', value: dashboard?.cancelledSessions ?? 0 },
-    { name: 'Live', value: dashboard?.liveSessions ?? 0 },
-    { name: 'Scheduled', value: dashboard?.scheduledSessions ?? 0 },
+    { name: 'Completed', value: dashboard?.completedSessions ?? overview?.completedSessions ?? 0 },
+    { name: 'Cancelled', value: dashboard?.cancelledSessions ?? overview?.cancelledSessions ?? 0 },
+    { name: 'Live', value: dashboard?.liveSessions ?? overview?.liveSessions ?? 0 },
+    { name: 'Scheduled', value: overview?.scheduledSessions ?? 0 },
   ];
 
-  const completionPct = dashboard?.completionRate ?? 0;
+  const completionPct = dashboard?.completionRate ?? overview?.completionRate ?? 0;
   const teacherUtilization =
     completionPct > 0
       ? [
