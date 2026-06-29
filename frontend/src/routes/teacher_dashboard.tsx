@@ -605,7 +605,7 @@ function TeacherDashboard() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-[0.2em] mb-2">
-                Assalamu Alaikum, Teacher
+                Assalamu Alaikum, {data?.teacher?.fullName?.split(" ")[0] || "Teacher"}
               </p>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground font-serif">
                 Dashboard Overview

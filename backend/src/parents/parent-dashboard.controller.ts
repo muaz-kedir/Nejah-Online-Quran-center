@@ -47,7 +47,7 @@ export class ParentDashboardController {
     if (!parent) {
       return {
         message: 'Parent profile not found',
-        parent: { name: 'Ahmed', email: req.user.email },
+        parent: { name: '', email: req.user.email },
         stats: {
           totalChildren: 0,
           activeClasses: 0,
@@ -163,8 +163,8 @@ export class ParentDashboardController {
 
       activities = recentFeedback.slice(0, 5).map((f) => ({
         id: f.id,
-        type: 'Message',
-        title: 'New Message',
+        type: 'Feedback',
+        title: 'Progress Report',
         content: `${f.teacher?.fullName || 'Teacher'} sent a progress report for ${f.student?.fullName || 'student'}`,
         date: f.createdAt,
       }));
@@ -177,18 +177,6 @@ export class ParentDashboardController {
         childName: f.student?.fullName || 'Child',
         teacherName: f.teacher?.fullName || 'Teacher',
       }));
-    }
-
-    if (activities.length === 0) {
-      activities = [
-        {
-          id: 'mock-1',
-          type: 'Result',
-          title: 'Exam Result Posted',
-          content: `Lina scored 95% in Arabic Basics`,
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        },
-      ];
     }
 
     // 5. Schedules (All Schedules for Children)
@@ -211,39 +199,10 @@ export class ParentDashboardController {
         time:
           sc.startTimeString && sc.endTimeString
             ? `${sc.startTimeString} - ${sc.endTimeString}`
-            : '04:30 PM',
+            : '',
         meetingLink: sc.meetingLink,
         status: sc.status,
       }));
-    }
-
-    if (schedules.length === 0) {
-      schedules = [
-        {
-          id: '1',
-          studentId: studentIds[0] || '1',
-          childName: children[0]?.name || 'Zaid',
-          className: 'Hifz Class',
-          teacher: 'Sheikh Abdullah',
-          time: '04:30 PM',
-          dayOfWeek: 'Monday',
-          startTimeString: '16:30',
-          endTimeString: '17:30',
-          status: 'active',
-        },
-        {
-          id: '2',
-          studentId: studentIds[1] || '2',
-          childName: children[1]?.name || 'Lina',
-          className: 'Qaida Class',
-          teacher: 'Ustadha Maryam',
-          time: '05:30 PM',
-          dayOfWeek: 'Tuesday',
-          startTimeString: '17:30',
-          endTimeString: '18:30',
-          status: 'active',
-        },
-      ];
     }
 
     // 6. Homework list
@@ -279,7 +238,7 @@ export class ParentDashboardController {
         attendanceRate: avgAttendance.toFixed(1),
         memorizationProgress: avgProgress.toFixed(0),
         pendingHomework: pendingHomework,
-        upcomingExams: 1,
+        upcomingExams,
       },
       children,
       activities,
