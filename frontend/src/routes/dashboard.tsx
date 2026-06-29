@@ -5,7 +5,6 @@ import { RecentStudentsTable } from '@/components/dashboard/RecentStudentsTable'
 import { StaffOverview } from '@/components/dashboard/StaffOverview';
 import { TodaysClasses } from '@/components/dashboard/TodaysClasses';
 import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
-import { RecentCompletedSessions } from '@/components/dashboard/RecentCompletedSessions';
 import { AmbientSection, PageHeader } from '@/components/dashboard/design-system';
 import { createFileRoute } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
@@ -47,8 +46,6 @@ function DashboardContent() {
       />
 
       <DashboardCards key={`cards-${refreshKey}`} />
-
-      <RecentCompletedSessions key={`completed-${refreshKey}`} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

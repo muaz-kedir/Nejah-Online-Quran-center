@@ -38,6 +38,7 @@ import { Route as Parent_sessionsRouteImport } from './routes/parent_sessions'
 import { Route as Parent_notificationsRouteImport } from './routes/parent_notifications'
 import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LiveSessionsRouteImport } from './routes/live-sessions'
 import { Route as HomeworkRouteImport } from './routes/homework'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as Finance_teacherPaymentsRouteImport } from './routes/finance_teacher-payments'
@@ -69,6 +70,7 @@ import { Route as StudentNotificationsRouteImport } from './routes/student_.noti
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
+import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
 import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
 import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$sessionId'
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
@@ -221,6 +223,11 @@ const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveSessionsRoute = LiveSessionsRouteImport.update({
+  id: '/live-sessions',
+  path: '/live-sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeworkRoute = HomeworkRouteImport.update({
@@ -379,10 +386,15 @@ const StudentClassesRoute = StudentClassesRouteImport.update({
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
-  id: '/live-sessions/analytics',
-  path: '/live-sessions/analytics',
+const LiveSessionsIdRoute = LiveSessionsIdRouteImport.update({
+  id: '/live-sessions_/$id',
+  path: '/live-sessions/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => LiveSessionsRoute,
 } as any)
 const ClassroomSessionIdRoute = ClassroomSessionIdRouteImport.update({
   id: '/classroom_/$sessionId',
@@ -441,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
@@ -473,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -511,6 +525,7 @@ export interface FileRoutesByTo {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
@@ -543,6 +558,7 @@ export interface FileRoutesByTo {
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -581,6 +597,7 @@ export interface FileRoutesById {
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/homework': typeof HomeworkRoute
+  '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
   '/parent_dashboard': typeof Parent_dashboardRoute
   '/parent_notifications': typeof Parent_notificationsRoute
@@ -613,6 +630,7 @@ export interface FileRoutesById {
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
+  '/live-sessions_/$id': typeof LiveSessionsIdRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
   '/student_/homework': typeof StudentHomeworkRoute
@@ -653,6 +671,7 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/parent_dashboard'
     | '/parent_notifications'
@@ -685,6 +704,7 @@ export interface FileRouteTypes {
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
+    | '/live-sessions/$id'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -723,6 +743,7 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/parent_dashboard'
     | '/parent_notifications'
@@ -755,6 +776,7 @@ export interface FileRouteTypes {
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
+    | '/live-sessions/$id'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -792,6 +814,7 @@ export interface FileRouteTypes {
     | '/finance_teacher-payments'
     | '/forgot-password'
     | '/homework'
+    | '/live-sessions'
     | '/login'
     | '/parent_dashboard'
     | '/parent_notifications'
@@ -824,6 +847,7 @@ export interface FileRouteTypes {
     | '/class-session_/$id'
     | '/classroom_/$sessionId'
     | '/live-sessions/analytics'
+    | '/live-sessions_/$id'
     | '/student_/classes'
     | '/student_/evaluations'
     | '/student_/homework'
@@ -863,6 +887,7 @@ export interface RootRouteChildren {
   Finance_teacherPaymentsRoute: typeof Finance_teacherPaymentsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeworkRoute: typeof HomeworkRoute
+  LiveSessionsRoute: typeof LiveSessionsRouteWithChildren
   LoginRoute: typeof LoginRoute
   Parent_dashboardRoute: typeof Parent_dashboardRoute
   Parent_notificationsRoute: typeof Parent_notificationsRoute
@@ -894,7 +919,7 @@ export interface RootRouteChildren {
   ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
-  LiveSessionsAnalyticsRoute: typeof LiveSessionsAnalyticsRoute
+  LiveSessionsIdRoute: typeof LiveSessionsIdRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
@@ -1114,6 +1139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live-sessions': {
+      id: '/live-sessions'
+      path: '/live-sessions'
+      fullPath: '/live-sessions'
+      preLoaderRoute: typeof LiveSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/homework': {
       id: '/homework'
       path: '/homework'
@@ -1331,12 +1363,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live-sessions_/$id': {
+      id: '/live-sessions_/$id'
+      path: '/live-sessions/$id'
+      fullPath: '/live-sessions/$id'
+      preLoaderRoute: typeof LiveSessionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/live-sessions/analytics': {
       id: '/live-sessions/analytics'
-      path: '/live-sessions/analytics'
+      path: '/analytics'
       fullPath: '/live-sessions/analytics'
       preLoaderRoute: typeof LiveSessionsAnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof LiveSessionsRoute
     }
     '/classroom_/$sessionId': {
       id: '/classroom_/$sessionId'
@@ -1390,6 +1429,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LiveSessionsRouteChildren {
+  LiveSessionsAnalyticsRoute: typeof LiveSessionsAnalyticsRoute
+}
+
+const LiveSessionsRouteChildren: LiveSessionsRouteChildren = {
+  LiveSessionsAnalyticsRoute: LiveSessionsAnalyticsRoute,
+}
+
+const LiveSessionsRouteWithChildren = LiveSessionsRoute._addFileChildren(
+  LiveSessionsRouteChildren,
+)
+
 interface TeachersIdRouteChildren {
   TeachersIdProfileRoute: typeof TeachersIdProfileRoute
   TeachersIdStudentsRoute: typeof TeachersIdStudentsRoute
@@ -1430,6 +1481,7 @@ const rootRouteChildren: RootRouteChildren = {
   Finance_teacherPaymentsRoute: Finance_teacherPaymentsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeworkRoute: HomeworkRoute,
+  LiveSessionsRoute: LiveSessionsRouteWithChildren,
   LoginRoute: LoginRoute,
   Parent_dashboardRoute: Parent_dashboardRoute,
   Parent_notificationsRoute: Parent_notificationsRoute,
@@ -1461,7 +1513,7 @@ const rootRouteChildren: RootRouteChildren = {
   ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
-  LiveSessionsAnalyticsRoute: LiveSessionsAnalyticsRoute,
+  LiveSessionsIdRoute: LiveSessionsIdRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,

@@ -3,7 +3,6 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronLeft,
-  MessageSquare,
   Pencil,
   UserPlus,
   BookOpen,
@@ -337,21 +336,6 @@ function TeacherProfilePage() {
             </div>
 
             <div className="flex items-center gap-2.5 flex-wrap">
-              <Button
-                asChild
-                className="h-10 rounded-xl px-4 bg-primary hover:bg-nejah-azure text-white gap-1.5 text-xs font-bold uppercase tracking-wider"
-              >
-                <Link to="/teachers/$id/students" params={{ id }}>
-                  <Users className="h-4 w-4" /> View Assigned Students
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-10 rounded-xl px-4 dark:border-nejah-border-blue gap-1.5 hover:bg-muted text-xs font-bold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground"
-              >
-                <MessageSquare className="h-4 w-4" /> Message
-              </Button>
               <Button
                 onClick={() => setIsEditModalOpen(true)}
                 className="h-10 rounded-xl px-4 bg-primary/10 hover:bg-primary/10 text-nejah-sapphire border border-primary/250/20 gap-1.5 text-xs font-bold uppercase tracking-wider"

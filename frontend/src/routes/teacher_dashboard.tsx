@@ -1042,8 +1042,7 @@ function TeacherDashboard() {
                 {completedSessions.slice(0, 5).map((session: any) => (
                   <div
                     key={session.id || session.scheduleId}
-                    onClick={() => navigate({ to: '/live-sessions/$id', params: { id: session.id } })}
-                    className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm hover:shadow-md hover:border-emerald-500/20 transition-all cursor-pointer"
+                    className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 min-w-0 flex-1">

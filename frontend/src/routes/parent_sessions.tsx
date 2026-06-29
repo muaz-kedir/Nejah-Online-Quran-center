@@ -21,7 +21,6 @@ import {
   ExternalLink,
   CheckCircle2,
   XCircle,
-  Eye,
   Activity,
   Percent,
   GraduationCap,
@@ -121,8 +120,7 @@ function ParentSessionsPage() {
       <motion.tr
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all cursor-pointer border-b border-border dark:border-nejah-border-blue/20 last:border-0"
-        onClick={() => session.id && navigate({ to: '/live-sessions/$id', params: { id: session.id } })}
+        className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all border-b border-border dark:border-nejah-border-blue/20 last:border-0"
       >
         <td className="py-4 px-6">
           <p className="text-sm font-bold">{session.schedule?.className || 'Quran Class'}</p>
@@ -163,9 +161,6 @@ function ParentSessionsPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             )}
-            <Button onClick={(e) => { e.stopPropagation(); navigate({ to: '/live-sessions/$id', params: { id: session.id } }); }} size="sm" className="rounded-lg h-8 w-8 p-0" variant="outline" title="View Details">
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
           </div>
         </td>
       </motion.tr>
