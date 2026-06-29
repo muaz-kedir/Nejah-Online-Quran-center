@@ -46,8 +46,22 @@ function ParentSessionsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState<string>('all');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => { fetchSessions(); }, []);
+
+  // Poll for unread notifications
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const data = await api<{ count: number }>('/notifications/unread-count');
+        setUnreadCount(data.count ?? 0);
+      } catch { /* silent */ }
+    };
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -168,7 +182,7 @@ function ParentSessionsPage() {
   };
 
   return (
-    <ParentPortalLayout activePath="/parent_sessions">
+    <ParentPortalLayout activePath="/parent_sessions" unreadNotifications={unreadCount}>
       <div className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12">
         <PageHeader
           eyebrow="Parent Portal"

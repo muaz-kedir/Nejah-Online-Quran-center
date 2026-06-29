@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useSocket } from '@/hooks/useSocket';
 import {
   Bell,
   CheckCheck,
@@ -39,10 +39,7 @@ function ParentNotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchNotifications(); }, []);
-
-  const fetchNotifications = async () => {
-    setLoading(true);
+  const fetchNotifications = useCallback(async () => {
     try {
       const data = await api<any[]>('/notifications');
       setNotifications(Array.isArray(data) ? data : []);
@@ -51,7 +48,17 @@ function ParentNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Initial fetch + periodic polling
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Real-time updates via WebSocket
+  useSocket({ onNotification: fetchNotifications });
 
   const markAsRead = async (id: string) => {
     try {
