@@ -4,14 +4,11 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
-  Calendar,
   ClipboardList,
   FileText,
   Clock,
-  Mic,
   Video,
   Bell,
-  MessageSquare,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -28,12 +25,9 @@ type TabType =
   | 'dashboard'
   | 'children'
   | 'quran'
-  | 'attendance'
   | 'homework'
   | 'exams'
   | 'schedule'
-  | 'recitations'
-  | 'messages'
   | 'settings'
   | 'sessions'
   | 'notifications';
@@ -123,16 +117,13 @@ export function ParentPortalLayout({
     { label: translations.dashboard, icon: LayoutDashboard, tab: 'dashboard', path: '/parent_dashboard' },
     { label: translations.myChildren, icon: Users, tab: 'children', path: '/parent_dashboard' },
     { label: translations.quranProgress, icon: BookOpen, tab: 'quran', path: '/parent_dashboard' },
-    { label: translations.attendance, icon: Calendar, tab: 'attendance', path: '/parent_dashboard' },
     { label: translations.homework, icon: ClipboardList, tab: 'homework', path: '/parent_dashboard' },
     { label: translations.examsResults, icon: FileText, tab: 'exams', path: '/parent_dashboard' },
     { label: translations.classSchedule, icon: Clock, tab: 'schedule', path: '/parent_dashboard' },
-    { label: translations.recitationAudio, icon: Mic, tab: 'recitations', path: '/parent_dashboard' },
     { label: 'Sessions', icon: Video, tab: 'sessions', path: '/parent_sessions' },
   ];
 
   const bottomItems: MenuItem[] = [
-    { label: translations.messagesChat, icon: MessageSquare, tab: 'messages', path: '/parent_dashboard' },
     { label: translations.profileSettings, icon: Settings, tab: 'settings', path: '/parent_dashboard' },
   ];
 
@@ -174,7 +165,7 @@ export function ParentPortalLayout({
       {/* Language Switcher inside sidebar */}
       {(!collapsed || isMobile) && (
         <div className="px-6 pb-4 flex items-center gap-2">
-          {['English', 'Amharic', 'Oromo'].map((l) => (
+          {['English', 'Arabic', 'Amharic', 'Oromo'].map((l) => (
             <button
               key={l}
               onClick={() => setLang(l as any)}
