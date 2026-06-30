@@ -175,7 +175,7 @@ const ChildCard = ({ child, onInspectProgress }: any) => {
     <div
       className={cn(
         "absolute top-0 left-0 w-full h-2.5",
-        child.name.includes("Lina") ? "bg-amber-400" : "bg-nejah-sapphire",
+        child.id.charCodeAt(child.id.length - 1) % 2 === 0 ? "bg-amber-400" : "bg-nejah-sapphire",
       )}
     />
 
@@ -452,41 +452,36 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
                 <StatCard
                   icon={Users}
-                  value={data?.stats?.totalChildren || 2}
+                  value={data?.stats?.totalChildren ?? 0}
                   label={t('totalChildren')}
-                  trend="+0%"
                   color="emerald"
                   onClick={() => setActiveTab("children")}
                 />
                 <StatCard
                   icon={BookOpen}
-                  value={data?.stats?.activeClasses || 4}
+                  value={data?.stats?.activeClasses ?? 0}
                   label={t('activeClasses')}
-                  trend="Weekly"
                   color="emerald"
                   onClick={() => setActiveTab("schedule")}
                 />
                 <StatCard
                   icon={Calendar}
-                  value={`${data?.stats?.attendanceRate || 98}%`}
+                  value={`${data?.stats?.attendanceRate ?? 0}%`}
                   label={t('attendanceRate')}
-                  trend="Auto-tracked"
                   color="blue"
                   onClick={() => setActiveTab("schedule")}
                 />
                 <StatCard
                   icon={Award}
-                  value={`${data?.stats?.memorizationProgress || 75}%`}
+                  value={`${data?.stats?.memorizationProgress ?? 0}%`}
                   label="Avg Memorization"
-                  trend="Juz 30"
                   color="amber"
                   onClick={() => setActiveTab("quran")}
                 />
                 <StatCard
                   icon={ClipboardList}
-                  value={data?.stats?.pendingHomework || 2}
+                  value={data?.stats?.pendingHomework ?? 0}
                   label="Pending HW"
-                  trend=""
                   color="red"
                   onClick={() => setActiveTab("homework")}
                 />
@@ -539,39 +534,45 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                     </h3>
 
                     <div className="space-y-4 relative z-10">
-                      {data?.schedules?.slice(0, 3).map((session: any) => (
-                        <div
-                          key={session.id}
-                          className="bg-white/10 p-5 rounded-[28px] border border-white/5 backdrop-blur-sm group/item flex flex-col gap-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <p className="text-[10px] font-black text-nejah-electric uppercase tracking-widest leading-none">
-                                {session.childName}
-                              </p>
-                              <h4 className="text-sm font-black text-white group-hover/item:text-nejah-electric transition-colors mt-1">
-                                {session.className}
-                              </h4>
-                            </div>
-                            <Badge className="bg-background/70 text-foreground rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">
-                              {session.time}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] text-nejah-electric/80 mt-1">
-                            <span>Teacher: {session.teacher}</span>
-                            {session.meetingLink && (
-                              <a
-                                href={session.meetingLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1 text-amber-300 hover:text-white font-bold"
-                              >
-                                {t("joinLink")} <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
+                      {data?.schedules?.length === 0 ? (
+                        <div className="bg-white/5 p-6 rounded-[28px] border border-white/5 text-center">
+                          <p className="text-xs text-white/60 italic">No classes scheduled for today.</p>
                         </div>
-                      ))}
+                      ) : (
+                        data?.schedules?.slice(0, 3).map((session: any) => (
+                          <div
+                            key={session.id}
+                            className="bg-white/10 p-5 rounded-[28px] border border-white/5 backdrop-blur-sm group/item flex flex-col gap-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <p className="text-[10px] font-black text-nejah-electric uppercase tracking-widest leading-none">
+                                  {session.childName}
+                                </p>
+                                <h4 className="text-sm font-black text-white group-hover/item:text-nejah-electric transition-colors mt-1">
+                                  {session.className}
+                                </h4>
+                              </div>
+                              <Badge className="bg-background/70 text-foreground rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">
+                                {session.time}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-nejah-electric/80 mt-1">
+                              <span>Teacher: {session.teacher}</span>
+                              {session.meetingLink && (
+                                <a
+                                  href={session.meetingLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-1 text-amber-300 hover:text-white font-bold"
+                                >
+                                  {t("joinLink")} <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
 
                       <Button
                         onClick={() => setActiveTab("schedule")}
@@ -638,32 +639,38 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                     </h3>
 
                     <div className="space-y-6">
-                      {data?.activities?.slice(0, 3).map((a: any) => (
-                        <div
-                          key={a.id}
-                          className="flex gap-4 group cursor-pointer"
-                          onClick={() => setActiveTab("quran")}
-                        >
-                          <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
-                            {a.type === "Result" ? (
-                              <Award className="h-5 w-5" />
-                            ) : (
-                              <BookOpen className="h-5 w-5" />
-                            )}
-                          </div>
-                          <div className="space-y-0.5">
-                            <h4 className="text-xs font-black text-foreground leading-tight group-hover:text-nejah-electric transition-colors">
-                              {a.title}
-                            </h4>
-                            <p className="text-[11px] text-muted-foreground font-medium leading-tight">
-                              {a.content}
-                            </p>
-                            <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">
-                              {new Date(a.date).toLocaleDateString()}
-                            </p>
-                          </div>
+                      {data?.activities?.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-xs text-muted-foreground italic">No recent feedbacks.</p>
                         </div>
-                      ))}
+                      ) : (
+                        data?.activities?.slice(0, 3).map((a: any) => (
+                          <div
+                            key={a.id}
+                            className="flex gap-4 group cursor-pointer"
+                            onClick={() => setActiveTab("quran")}
+                          >
+                            <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
+                              {a.type === "Result" ? (
+                                <Award className="h-5 w-5" />
+                              ) : (
+                                <BookOpen className="h-5 w-5" />
+                              )}
+                            </div>
+                            <div className="space-y-0.5">
+                              <h4 className="text-xs font-black text-foreground leading-tight group-hover:text-nejah-electric transition-colors">
+                                {a.title}
+                              </h4>
+                              <p className="text-[11px] text-muted-foreground font-medium leading-tight">
+                                {a.content}
+                              </p>
+                              <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">
+                                {new Date(a.date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     <Button
@@ -754,7 +761,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                             {selectedChild.name}
                           </h3>
                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                            Active Program: Hifz & Tajweed
+                            Active Program: {selectedChild.level || 'Quran Studies'}
                           </p>
                           <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">
@@ -781,10 +788,10 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
 
                           <div className="flex flex-wrap gap-2 pt-2">
                             <Badge className="bg-primary/10 text-nejah-electric border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">
-                              Tajweed: Level 2
+                              {selectedChild.level || 'Active'}
                             </Badge>
                             <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">
-                              Revision: Daily
+                              {selectedChild.teacher ? `Teacher: ${selectedChild.teacher}` : 'Assigned'}
                             </Badge>
                           </div>
                         </div>
@@ -795,7 +802,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               {selectedChild.memorization}%
                             </span>
                             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">
-                              Juz 30 Progress
+                              {selectedChild.level || 'Progress'}
                             </span>
                           </div>
                           <svg className="w-full h-full transform -rotate-90">
@@ -901,16 +908,6 @@ text-nejah-electric"
                       </div>
                     </div>
 
-                    <div className="bg-amber-500/5 border border-amber-500/10 rounded-[32px] p-6 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-700">
-                        <AlertCircle className="h-5 w-5" />
-                        <h4 className="text-sm font-black uppercase tracking-wider">{t("tajweedTip")}</h4>
-                      </div>
-                      <p className="text-xs text-amber-800/80 leading-relaxed font-semibold">
-                        Ensure {selectedChild.name} revises Surat Al-Mulk daily paying close
-                        attention to "Ghunnah" lengths and "Mudood" markers.
-                      </p>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1214,46 +1211,59 @@ text-nejah-electric"
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border font-medium text-foreground">
-                      {data?.schedules?.map((sc: any) => (
-                        <tr key={sc.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="py-4 pr-4 text-foreground font-black flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-foreground text-[10px]">
-                              {sc.childName?.charAt(0) || "S"}
+                      {data?.schedules?.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-16 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                              <Clock className="h-10 w-10 text-muted-foreground/40" />
+                              <p className="text-sm font-medium text-muted-foreground italic">
+                                No class schedules available.
+                              </p>
                             </div>
-                            {sc.childName}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-foreground">{sc.className}</td>
-                          <td className="py-4 px-4 font-semibold text-muted-foreground">
-                            {sc.teacher}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-foreground">
-                            {sc.dayOfWeek || "Monday"}
-                          </td>
-                          <td className="py-4 px-4 text-center tabular-nums text-muted-foreground font-semibold">
-                            {sc.time}
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <Badge className="bg-primary/10 text-nejah-electric border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
-                              {sc.status || "Active"}
-                            </Badge>
-                          </td>
-                          <td className="py-4 pl-4 text-center">
-                            {sc.meetingLink ? (
-                              <Button
-                                onClick={() => window.open(sc.meetingLink, "_blank")}
-                                size="sm"
-                                className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
-                              >
-                                {t("joinRoom")}
-                              </Button>
-                            ) : (
-                              <span className="text-muted-foreground italic text-[10px]">
-                                {t("noLinkYet")}
-                              </span>
-                            )}
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        data?.schedules?.map((sc: any) => (
+                          <tr key={sc.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="py-4 pr-4 text-foreground font-black flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-foreground text-[10px]">
+                                {sc.childName?.charAt(0) || "S"}
+                              </div>
+                              {sc.childName}
+                            </td>
+                            <td className="py-4 px-4 font-bold text-foreground">{sc.className}</td>
+                            <td className="py-4 px-4 font-semibold text-muted-foreground">
+                              {sc.teacher}
+                            </td>
+                            <td className="py-4 px-4 font-bold text-foreground">
+                              {sc.dayOfWeek || "Monday"}
+                            </td>
+                            <td className="py-4 px-4 text-center tabular-nums text-muted-foreground font-semibold">
+                              {sc.time}
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <Badge className="bg-primary/10 text-nejah-electric border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
+                                {sc.status || "Active"}
+                              </Badge>
+                            </td>
+                            <td className="py-4 pl-4 text-center">
+                              {sc.meetingLink ? (
+                                <Button
+                                  onClick={() => window.open(sc.meetingLink, "_blank")}
+                                  size="sm"
+                                  className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
+                                >
+                                  {t("joinRoom")}
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground italic text-[10px]">
+                                  {t("noLinkYet")}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

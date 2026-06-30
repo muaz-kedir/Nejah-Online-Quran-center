@@ -60,7 +60,7 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
               month: 'short',
               day: 'numeric',
             }),
-            status: 'active' as const,
+            status: (student.status === 'active' || student.status === 'pending' ? student.status : 'active') as 'active' | 'pending',
           }));
           setStudents(formattedStudents);
         }

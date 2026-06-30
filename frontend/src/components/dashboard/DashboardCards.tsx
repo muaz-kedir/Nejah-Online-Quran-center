@@ -34,7 +34,7 @@ export const DashboardCards = memo(function DashboardCards() {
         let totalStudents = 0;
         let totalTeachers = 0;
         let activeClasses = 0;
-        let attendanceRate = 94.5;
+        let attendanceRate = 0;
         let avgSessionDuration = 0;
         let completedSessions = 0;
 
@@ -54,7 +54,7 @@ export const DashboardCards = memo(function DashboardCards() {
         if (analyticsRes.ok) {
           const data = await analyticsRes.json();
           activeClasses = activeClasses || data?.liveSessions || 0;
-          attendanceRate = data?.attendanceRate ?? 94.5;
+          attendanceRate = data?.attendanceRate ?? 0;
           avgSessionDuration = data?.averageSessionDuration || 0;
           completedSessions = completedSessions || data?.completedSessions || 0;
         }
@@ -86,19 +86,16 @@ export const DashboardCards = memo(function DashboardCards() {
       <BentoStatCard
         label={t.totalStudents}
         value={display(stats.totalStudents.toLocaleString())}
-        sub="+12% vs last month"
         icon={<Users className="h-5 w-5" />}
       />
       <BentoStatCard
         label={t.totalTeachers}
         value={display(stats.totalTeachers)}
-        sub="Full Capacity"
         icon={<GraduationCap className="h-5 w-5" />}
       />
       <BentoStatCard
         label="Active Sessions"
         value={display(stats.activeClasses)}
-        sub={`${stats.avgSessionDuration ? `${stats.avgSessionDuration} min avg` : 'Live Now'}`}
         icon={<BookOpen className="h-5 w-5" />}
         highlight
       />
