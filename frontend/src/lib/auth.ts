@@ -12,6 +12,17 @@ const ROLE_DASHBOARDS: Record<string, string> = {
 
 export const ACADEMIC_ROLES = ['admin', 'super_admin', 'qirat_manager'] as const;
 
+function getJwtExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload));
+    return decoded.exp || null;
+  } catch {
+    return null;
+  }
+}
+
 export function requireAuth(allowedRoles?: string[]) {
   if (typeof window === 'undefined') return;
 
@@ -24,6 +35,17 @@ export function requireAuth(allowedRoles?: string[]) {
 
   if (!role) {
     throw redirect({ to: '/login' });
+  }
+
+  const exp = getJwtExpiry(token);
+  if (exp && Date.now() >= exp * 1000) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('studentId');
+    throw redirect({ to: '/login?reason=session_expired' });
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
