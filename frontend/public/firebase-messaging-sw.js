@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js');
 importScripts('/sw-shared.js');
 
-var CACHE_NAME = 'nejah-pwa-v4';
+var CACHE_NAME = 'nejah-pwa-v5';
 var STATIC_URLS = ['/offline.html'];
 
 function cacheStaticUrls(cache, urls) {
