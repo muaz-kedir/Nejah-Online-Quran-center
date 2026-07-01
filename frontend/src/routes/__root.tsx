@@ -9,10 +9,15 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
+import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
+import { initializePwaPush, setupForegroundListener } from "@/lib/push-notifications";
+import { io, Socket } from "socket.io-client";
+import { WS_URL } from "@/lib/api";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -151,9 +156,72 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     setupChunkLoadRecovery();
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    initializePwaPush().catch(() => {});
+
+    const unsubForeground = setupForegroundListener((payload) => {
+      const title = payload.title || "Nejah";
+      const body = payload.body || "";
+      if (body) {
+        toast(title, {
+          description: body,
+          duration: 8000,
+          action: payload.clickAction
+            ? { label: "View", onClick: () => { window.location.href = payload.clickAction!; } }
+            : undefined,
+        });
+      }
+    });
+
+    const socket = io(`${WS_URL}/ws`, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+    });
+
+    socket.on("connect", () => console.log("[WS Root] Connected"));
+    socket.on("connected", (data) => console.log("[WS Root] Authenticated:", data.userId));
+
+    socket.on("notification:new", (notif: any) => {
+      console.log("[WS Root] Notification:", notif);
+      const isSamePage = window.location.pathname.includes("/notifications");
+      if (!isSamePage) {
+        const handleClick = notif.data?.sessionId
+          ? () => { window.location.href = `/classroom/${notif.data.sessionId}`; }
+          : undefined;
+        toast(notif.title, {
+          description: notif.content,
+          duration: 8000,
+          action: handleClick ? { label: "View", onClick: handleClick } : undefined,
+        });
+      }
+    });
+
+    socket.on("session:status_changed", (data) => {
+      console.log("[WS Root] Session status:", data);
+    });
+
+    socket.on("error", (err) => console.error("[WS Root] Error:", err.message));
+
+    socketRef.current = socket;
+
+    return () => {
+      unsubForeground?.();
+      socket.disconnect();
+      socketRef.current = null;
+    };
   }, []);
 
   return (
@@ -161,6 +229,7 @@ function RootComponent() {
       <AppProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
+        <PWADownloadPrompt />
       </AppProvider>
     </QueryClientProvider>
   );
