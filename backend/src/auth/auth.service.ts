@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
@@ -399,13 +400,20 @@ export class AuthService {
       return;
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expires = new Date(Date.now() + 15 * 60 * 1000);
+    const tempPassword = crypto.randomBytes(9).toString('base64url');
 
-    await this.usersService.setPasswordResetToken(user.id, hashedToken, expires);
+    await this.usersService.resetPasswordWithToken(user.id, tempPassword);
 
-    await this.emailService.sendPasswordResetEmail(user.email, user.name, rawToken);
+    const logger = new Logger('ForgotPassword');
+    logger.log(`═══════════════════════════════════════════════════════`);
+    logger.log(`  NEW PASSWORD for ${user.email} (${user.name}):`);
+    logger.log(`  ┌──────────────────────────────────────────────┐`);
+    logger.log(`  │  ${tempPassword.padEnd(38)}│`);
+    logger.log(`  └──────────────────────────────────────────────┘`);
+    logger.log(`  Copy this password and use it to log in.`);
+    logger.log(`═══════════════════════════════════════════════════════`);
+
+    await this.emailService.sendNewPasswordEmail(user.email, user.name, tempPassword);
   }
 
   async resetPassword(rawToken: string, newPassword: string): Promise<void> {
