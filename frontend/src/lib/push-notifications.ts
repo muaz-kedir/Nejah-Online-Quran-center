@@ -3,6 +3,7 @@ import {
   registerFcmToken,
   unregisterFcmToken,
   getCurrentFcmToken,
+  removeTokenFromStorage,
   setupForegroundListener,
 } from '@/lib/fcm';
 import { initFirebase } from '@/lib/firebase';
@@ -146,7 +147,20 @@ export async function initializePwaPush(): Promise<boolean> {
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
 
   const existingFcm = getCurrentFcmToken();
-  if (existingFcm) return true;
+  if (existingFcm) {
+    try {
+      const { tokens } = await api<{ tokens: Array<{ fcmToken: string; isActive: boolean }> }>('/fcm/tokens');
+      const active = tokens.some((t) => t.fcmToken === existingFcm && t.isActive);
+      if (!active) {
+        console.warn('Stored FCM token is no longer active on backend — re-registering');
+        removeTokenFromStorage();
+      } else {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+  }
 
   const registration = await waitForServiceWorkerReady(15000);
   if (registration) {
@@ -200,6 +214,23 @@ export async function initializePwaPush(): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+export async function updateNotificationBadge(count?: number): Promise<number> {
+  if (!('setAppBadge' in navigator)) return 0;
+  try {
+    const unread = count ?? (await api<{ count: number }>('/notifications/unread-count')).count;
+    await navigator.setAppBadge(unread);
+    return unread;
+  } catch { return 0; }
+}
+
+export async function clearNotificationBadge(): Promise<void> {
+  if ('clearAppBadge' in navigator) {
+    try { await navigator.clearAppBadge(); } catch { }
+  } else if ('setAppBadge' in navigator) {
+    try { await navigator.setAppBadge(0); } catch { }
   }
 }
 
