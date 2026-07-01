@@ -94,13 +94,17 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
     const json = subscription.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
 
-    await api('/push-notifications/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
-        deviceInfo: navigator.userAgent,
-      }),
-    });
+    try {
+      await api('/push-notifications/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+          deviceInfo: navigator.userAgent,
+        }),
+      });
+    } catch (err) {
+      console.warn('Browser subscription created but backend save failed — will retry on next page load', err);
+    }
 
     return true;
   } catch (err) {
@@ -147,7 +151,25 @@ export async function initializePwaPush(): Promise<boolean> {
   const registration = await waitForServiceWorkerReady(15000);
   if (registration) {
     const existingSub = await registration.pushManager.getSubscription();
-    if (existingSub) return true;
+    if (existingSub) {
+      const json = existingSub.toJSON();
+      if (json.endpoint && json.keys?.p256dh && json.keys?.auth) {
+        const savedKey = 'pushSubSaved_' + json.endpoint.slice(-20);
+        if (!localStorage.getItem(savedKey)) {
+          try {
+            await api('/push-notifications/subscribe', {
+              method: 'POST',
+              body: JSON.stringify({
+                subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+                deviceInfo: navigator.userAgent,
+              }),
+            });
+            localStorage.setItem(savedKey, '1');
+          } catch { /* will retry next time */ }
+        }
+      }
+      return true;
+    }
   }
 
   const fcmOk = await registerFcmToken();
@@ -164,13 +186,17 @@ export async function initializePwaPush(): Promise<boolean> {
     });
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
-    await api('/push-notifications/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
-        deviceInfo: navigator.userAgent,
-      }),
-    });
+    try {
+      await api('/push-notifications/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+          deviceInfo: navigator.userAgent,
+        }),
+      });
+    } catch (err) {
+      console.warn('Browser subscription created (init) but backend save failed', err);
+    }
     return true;
   } catch {
     return false;
