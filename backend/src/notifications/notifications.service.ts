@@ -464,6 +464,7 @@ export class NotificationsService {
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
     const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const classroomUrl = `/classroom/${sessionId}`;
     const enrolledCount =
       session.schedule?.scheduleStudents?.length ||
       (session.studentId ? 1 : 0) ||
@@ -477,11 +478,12 @@ export class NotificationsService {
       body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
       icon: '/logo.png',
       badge: '/logo.png',
-      url: joinUrl,
+      url: classroomUrl,
       tag: `session-${sessionId}`,
       data: {
         sessionId,
-        url: joinUrl,
+        url: classroomUrl,
+        joinUrl,
         channel: 'MEETING_STARTED',
         className,
         teacherName,

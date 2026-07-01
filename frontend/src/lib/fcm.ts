@@ -12,7 +12,7 @@ function saveTokenToStorage(token: string) {
   try { localStorage.setItem('fcmToken', token); } catch { }
 }
 
-function removeTokenFromStorage() {
+export function removeTokenFromStorage() {
   try { localStorage.removeItem('fcmToken'); } catch { }
 }
 

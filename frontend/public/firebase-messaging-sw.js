@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js');
 importScripts('/sw-shared.js');
 
-var CACHE_NAME = 'nejah-pwa-v4';
+var CACHE_NAME = 'nejah-pwa-v5';
 var STATIC_URLS = ['/offline.html'];
 
 function cacheStaticUrls(cache, urls) {
@@ -89,6 +89,30 @@ if (firebaseInitialized) {
     });
   });
 }
+
+self.addEventListener('push', function (event) {
+  if (!event.data) return;
+  try {
+    var payload = event.data.json();
+    if (!payload || !payload.title) return;
+    var title = payload.title;
+    var options = {
+      body: payload.body || '',
+      icon: payload.icon || '/logo.png',
+      badge: payload.badge || '/logo.png',
+      tag: payload.tag || 'nejah-notification',
+      data: payload.data || {},
+      requireInteraction: true,
+      renotify: !!payload.renotify,
+      actions: payload.actions && payload.actions.length > 0
+        ? payload.actions
+        : [{ action: 'view', title: 'View' }, { action: 'dismiss', title: 'Dismiss' }],
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (e) {
+    console.warn('[SW] Failed to handle push event:', e);
+  }
+});
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();

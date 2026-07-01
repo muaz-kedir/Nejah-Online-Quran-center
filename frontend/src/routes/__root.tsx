@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
-import { initializePwaPush, setupForegroundListener } from "@/lib/push-notifications";
+import { initializePwaPush, setupForegroundListener, updateNotificationBadge } from "@/lib/push-notifications";
 import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
 
@@ -168,6 +168,15 @@ function RootComponent() {
 
     initializePwaPush().catch(() => {});
 
+    updateNotificationBadge().catch(() => {});
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateNotificationBadge().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     const unsubForeground = setupForegroundListener((payload) => {
       const title = payload.title || "Nejah";
       const body = payload.body || "";
@@ -219,6 +228,7 @@ function RootComponent() {
 
     return () => {
       unsubForeground?.();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       socket.disconnect();
       socketRef.current = null;
     };

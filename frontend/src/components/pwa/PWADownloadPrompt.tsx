@@ -14,12 +14,20 @@ export default function PWADownloadPrompt() {
     subscribeToPush,
     unsubscribeFromPush,
   } = usePWA();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("pwaPromptDismissed") === "true";
+  });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setIsMobile(/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+  }, []);
+
+  const doDismiss = useCallback(() => {
+    setDismissed(true);
+    try { localStorage.setItem("pwaPromptDismissed", "true"); } catch {}
   }, []);
 
   const handleInstall = useCallback(async () => {
@@ -33,22 +41,24 @@ export default function PWADownloadPrompt() {
         }
       }
     }
-    setDismissed(true);
-  }, [install, pushSupported, subscribeToPush]);
+    doDismiss();
+  }, [install, pushSupported, subscribeToPush, doDismiss]);
 
   const handleTogglePush = useCallback(async () => {
     if (pushSubscribed) {
       await unsubscribeFromPush();
       toast.success("Push notifications disabled");
+      doDismiss();
     } else {
       const success = await subscribeToPush();
       if (success) {
         toast.success("Push notifications enabled!");
+        doDismiss();
       } else {
         toast.error("Failed to enable push notifications. Check permissions.");
       }
     }
-  }, [pushSubscribed, subscribeToPush, unsubscribeFromPush]);
+  }, [pushSubscribed, subscribeToPush, unsubscribeFromPush, doDismiss]);
 
   if (dismissed) return null;
   if (!isMobile && !canInstall && isInstalled) return null;
@@ -62,7 +72,7 @@ export default function PWADownloadPrompt() {
               <Download className="h-5 w-5 text-nejah-electric" />
               <span className="text-sm font-bold font-serif text-foreground">Install App</span>
             </div>
-            <button onClick={() => setDismissed(true)} className="text-muted-foreground hover:text-foreground">
+            <button onClick={doDismiss} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
           </div>
