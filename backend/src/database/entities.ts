@@ -48,6 +48,7 @@ import { HomeMissionSection } from '../website-cms/entities/home-mission-section
 import { HomeMissionCard } from '../website-cms/entities/home-mission-card.entity';
 import { HomeProgramsSection } from '../website-cms/entities/home-programs-section.entity';
 import { HomeProgram } from '../website-cms/entities/home-program.entity';
+import { Testimonial } from '../website-cms/entities/testimonial.entity';
 
 /** Every TypeORM entity — explicit registration avoids missing relation metadata on Render. */
 export const ALL_ENTITIES = [
@@ -101,4 +102,5 @@ export const ALL_ENTITIES = [
   HomeMissionCard,
   HomeProgramsSection,
   HomeProgram,
+  Testimonial,
 ];

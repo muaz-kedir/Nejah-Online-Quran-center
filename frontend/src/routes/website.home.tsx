@@ -1,23 +1,25 @@
-import { useEffect, useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
-import { requireAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PageHeader, GlassPanel } from "@/components/dashboard/design-system";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { requireAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
 import {
   uploadCmsImage,
+  resolveCmsImageUrl,
   type HomeMissionCard,
   type HomeMissionSection,
   type HomeProgram,
   type HomeProgramsSection,
   type LocalizedText,
   EMPTY_LOCALIZED,
-} from '@/lib/home-cms';
-import { LocalizedFields, ImageUploadField } from '@/components/website-cms/CmsFormFields';
+  type Testimonial,
+} from "@/lib/home-cms";
+import { LocalizedFields, ImageUploadField } from "@/components/website-cms/CmsFormFields";
 import {
   Loader2,
   Plus,
@@ -26,15 +28,29 @@ import {
   ChevronUp,
   ChevronDown,
   Save,
-} from 'lucide-react';
+  Star,
+  Quote,
+  Eye,
+} from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute('/website/home')({
+export const Route = createFileRoute("/website/home")({
   component: WebsiteHomeCmsPage,
-  beforeLoad: () => requireAuth(['super_admin']),
+  beforeLoad: () => requireAuth(["super_admin"]),
 });
 
 function WebsiteHomeCmsPage() {
-  const [tab, setTab] = useState('mission');
+  const [tab, setTab] = useState("mission");
 
   return (
     <DashboardLayout>
@@ -42,19 +58,23 @@ function WebsiteHomeCmsPage() {
         <PageHeader
           eyebrow="Website Management"
           title="Home Page CMS"
-          description="Manage Our Mission and Programs sections in English, Arabic, and Amharic"
+          description="Manage Our Mission, Programs, and Testimonials sections in English, Arabic, and Amharic"
         />
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="mission">Our Mission Section</TabsTrigger>
             <TabsTrigger value="programs">Programs Section</TabsTrigger>
+            <TabsTrigger value="testimonials">Testimonials Section</TabsTrigger>
           </TabsList>
           <TabsContent value="mission" className="mt-6">
             <MissionSectionEditor />
           </TabsContent>
           <TabsContent value="programs" className="mt-6">
             <ProgramsSectionEditor />
+          </TabsContent>
+          <TabsContent value="testimonials" className="mt-6">
+            <TestimonialsSectionEditor />
           </TabsContent>
         </Tabs>
       </div>
@@ -80,15 +100,16 @@ function MissionSectionEditor() {
     setLoading(true);
     try {
       const data = await api<{ section: HomeMissionSection; cards: HomeMissionCard[] }>(
-        '/website/admin/home/mission',
+        "/website/admin/home/mission",
       );
       setSection(data.section);
       setCards(data.cards);
-    } catch (e: any) {
+    } catch (e) {
+      const err = e as Error;
       const msg =
-        e.message?.includes('404') || e.message?.includes('Request failed: 404')
-          ? 'Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh.'
-          : e.message || 'Failed to load mission content';
+        err.message?.includes("404") || err.message?.includes("Request failed: 404")
+          ? "Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh."
+          : err.message || "Failed to load mission content";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -103,8 +124,8 @@ function MissionSectionEditor() {
     if (!section) return;
     setSaving(true);
     try {
-      const updated = await api<HomeMissionSection>('/website/admin/home/mission', {
-        method: 'PUT',
+      const updated = await api<HomeMissionSection>("/website/admin/home/mission", {
+        method: "PUT",
         body: JSON.stringify({
           aboutHeader: section.aboutHeader,
           aboutDescription: section.aboutDescription,
@@ -115,9 +136,10 @@ function MissionSectionEditor() {
         }),
       });
       setSection(updated);
-      toast.success('Mission section saved');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save');
+      toast.success("Mission section saved");
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -149,33 +171,35 @@ function MissionSectionEditor() {
     try {
       if (editingCard) {
         await api(`/website/admin/home/mission/cards/${editingCard.id}`, {
-          method: 'PATCH',
+          method: "PATCH",
           body: JSON.stringify(cardForm),
         });
-        toast.success('Card updated');
+        toast.success("Card updated");
       } else {
-        await api('/website/admin/home/mission/cards', {
-          method: 'POST',
+        await api("/website/admin/home/mission/cards", {
+          method: "POST",
           body: JSON.stringify(cardForm),
         });
-        toast.success('Card created');
+        toast.success("Card created");
       }
       setEditingCard(null);
       setShowCardForm(false);
       await load();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save card');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to save card");
     }
   };
 
   const deleteCard = async (id: string) => {
-    if (!confirm('Delete this card?')) return;
+    if (!confirm("Delete this card?")) return;
     try {
-      await api(`/website/admin/home/mission/cards/${id}`, { method: 'DELETE' });
-      toast.success('Card deleted');
+      await api(`/website/admin/home/mission/cards/${id}`, { method: "DELETE" });
+      toast.success("Card deleted");
       await load();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to delete');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to delete");
     }
   };
 
@@ -186,13 +210,14 @@ function MissionSectionEditor() {
     const [removed] = ids.splice(index, 1);
     ids.splice(newIndex, 0, removed);
     try {
-      const reordered = await api<HomeMissionCard[]>('/website/admin/home/mission/cards/reorder', {
-        method: 'POST',
+      const reordered = await api<HomeMissionCard[]>("/website/admin/home/mission/cards/reorder", {
+        method: "POST",
         body: JSON.stringify({ ids }),
       });
       setCards(reordered);
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to reorder');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to reorder");
     }
   };
 
@@ -284,9 +309,9 @@ function MissionSectionEditor() {
                 </Button>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{card.title?.en || 'Untitled'}</p>
+                <p className="font-semibold truncate">{card.title?.en || "Untitled"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {card.isActive ? 'Visible' : 'Hidden'} · Order {card.displayOrder}
+                  {card.isActive ? "Visible" : "Hidden"} · Order {card.displayOrder}
                 </p>
               </div>
               <Button size="sm" variant="outline" onClick={() => openEditCard(card)}>
@@ -306,7 +331,7 @@ function MissionSectionEditor() {
 
         {showCardForm && (
           <div className="mt-4 space-y-4 border-t pt-4">
-            <h4 className="font-semibold">{editingCard ? 'Edit Card' : 'New Card'}</h4>
+            <h4 className="font-semibold">{editingCard ? "Edit Card" : "New Card"}</h4>
             <LocalizedFields
               label="Title"
               value={cardForm.title}
@@ -375,15 +400,16 @@ function ProgramsSectionEditor() {
     setLoading(true);
     try {
       const data = await api<{ section: HomeProgramsSection; programs: HomeProgram[] }>(
-        '/website/admin/home/programs',
+        "/website/admin/home/programs",
       );
       setSection(data.section);
       setPrograms(data.programs);
-    } catch (e: any) {
+    } catch (e) {
+      const err = e as Error;
       const msg =
-        e.message?.includes('404') || e.message?.includes('Request failed: 404')
-          ? 'Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh.'
-          : e.message || 'Failed to load programs';
+        err.message?.includes("404") || err.message?.includes("Request failed: 404")
+          ? "Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh."
+          : err.message || "Failed to load programs";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -398,8 +424,8 @@ function ProgramsSectionEditor() {
     if (!section) return;
     setSaving(true);
     try {
-      const updated = await api<HomeProgramsSection>('/website/admin/home/programs', {
-        method: 'PUT',
+      const updated = await api<HomeProgramsSection>("/website/admin/home/programs", {
+        method: "PUT",
         body: JSON.stringify({
           sectionHeader: section.sectionHeader,
           mainTitle: section.mainTitle,
@@ -407,9 +433,10 @@ function ProgramsSectionEditor() {
         }),
       });
       setSection(updated);
-      toast.success('Programs section saved');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save');
+      toast.success("Programs section saved");
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -443,33 +470,35 @@ function ProgramsSectionEditor() {
     try {
       if (editingProgram) {
         await api(`/website/admin/home/programs/items/${editingProgram.id}`, {
-          method: 'PATCH',
+          method: "PATCH",
           body: JSON.stringify(programForm),
         });
-        toast.success('Program updated');
+        toast.success("Program updated");
       } else {
-        await api('/website/admin/home/programs/items', {
-          method: 'POST',
+        await api("/website/admin/home/programs/items", {
+          method: "POST",
           body: JSON.stringify(programForm),
         });
-        toast.success('Program created');
+        toast.success("Program created");
       }
       setEditingProgram(null);
       setShowProgramForm(false);
       await load();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save program');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to save program");
     }
   };
 
   const deleteProgram = async (id: string) => {
-    if (!confirm('Delete this program?')) return;
+    if (!confirm("Delete this program?")) return;
     try {
-      await api(`/website/admin/home/programs/items/${id}`, { method: 'DELETE' });
-      toast.success('Program deleted');
+      await api(`/website/admin/home/programs/items/${id}`, { method: "DELETE" });
+      toast.success("Program deleted");
       await load();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to delete');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to delete");
     }
   };
 
@@ -481,13 +510,14 @@ function ProgramsSectionEditor() {
     const [removed] = ids.splice(index, 1);
     ids.splice(newIndex, 0, removed);
     try {
-      const reordered = await api<HomeProgram[]>('/website/admin/home/programs/items/reorder', {
-        method: 'POST',
+      const reordered = await api<HomeProgram[]>("/website/admin/home/programs/items/reorder", {
+        method: "POST",
         body: JSON.stringify({ ids }),
       });
       setPrograms(reordered);
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to reorder');
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to reorder");
     }
   };
 
@@ -562,9 +592,9 @@ function ProgramsSectionEditor() {
                 </Button>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{program.title?.en || 'Untitled'}</p>
+                <p className="font-semibold truncate">{program.title?.en || "Untitled"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {program.isActive ? 'Active' : 'Inactive'} · {program.level?.en} · Order{' '}
+                  {program.isActive ? "Active" : "Inactive"} · {program.level?.en} · Order{" "}
                   {program.displayOrder}
                 </p>
               </div>
@@ -585,7 +615,7 @@ function ProgramsSectionEditor() {
 
         {showProgramForm && (
           <div className="mt-4 space-y-4 border-t pt-4">
-            <h4 className="font-semibold">{editingProgram ? 'Edit Program' : 'New Program'}</h4>
+            <h4 className="font-semibold">{editingProgram ? "Edit Program" : "New Program"}</h4>
             <LocalizedFields
               label="Level"
               value={programForm.level}
@@ -637,6 +667,694 @@ function ProgramsSectionEditor() {
           </div>
         )}
       </GlassPanel>
+    </div>
+  );
+}
+
+function TestimonialsSectionEditor() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [previewTestimonial, setPreviewTestimonial] = useState<Testimonial | null>(null);
+  const [previewLang, setPreviewLang] = useState<"en" | "ar" | "am">("en");
+
+  const [form, setForm] = useState({
+    studentName: "",
+    parentName: "",
+    displayName: "",
+    studentType: "child" as "child" | "adult" | "parent",
+    country: "",
+    city: "",
+    photo: null as string | null,
+    rating: 5,
+    program: "",
+    learningDuration: "",
+    studentSince: "",
+    testimonialText: { en: "", ar: "", am: "" },
+    isFeatured: false,
+    isPublished: true,
+  });
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await api<Testimonial[]>("/website/admin/home/testimonials");
+      setTestimonials(data || []);
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to load testimonials");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const openNew = () => {
+    setEditingTestimonial(null);
+    setShowForm(true);
+    setForm({
+      studentName: "",
+      parentName: "",
+      displayName: "",
+      studentType: "child",
+      country: "",
+      city: "",
+      photo: null,
+      rating: 5,
+      program: "",
+      learningDuration: "",
+      studentSince: "",
+      testimonialText: { en: "", ar: "", am: "" },
+      isFeatured: false,
+      isPublished: true,
+    });
+  };
+
+  const openEdit = (t: Testimonial) => {
+    setEditingTestimonial(t);
+    setShowForm(true);
+    setForm({
+      studentName: t.studentName || "",
+      parentName: t.parentName || "",
+      displayName: t.displayName || "",
+      studentType: t.studentType || "child",
+      country: t.country || "",
+      city: t.city || "",
+      photo: t.photo || null,
+      rating: t.rating || 5,
+      program: t.program || "",
+      learningDuration: t.learningDuration || "",
+      studentSince: t.studentSince || "",
+      testimonialText: {
+        en: t.testimonialText?.en || "",
+        ar: t.testimonialText?.ar || "",
+        am: t.testimonialText?.am || "",
+      },
+      isFeatured: !!t.isFeatured,
+      isPublished: !!t.isPublished,
+    });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.studentName || !form.displayName || !form.country) {
+      toast.error("Student Name, Display Name, and Country are required");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editingTestimonial) {
+        await api(`/website/admin/home/testimonials/${editingTestimonial.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(form),
+        });
+        toast.success("Testimonial updated");
+      } else {
+        await api("/website/admin/home/testimonials", {
+          method: "POST",
+          body: JSON.stringify(form),
+        });
+        toast.success("Testimonial created");
+      }
+      setShowForm(false);
+      await load();
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to save testimonial");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+    try {
+      await api(`/website/admin/home/testimonials/${id}`, { method: "DELETE" });
+      toast.success("Testimonial deleted");
+      await load();
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to delete testimonial");
+    }
+  };
+
+  const handleQuickPublishToggle = async (t: Testimonial) => {
+    try {
+      await api(`/website/admin/home/testimonials/${t.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isPublished: !t.isPublished }),
+      });
+      toast.success(`Testimonial ${t.isPublished ? "unpublished" : "published"}`);
+      await load();
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to toggle publish status");
+    }
+  };
+
+  const handleMove = async (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    const sorted = [...testimonials].sort((a, b) => a.displayOrder - b.displayOrder);
+    if (newIndex < 0 || newIndex >= sorted.length) return;
+    const ids = sorted.map((t) => t.id);
+    const [removed] = ids.splice(index, 1);
+    ids.splice(newIndex, 0, removed);
+    try {
+      const reordered = await api<Testimonial[]>("/website/admin/home/testimonials/reorder", {
+        method: "POST",
+        body: JSON.stringify({ ids }),
+      });
+      setTestimonials(reordered);
+      toast.success("Display order updated");
+    } catch (e) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to reorder testimonials");
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name ? name.trim().charAt(0).toUpperCase() : "T";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const sortedTestimonials = [...testimonials].sort((a, b) => a.displayOrder - b.displayOrder);
+
+  return (
+    <div className="space-y-6">
+      <GlassPanel className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-lg">Testimonials</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage client reviews displayed on the website landing page.
+            </p>
+          </div>
+          <Button onClick={openNew} className="gap-1">
+            <Plus className="h-4 w-4" /> Add Testimonial
+          </Button>
+        </div>
+
+        {/* CMS Table */}
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-muted text-xs uppercase text-muted-foreground font-semibold border-b">
+              <tr>
+                <th className="py-3 px-4 w-12">Photo</th>
+                <th className="py-3 px-4">Display Name</th>
+                <th className="py-3 px-4">Program</th>
+                <th className="py-3 px-4">Country</th>
+                <th className="py-3 px-4">Rating</th>
+                <th className="py-3 px-4">Languages</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Featured</th>
+                <th className="py-3 px-4">Order</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {sortedTestimonials.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="text-center py-8 text-muted-foreground">
+                    No testimonials found. Add a testimonial to get started.
+                  </td>
+                </tr>
+              ) : (
+                sortedTestimonials.map((t, idx) => {
+                  const hasEn = !!t.testimonialText?.en?.trim();
+                  const hasAr = !!t.testimonialText?.ar?.trim();
+                  const hasAm = !!t.testimonialText?.am?.trim();
+
+                  return (
+                    <tr key={t.id} className="hover:bg-muted/30">
+                      <td className="py-3 px-4">
+                        {t.photo ? (
+                          <img
+                            src={resolveCmsImageUrl(t.photo)}
+                            alt=""
+                            className="h-9 w-9 rounded-full object-cover border"
+                            onError={(e) => {
+                              // If image fails, clear it to fallback to initials
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                            {getInitials(t.displayName || t.studentName)}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        {t.displayName}
+                        {t.parentName && (
+                          <span className="block text-xs text-muted-foreground">
+                            Parent: {t.parentName}
+                          </span>
+                        )}
+                        <span className="block text-[10px] text-muted-foreground uppercase font-semibold">
+                          {t.studentType}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">{t.program || "—"}</td>
+                      <td className="py-3 px-4">
+                        {t.country}
+                        {t.city && (
+                          <span className="block text-xs text-muted-foreground">{t.city}</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-0.5 text-yellow-500">
+                          {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3 fill-current" />
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-1.5 text-[10px] font-mono">
+                          <span
+                            className={
+                              hasEn ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                            }
+                          >
+                            EN
+                          </span>
+                          <span
+                            className={
+                              hasAr ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                            }
+                          >
+                            AR
+                          </span>
+                          <span
+                            className={
+                              hasAm ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                            }
+                          >
+                            AM
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleQuickPublishToggle(t)}
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            t.isPublished
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          }`}
+                        >
+                          {t.isPublished ? "Published" : "Draft"}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={
+                            t.isFeatured ? "text-primary font-bold" : "text-muted-foreground"
+                          }
+                        >
+                          {t.isFeatured ? "Yes" : "No"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-mono">{t.displayOrder}</td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            disabled={idx === 0}
+                            onClick={() => handleMove(idx, -1)}
+                            title="Move Up"
+                            type="button"
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            disabled={idx === sortedTestimonials.length - 1}
+                            onClick={() => handleMove(idx, 1)}
+                            title="Move Down"
+                            type="button"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => setPreviewTestimonial(t)}
+                            title="Preview Testimonial"
+                            type="button"
+                          >
+                            <Eye className="h-4 w-4 text-sky-600" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => openEdit(t)}
+                            title="Edit"
+                            type="button"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(t.id)}
+                            title="Delete"
+                            type="button"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </GlassPanel>
+
+      {/* Editor Modal */}
+      {showForm && (
+        <GlassPanel className="p-6 border border-primary/20 space-y-6">
+          <h3 className="font-bold text-lg border-b pb-2">
+            {editingTestimonial ? "Edit Testimonial" : "Add New Testimonial"}
+          </h3>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="studentName">Student Name *</Label>
+                <Input
+                  id="studentName"
+                  value={form.studentName}
+                  onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                  placeholder="e.g. Fatima Hussein"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="displayName">Display Name *</Label>
+                <Input
+                  id="displayName"
+                  value={form.displayName}
+                  onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                  placeholder="Name visible on review (e.g. Fatima H.)"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="parentName">Parent Name (Optional)</Label>
+                <Input
+                  id="parentName"
+                  value={form.parentName}
+                  onChange={(e) => setForm({ ...form, parentName: e.target.value })}
+                  placeholder="e.g. Ibrahim Hussein"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Student Type</Label>
+                <Select
+                  value={form.studentType}
+                  onValueChange={(val: "child" | "adult" | "parent") =>
+                    setForm({ ...form, studentType: val })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="child">Child</SelectItem>
+                    <SelectItem value="adult">Adult</SelectItem>
+                    <SelectItem value="parent">Parent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="country">Country *</Label>
+                <Input
+                  id="country"
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  placeholder="e.g. United States"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="city">City (Optional)</Label>
+                <Input
+                  id="city"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  placeholder="e.g. Seattle"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="program">Program / Course (Optional)</Label>
+                <Input
+                  id="program"
+                  value={form.program}
+                  onChange={(e) => setForm({ ...form, program: e.target.value })}
+                  placeholder="e.g. Qaida Nooraniya / Hifz"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="learningDuration">Learning Duration (Optional)</Label>
+                <Input
+                  id="learningDuration"
+                  value={form.learningDuration}
+                  onChange={(e) => setForm({ ...form, learningDuration: e.target.value })}
+                  placeholder="e.g. 6 Months / 1 Year"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="studentSince">Student Since (Optional)</Label>
+                <Input
+                  id="studentSince"
+                  value={form.studentSince}
+                  onChange={(e) => setForm({ ...form, studentSince: e.target.value })}
+                  placeholder="e.g. Jan 2025"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Rating stars</Label>
+                <Select
+                  value={String(form.rating)}
+                  onValueChange={(val) => setForm({ ...form, rating: Number(val) })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 Stars</SelectItem>
+                    <SelectItem value="4">4 Stars</SelectItem>
+                    <SelectItem value="3">3 Stars</SelectItem>
+                    <SelectItem value="2">2 Stars</SelectItem>
+                    <SelectItem value="1">1 Star</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <ImageUploadField
+              label="Profile Photo"
+              imageUrl={form.photo}
+              onChange={(url) => setForm({ ...form, photo: url })}
+              onUpload={uploadCmsImage}
+            />
+
+            <LocalizedFields
+              label="Testimonial text"
+              value={form.testimonialText}
+              onChange={(v) => setForm({ ...form, testimonialText: v })}
+              multiline
+            />
+
+            <div className="flex flex-wrap gap-6 pt-2">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.isPublished}
+                  onCheckedChange={(v) => setForm({ ...form, isPublished: v })}
+                />
+                <span className="text-sm font-semibold">Published (visible on website)</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.isFeatured}
+                  onCheckedChange={(v) => setForm({ ...form, isFeatured: v })}
+                />
+                <span className="text-sm font-semibold">Featured (pin to top)</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t">
+              <Button type="submit" disabled={saving} className="gap-2">
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editingTestimonial ? "Update Testimonial" : "Create Testimonial"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingTestimonial(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-1.5 ml-auto"
+                onClick={() => {
+                  // Quick mock preview
+                  setPreviewTestimonial({
+                    id: "temp",
+                    createdAt: "",
+                    updatedAt: "",
+                    displayOrder: 0,
+                    ...form,
+                  } as Testimonial);
+                }}
+              >
+                <Eye className="h-4 w-4" /> Live Preview
+              </Button>
+            </div>
+          </form>
+        </GlassPanel>
+      )}
+
+      {/* Preview Dialog */}
+      <Dialog open={previewTestimonial !== null} onOpenChange={() => setPreviewTestimonial(null)}>
+        <DialogContent className="sm:max-w-[600px] rounded-3xl p-6 dark:bg-nejah-surface dark:border-nejah-border-blue">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" /> Testimonial Live Preview
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewTestimonial && (
+            <div className="space-y-6 py-4">
+              <p className="text-xs text-muted-foreground">
+                Toggle languages to preview the testimonial exactly as it will render on the landing
+                page.
+              </p>
+
+              {/* Language Selector */}
+              <div className="grid grid-cols-3 gap-2">
+                {(["en", "ar", "am"] as const).map((lang) => (
+                  <Button
+                    key={lang}
+                    variant={previewLang === lang ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-xl uppercase font-bold"
+                    onClick={() => setPreviewLang(lang)}
+                  >
+                    {lang === "en" ? "English 🇬🇧" : lang === "ar" ? "Arabic 🇸🇦" : "Amharic 🇪🇹"}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Mock Landing Page Card Container */}
+              <div className="border border-border rounded-3xl p-8 bg-background relative overflow-hidden shadow-sm dark:bg-nejah-surface dark:border-nejah-border-blue">
+                <Quote className="absolute top-6 end-6 size-14 text-primary/10" />
+
+                {/* Rating stars */}
+                <div className="flex gap-0.5 mb-5 text-yellow-500">
+                  {Array.from({ length: previewTestimonial.rating || 5 }).map((_, idx) => (
+                    <Star key={idx} className="h-4.5 w-4.5 fill-current" />
+                  ))}
+                </div>
+
+                {/* Text */}
+                <p
+                  className="text-base md:text-lg font-medium leading-relaxed mb-6 italic"
+                  dir={previewLang === "ar" ? "rtl" : "ltr"}
+                >
+                  "
+                  {previewTestimonial.testimonialText?.[previewLang] ||
+                    previewTestimonial.testimonialText?.en ||
+                    "No testimonial text added for this language."}
+                  "
+                </p>
+
+                {/* Avatar & Info */}
+                <div className="flex items-center gap-3">
+                  {previewTestimonial.photo ? (
+                    <img
+                      src={
+                        previewTestimonial.photo.startsWith("http")
+                          ? previewTestimonial.photo
+                          : resolveCmsImageUrl(previewTestimonial.photo)
+                      }
+                      alt=""
+                      className="h-11 w-11 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                      {getInitials(
+                        previewTestimonial.displayName || previewTestimonial.studentName,
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="font-bold text-foreground">
+                      {previewTestimonial.displayName || previewTestimonial.studentName}
+                      {previewTestimonial.parentName && (
+                        <span className="text-xs text-muted-foreground font-normal ml-1">
+                          (Parent: {previewTestimonial.parentName})
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <span>{previewTestimonial.country}</span>
+                      {previewTestimonial.program && (
+                        <>
+                          <span className="opacity-40">•</span>
+                          <span className="text-primary font-medium">
+                            {previewTestimonial.program}
+                          </span>
+                        </>
+                      )}
+                      {previewTestimonial.learningDuration && (
+                        <>
+                          <span className="opacity-40">•</span>
+                          <span>{previewTestimonial.learningDuration}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

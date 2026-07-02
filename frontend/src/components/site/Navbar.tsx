@@ -12,7 +12,7 @@ const linkHrefs = [
   { href: "#courses", key: "courses" as const },
   { href: "#teachers", key: "teachers" as const },
   { href: "#testimonials", key: "testimonials" as const },
-  { href: "#contact", key: "contact" as const },
+  { href: "#contact-section", key: "contact" as const },
 ];
 
 const langs = [
@@ -226,7 +226,11 @@ export function Navbar() {
                     >
                       {mounted && (
                         <>
-                          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                          {theme === "dark" ? (
+                            <Sun className="size-4" />
+                          ) : (
+                            <Moon className="size-4" />
+                          )}
                           {theme === "dark" ? "Light" : "Dark"}
                         </>
                       )}
