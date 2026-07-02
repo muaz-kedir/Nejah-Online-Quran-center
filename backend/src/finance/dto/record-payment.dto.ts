@@ -47,6 +47,11 @@ export class UpdateStudentFeeDto {
   @IsOptional()
   @IsString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  teacherMonthlyBudget?: number;
 }
 
 export class BundleFamilyDto {

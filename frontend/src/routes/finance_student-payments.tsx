@@ -181,7 +181,7 @@ function StudentPaymentsPage() {
                 <TableCell>{r.parentName}</TableCell>
                 <TableCell>{r.teacherName}</TableCell>
                 <TableCell>{r.program}</TableCell>
-                <TableCell>${r.monthlyFee}</TableCell>
+                <TableCell>ETB {r.monthlyFee}</TableCell>
                 <TableCell><Badge variant={statusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                 <TableCell>
                   <Button size="sm" variant="ghost" onClick={() => openDetail(r.id)}><Eye className="h-4 w-4" /></Button>
@@ -205,12 +205,18 @@ function StudentPaymentsPage() {
           <DialogHeader><DialogTitle>Payment Details — {detail?.studentName}</DialogTitle></DialogHeader>
           {detailLoading ? <Loader2 className="mx-auto h-8 w-8 animate-spin" /> : detail && (
             <div className="space-y-4 text-sm">
+              {detail.status === 'paid' && (
+                <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-green-600 text-center">
+                  <p className="font-semibold text-base">✅ Payment is done</p>
+                  <p className="text-xs mt-1">This student's fee is fully paid for {detail.billingMonth}.</p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div><span className="text-nejah-slate-blue">Program:</span> {detail.program}</div>
                 <div><span className="text-nejah-slate-blue">Teacher:</span> {detail.teacherName}</div>
-                <div><span className="text-nejah-slate-blue">Monthly Fee:</span> ${detail.monthlyFee}</div>
-                <div><span className="text-nejah-slate-blue">Paid:</span> ${detail.amountPaid}</div>
-                <div><span className="text-nejah-slate-blue">Balance:</span> ${detail.remainingBalance}</div>
+                <div><span className="text-nejah-slate-blue">Monthly Fee:</span> ETB {detail.monthlyFee}</div>
+                <div><span className="text-nejah-slate-blue">Paid:</span> ETB {detail.amountPaid}</div>
+                <div><span className="text-nejah-slate-blue">Balance:</span> ETB {detail.remainingBalance}</div>
                 <div><span className="text-nejah-slate-blue">Sessions/mo:</span> {detail.monthlySessions}</div>
               </div>
               {detail.weeklySchedule?.length > 0 && (
@@ -225,30 +231,34 @@ function StudentPaymentsPage() {
                 <p className="mb-2 font-medium">Payment History</p>
                 {detail.paymentHistory?.length === 0 && <p className="text-nejah-slate-blue">No transactions yet</p>}
                 {detail.paymentHistory?.map((t: any) => (
-                  <p key={t.id} className="text-nejah-slate-blue">{t.transactionDate}: ${t.amount} ({t.type})</p>
+                  <p key={t.id} className="text-nejah-slate-blue">{t.transactionDate}: ETB {t.amount} ({t.type})</p>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Amount</Label><Input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} /></div>
-                <div><Label>Type</Label>
-                  <Select value={payType} onValueChange={setPayType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="payment">Payment</SelectItem>
-                      <SelectItem value="discount">Discount</SelectItem>
-                      <SelectItem value="scholarship">Scholarship</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {detail.status !== 'paid' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Amount</Label><Input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} /></div>
+                  <div><Label>Type</Label>
+                    <Select value={payType} onValueChange={setPayType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="payment">Payment</SelectItem>
+                        <SelectItem value="discount">Discount</SelectItem>
+                        <SelectItem value="scholarship">Scholarship</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
-          <DialogFooter className="flex-wrap gap-2">
-            <Button variant="outline" onClick={() => markStatus('paid')}>Mark Paid</Button>
-            <Button variant="outline" onClick={() => markStatus('partial')}>Mark Partial</Button>
-            <Button variant="outline" onClick={() => markStatus('overdue')}>Mark Overdue</Button>
-            <Button onClick={recordPayment} disabled={submitting}>{submitting ? 'Saving...' : 'Record Payment'}</Button>
-          </DialogFooter>
+          {detail && detail.status !== 'paid' && (
+            <DialogFooter className="flex-wrap gap-2">
+              <Button variant="outline" onClick={() => markStatus('paid')}>Mark Paid</Button>
+              <Button variant="outline" onClick={() => markStatus('partial')}>Mark Partial</Button>
+              <Button variant="outline" onClick={() => markStatus('overdue')}>Mark Overdue</Button>
+              <Button onClick={recordPayment} disabled={submitting}>{submitting ? 'Saving...' : 'Record Payment'}</Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
