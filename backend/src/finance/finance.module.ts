@@ -15,6 +15,7 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { ClassSession } from '../attendance/entities/class-session.entity';
 import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
+import { FinanceExpense } from './entities/finance-expense.entity';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TeacherReplacement } from '../teacher-replacements/entities/teacher-rep
       ClassSession,
       StudentAttendance,
       TeacherReplacement,
+      FinanceExpense,
     ]),
   ],
   controllers: [FinanceController],

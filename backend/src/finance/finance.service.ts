@@ -7,6 +7,7 @@ import { FamilyBillingGroup } from './entities/family-billing-group.entity';
 import { FamilyBillingMember } from './entities/family-billing-member.entity';
 import { TeacherPayrollRecord } from './entities/teacher-payroll-record.entity';
 import { TeacherEarningDetail } from './entities/teacher-earning-detail.entity';
+import { FinanceExpense } from './entities/finance-expense.entity';
 import { Student, StudentStatus } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
@@ -17,7 +18,9 @@ import { TeacherReplacement } from '../teacher-replacements/entities/teacher-rep
 import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { TransactionType } from '../common/enums/transaction-type.enum';
 import { FinanceQueryDto } from './dto/finance-query.dto';
-import { RecordPaymentDto, UpdateStudentFeeDto, BundleFamilyDto } from './dto/record-payment.dto';
+import { RecordPaymentDto, UpdateStudentFeeDto, BundleFamilyDto, GeneratePayrollDto } from './dto/record-payment.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 import {
   fmtDate,
   currentBillingMonth,
@@ -52,6 +55,7 @@ export class FinanceService {
     @InjectRepository(ClassSession) private sessionRepo: Repository<ClassSession>,
     @InjectRepository(StudentAttendance) private studentAttRepo: Repository<StudentAttendance>,
     @InjectRepository(TeacherReplacement) private replacementRepo: Repository<TeacherReplacement>,
+    @InjectRepository(FinanceExpense) private expenseRepo: Repository<FinanceExpense>,
   ) {}
 
   getCurrentBillingMonth(): string {
@@ -100,6 +104,17 @@ export class FinanceService {
 
   private toNumber(val: any): number {
     return parseFloat(String(val ?? 0)) || 0;
+  }
+
+  private resolveTeacherRate(fee: any, defaultRate: number): number {
+    if (!fee) return defaultRate;
+    if (fee.teacherMonthlyBudget != null) {
+      const budget = this.toNumber(fee.teacherMonthlyBudget);
+      const scheduled = this.toNumber(fee.monthlySessions);
+      return scheduled > 0 ? budget / scheduled : defaultRate;
+    }
+    if (fee.sessionRate != null) return this.toNumber(fee.sessionRate);
+    return defaultRate;
   }
 
   async calculateStudentFee(
@@ -252,6 +267,31 @@ export class FinanceService {
       },
     });
 
+    const last12 = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return ym;
+    }).reverse();
+
+    const revenueTrends: { month: string; revenue: number }[] = [];
+    const revenueVsPayroll: { month: string; revenue: number; payroll: number }[] = [];
+
+    for (const ym of last12) {
+      const accts = await this.feeRepo.find({ where: { billingMonth: ym } });
+      const fams = await this.familyRepo.find({ where: { billingMonth: ym } });
+      const pays = await this.payrollRepo.find({ where: { billingMonth: ym } });
+
+      const rev =
+        accts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0) +
+        fams.reduce((s, f) => s + this.toNumber(f.amountPaid), 0);
+
+      const pay = pays.reduce((s, p) => s + this.toNumber(p.totalEarnings), 0);
+
+      revenueTrends.push({ month: ym, revenue: +rev.toFixed(2) });
+      revenueVsPayroll.push({ month: ym, revenue: +rev.toFixed(2), payroll: +pay.toFixed(2) });
+    }
+
     return {
       totalMonthlyRevenue: +totalMonthlyRevenue.toFixed(2),
       totalCollectedPayments: +totalCollected.toFixed(2),
@@ -269,6 +309,12 @@ export class FinanceService {
         transactionDate: t.transactionDate,
         description: t.description,
       })),
+      revenueTrends,
+      collectionVsOutstanding: [
+        { name: 'Collected', value: +totalCollected.toFixed(2) },
+        { name: 'Outstanding', value: +totalOutstanding.toFixed(2) },
+      ],
+      revenueVsPayroll,
     };
   }
 
@@ -364,6 +410,7 @@ export class FinanceService {
       sessionDurationMinutes: account.sessionDurationMinutes,
       monthlySessions: account.monthlySessions,
       sessionRate: this.toNumber(account.sessionRate),
+      teacherMonthlyBudget: account.teacherMonthlyBudget != null ? this.toNumber(account.teacherMonthlyBudget) : null,
       discountAmount: this.toNumber(account.discountAmount),
       scholarshipAmount: this.toNumber(account.scholarshipAmount),
       paymentHistory: transactions.map((t) => ({
@@ -426,6 +473,7 @@ export class FinanceService {
       account.sessionRate = dto.sessionRate;
       account.monthlyFee = dto.sessionRate * account.monthlySessions;
     }
+    if (dto.teacherMonthlyBudget !== undefined) account.teacherMonthlyBudget = dto.teacherMonthlyBudget;
     if (dto.dueDate) account.dueDate = dto.dueDate;
 
     const effectiveFee =
@@ -655,6 +703,34 @@ export class FinanceService {
     return this.getFamilyPaymentDetail(id);
   }
 
+  async updateFamilyPayment(id: string, dto: UpdateStudentFeeDto) {
+    const group = await this.familyRepo.findOne({ where: { id } });
+    if (!group) throw new NotFoundException('Family billing group not found');
+
+    if (dto.discountAmount !== undefined) group.discountAmount = dto.discountAmount;
+    if (dto.scholarshipAmount !== undefined) group.scholarshipAmount = dto.scholarshipAmount;
+    if (dto.dueDate) group.dueDate = dto.dueDate;
+
+    const effectiveFee =
+      this.toNumber(group.monthlyTotal) -
+      this.toNumber(group.discountAmount) -
+      this.toNumber(group.scholarshipAmount);
+    group.remainingBalance = Math.max(effectiveFee - this.toNumber(group.amountPaid), 0);
+
+    if (dto.status) {
+      group.status = dto.status;
+    } else {
+      group.status = this.resolvePaymentStatus(
+        this.toNumber(group.amountPaid),
+        effectiveFee,
+        group.dueDate,
+      );
+    }
+
+    await this.familyRepo.save(group);
+    return this.getFamilyPaymentDetail(id);
+  }
+
   async calculateTeacherEarnings(teacherId: string, billingMonth?: string) {
     const month = billingMonth || this.getCurrentBillingMonth();
     const [year, mon] = month.split('-').map(Number);
@@ -664,7 +740,7 @@ export class FinanceService {
     const teacher = await this.teacherRepo.findOne({ where: { id: teacherId } });
     if (!teacher) throw new NotFoundException('Teacher not found');
 
-    const sessionRate = this.toNumber(teacher.hourlyRate) || DEFAULT_SESSION_RATE;
+    const defaultSessionRate = this.toNumber(teacher.hourlyRate) || DEFAULT_SESSION_RATE;
 
     const sessions = await this.sessionRepo
       .createQueryBuilder('session')
@@ -680,9 +756,12 @@ export class FinanceService {
       where: [{ originalTeacherId: teacherId }, { replacementTeacherId: teacherId }],
     });
 
+    const feeAccounts = await this.feeRepo.find({ where: { billingMonth: month } });
+    const feeMap = new Map(feeAccounts.map((a) => [a.studentId, a]));
+
     const studentEarnings = new Map<
       string,
-      { sessions: number; earnings: number; isReplacement: boolean; replacementId?: string }
+      { sessions: number; earnings: number; isReplacement: boolean; replacementId?: string; rate: number }
     >();
 
     for (const session of sessions) {
@@ -695,23 +774,38 @@ export class FinanceService {
           typeof session.sessionDate === 'string'
             ? session.sessionDate
             : fmtDate(new Date(session.sessionDate));
-        const replacement = replacements.find(
+
+        const isReplaced = replacements.find(
           (r) =>
+            r.originalTeacherId === teacherId &&
             r.studentId === sid &&
-            r.replacementTeacherId === teacherId &&
             sessionDateStr >= r.startDate &&
             sessionDateStr <= r.endDate,
         );
 
-        const key = `${sid}-${replacement?.id || 'regular'}`;
+        if (isReplaced) continue;
+
+        const asReplacement = replacements.find(
+          (r) =>
+            r.replacementTeacherId === teacherId &&
+            r.studentId === sid &&
+            sessionDateStr >= r.startDate &&
+            sessionDateStr <= r.endDate,
+        );
+
+        const fee = feeMap.get(sid);
+        const perStudentRate = this.resolveTeacherRate(fee, defaultSessionRate);
+
+        const key = `${sid}-${asReplacement?.id || 'regular'}`;
         const existing = studentEarnings.get(key) || {
           sessions: 0,
           earnings: 0,
-          isReplacement: !!replacement,
-          replacementId: replacement?.id,
+          isReplacement: !!asReplacement,
+          replacementId: asReplacement?.id,
+          rate: perStudentRate,
         };
         existing.sessions += 1;
-        existing.earnings += sessionRate;
+        existing.earnings += perStudentRate;
         studentEarnings.set(key, existing);
       }
 
@@ -721,10 +815,57 @@ export class FinanceService {
           sessions: 0,
           earnings: 0,
           isReplacement: false,
+          rate: defaultSessionRate,
         };
         existing.sessions += 1;
-        existing.earnings += sessionRate;
+        existing.earnings += defaultSessionRate;
         studentEarnings.set(key, existing);
+      }
+    }
+
+    const coveringReplacements = replacements.filter(
+      (r) => r.replacementTeacherId === teacherId && r.status === 'completed',
+    );
+
+    for (const rep of coveringReplacements) {
+      const fee = feeMap.get(rep.studentId);
+      const perStudentRate = this.resolveTeacherRate(fee, defaultSessionRate);
+
+      const repSessions = sessions.filter((s) => {
+        const sDate =
+          typeof s.sessionDate === 'string'
+            ? s.sessionDate
+            : fmtDate(new Date(s.sessionDate));
+        return (
+          sDate >= rep.startDate &&
+          sDate <= rep.endDate &&
+          (s.studentAttendances || []).some((a) => a.studentId === rep.studentId)
+        );
+      });
+
+      const repAttendances = repSessions.reduce(
+        (sum, s) =>
+          sum + (s.studentAttendances || []).filter((a) => a.studentId === rep.studentId).length,
+        0,
+      );
+
+      if (repAttendances > 0) {
+        const key = `${rep.studentId}-${rep.id}`;
+        const existing = studentEarnings.get(key) || {
+          sessions: 0,
+          earnings: 0,
+          isReplacement: true,
+          replacementId: rep.id,
+          rate: perStudentRate,
+        };
+
+        const alreadyCounted = existing.sessions;
+        if (repAttendances > alreadyCounted) {
+          const newSessions = repAttendances - alreadyCounted;
+          existing.sessions += newSessions;
+          existing.earnings += newSessions * perStudentRate;
+          studentEarnings.set(key, existing);
+        }
       }
     }
 
@@ -736,7 +877,7 @@ export class FinanceService {
       return {
         studentId,
         sessionsConducted: val.sessions,
-        sessionRate,
+        sessionRate: val.rate,
         earnings: val.earnings,
         isReplacement: val.isReplacement,
         replacementId: val.replacementId,
@@ -751,7 +892,7 @@ export class FinanceService {
       teacherName: teacher.fullName,
       assignedStudents,
       sessionsConducted: totalSessions,
-      sessionRate,
+      sessionRate: defaultSessionRate,
       earnings: +totalEarnings.toFixed(2),
       billingMonth: month,
       details,
@@ -817,16 +958,57 @@ export class FinanceService {
       relations: ['earningDetails', 'earningDetails.student'],
     });
 
+    const feeAccounts = await this.feeRepo.find({
+      where: { billingMonth: calc.billingMonth },
+    });
+    const feeAccountMap = new Map(feeAccounts.map((fa) => [fa.studentId, fa]));
+
+    const assignedStudents = await this.studentRepo.find({
+      where: { teacherId, status: StudentStatus.ACTIVE },
+    });
+
+    const scheduleStudents = await this.scheduleRepo.find({
+      where: { teacherId, status: 'active' },
+      select: ['studentId'],
+    });
+
+    const allStudentIds = [
+      ...new Set([
+        ...calc.details.filter((d) => d.studentId).map((d) => d.studentId!),
+        ...assignedStudents.map((s) => s.id),
+        ...scheduleStudents.map((s) => s.studentId).filter(Boolean),
+      ]),
+    ];
+
     const studentDetails = await Promise.all(
-      calc.details
-        .filter((d) => d.studentId)
-        .map(async (d) => {
-          const student = await this.studentRepo.findOne({ where: { id: d.studentId! } });
-          return {
-            studentName: student?.fullName || '—',
-            ...d,
-          };
-        }),
+      allStudentIds.map(async (studentId) => {
+        const detail = calc.details.find((d) => d.studentId === studentId);
+        const student = assignedStudents.find((s) => s.id === studentId)
+          || await this.studentRepo.findOne({ where: { id: studentId } });
+        const fee = feeAccountMap.get(studentId);
+        const schedules = await this.scheduleRepo.find({
+          where: { studentId, status: 'active' },
+        });
+        return {
+          studentName: student?.fullName || '—',
+          feeAccountId: fee?.id || null,
+          teacherMonthlyBudget: fee?.teacherMonthlyBudget != null ? this.toNumber(fee.teacherMonthlyBudget) : null,
+          monthlySessions: fee ? this.toNumber(fee.monthlySessions) : 0,
+          assignableRate: fee?.sessionRate != null ? this.toNumber(fee.sessionRate) : (detail?.sessionRate ?? 0),
+          weeklySchedule: schedules.map((s) => ({
+            day: s.dayOfWeek,
+            startTime: s.startTimeString,
+            endTime: s.endTimeString,
+            className: s.className,
+          })),
+          sessionsConducted: detail?.sessionsConducted ?? 0,
+          earnings: detail?.earnings ?? 0,
+          sessionRate: detail?.sessionRate ?? 0,
+          studentId,
+          isReplacement: detail?.isReplacement ?? false,
+          replacementId: detail?.replacementId ?? null,
+        };
+      }),
     );
 
     return {
@@ -1056,5 +1238,187 @@ export class FinanceService {
       default:
         throw new BadRequestException(`Unknown report type: ${type}`);
     }
+  }
+
+  async getExpenses(query: FinanceQueryDto) {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+
+    const qb = this.expenseRepo.createQueryBuilder('e');
+
+    if (query.search)
+      qb.andWhere('e.description ILIKE :search', { search: `%${query.search}%` });
+
+    if (query.paymentStatus)
+      qb.andWhere('e.category = :category', { category: query.paymentStatus });
+
+    const { start, end } = this.resolveDateRange(query);
+    if (start && end) {
+      const startStr = fmtDate(start);
+      const endStr = fmtDate(end);
+      qb.andWhere('e.expenseDate >= :startStr', { startStr });
+      qb.andWhere('e.expenseDate <= :endStr', { endStr });
+    }
+
+    const total = await qb.getCount();
+    const expenses = await qb
+      .orderBy('e.expenseDate', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return {
+      data: expenses.map((e) => ({
+        id: e.id,
+        amount: this.toNumber(e.amount),
+        description: e.description,
+        category: e.category,
+        expenseDate: e.expenseDate,
+        isRecurring: e.isRecurring,
+        recurringInterval: e.recurringInterval,
+        attachmentUrl: e.attachmentUrl,
+        notes: e.notes,
+        recordedBy: e.recordedBy,
+        createdAt: e.createdAt,
+      })),
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async getExpenseDetail(id: string) {
+    const expense = await this.expenseRepo.findOne({ where: { id } });
+    if (!expense) throw new NotFoundException('Expense not found');
+    return {
+      id: expense.id,
+      amount: this.toNumber(expense.amount),
+      description: expense.description,
+      category: expense.category,
+      expenseDate: expense.expenseDate,
+      isRecurring: expense.isRecurring,
+      recurringInterval: expense.recurringInterval,
+      attachmentUrl: expense.attachmentUrl,
+      notes: expense.notes,
+      recordedBy: expense.recordedBy,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt,
+    };
+  }
+
+  async createExpense(dto: CreateExpenseDto, userId: string) {
+    const expense = this.expenseRepo.create({
+      amount: dto.amount,
+      description: dto.description,
+      category: dto.category,
+      expenseDate: dto.expenseDate || fmtDate(new Date()),
+      isRecurring: dto.isRecurring || false,
+      recurringInterval: dto.recurringInterval,
+      attachmentUrl: dto.attachmentUrl,
+      notes: dto.notes,
+      recordedBy: userId,
+    });
+    const saved = await this.expenseRepo.save(expense);
+    return this.getExpenseDetail(saved.id);
+  }
+
+  async updateExpense(id: string, dto: UpdateExpenseDto) {
+    const expense = await this.expenseRepo.findOne({ where: { id } });
+    if (!expense) throw new NotFoundException('Expense not found');
+
+    if (dto.amount !== undefined) expense.amount = dto.amount;
+    if (dto.description !== undefined) expense.description = dto.description;
+    if (dto.category !== undefined) expense.category = dto.category;
+    if (dto.expenseDate !== undefined) expense.expenseDate = dto.expenseDate;
+    if (dto.isRecurring !== undefined) expense.isRecurring = dto.isRecurring;
+    if (dto.recurringInterval !== undefined) expense.recurringInterval = dto.recurringInterval;
+    if (dto.attachmentUrl !== undefined) expense.attachmentUrl = dto.attachmentUrl;
+    if (dto.notes !== undefined) expense.notes = dto.notes;
+
+    await this.expenseRepo.save(expense);
+    return this.getExpenseDetail(id);
+  }
+
+  async deleteExpense(id: string) {
+    const expense = await this.expenseRepo.findOne({ where: { id } });
+    if (!expense) throw new NotFoundException('Expense not found');
+    await this.expenseRepo.remove(expense);
+    return { message: 'Expense deleted' };
+  }
+
+  async getNetProfit(billingMonth?: string) {
+    const month = billingMonth || this.getCurrentBillingMonth();
+    const [year, mon] = month.split('-').map(Number);
+    const monthStart = fmtDate(new Date(year, mon - 1, 1));
+    const monthEnd = fmtDate(endOfMonthDate(new Date(year, mon - 1, 1)));
+
+    const accounts = await this.feeRepo.find({ where: { billingMonth: month } });
+    const families = await this.familyRepo.find({ where: { billingMonth: month } });
+    const payrolls = await this.payrollRepo.find({ where: { billingMonth: month } });
+    const expenses = await this.expenseRepo.find({
+      where: {
+        expenseDate: Between(monthStart, monthEnd),
+      },
+    });
+
+    const totalCollected =
+      accounts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0) +
+      families.reduce((s, f) => s + this.toNumber(f.amountPaid), 0);
+
+    const totalExpected =
+      accounts.reduce((s, a) => s + this.toNumber(a.monthlyFee), 0) +
+      families.reduce((s, f) => s + this.toNumber(f.monthlyTotal), 0);
+
+    const totalPayroll = payrolls.reduce((s, p) => s + this.toNumber(p.totalEarnings), 0);
+    const totalExpenses = expenses.reduce((s, e) => s + this.toNumber(e.amount), 0);
+
+    const collectionRate =
+      totalExpected > 0 ? +((totalCollected / totalExpected) * 100).toFixed(2) : 0;
+
+    const expenseBreakdown = expenses.reduce(
+      (acc, e) => {
+        const cat = e.category;
+        acc[cat] = (acc[cat] || 0) + this.toNumber(e.amount);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const prevMonth = mon === 1 ? `${year - 1}-12` : `${year}-${String(mon - 1).padStart(2, '0')}`;
+    const prevAccounts = await this.feeRepo.find({ where: { billingMonth: prevMonth } });
+    const prevPayrolls = await this.payrollRepo.find({ where: { billingMonth: prevMonth } });
+    const prevExpenses = await this.expenseRepo.find({
+      where: {
+        expenseDate: Between(
+          fmtDate(new Date(prevMonth.split('-')[0] as any, parseInt(prevMonth.split('-')[1]) - 1, 1)),
+          fmtDate(endOfMonthDate(new Date(prevMonth.split('-')[0] as any, parseInt(prevMonth.split('-')[1]) - 1, 1))),
+        ),
+      },
+    });
+
+    const prevCollected = prevAccounts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0);
+    const prevPayroll = prevPayrolls.reduce((s, p) => s + this.toNumber(p.totalEarnings), 0);
+    const prevExpenseTotal = prevExpenses.reduce((s, e) => s + this.toNumber(e.amount), 0);
+    const prevNetProfit = prevCollected - prevPayroll - prevExpenseTotal;
+    const currentNetProfit = totalCollected - totalPayroll - totalExpenses;
+
+    const profitChange =
+      prevNetProfit !== 0
+        ? +(((currentNetProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100).toFixed(2)
+        : currentNetProfit !== 0
+          ? 100
+          : 0;
+
+    return {
+      billingMonth: month,
+      totalCollected: +totalCollected.toFixed(2),
+      totalExpected: +totalExpected.toFixed(2),
+      collectionRate,
+      totalPayroll: +totalPayroll.toFixed(2),
+      totalExpenses: +totalExpenses.toFixed(2),
+      expenseBreakdown,
+      netProfit: +currentNetProfit.toFixed(2),
+      profitChange,
+      previousMonth: prevMonth,
+      previousNetProfit: +prevNetProfit.toFixed(2),
+    };
   }
 }

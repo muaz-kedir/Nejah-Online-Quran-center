@@ -34,10 +34,10 @@ function RevenuePage() {
   }, [filters]);
 
   const stats = data ? [
-    { label: 'Daily Revenue', value: `$${data.dailyRevenue}`, icon: DollarSign },
-    { label: 'Weekly Revenue', value: `$${data.weeklyRevenue}`, icon: TrendingUp },
-    { label: 'Monthly Revenue', value: `$${data.monthlyRevenue}`, icon: Calendar },
-    { label: 'Annual Revenue', value: `$${data.annualRevenue}`, icon: BarChart3 },
+    { label: 'Daily Revenue', value: `ETB ${data.dailyRevenue}`, icon: DollarSign },
+    { label: 'Weekly Revenue', value: `ETB ${data.weeklyRevenue}`, icon: TrendingUp },
+    { label: 'Monthly Revenue', value: `ETB ${data.monthlyRevenue}`, icon: Calendar },
+    { label: 'Annual Revenue', value: `ETB ${data.annualRevenue}`, icon: BarChart3 },
   ] : [];
 
   return (
