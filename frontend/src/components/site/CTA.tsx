@@ -10,6 +10,16 @@ const highlightIcons = [Users, BookOpen, Clock] as const;
 export function CTA() {
   const { t } = useTheme();
 
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const contactSection = document.getElementById("contact-section");
+    if (contactSection) {
+      contactSection.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <section className="py-16 md:py-24">
       <div className="container-x">
@@ -56,15 +66,14 @@ export function CTA() {
                     <ArrowRight className="ms-2 size-4 rtl:rotate-180" />
                   </Button>
                 </Link>
-                <a href="#contact">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-12 rounded-full border-white/25 bg-white/5 px-8 text-base text-white hover:border-white/40 hover:bg-white/10"
-                  >
-                    {t.cta.contact}
-                  </Button>
-                </a>
+                <Button
+                  onClick={handleContactClick}
+                  size="lg"
+                  variant="outline"
+                  className="h-12 rounded-full border-white/25 bg-white/5 px-8 text-base text-white hover:border-white/40 hover:bg-white/10"
+                >
+                  {t.cta.contact}
+                </Button>
               </div>
 
               <p className="mt-5 font-mono text-[11px] uppercase tracking-widest text-white/45">
@@ -89,8 +98,12 @@ export function CTA() {
                       <Icon className="size-5" />
                     </div>
                     <div>
-                      <p className="font-mono text-xl font-bold tracking-tight text-white">{highlightValues[i]}</p>
-                      <p className="text-xs font-medium uppercase tracking-wider text-white/55">{label}</p>
+                      <p className="font-mono text-xl font-bold tracking-tight text-white">
+                        {highlightValues[i]}
+                      </p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-white/55">
+                        {label}
+                      </p>
                     </div>
                   </motion.div>
                 );

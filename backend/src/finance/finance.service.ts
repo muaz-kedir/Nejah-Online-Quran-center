@@ -21,6 +21,10 @@ import { FinanceQueryDto } from './dto/finance-query.dto';
 import { RecordPaymentDto, UpdateStudentFeeDto, BundleFamilyDto, GeneratePayrollDto } from './dto/record-payment.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
+import { NotificationChannel } from '../notifications/entities/notification.entity';
 import {
   fmtDate,
   currentBillingMonth,
@@ -56,6 +60,8 @@ export class FinanceService {
     @InjectRepository(StudentAttendance) private studentAttRepo: Repository<StudentAttendance>,
     @InjectRepository(TeacherReplacement) private replacementRepo: Repository<TeacherReplacement>,
     @InjectRepository(FinanceExpense) private expenseRepo: Repository<FinanceExpense>,
+    @InjectRepository(User) private userRepo: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   getCurrentBillingMonth(): string {
@@ -104,6 +110,16 @@ export class FinanceService {
 
   private toNumber(val: any): number {
     return parseFloat(String(val ?? 0)) || 0;
+  }
+
+  private async getAdminUserIds(): Promise<string[]> {
+    const admins = await this.userRepo.find({
+      where: [
+        { role: UserRole.FINANCE_MANAGER, isActive: true },
+        { role: UserRole.SUPER_ADMIN, isActive: true },
+      ],
+    });
+    return admins.map((u) => u.id);
   }
 
   private resolveTeacherRate(fee: any, defaultRate: number): number {
@@ -458,7 +474,45 @@ export class FinanceService {
       effectiveFee,
       account.dueDate,
     );
+    const prevStatus = account.status;
+    const paidBefore = this.toNumber(account.amountPaid) - (dto.type === TransactionType.PAYMENT ? dto.amount : 0);
     await this.feeRepo.save(account);
+
+    const student = account.studentId ? await this.studentRepo.findOne({ where: { id: account.studentId }, relations: ['user'] }) : null;
+    const parent = account.parentId ? await this.parentRepo.findOne({ where: { id: account.parentId }, relations: ['user'] }) : null;
+    const adminIds = await this.getAdminUserIds();
+    const studentName = student?.fullName || 'Student';
+    const month = account.billingMonth;
+
+    if (account.status === PaymentStatus.PAID && prevStatus !== PaymentStatus.PAID) {
+      const msg = `Your payment of ${this.toNumber(dto.amount)} ETB has been successfully received. Status: Paid.`;
+      const recipients: string[] = [];
+      if (student?.userId) recipients.push(student.userId);
+      if (parent?.user?.id) recipients.push(parent.user.id);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set([...recipients, ...adminIds])],
+        'Payment Received',
+        msg,
+        { amount: this.toNumber(dto.amount), billingMonth: month, studentName },
+        NotificationChannel.PAYMENT_RECEIVED,
+        false,
+        '/finance_student-payments',
+      );
+    } else if (account.status === PaymentStatus.PARTIAL && paidBefore <= 0) {
+      const msg = `${this.toNumber(dto.amount)} ETB has been received. Remaining Balance: ${this.toNumber(account.remainingBalance)} ETB. Status: Partially Paid.`;
+      const recipients: string[] = [];
+      if (student?.userId) recipients.push(student.userId);
+      if (parent?.user?.id) recipients.push(parent.user.id);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set([...recipients, ...adminIds])],
+        'Partial Payment Recorded',
+        msg,
+        { amount: this.toNumber(dto.amount), remaining: this.toNumber(account.remainingBalance), billingMonth: month, studentName },
+        NotificationChannel.PAYMENT_RECEIVED,
+        false,
+        '/finance_student-payments',
+      );
+    }
 
     return this.getStudentPaymentDetail(id);
   }
@@ -492,7 +546,31 @@ export class FinanceService {
       );
     }
 
+    const prevStatus = account.status;
     await this.feeRepo.save(account);
+
+    const student = account.studentId ? await this.studentRepo.findOne({ where: { id: account.studentId }, relations: ['user'] }) : null;
+    const parent = account.parentId ? await this.parentRepo.findOne({ where: { id: account.parentId }, relations: ['user'] }) : null;
+    const adminIds = await this.getAdminUserIds();
+    const studentName = student?.fullName || 'Student';
+
+    if (account.status === PaymentStatus.OVERDUE && prevStatus !== PaymentStatus.OVERDUE) {
+      const daysOverdue = account.dueDate ? Math.max(0, Math.ceil((Date.now() - new Date(account.dueDate).getTime()) / 86400000)) : 0;
+      const msg = `The academic fee for ${studentName} is overdue. Outstanding Balance: ${this.toNumber(account.remainingBalance)} ETB. Days Overdue: ${daysOverdue}.`;
+      const recipients: string[] = [...adminIds];
+      if (parent?.user?.id) recipients.push(parent.user.id);
+      if (student?.userId) recipients.push(student.userId);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set(recipients)],
+        'Payment Overdue',
+        msg,
+        { studentName, amount: this.toNumber(account.remainingBalance), daysOverdue, billingMonth: account.billingMonth },
+        NotificationChannel.PAYMENT_OVERDUE,
+        false,
+        '/finance_student-payments',
+      );
+    }
+
     return this.getStudentPaymentDetail(id);
   }
 
@@ -698,7 +776,43 @@ export class FinanceService {
       effectiveFee,
       group.dueDate,
     );
+    const prevGroupStatus = group.status;
+    const paidBefore = this.toNumber(group.amountPaid) - (dto.type === TransactionType.PAYMENT ? dto.amount : 0);
     await this.familyRepo.save(group);
+
+    const parent = group.parentId ? await this.parentRepo.findOne({ where: { id: group.parentId }, relations: ['user'] }) : null;
+    const adminIds = await this.getAdminUserIds();
+    const month = group.billingMonth;
+    const members = await this.familyMemberRepo.find({ where: { familyBillingGroupId: id }, relations: ['student'] });
+    const childNames = members.map((m) => m.student?.fullName || 'Student').join(', ');
+
+    if (group.status === PaymentStatus.PAID && prevGroupStatus !== PaymentStatus.PAID) {
+      const msg = `Your family payment of ${this.toNumber(dto.amount)} ETB has been successfully received. Status: Paid.`;
+      const recipients: string[] = [...adminIds];
+      if (parent?.user?.id) recipients.push(parent.user.id);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set(recipients)],
+        'Payment Received',
+        msg,
+        { amount: this.toNumber(dto.amount), billingMonth: month, children: childNames },
+        NotificationChannel.PAYMENT_RECEIVED,
+        false,
+        '/finance_family-payments',
+      );
+    } else if (group.status === PaymentStatus.PARTIAL && paidBefore <= 0) {
+      const msg = `${this.toNumber(dto.amount)} ETB has been received. Remaining Balance: ${this.toNumber(group.remainingBalance)} ETB. Status: Partially Paid.`;
+      const recipients: string[] = [...adminIds];
+      if (parent?.user?.id) recipients.push(parent.user.id);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set(recipients)],
+        'Partial Payment Recorded',
+        msg,
+        { amount: this.toNumber(dto.amount), remaining: this.toNumber(group.remainingBalance), billingMonth: month },
+        NotificationChannel.PAYMENT_RECEIVED,
+        false,
+        '/finance_family-payments',
+      );
+    }
 
     return this.getFamilyPaymentDetail(id);
   }
@@ -1075,9 +1189,50 @@ export class FinanceService {
       }
 
       generated.push(saved);
+
+      const adminIds = await this.getAdminUserIds();
+      const earningsAmount = this.toNumber(calc.earnings);
+      if (earningsAmount > 0 && record.status === 'pending') {
+        await this.notificationsService.sendCustomNotifications(
+          adminIds,
+          'Teacher Salary Due',
+          `Teacher "${teacher.fullName}" has earned ${earningsAmount} ETB for ${month}. Please review and process the salary payment.`,
+          { teacherId: teacher.id, teacherName: teacher.fullName, amount: earningsAmount, billingMonth: month },
+          NotificationChannel.PAYMENT_REMINDER,
+          false,
+          '/finance_teacher-payments',
+        );
+      }
     }
 
     return { billingMonth: month, generated: generated.length, records: generated };
+  }
+
+  async markPayrollAsPaid(teacherId: string, billingMonth?: string) {
+    const month = billingMonth || this.getCurrentBillingMonth();
+    const record = await this.payrollRepo.findOne({
+      where: { teacherId, billingMonth: month },
+      relations: ['teacher'],
+    });
+    if (!record) throw new NotFoundException('Payroll record not found');
+
+    record.status = 'paid';
+    record.paidAt = new Date();
+    await this.payrollRepo.save(record);
+
+    const teacherName = record.teacher?.fullName || 'Teacher';
+    const adminIds = await this.getAdminUserIds();
+    await this.notificationsService.sendCustomNotifications(
+      adminIds,
+      'Teacher Salary Paid',
+      `Salary payment of ${this.toNumber(record.totalEarnings)} ETB has been successfully recorded for Teacher ${teacherName}.`,
+      { teacherId, teacherName, amount: this.toNumber(record.totalEarnings), billingMonth: month },
+      NotificationChannel.PAYMENT_RECEIVED,
+      false,
+      '/finance_teacher-payments',
+    );
+
+    return { success: true, record };
   }
 
   async getRevenueAnalytics(query: FinanceQueryDto) {

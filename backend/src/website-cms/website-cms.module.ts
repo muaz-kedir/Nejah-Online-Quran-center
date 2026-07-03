@@ -7,6 +7,7 @@ import { HomeMissionSection } from './entities/home-mission-section.entity';
 import { HomeMissionCard } from './entities/home-mission-card.entity';
 import { HomeProgramsSection } from './entities/home-programs-section.entity';
 import { HomeProgram } from './entities/home-program.entity';
+import { Testimonial } from './entities/testimonial.entity';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { HomeProgram } from './entities/home-program.entity';
       HomeMissionCard,
       HomeProgramsSection,
       HomeProgram,
+      Testimonial,
     ]),
   ],
   controllers: [WebsiteCmsPublicController, WebsiteCmsAdminController],

@@ -5,6 +5,7 @@ import { HomeMissionSection } from './entities/home-mission-section.entity';
 import { HomeMissionCard } from './entities/home-mission-card.entity';
 import { HomeProgramsSection } from './entities/home-programs-section.entity';
 import { HomeProgram } from './entities/home-program.entity';
+import { Testimonial } from './entities/testimonial.entity';
 import { UpdateHomeMissionSectionDto } from './dto/update-home-mission-section.dto';
 import {
   CreateHomeMissionCardDto,
@@ -15,6 +16,7 @@ import {
   CreateHomeProgramDto,
   UpdateHomeProgramDto,
 } from './dto/home-program.dto';
+import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
 import { LocalizedText } from './types/localized-text';
 
 const MISSION_SECTION_ID = 'default';
@@ -33,6 +35,8 @@ export class WebsiteCmsService implements OnModuleInit {
     private readonly programsSectionRepo: Repository<HomeProgramsSection>,
     @InjectRepository(HomeProgram)
     private readonly programRepo: Repository<HomeProgram>,
+    @InjectRepository(Testimonial)
+    private readonly testimonialRepo: Repository<Testimonial>,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -222,6 +226,68 @@ export class WebsiteCmsService implements OnModuleInit {
       await this.programRepo.save(programs.map((p) => this.programRepo.create(p)));
       this.logger.log('Seeded default home programs');
     }
+
+    const testimonialCount = await this.testimonialRepo.count();
+    if (testimonialCount === 0) {
+      const defaultTestimonials: Partial<Testimonial>[] = [
+        {
+          studentName: 'Abdurahman',
+          displayName: 'Abdurahman',
+          studentType: 'adult',
+          country: 'United Kingdom',
+          city: 'London',
+          rating: 5,
+          program: 'Quran Reading',
+          learningDuration: '6 Months',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 0,
+          testimonialText: {
+            en: 'The flexibility of scheduling and the quality of teachers at Nejah Online Quran Center has allowed me to balance my Quran studies with a busy career. I highly recommend it.',
+            ar: 'مرونة الجدولة وجودة المعلمين في مركز نجاح لتعليم القرآن سمحت لي بموازنة دراستي للقرآن مع عملي المزدحم. أنصح به بشدة.',
+            am: 'የመማሪያ ጊዜዎች ተለዋዋጭነት እና በነጃህ የመስመር ላይ ቁርዓን ማዕከል ያሉ መምህራን ጥራት የቁርዓን ጥናቴን ከተጠመደ የሥራ ሕይወቴ ጋር ለማመጣጠን አስችሎኛል። በጣም እመክረዋለሁ።',
+          },
+        },
+        {
+          studentName: 'Fatima Hussein',
+          displayName: 'Fatima',
+          studentType: 'parent',
+          country: 'United States',
+          city: 'Minneapolis',
+          rating: 5,
+          program: 'Tajweed',
+          learningDuration: '1 Year',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 1,
+          testimonialText: {
+            en: 'I am amazed by the progress my children have made in just a few months. The teachers are incredibly patient, encouraging, and the interactive platform keeps them engaged.',
+            ar: 'أنا مندهشة من التقدم الذي أحرزه أطفالي في بضعة أشهر فقط. المعلمون صبورون للغاية ومشجعون، والمنصة التفاعلية تبقيهم متفاعلين.',
+            am: 'ልጆቼ በጥቂት ወራት ውስጥ ባሳዩት እድገት በጣም ተገርሜያለሁ። መምህራኑ በሚያስደንቅ ሁኔታ ታጋሽ እና አበረታች ናቸው، እና በይነተገናኝ መድረክ ላይ እንዲሳተፉ ያደርጋቸዋል።',
+          },
+        },
+        {
+          studentName: 'Khalid Al-Mansoor',
+          displayName: 'Khalid',
+          studentType: 'child',
+          country: 'Saudi Arabia',
+          city: 'Riyadh',
+          rating: 5,
+          program: 'Hifz Program',
+          learningDuration: '2 Years',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 2,
+          testimonialText: {
+            en: 'Under the guidance of my teacher, I have memorized 5 Juz of the Quran. The focus on Tajweed and the daily progress reviews are excellent.',
+            ar: 'تحت إشراف معلمي، حفظت 5 أجزاء من القرآن. التركيز على التجويد والمراجعات اليومية للتقدم ممتازة.',
+            am: 'በመምህሬ መሪነት 5 ጁዝ ቁርአን መሐፈዝ ችያለሁ። በታጅዊድ ላይ ያለው ትኩረት እና ዕለታዊ የእድገት ግምገማዎች በጣም ጥሩ ናቸው።',
+          },
+        },
+      ];
+      await this.testimonialRepo.save(defaultTestimonials.map((t) => this.testimonialRepo.create(t)));
+      this.logger.log('Seeded default testimonials');
+    }
   }
 
   async getPublicMissionContent() {
@@ -369,5 +435,59 @@ export class WebsiteCmsService implements OnModuleInit {
       ids.map((id, index) => this.programRepo.update(id, { displayOrder: index })),
     );
     return this.programRepo.find({ order: { displayOrder: 'ASC' } });
+  }
+
+  // --- Testimonials ---
+
+  async getPublicTestimonials(): Promise<Testimonial[]> {
+    return this.testimonialRepo.find({
+      where: { isPublished: true },
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async getAdminTestimonials(): Promise<Testimonial[]> {
+    return this.testimonialRepo.find({
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async createTestimonial(dto: CreateTestimonialDto): Promise<Testimonial> {
+    const maxOrder = await this.testimonialRepo
+      .createQueryBuilder('t')
+      .select('MAX(t.displayOrder)', 'max')
+      .getRawOne();
+    const displayOrder = dto.displayOrder ?? (Number(maxOrder?.max ?? -1) + 1);
+    const testimonial = this.testimonialRepo.create({
+      ...dto,
+      displayOrder,
+      isPublished: dto.isPublished ?? true,
+      isFeatured: dto.isFeatured ?? false,
+    });
+    return this.testimonialRepo.save(testimonial);
+  }
+
+  async updateTestimonial(id: string, dto: UpdateTestimonialDto): Promise<Testimonial> {
+    const testimonial = await this.testimonialRepo.findOne({ where: { id } });
+    if (!testimonial) throw new NotFoundException('Testimonial not found');
+    Object.assign(testimonial, dto);
+    return this.testimonialRepo.save(testimonial);
+  }
+
+  async deleteTestimonial(id: string): Promise<void> {
+    const result = await this.testimonialRepo.delete(id);
+    if (!result.affected) throw new NotFoundException('Testimonial not found');
+  }
+
+  async reorderTestimonials(ids: string[]): Promise<Testimonial[]> {
+    const testimonials = await this.testimonialRepo.find();
+    const idSet = new Set(ids);
+    if (idSet.size !== ids.length || ids.length !== testimonials.length) {
+      throw new NotFoundException('Invalid testimonial order payload');
+    }
+    await Promise.all(
+      ids.map((id, index) => this.testimonialRepo.update(id, { displayOrder: index })),
+    );
+    return this.testimonialRepo.find({ order: { displayOrder: 'ASC' } });
   }
 }

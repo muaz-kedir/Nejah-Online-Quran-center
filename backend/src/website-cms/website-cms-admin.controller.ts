@@ -24,6 +24,7 @@ import {
   CreateHomeProgramDto,
   UpdateHomeProgramDto,
 } from './dto/home-program.dto';
+import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
 import { ReorderDto } from './dto/reorder.dto';
 
 @Controller('website/admin/home')
@@ -90,5 +91,32 @@ export class WebsiteCmsAdminController {
   @Post('programs/items/reorder')
   reorderPrograms(@Body() dto: ReorderDto) {
     return this.cmsService.reorderPrograms(dto.ids);
+  }
+
+  // --- Testimonials ---
+
+  @Get('testimonials')
+  getTestimonials() {
+    return this.cmsService.getAdminTestimonials();
+  }
+
+  @Post('testimonials')
+  createTestimonial(@Body() dto: CreateTestimonialDto) {
+    return this.cmsService.createTestimonial(dto);
+  }
+
+  @Patch('testimonials/:id')
+  updateTestimonial(@Param('id') id: string, @Body() dto: UpdateTestimonialDto) {
+    return this.cmsService.updateTestimonial(id, dto);
+  }
+
+  @Delete('testimonials/:id')
+  deleteTestimonial(@Param('id') id: string) {
+    return this.cmsService.deleteTestimonial(id);
+  }
+
+  @Post('testimonials/reorder')
+  reorderTestimonials(@Body() dto: ReorderDto) {
+    return this.cmsService.reorderTestimonials(dto.ids);
   }
 }

@@ -31,18 +31,18 @@ function FamilyPaymentsPage() {
   const [payDescription, setPayDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await financeFetch<any>('/family-payments', filters);
+      setRows(res.data || []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await financeFetch<any>('/family-payments', filters);
-        setRows(res.data || []);
-      } catch (e: any) {
-        toast.error(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     load();
   }, [filters]);
 

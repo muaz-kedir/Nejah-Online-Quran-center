@@ -2,10 +2,12 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import {
   fetchPublicMissionContent,
   fetchPublicProgramsContent,
+  fetchPublicTestimonials,
   type HomeMissionCard,
   type HomeMissionSection,
   type HomeProgram,
   type HomeProgramsSection,
+  type Testimonial,
 } from '@/lib/home-cms';
 
 type HomeCmsState = {
@@ -13,6 +15,7 @@ type HomeCmsState = {
   missionCards: HomeMissionCard[];
   programsSection: HomeProgramsSection | null;
   programs: HomeProgram[];
+  testimonials: Testimonial[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -25,6 +28,7 @@ export function HomeCmsProvider({ children }: { children: ReactNode }) {
   const [missionCards, setMissionCards] = useState<HomeMissionCard[]>([]);
   const [programsSection, setProgramsSection] = useState<HomeProgramsSection | null>(null);
   const [programs, setPrograms] = useState<HomeProgram[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,14 +36,16 @@ export function HomeCmsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [mission, programsData] = await Promise.all([
+      const [mission, programsData, testimonialsData] = await Promise.all([
         fetchPublicMissionContent(),
         fetchPublicProgramsContent(),
+        fetchPublicTestimonials(),
       ]);
       setMissionSection(mission.section);
       setMissionCards(mission.cards);
       setProgramsSection(programsData.section);
       setPrograms(programsData.programs);
+      setTestimonials(testimonialsData);
     } catch (e: any) {
       setError(e.message || 'Failed to load page content');
     } finally {
@@ -58,6 +64,7 @@ export function HomeCmsProvider({ children }: { children: ReactNode }) {
         missionCards,
         programsSection,
         programs,
+        testimonials,
         loading,
         error,
         refresh: load,

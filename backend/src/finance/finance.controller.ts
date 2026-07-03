@@ -102,6 +102,11 @@ export class FinanceController {
     return this.financeService.generatePayroll(dto.billingMonth);
   }
 
+  @Patch('teacher-payments/:teacherId/payroll/mark-paid')
+  markPayrollAsPaid(@Param('teacherId') teacherId: string, @Query('billingMonth') billingMonth?: string) {
+    return this.financeService.markPayrollAsPaid(teacherId, billingMonth);
+  }
+
   @Get('revenue-analytics')
   getRevenueAnalytics(@Query() query: FinanceQueryDto) {
     return this.financeService.getRevenueAnalytics(query);

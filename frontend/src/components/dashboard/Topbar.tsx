@@ -104,7 +104,7 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
 
-        {userRole !== 'super_admin' && (
+        {userRole !== 'super_admin' && userRole !== 'finance_manager' && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={iconBtn} title="Change Language">
@@ -144,6 +144,7 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
               student: '/student/notifications',
               qirat_manager: '/qirat_notifications',
               parent: '/parent_notifications',
+              finance_manager: '/finance_notifications',
             };
             navigate({ to: paths[role || ''] || '/dashboard' });
           }}>
