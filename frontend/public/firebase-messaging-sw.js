@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js');
 importScripts('/sw-shared.js');
 
-var CACHE_NAME = 'nejah-pwa-v5';
+var CACHE_NAME = 'nejah-pwa-v6';
 var STATIC_URLS = ['/offline.html'];
 
 function cacheStaticUrls(cache, urls) {
@@ -77,7 +77,7 @@ if (firebaseInitialized) {
         { action: 'dismiss', title: 'Dismiss' },
       ];
     }
-    self.registration.showNotification(title, {
+    showNotif(title, {
       body: body,
       icon: icon,
       badge: badge,
@@ -88,6 +88,12 @@ if (firebaseInitialized) {
       actions: actions,
     });
   });
+}
+
+function showNotif(title, options) {
+  try {
+    self.registration.showNotification(title, options);
+  } catch (_) { /* permission not granted */ }
 }
 
 self.addEventListener('push', function (event) {
@@ -109,17 +115,19 @@ self.addEventListener('push', function (event) {
           ? payload.actions
           : [{ action: 'view', title: 'View' }, { action: 'dismiss', title: 'Dismiss' }],
       };
-      event.waitUntil(self.registration.showNotification(title, options));
+      event.waitUntil(Promise.resolve(showNotif(title, options)));
       return;
     }
   } catch (_) { /* not JSON — fall through to plain text */ }
 
   event.waitUntil(
-    self.registration.showNotification('Nejah Online Quran Center', {
-      body: event.data.text(),
-      icon: '/logo.png',
-      badge: '/logo.png',
-    }),
+    Promise.resolve(
+      showNotif('Nejah Online Quran Center', {
+        body: event.data.text(),
+        icon: '/logo.png',
+        badge: '/logo.png',
+      }),
+    ),
   );
 });
 
