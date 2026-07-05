@@ -338,9 +338,20 @@ export class LiveSessionService {
       const windowOpen = new Date(session.scheduledStart.getTime() - windowMs);
 
       if (now < windowOpen) {
-        const minutesUntil = Math.ceil((windowOpen.getTime() - now.getTime()) / 60000);
+        const diffMs = windowOpen.getTime() - now.getTime();
+        const days = Math.floor(diffMs / 86400000);
+        const hours = Math.floor((diffMs % 86400000) / 3600000);
+        const minutes = Math.ceil((diffMs % 3600000) / 60000);
+        let human: string;
+        if (days > 0) {
+          human = `${days} day(s) and ${hours} hour(s)`;
+        } else if (hours > 0) {
+          human = `${hours} hour(s) and ${minutes} minute(s)`;
+        } else {
+          human = `${minutes} minute(s)`;
+        }
         throw new BadRequestException(
-          `Session cannot start yet. The start window opens in ${minutesUntil} minute(s).`,
+          `This session is scheduled for later. It can be started in approximately ${human}.`,
         );
       }
 
