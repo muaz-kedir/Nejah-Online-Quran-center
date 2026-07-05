@@ -1,13 +1,20 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "./ThemeProvider";
 import { useHomeCms } from "./HomeCmsProvider";
-import { pickLocalized, resolveCmsImageUrl } from "@/lib/home-cms";
+import { pickLocalized, resolveCmsImageUrl, type HomeProgram } from "@/lib/home-cms";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function Courses() {
   const { t, lang } = useTheme();
   const { programsSection, programs, loading } = useHomeCms();
+  const [selectedProgram, setSelectedProgram] = useState<HomeProgram | null>(null);
 
   if (loading || !programsSection) {
     return (
@@ -24,6 +31,7 @@ export function Courses() {
   const description = pickLocalized(programsSection.description, lang);
 
   return (
+    <>
     <section id="courses" className="py-20 md:py-28">
       <div className="container-x">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
@@ -83,6 +91,7 @@ export function Courses() {
                   <p className="mb-4 text-sm leading-relaxed text-nejah-slate-blue">{desc}</p>
                   <Button
                     variant="outline"
+                    onClick={() => setSelectedProgram(program)}
                     className="h-10 w-full rounded-full border-nejah-electric/30 text-sm font-semibold text-nejah-electric hover:border-nejah-electric hover:bg-primary hover:text-white hover:shadow-[0_0_16px_rgba(0,102,204,0.35)]"
                   >
                     {t.courses.learnMore}
@@ -94,5 +103,47 @@ export function Courses() {
         </div>
       </div>
     </section>
+
+    <Dialog open={!!selectedProgram} onOpenChange={(open) => { if (!open) setSelectedProgram(null); }}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        {selectedProgram && (() => {
+          const badge = pickLocalized(selectedProgram.level, lang);
+          const title = pickLocalized(selectedProgram.title, lang);
+          const img = resolveCmsImageUrl(selectedProgram.imageUrl);
+          const detailedContent = pickLocalized(selectedProgram.detailedContent, lang);
+          const desc = pickLocalized(selectedProgram.description, lang);
+
+          return (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
+                {img && (
+                  <img
+                    src={img}
+                    alt={title}
+                    className="w-full sm:w-40 h-32 object-cover rounded-xl"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="inline-block rounded-full border border-nejah-electric/20 bg-background/90 px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric backdrop-blur">
+                    {badge}
+                  </span>
+                  <DialogTitle className="mt-2 text-2xl font-bold">{title}</DialogTitle>
+                </div>
+              </div>
+
+              {detailedContent ? (
+                <div
+                  className="prose prose-lg dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: detailedContent }}
+                />
+              ) : (
+                <p className="text-muted-foreground">{desc}</p>
+              )}
+            </>
+          );
+        })()}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

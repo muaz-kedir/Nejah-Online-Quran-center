@@ -215,7 +215,7 @@ export const translations: Record<Lang, TDict> = {
     },
     teachers: {
       title: "Meet Our Expert Scholars",
-      bookTrial: "Book trial",
+      bookTrial: "Detail",
       t1Name: "Sheikh Ahmad Al-Farsi",
       t1Spec: "Tajweed & Hifz",
       t1Exp: "12+ years experience teaching students of all ages across the globe.",

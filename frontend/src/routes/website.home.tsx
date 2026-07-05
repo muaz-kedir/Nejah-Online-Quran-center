@@ -20,6 +20,7 @@ import {
   type Testimonial,
 } from "@/lib/home-cms";
 import { LocalizedFields, ImageUploadField } from "@/components/website-cms/CmsFormFields";
+import { LocalizedRichTextField } from "@/components/website-cms/LocalizedRichTextField";
 import {
   Loader2,
   Plus,
@@ -392,6 +393,7 @@ function ProgramsSectionEditor() {
     level: EMPTY_LOCALIZED,
     title: EMPTY_LOCALIZED,
     description: EMPTY_LOCALIZED,
+    detailedContent: EMPTY_LOCALIZED,
     imageUrl: null as string | null,
     isActive: true,
   });
@@ -449,6 +451,7 @@ function ProgramsSectionEditor() {
       level: EMPTY_LOCALIZED,
       title: EMPTY_LOCALIZED,
       description: EMPTY_LOCALIZED,
+      detailedContent: EMPTY_LOCALIZED,
       imageUrl: null,
       isActive: true,
     });
@@ -461,6 +464,7 @@ function ProgramsSectionEditor() {
       level: { ...EMPTY_LOCALIZED, ...program.level },
       title: { ...EMPTY_LOCALIZED, ...program.title },
       description: { ...EMPTY_LOCALIZED, ...program.description },
+      detailedContent: { ...EMPTY_LOCALIZED, ...program.detailedContent },
       imageUrl: program.imageUrl,
       isActive: program.isActive,
     });
@@ -632,6 +636,12 @@ function ProgramsSectionEditor() {
               onChange={(v) => setProgramForm({ ...programForm, description: v })}
               multiline
             />
+            <LocalizedRichTextField
+              label="Detailed Content"
+              value={programForm.detailedContent}
+              onChange={(v) => setProgramForm({ ...programForm, detailedContent: v })}
+              placeholder="Full course details, syllabus, learning outcomes..."
+            />
             <ImageUploadField
               label="Program Image"
               imageUrl={programForm.imageUrl}
@@ -656,6 +666,7 @@ function ProgramsSectionEditor() {
                     level: EMPTY_LOCALIZED,
                     title: EMPTY_LOCALIZED,
                     description: EMPTY_LOCALIZED,
+                    detailedContent: EMPTY_LOCALIZED,
                     imageUrl: null,
                     isActive: true,
                   });
