@@ -6,13 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { requireAuth } from "@/lib/auth";
 import {
-  getTickets, updateTicket,
-  type SupportTicket, TicketStatus, TicketPriority,
+  getTickets,
+  updateTicket,
+  type SupportTicket,
+  TicketStatus,
+  TicketPriority,
 } from "@/lib/support-pages";
 import { Loader2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,7 +66,9 @@ function TicketsCmsPage() {
     }
   };
 
-  useEffect(() => { load(); }, [pag.page, statusFilter]);
+  useEffect(() => {
+    load();
+  }, [pag.page, statusFilter]);
 
   const handleUpdate = async (field: string, value: string) => {
     if (!selectedTicket) return;
@@ -79,7 +88,9 @@ function TicketsCmsPage() {
   if (loading && tickets.length === 0) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </DashboardLayout>
     );
   }
@@ -95,7 +106,13 @@ function TicketsCmsPage() {
 
         <GlassPanel className="p-6 space-y-4">
           <div className="flex gap-3">
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPag({ ...pag, page: 1 }); }}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v);
+                setPag({ ...pag, page: 1 });
+              }}
+            >
               <SelectTrigger className="max-w-[200px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -135,12 +152,16 @@ function TicketsCmsPage() {
                       </td>
                       <td className="py-3 px-4 max-w-[200px] truncate">{t.subject}</td>
                       <td className="py-3 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${PRIORITY_COLORS[t.priority] || ""}`}>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${PRIORITY_COLORS[t.priority] || ""}`}
+                        >
                           {t.priority}
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[t.status] || ""}`}>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[t.status] || ""}`}
+                        >
                           {t.status.replace("_", " ")}
                         </span>
                       </td>
@@ -162,7 +183,12 @@ function TicketsCmsPage() {
           {pag.totalPages > 1 && (
             <div className="flex justify-center gap-2">
               {Array.from({ length: pag.totalPages }, (_, i) => i + 1).map((p) => (
-                <Button key={p} size="sm" variant={pag.page === p ? "default" : "outline"} onClick={() => setPag({ ...pag, page: p })}>
+                <Button
+                  key={p}
+                  size="sm"
+                  variant={pag.page === p ? "default" : "outline"}
+                  onClick={() => setPag({ ...pag, page: p })}
+                >
                   {p}
                 </Button>
               ))}
@@ -181,10 +207,22 @@ function TicketsCmsPage() {
             {selectedTicket && (
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><Label>Name</Label><p className="font-medium">{selectedTicket.name}</p></div>
-                  <div><Label>Email</Label><p className="font-medium">{selectedTicket.email}</p></div>
-                  <div><Label>Role</Label><p className="font-medium">{selectedTicket.userRole || "—"}</p></div>
-                  <div><Label>Subject</Label><p className="font-medium">{selectedTicket.subject}</p></div>
+                  <div>
+                    <Label>Name</Label>
+                    <p className="font-medium">{selectedTicket.name}</p>
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <p className="font-medium">{selectedTicket.email}</p>
+                  </div>
+                  <div>
+                    <Label>Role</Label>
+                    <p className="font-medium">{selectedTicket.userRole || "—"}</p>
+                  </div>
+                  <div>
+                    <Label>Subject</Label>
+                    <p className="font-medium">{selectedTicket.subject}</p>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -197,7 +235,12 @@ function TicketsCmsPage() {
                 {selectedTicket.attachmentUrl && (
                   <div className="space-y-1">
                     <Label>Attachment</Label>
-                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-primary text-sm underline">
+                    <a
+                      href={selectedTicket.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary text-sm underline"
+                    >
                       View attachment
                     </a>
                   </div>
@@ -206,8 +249,14 @@ function TicketsCmsPage() {
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                   <div className="space-y-2">
                     <Label>Status</Label>
-                    <Select value={selectedTicket.status} onValueChange={(v) => handleUpdate("status", v)} disabled={updating}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={selectedTicket.status}
+                      onValueChange={(v) => handleUpdate("status", v)}
+                      disabled={updating}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="open">Open</SelectItem>
                         <SelectItem value="in_progress">In Progress</SelectItem>
@@ -218,8 +267,14 @@ function TicketsCmsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Priority</Label>
-                    <Select value={selectedTicket.priority} onValueChange={(v) => handleUpdate("priority", v)} disabled={updating}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={selectedTicket.priority}
+                      onValueChange={(v) => handleUpdate("priority", v)}
+                      disabled={updating}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
@@ -231,7 +286,8 @@ function TicketsCmsPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  Created: {new Date(selectedTicket.createdAt).toLocaleString()} · Updated: {new Date(selectedTicket.updatedAt).toLocaleString()}
+                  Created: {new Date(selectedTicket.createdAt).toLocaleString()} · Updated:{" "}
+                  {new Date(selectedTicket.updatedAt).toLocaleString()}
                 </p>
               </div>
             )}

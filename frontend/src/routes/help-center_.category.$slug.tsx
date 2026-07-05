@@ -10,17 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  getCategoriesWithCounts, getPublishedArticles,
-  type HelpCategory, type HelpArticle,
+  getCategoriesWithCounts,
+  getPublishedArticles,
+  type HelpCategory,
+  type HelpArticle,
 } from "@/lib/support-pages";
 import { Loader2, Search, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/help-center_/category/$slug")({
   component: CategoryArticlesPage,
   head: ({ params }) => ({
-    meta: [
-      { title: `Help Center - ${params.slug} - Nejah` },
-    ],
+    meta: [{ title: `Help Center - ${params.slug} - Nejah` }],
   }),
 });
 
@@ -42,8 +42,11 @@ function CategoryArticlesPage() {
         setCategory(found || null);
         const result = await getPublishedArticles({ categoryId: found?.id, limit: 50 });
         setArticles(result.data || []);
-      } catch {}
-      finally { setLoading(false); }
+      } catch (err) {
+        console.error("Failed to load category articles", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [slug]);
 
@@ -58,7 +61,13 @@ function CategoryArticlesPage() {
     return (
       <ThemeProvider>
         <Loader />
-        <div className="relative flex min-h-screen flex-col"><Navbar /><main className="flex-1 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></main><Footer /></div>
+        <div className="relative flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </main>
+          <Footer />
+        </div>
       </ThemeProvider>
     );
   }
@@ -73,9 +82,13 @@ function CategoryArticlesPage() {
           <div className="container-x py-16">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-              <Link to="/help-center" className="hover:text-primary">Help Center</Link>
+              <Link to="/help-center" className="hover:text-primary">
+                Help Center
+              </Link>
               <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground font-medium">{category?.name?.[lang] || category?.name?.en || slug}</span>
+              <span className="text-foreground font-medium">
+                {category?.name?.[lang] || category?.name?.en || slug}
+              </span>
             </div>
 
             <div className="max-w-3xl">
@@ -105,7 +118,9 @@ function CategoryArticlesPage() {
                       to={`/help-center/article/${article.slug}`}
                       className="block rounded-xl border border-border p-4 bg-background/50 hover:bg-muted/30 transition-colors"
                     >
-                      <h3 className="font-semibold text-lg">{article.title?.[lang] || article.title?.en}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {article.title?.[lang] || article.title?.en}
+                      </h3>
                       <p className="text-sm text-muted-foreground mt-1">
                         {article.shortDescription?.[lang] || article.shortDescription?.en}
                       </p>

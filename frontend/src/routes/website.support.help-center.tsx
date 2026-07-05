@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { requireAuth } from "@/lib/auth";
@@ -16,15 +20,36 @@ import { LocalizedFields, ImageUploadField } from "@/components/website-cms/CmsF
 import { LocalizedRichTextField } from "@/components/website-cms/LocalizedRichTextField";
 import { uploadCmsImage } from "@/lib/home-cms";
 import {
-  getCategories, createCategory, updateCategory, deleteCategory, reorderCategories,
-  getArticles, getArticle, createArticle, updateArticle, deleteArticle,
-  getArticleVersions, restoreArticleVersion,
-  type HelpCategory, type HelpArticle, type ArticleVersion,
-  type LocalizedText, EMPTY_LOCALIZED, ArticleStatus,
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  reorderCategories,
+  getArticles,
+  getArticle,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  getArticleVersions,
+  restoreArticleVersion,
+  type HelpCategory,
+  type HelpArticle,
+  type ArticleVersion,
+  type LocalizedText,
+  EMPTY_LOCALIZED,
+  ArticleStatus,
 } from "@/lib/support-pages";
 import {
-  Loader2, Plus, Pencil, Trash2, Save, ChevronUp, ChevronDown,
-  History, RotateCcw, Eye,
+  Loader2,
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
+  ChevronUp,
+  ChevronDown,
+  History,
+  RotateCcw,
+  Eye,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -51,9 +76,15 @@ function HelpCenterCmsPage() {
             <TabsTrigger value="articles">Articles</TabsTrigger>
             <TabsTrigger value="versions">Article Versions</TabsTrigger>
           </TabsList>
-          <TabsContent value="categories" className="mt-6"><CategoriesEditor /></TabsContent>
-          <TabsContent value="articles" className="mt-6"><ArticlesEditor /></TabsContent>
-          <TabsContent value="versions" className="mt-6"><VersionsPanel /></TabsContent>
+          <TabsContent value="categories" className="mt-6">
+            <CategoriesEditor />
+          </TabsContent>
+          <TabsContent value="articles" className="mt-6">
+            <ArticlesEditor />
+          </TabsContent>
+          <TabsContent value="versions" className="mt-6">
+            <VersionsPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
@@ -85,7 +116,9 @@ function CategoriesEditor() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const openNew = () => {
     setEditingCat(null);
@@ -105,7 +138,10 @@ function CategoriesEditor() {
   };
 
   const handleSave = async () => {
-    if (!form.slug.trim()) { toast.error("Slug is required"); return; }
+    if (!form.slug.trim()) {
+      toast.error("Slug is required");
+      return;
+    }
     setSaving(true);
     try {
       if (editingCat) {
@@ -152,7 +188,12 @@ function CategoriesEditor() {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
 
   const sortedCategories = [...categories].sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -168,12 +209,27 @@ function CategoriesEditor() {
 
         <div className="space-y-2">
           {sortedCategories.map((cat, index) => (
-            <div key={cat.id} className="flex items-center gap-3 rounded-xl border border-border p-3 bg-background/50">
+            <div
+              key={cat.id}
+              className="flex items-center gap-3 rounded-xl border border-border p-3 bg-background/50"
+            >
               <div className="flex flex-col gap-0.5">
-                <Button size="icon" variant="ghost" className="h-7 w-7" disabled={index === 0} onClick={() => moveItem(index, -1)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  disabled={index === 0}
+                  onClick={() => moveItem(index, -1)}
+                >
                   <ChevronUp className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" disabled={index === sortedCategories.length - 1} onClick={() => moveItem(index, 1)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  disabled={index === sortedCategories.length - 1}
+                  onClick={() => moveItem(index, 1)}
+                >
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
@@ -184,7 +240,12 @@ function CategoriesEditor() {
               <Button size="sm" variant="outline" onClick={() => openEdit(cat)}>
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDelete(cat.id)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-red-600"
+                onClick={() => handleDelete(cat.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -192,28 +253,63 @@ function CategoriesEditor() {
         </div>
       </GlassPanel>
 
-      <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingCat(null); } }}>
+      <Dialog
+        open={showForm}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowForm(false);
+            setEditingCat(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{editingCat ? "Edit Category" : "New Category"}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {editingCat ? "Edit Category" : "New Category"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <LocalizedFields label="Category Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+            <LocalizedFields
+              label="Category Name"
+              value={form.name}
+              onChange={(v) => setForm({ ...form, name: v })}
+            />
             <div className="space-y-2">
               <Label>Slug</Label>
-              <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="e.g. student" />
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                placeholder="e.g. student"
+              />
             </div>
             <div className="space-y-2">
               <Label>Icon (emoji or icon name)</Label>
-              <Input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="e.g. BookOpen" />
+              <Input
+                value={form.icon}
+                onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                placeholder="e.g. BookOpen"
+              />
             </div>
-            <LocalizedFields label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline />
+            <LocalizedFields
+              label="Description"
+              value={form.description}
+              onChange={(v) => setForm({ ...form, description: v })}
+              multiline
+            />
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSave} disabled={saving} className="gap-2">
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 {editingCat ? "Update" : "Create"}
               </Button>
-              <Button variant="outline" onClick={() => { setShowForm(false); setEditingCat(null); }}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingCat(null);
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -265,19 +361,31 @@ function ArticlesEditor() {
     try {
       const data = await getCategories();
       setCategories(data || []);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
-  useEffect(() => { load(); loadCategories(); }, [pag.page, search, filterCategory, filterStatus]);
-  useEffect(() => { loadCategories(); }, []);
+  useEffect(() => {
+    load();
+    loadCategories();
+  }, [pag.page, search, filterCategory, filterStatus]);
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const openNew = () => {
     setEditingArticle(null);
     setShowForm(true);
     setForm({
-      title: EMPTY_LOCALIZED, slug: "", categoryId: categories[0]?.id || "",
-      shortDescription: EMPTY_LOCALIZED, content: { en: "", ar: "", am: "" },
-      tags: "", author: "", status: ArticleStatus.DRAFT,
+      title: EMPTY_LOCALIZED,
+      slug: "",
+      categoryId: categories[0]?.id || "",
+      shortDescription: EMPTY_LOCALIZED,
+      content: { en: "", ar: "", am: "" },
+      tags: "",
+      author: "",
+      status: ArticleStatus.DRAFT,
     });
   };
 
@@ -291,7 +399,13 @@ function ArticlesEditor() {
         slug: full.slug,
         categoryId: full.categoryId,
         shortDescription: { ...EMPTY_LOCALIZED, ...full.shortDescription },
-        content: { ...EMPTY_LOCALIZED, ...full.content, en: full.content?.en || "", ar: full.content?.ar || "", am: full.content?.am || "" },
+        content: {
+          ...EMPTY_LOCALIZED,
+          ...full.content,
+          en: full.content?.en || "",
+          ar: full.content?.ar || "",
+          am: full.content?.am || "",
+        },
         tags: full.tags?.join(", ") || "",
         author: full.author || "",
         status: full.status,
@@ -337,7 +451,9 @@ function ArticlesEditor() {
     }
   };
 
-  const handleSearch = () => { setPag((prev) => ({ ...prev, page: 1 })); };
+  const handleSearch = () => {
+    setPag((prev) => ({ ...prev, page: 1 }));
+  };
 
   const getStatusBadge = (status: ArticleStatus) => {
     const colors: Record<string, string> = {
@@ -345,11 +461,19 @@ function ArticlesEditor() {
       published: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
       archived: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
     };
-    return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colors[status] || ""}`}>{status}</span>;
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colors[status] || ""}`}>
+        {status}
+      </span>
+    );
   };
 
   if (loading && articles.length === 0) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
@@ -372,15 +496,25 @@ function ArticlesEditor() {
           />
           <select
             value={filterCategory}
-            onChange={(e) => { setFilterCategory(e.target.value); setPag({ ...pag, page: 1 }); }}
+            onChange={(e) => {
+              setFilterCategory(e.target.value);
+              setPag({ ...pag, page: 1 });
+            }}
             className="rounded-xl border border-border bg-background px-3 py-2 text-sm max-w-[200px]"
           >
             <option value="">All categories</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name?.en || c.slug}</option>)}
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name?.en || c.slug}
+              </option>
+            ))}
           </select>
           <select
             value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setPag({ ...pag, page: 1 }); }}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPag({ ...pag, page: 1 });
+            }}
             className="rounded-xl border border-border bg-background px-3 py-2 text-sm max-w-[150px]"
           >
             <option value="">All statuses</option>
@@ -422,7 +556,12 @@ function ArticlesEditor() {
                         <Button size="sm" variant="outline" onClick={() => openEdit(a)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDelete(a.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600"
+                          onClick={() => handleDelete(a.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -437,7 +576,12 @@ function ArticlesEditor() {
         {pag.totalPages > 1 && (
           <div className="flex justify-center gap-2 pt-2">
             {Array.from({ length: pag.totalPages }, (_, i) => i + 1).map((p) => (
-              <Button key={p} size="sm" variant={pag.page === p ? "default" : "outline"} onClick={() => setPag({ ...pag, page: p })}>
+              <Button
+                key={p}
+                size="sm"
+                variant={pag.page === p ? "default" : "outline"}
+                onClick={() => setPag({ ...pag, page: p })}
+              >
                 {p}
               </Button>
             ))}
@@ -445,34 +589,65 @@ function ArticlesEditor() {
         )}
       </GlassPanel>
 
-      <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingArticle(null); } }}>
+      <Dialog
+        open={showForm}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowForm(false);
+            setEditingArticle(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{editingArticle ? "Edit Article" : "New Article"}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {editingArticle ? "Edit Article" : "New Article"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Slug</Label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="e.g. how-to-join-zoom" />
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  placeholder="e.g. how-to-join-zoom"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Select value={form.categoryId} onValueChange={(v) => setForm({ ...form, categoryId: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(v) => setForm({ ...form, categoryId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name?.en || c.slug}</SelectItem>)}
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name?.en || c.slug}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Author</Label>
-                <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} />
+                <Input
+                  value={form.author}
+                  onChange={(e) => setForm({ ...form, author: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v: ArticleStatus) => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={form.status}
+                  onValueChange={(v: ArticleStatus) => setForm({ ...form, status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
@@ -482,21 +657,50 @@ function ArticlesEditor() {
               </div>
             </div>
 
-            <LocalizedFields label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-            <LocalizedFields label="Short Description" value={form.shortDescription} onChange={(v) => setForm({ ...form, shortDescription: v })} multiline />
-            <LocalizedRichTextField label="Article Content" value={form.content} onChange={(v) => setForm({ ...form, content: v })} />
+            <LocalizedFields
+              label="Title"
+              value={form.title}
+              onChange={(v) => setForm({ ...form, title: v })}
+            />
+            <LocalizedFields
+              label="Short Description"
+              value={form.shortDescription}
+              onChange={(v) => setForm({ ...form, shortDescription: v })}
+              multiline
+            />
+            <LocalizedRichTextField
+              label="Article Content"
+              value={form.content}
+              onChange={(v) => setForm({ ...form, content: v })}
+            />
 
             <div className="space-y-2">
               <Label>Tags (comma separated)</Label>
-              <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="zoom, attendance, setup" />
+              <Input
+                value={form.tags}
+                onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                placeholder="zoom, attendance, setup"
+              />
             </div>
 
             <div className="flex gap-2 pt-2 border-t">
               <Button onClick={handleSave} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {editingArticle ? "Update" : "Create"}
               </Button>
-              <Button variant="outline" onClick={() => { setShowForm(false); setEditingArticle(null); }}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingArticle(null);
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -551,15 +755,22 @@ function VersionsPanel() {
           onKeyDown={(e) => e.key === "Enter" && loadVersions()}
           className="max-w-xs"
         />
-        <Button onClick={loadVersions} disabled={loading}>Load Versions</Button>
+        <Button onClick={loadVersions} disabled={loading}>
+          Load Versions
+        </Button>
       </div>
 
       {versions.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Enter an article slug and click Load Versions.</p>
+        <p className="text-muted-foreground text-sm">
+          Enter an article slug and click Load Versions.
+        </p>
       ) : (
         <div className="space-y-2">
           {versions.map((v) => (
-            <div key={v.id} className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50">
+            <div
+              key={v.id}
+              className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50"
+            >
               <div>
                 <p className="text-sm font-medium">
                   Edited by {v.editor || "Unknown"} · {new Date(v.createdAt).toLocaleString()}
@@ -568,7 +779,13 @@ function VersionsPanel() {
                   Status: {v.changes?.status || "—"} · Title: {v.changes?.title?.en || "—"}
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => handleRestore(v.id)} disabled={restoring} className="gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleRestore(v.id)}
+                disabled={restoring}
+                className="gap-1"
+              >
                 <RotateCcw className="h-3 w-3" /> Restore
               </Button>
             </div>

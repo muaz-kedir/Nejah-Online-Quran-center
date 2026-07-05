@@ -11,7 +11,17 @@ export const Route = createFileRoute("/website/support/analytics")({
   beforeLoad: () => requireAuth(["super_admin"]),
 });
 
-function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: number | string; sub?: string }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: any;
+  label: string;
+  value: number | string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-xl border border-border bg-background/50 p-4 space-y-1">
       <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -44,7 +54,9 @@ function AnalyticsCmsPage() {
   if (loading || !data) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </DashboardLayout>
     );
   }
@@ -59,11 +71,35 @@ function AnalyticsCmsPage() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={FileText} label="Total Articles" value={data.totalArticles} sub={`${data.publishedArticles} published · ${data.draftArticles} drafts`} />
-          <StatCard icon={Eye} label="Most Viewed" value={data.mostViewed[0]?.title?.en || "—"} sub={`${data.mostViewed[0]?.viewCount || 0} views`} />
-          <StatCard icon={ThumbsUp} label="Helpful Votes" value={data.helpfulVotes} sub={`${data.notHelpfulVotes} not helpful`} />
+          <StatCard
+            icon={FileText}
+            label="Total Articles"
+            value={data.totalArticles}
+            sub={`${data.publishedArticles} published · ${data.draftArticles} drafts`}
+          />
+          <StatCard
+            icon={Eye}
+            label="Most Viewed"
+            value={data.mostViewed[0]?.title?.en || "—"}
+            sub={`${data.mostViewed[0]?.viewCount || 0} views`}
+          />
+          <StatCard
+            icon={ThumbsUp}
+            label="Helpful Votes"
+            value={data.helpfulVotes}
+            sub={`${data.notHelpfulVotes} not helpful`}
+          />
           <StatCard icon={Ticket} label="Total Tickets" value={data.totalTickets} />
-          <StatCard icon={CheckCircle} label="Resolved Tickets" value={data.resolvedTickets} sub={data.totalTickets > 0 ? `${Math.round((data.resolvedTickets / data.totalTickets) * 100)}% resolution rate` : "No tickets"} />
+          <StatCard
+            icon={CheckCircle}
+            label="Resolved Tickets"
+            value={data.resolvedTickets}
+            sub={
+              data.totalTickets > 0
+                ? `${Math.round((data.resolvedTickets / data.totalTickets) * 100)}% resolution rate`
+                : "No tickets"
+            }
+          />
           <StatCard icon={FileText} label="Categories" value={data.totalCategories} />
         </div>
 
@@ -75,7 +111,10 @@ function AnalyticsCmsPage() {
             ) : (
               <div className="space-y-2">
                 {data.mostViewed.map((a, i) => (
-                  <div key={a.id} className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50">
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-muted-foreground">#{i + 1}</span>
                       <div>
@@ -96,7 +135,10 @@ function AnalyticsCmsPage() {
             ) : (
               <div className="space-y-2">
                 {data.leastViewed.map((a, i) => (
-                  <div key={a.id} className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50">
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-xl border border-border p-3 bg-background/50"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-muted-foreground">#{i + 1}</span>
                       <div>

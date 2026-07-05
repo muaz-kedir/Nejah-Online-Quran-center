@@ -12,8 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
-  getCategoriesWithCounts, getPopularArticles, getPublishedArticles, createTicket,
-  type HelpCategory, type HelpArticle,
+  getCategoriesWithCounts,
+  getPopularArticles,
+  getPublishedArticles,
+  createTicket,
+  type HelpCategory,
+  type HelpArticle,
 } from "@/lib/support-pages";
 import { Loader2, Search, ThumbsUp, MessageSquare, ChevronRight, BookOpen } from "lucide-react";
 
@@ -22,7 +26,10 @@ export const Route = createFileRoute("/help-center")({
   head: () => ({
     meta: [
       { title: "Help Center - Nejah Online Quran Center" },
-      { name: "description", content: "Help Center and knowledge base for Nejah Online Quran Center" },
+      {
+        name: "description",
+        content: "Help Center and knowledge base for Nejah Online Quran Center",
+      },
     ],
   }),
 });
@@ -58,25 +65,33 @@ function HelpCenterPage() {
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", userRole: "student", subject: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    userRole: "student",
+    subject: "",
+    message: "",
+  });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const [cats, pops] = await Promise.all([
-          getCategoriesWithCounts(),
-          getPopularArticles(),
-        ]);
+        const [cats, pops] = await Promise.all([getCategoriesWithCounts(), getPopularArticles()]);
         setCategories(cats || []);
         setPopular(pops || []);
-      } catch {}
-      finally { setLoading(false); }
+      } catch {
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) { setSearchResults(null); return; }
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
     setSearching(true);
     try {
       const result = await getPublishedArticles({ search: searchQuery, limit: 20 });
@@ -113,7 +128,9 @@ function HelpCenterPage() {
         <Loader />
         <div className="relative flex min-h-screen flex-col">
           <Navbar />
-          <main className="flex-1 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></main>
+          <main className="flex-1 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </main>
           <Footer />
         </div>
       </ThemeProvider>
@@ -132,7 +149,8 @@ function HelpCenterPage() {
             <div className="text-center mb-12">
               <h1 className="text-3xl md:text-5xl font-bold mb-4">{t.footer.help}</h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-                Find answers to your questions and learn how to make the most of your learning experience.
+                Find answers to your questions and learn how to make the most of your learning
+                experience.
               </p>
 
               {/* Search */}
@@ -145,7 +163,11 @@ function HelpCenterPage() {
                   className="text-base"
                 />
                 <Button onClick={handleSearch} disabled={searching}>
-                  {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {searching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
                   Search
                 </Button>
               </div>
@@ -165,7 +187,9 @@ function HelpCenterPage() {
                         to={`/help-center/article/${article.slug}`}
                         className="block rounded-xl border border-border p-4 bg-background/50 hover:bg-muted/30 transition-colors"
                       >
-                        <h3 className="font-semibold">{article.title?.[lang] || article.title?.en}</h3>
+                        <h3 className="font-semibold">
+                          {article.title?.[lang] || article.title?.en}
+                        </h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           {article.shortDescription?.[lang] || article.shortDescription?.en}
                         </p>
@@ -242,16 +266,30 @@ function HelpCenterPage() {
               <div className="w-full max-w-lg rounded-3xl border border-border bg-background p-6 shadow-xl overflow-y-auto max-h-[90vh]">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold">Submit Support Request</h2>
-                  <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground text-xl">&times;</button>
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="text-muted-foreground hover:text-foreground text-xl"
+                  >
+                    &times;
+                  </button>
                 </div>
                 <form onSubmit={handleSubmitTicket} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Name *</Label>
-                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" />
+                    <Input
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Your name"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Email *</Label>
-                    <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} type="email" placeholder="your@email.com" />
+                    <Input
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      type="email"
+                      placeholder="your@email.com"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>User Role</Label>
@@ -268,11 +306,20 @@ function HelpCenterPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Subject *</Label>
-                    <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Brief summary" />
+                    <Input
+                      value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                      placeholder="Brief summary"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Message *</Label>
-                    <Textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Describe your issue..." />
+                    <Textarea
+                      rows={5}
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      placeholder="Describe your issue..."
+                    />
                   </div>
                   <Button type="submit" disabled={submitting} className="w-full gap-2">
                     {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

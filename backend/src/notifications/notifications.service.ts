@@ -474,7 +474,7 @@ export class NotificationsService {
     const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
 
     const learnerPayload = {
-      title: '📚 Class Started — Nejah',
+      title: 'Class Started — Nejah',
       body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
       icon: '/logo.png',
       badge: '/logo.png',
@@ -497,7 +497,7 @@ export class NotificationsService {
 
     const adminPayload = {
       ...learnerPayload,
-      title: '📚 Session Started — Nejah Admin',
+      title: 'Session Started — Nejah Admin',
       body: `Teacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.`,
       url: `/live-sessions/${sessionId}`,
       data: {
@@ -581,7 +581,7 @@ export class NotificationsService {
     if (recipientIds.length > 0) {
       await this.sendCustomNotifications(
         recipientIds,
-        '📚 New Learning Resource',
+        'New Learning Resource',
         `A new ${resource.learningLevel !== 'All Levels' ? resource.learningLevel : ''} resource has been added: ${resource.titleEn || resource.titleAr || resource.titleAm || 'Resource'}`,
         { resourceId: resource.id, type: 'resource_added' },
         NotificationChannel.SYSTEM_ALERT,
