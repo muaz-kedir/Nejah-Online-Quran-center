@@ -13,6 +13,7 @@ import { User, Key, Save, Loader2, Camera, Bell } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { RoleBadge } from '@/components/ui/role-badge';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
+import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -237,6 +238,9 @@ function ProfilePage() {
             </CardHeader>
             <CardContent>
               <PushNotificationToggle variant="card" />
+              <div className="mt-4 border-t pt-4">
+                <TelegramLink />
+              </div>
             </CardContent>
           </Card>
 

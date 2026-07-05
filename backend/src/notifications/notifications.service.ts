@@ -9,6 +9,7 @@ import { ClassSession } from '../attendance/entities/class-session.entity';
 import { AppGateway } from '../websocket/websocket.gateway';
 import { PushSubscriptionService } from './push-subscription.service';
 import { FcmService } from './fcm.service';
+import { TelegramService } from '../telegram/telegram.service';
 import {
   Notification,
   NotificationType,
@@ -42,6 +43,7 @@ export class NotificationsService {
     private appGateway: AppGateway,
     private pushSubscriptionService: PushSubscriptionService,
     private fcmService: FcmService,
+    private telegramService: TelegramService,
   ) {}
 
   async notifyMeetingStarted(session: ClassSession, assignedStudentIds: string[]): Promise<void> {
@@ -518,6 +520,9 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
+      await this.telegramService.sendToUsers(studentParentIds,
+        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\nTap to join: ${joinUrl}`,
+      );
       await this.fcmService.sendToUsers(studentParentIds, {
         title: learnerPayload.title,
         body: learnerPayload.body,
@@ -546,6 +551,9 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+      await this.telegramService.sendToUsers(adminUserIds,
+        `Session Started — Admin\n\nTeacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.\nView: /live-sessions/${sessionId}`,
+      );
       await this.fcmService.sendToUsers(adminUserIds, {
         title: adminPayload.title,
         body: adminPayload.body,

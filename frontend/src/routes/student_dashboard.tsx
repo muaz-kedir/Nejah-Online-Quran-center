@@ -28,6 +28,7 @@ import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
 import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { TelegramLink } from "@/components/ui/telegram-link";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 
 const dayLabels: Record<string, string> = {
@@ -766,8 +767,11 @@ function StudentDashboard() {
               <Lock className="h-5 w-5 text-nejah-electric" />
               <span className="font-bold text-sm">Change Password</span>
             </button>
-            <div className="border-t border-border pt-3">
+            <div className="border-t border-border pt-3 space-y-4">
               <PushNotificationToggle variant="card" />
+              <div className="border-t pt-4">
+                <TelegramLink />
+              </div>
             </div>
           </div>
         </DialogContent>

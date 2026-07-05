@@ -24,6 +24,8 @@ import { Resource } from '../resources/resources.entity';
 import { ResourceDownload } from '../resources/resource-download.entity';
 import { PushSubscription } from '../notifications/entities/push-subscription.entity';
 import { FcmToken } from '../notifications/entities/fcm-token.entity';
+import { TelegramSubscription } from '../telegram/entities/telegram-subscription.entity';
+import { TelegramLinkingCode } from '../telegram/entities/telegram-linking-code.entity';
 import { TeacherApplication } from '../teacher-applications/entities/teacher-application.entity';
 import { TeacherApplicationSettings } from '../teacher-applications/entities/teacher-application-settings.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
@@ -117,4 +119,6 @@ export const ALL_ENTITIES = [
   ArticleFeedback,
   ArticleVersion,
   SupportTicket,
+  TelegramSubscription,
+  TelegramLinkingCode,
 ];
