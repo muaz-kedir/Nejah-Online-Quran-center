@@ -22,6 +22,14 @@ import {
   Video,
   VideoOff,
   Layout,
+  FileText,
+  GitBranch,
+  LifeBuoy,
+  Ticket,
+  ChevronDown,
+  Home,
+  BookMarked,
+  MessageSquareText,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -29,6 +37,7 @@ export interface MenuItem {
   icon: any;
   path: string;
   badge?: string;
+  children?: MenuItem[];
 }
 
 export const menuByRole: Record<string, MenuItem[]> = {
@@ -48,8 +57,20 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-    { label: 'Website Management', icon: Layout, path: '/website/home' },
-    { label: 'Learning Resources', icon: FolderOpen, path: '/website/resources' },
+    {
+      label: 'Website CMS', icon: Layout, path: '#',
+      children: [
+        { label: 'Home Page', icon: Home, path: '/website/home' },
+        { label: 'Teachers', icon: GraduationCap, path: '/website/home' },
+        { label: 'Testimonials', icon: MessageSquareText, path: '/website/home' },
+        { label: 'Learning Resources', icon: BookMarked, path: '/website/resources' },
+        { label: 'Support Pages', icon: FileText, path: '/website/support/pages' },
+        { label: 'Sitemap', icon: GitBranch, path: '/website/support/sitemap' },
+        { label: 'Help Center', icon: LifeBuoy, path: '/website/support/help-center' },
+        { label: 'Support Tickets', icon: Ticket, path: '/website/support/tickets' },
+        { label: 'Support Analytics', icon: TrendingUp, path: '/website/support/analytics' },
+      ],
+    },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
