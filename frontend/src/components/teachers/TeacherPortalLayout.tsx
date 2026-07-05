@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   LogOut,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/auth";
@@ -62,7 +64,25 @@ export function TeacherPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("theme") as "light" | "dark" | null;
+      if (stored) return stored;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+  });
   const [liveUnread, setLiveUnread] = useState(0);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  }, []);
 
   // Poll unread count from API
   useEffect(() => {
@@ -153,6 +173,22 @@ export function TeacherPortalLayout({
             </p>
           </div>
         )}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className={cn(
+            "ml-auto p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
+            "text-muted-foreground hover:text-foreground hover:bg-primary/8",
+            collapsed && !isMobile && "ml-0",
+          )}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? (
+            <Sun className="h-4 w-4 transition-transform duration-500 rotate-0" />
+          ) : (
+            <Moon className="h-4 w-4 transition-transform duration-500 -rotate-12" />
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
@@ -295,6 +331,23 @@ export function TeacherPortalLayout({
 
   return (
     <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+      {/* ─── Ambient Background ─── */}
+      <div className="bg-ambient-layer">
+        <div className="bg-mesh-gradient animate-mesh w-full h-full" />
+        <div className="orb orb-1 orb-glow-pulse" />
+        <div className="orb orb-2 orb-glow-pulse" />
+        <div className="orb orb-3 orb-glow-pulse" />
+        <div className="bg-grid-overlay w-full h-full" />
+        <div className="scan-line" />
+        <div className="vignette-glow" />
+        <div className="particle particle-1" />
+        <div className="particle particle-2" />
+        <div className="particle particle-3" />
+        <div className="particle particle-4" />
+        <div className="particle particle-5" />
+      </div>
+      <div className="bg-noise" />
+
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
@@ -378,7 +431,7 @@ export function TeacherPortalLayout({
       </AnimatePresence>
 
       {/* ─── Main Content ─── */}
-      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16">
+      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
         {children}
       </div>
     </div>
