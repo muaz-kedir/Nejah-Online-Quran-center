@@ -47,6 +47,7 @@ export type HomeProgram = {
   level: LocalizedText;
   title: LocalizedText;
   description: LocalizedText;
+  detailedContent: LocalizedText;
   imageUrl: string | null;
   displayOrder: number;
   isActive: boolean;

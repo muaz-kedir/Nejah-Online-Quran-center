@@ -73,23 +73,48 @@ export function Footer() {
           <h4 className="font-display font-bold mb-4">{t.footer.contactInfo}</h4>
           <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li className="flex items-center gap-2">
-              <Mail className="size-4" /> hello@nejah.com
+              <Mail className="size-4" /> Nejahquranc@gmail.com
             </li>
             <li className="flex items-center gap-2">
-              <Phone className="size-4" /> +1 (555) 800-9300
+              <Phone className="size-4" /> 0960600660
+            </li>
+            <li className="flex items-center gap-2">
+              <Phone className="size-4" /> 0925697363
             </li>
           </ul>
           <div className="flex gap-2 mt-4">
-            {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                aria-label="social"
-                className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
-              >
-                <Icon className="size-4" />
-              </a>
-            ))}
+            <a
+              href="https://www.facebook.com/profile.php?id=61581323069796"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Facebook className="size-4" />
+            </a>
+            <a
+              href="https://www.instagram.com/nejah_quran_center?igsh=ZzJrb252ZmxkYng1"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Instagram className="size-4" />
+            </a>
+            <a
+              href="#"
+              aria-label="Twitter"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Twitter className="size-4" />
+            </a>
+            <a
+              href="#"
+              aria-label="Youtube"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Youtube className="size-4" />
+            </a>
           </div>
         </div>
       </div>
