@@ -53,6 +53,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    await this.deleteWebhook();
     this.cleanupExpiredCodes();
     await this.pollUpdates();
   }
@@ -60,6 +61,19 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   onModuleDestroy() {
     this.stopPolling();
   }
+
+  private async deleteWebhook() {
+    try {
+      const { data } = await axios.get(`${this.apiBase}/deleteWebhook`);
+      if (data.ok) {
+        this.logger.log('Existing webhook cleared');
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to clear webhook: ${(err as Error).message}`);
+    }
+  }
+
+  private conflictCount = 0;
 
   private async pollUpdates() {
     if (!this.configured) return;
@@ -74,6 +88,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         timeout: 35000,
       });
 
+      this.conflictCount = 0;
+
       if (data.ok && data.result?.length) {
         for (const update of data.result) {
           if (update.update_id >= this.lastUpdateId) {
@@ -82,8 +98,14 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
           await this.handleUpdate(update);
         }
       }
-    } catch (err) {
-      if ((err as any)?.code !== 'ECONNABORTED') {
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 409) {
+        this.conflictCount++;
+        if (this.conflictCount <= 3) {
+          this.logger.warn('Poll conflict (409) — another instance may be polling. Retrying...');
+        }
+      } else if ((err as any)?.code !== 'ECONNABORTED') {
         this.logger.warn(`Poll updates error: ${(err as Error).message}`);
       }
     }
