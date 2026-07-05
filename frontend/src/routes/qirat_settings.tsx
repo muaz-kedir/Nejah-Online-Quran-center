@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
+import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/qirat_settings')({
   component: QiratSettingsPage,
@@ -55,6 +56,9 @@ function QiratSettingsPage() {
           <p className="font-medium">Notification Settings</p>
         </div>
         <PushNotificationToggle variant="card" />
+        <div className="border-t mt-4 pt-4">
+          <TelegramLink />
+        </div>
       </div>
     </DashboardLayout>
   );
