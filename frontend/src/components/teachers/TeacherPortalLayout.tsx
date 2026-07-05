@@ -1,5 +1,5 @@
-import { ReactNode, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { ReactNode, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -11,19 +11,20 @@ import {
   Menu,
   X,
   LogOut,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
-import { apiUrl } from '@/lib/api';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { logout } from "@/lib/auth";
+import { AnimatePresence, motion } from "framer-motion";
+import { apiUrl } from "@/lib/api";
 
 const menuItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
-  { label: 'Students', icon: Users, path: '/teacher_students' },
-  { label: 'Zoom Sessions', icon: Video, path: '/teacher_zoom' },
-  { label: 'Zoom Settings', icon: Settings, path: '/zoom-settings' },
-  { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
-  { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
-  { label: 'Profile', icon: User, path: '/teacher_profile' },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/teacher_dashboard" },
+  { label: "Students", icon: Users, path: "/teacher_students" },
+  { label: "Zoom Sessions", icon: Video, path: "/teacher_zoom" },
+  { label: "Zoom Settings", icon: Settings, path: "/zoom-settings" },
+  { label: "Schedule", icon: Calendar, path: "/teacher_schedule" },
+  { label: "Notifications", icon: Bell, path: "/teacher_notifications" },
+  { label: "Profile", icon: User, path: "/teacher_profile" },
 ];
 
 type Props = {
@@ -42,7 +43,7 @@ type Props = {
   children: ReactNode;
 };
 
-const SIDEBAR_KEY = 'nejah_teacher_sidebar_collapsed';
+const SIDEBAR_KEY = "nejah_teacher_sidebar_collapsed";
 
 export function TeacherPortalLayout({
   activePath,
@@ -55,7 +56,7 @@ export function TeacherPortalLayout({
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return localStorage.getItem(SIDEBAR_KEY) === 'true';
+      return localStorage.getItem(SIDEBAR_KEY) === "true";
     } catch {
       return false;
     }
@@ -67,15 +68,17 @@ export function TeacherPortalLayout({
   useEffect(() => {
     const fetchUnread = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(apiUrl('/notifications/unread-count'), {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl("/notifications/unread-count"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const data = await res.json();
           setLiveUnread(data.count || 0);
         }
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
@@ -102,27 +105,21 @@ export function TeacherPortalLayout({
   // Prevent body scroll when mobile drawer is open
   useEffect(() => {
     if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [mobileOpen]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userId');
-    window.location.href = '/login';
-  };
+  const handleLogout = logout;
 
-  const displayName = teacher?.fullName || teacher?.name || 'Teacher';
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
-  const displayTitle = userRole === 'teacher' ? 'Teacher' : userRole === 'admin' ? 'Admin' : 'Teacher';
+  const displayName = teacher?.fullName || teacher?.name || "Teacher";
+  const userRole = typeof window !== "undefined" ? localStorage.getItem("userRole") || "" : "";
+  const displayTitle =
+    userRole === "teacher" ? "Teacher" : userRole === "admin" ? "Admin" : "Teacher";
   const avatarUrl = teacher?.avatarUrl || teacher?.avatar;
   const initials = teacher?.initials || displayName.charAt(0);
 
@@ -130,27 +127,41 @@ export function TeacherPortalLayout({
     if (onOpenProfile) {
       onOpenProfile();
     } else {
-      navigate({ to: '/teacher_profile' });
+      navigate({ to: "/teacher_profile" });
     }
   };
 
   const sidebarContent = (isMobile: boolean) => (
     <>
       {/* Logo / Brand */}
-      <div className={cn('flex items-center gap-3', collapsed && !isMobile ? 'justify-center px-4 py-8' : 'px-6 py-7')}>
+      <div
+        className={cn(
+          "flex items-center gap-3",
+          collapsed && !isMobile ? "justify-center px-4 py-8" : "px-6 py-7",
+        )}
+      >
         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 ring-2 ring-nejah-electric/20 ring-offset-2 ring-offset-transparent flex items-center justify-center shrink-0">
           <span className="text-nejah-electric font-black text-sm">N</span>
         </div>
         {(!collapsed || isMobile) && (
           <div className="min-w-0">
-            <h1 className="font-extrabold text-foreground tracking-tight leading-none text-lg">Nejah</h1>
-            <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">Teacher Suite</p>
+            <h1 className="font-extrabold text-foreground tracking-tight leading-none text-lg">
+              Nejah
+            </h1>
+            <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">
+              Teacher Suite
+            </p>
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className={cn('flex-1 space-y-1 overflow-y-auto min-w-0', collapsed && !isMobile ? 'px-2' : 'px-3')}>
+      <nav
+        className={cn(
+          "flex-1 space-y-1 overflow-y-auto min-w-0",
+          collapsed && !isMobile ? "px-2" : "px-3",
+        )}
+      >
         {menuItems.map((item) => {
           const isActive = activePath === item.path;
           return (
@@ -159,38 +170,46 @@ export function TeacherPortalLayout({
                 type="button"
                 onClick={() => navigate({ to: item.path })}
                 className={cn(
-                  'sidebar-nav-item w-full',
-                  collapsed && !isMobile ? 'justify-center px-3 py-3' : 'px-4 py-3',
-                  isActive ? 'sidebar-nav-item-active' : 'sidebar-nav-item-inactive',
+                  "sidebar-nav-item w-full",
+                  collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
+                  isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive",
                 )}
               >
                 <item.icon
                   className={cn(
-                    'h-5 w-5 shrink-0 transition-colors duration-200',
-                    isActive ? 'text-nejah-electric' : 'text-muted-foreground group-hover:text-nejah-electric',
+                    "h-5 w-5 shrink-0 transition-colors duration-200",
+                    isActive
+                      ? "text-nejah-electric"
+                      : "text-muted-foreground group-hover:text-nejah-electric",
                   )}
                 />
                 {(!collapsed || isMobile) && (
                   <span className="flex-1 text-left truncate font-semibold">{item.label}</span>
                 )}
-                {item.path === '/teacher_notifications' && (liveUnread || unreadNotifications) > 0 && (
-                  <span className={cn(
-                    'bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0',
-                    collapsed && !isMobile ? 'absolute -top-1 -right-1 w-5 h-5' : 'px-1.5 py-0.5 min-w-[20px]',
-                  )}>
-                    {liveUnread || unreadNotifications}
-                  </span>
-                )}
+                {item.path === "/teacher_notifications" &&
+                  (liveUnread || unreadNotifications) > 0 && (
+                    <span
+                      className={cn(
+                        "bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0",
+                        collapsed && !isMobile
+                          ? "absolute -top-1 -right-1 w-5 h-5"
+                          : "px-1.5 py-0.5 min-w-[20px]",
+                      )}
+                    >
+                      {liveUnread || unreadNotifications}
+                    </span>
+                  )}
               </button>
               {/* Tooltip when collapsed */}
               {collapsed && !isMobile && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
                   {item.label}
-                  {item.path === '/teacher_notifications' && (liveUnread || unreadNotifications) > 0 && (
-                    <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {liveUnread || unreadNotifications}
-                    </span>
-                  )}
+                  {item.path === "/teacher_notifications" &&
+                    (liveUnread || unreadNotifications) > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        {liveUnread || unreadNotifications}
+                      </span>
+                    )}
                 </div>
               )}
             </div>
@@ -199,15 +218,15 @@ export function TeacherPortalLayout({
       </nav>
 
       {/* Bottom actions */}
-      <div className={cn('space-y-1 min-w-0', collapsed && !isMobile ? 'px-2 pb-2' : 'px-3 pb-2')}>
+      <div className={cn("space-y-1 min-w-0", collapsed && !isMobile ? "px-2 pb-2" : "px-3 pb-2")}>
         {onOpenSettings && (
           <div className="relative group">
             <button
               type="button"
               onClick={onOpenSettings}
               className={cn(
-                'sidebar-nav-item sidebar-nav-item-inactive w-full',
-                collapsed && !isMobile ? 'justify-center px-3 py-3' : 'px-4 py-3',
+                "sidebar-nav-item sidebar-nav-item-inactive w-full",
+                collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
               )}
             >
               <Settings className="h-5 w-5 shrink-0" />
@@ -225,8 +244,8 @@ export function TeacherPortalLayout({
             type="button"
             onClick={handleLogout}
             className={cn(
-              'sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground',
-              collapsed && !isMobile ? 'justify-center px-3 py-3' : 'px-4 py-3',
+              "sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground",
+              collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
             )}
           >
             <LogOut className="h-5 w-5 shrink-0" />
@@ -241,14 +260,14 @@ export function TeacherPortalLayout({
       </div>
 
       {/* Profile card */}
-      <div className={cn('min-w-0', collapsed && !isMobile ? 'px-2 pb-4' : 'px-3 pb-4')}>
+      <div className={cn("min-w-0", collapsed && !isMobile ? "px-2 pb-4" : "px-3 pb-4")}>
         <button
           type="button"
           onClick={handleProfileClick}
           className={cn(
-            'w-full rounded-2xl border border-border/60 dark:border-nejah-border-blue/50 shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left',
-            'bg-gradient-to-br from-card to-muted/30 dark:from-nejah-surface dark:to-nejah-surface/50',
-            collapsed && !isMobile ? 'p-2 justify-center' : 'p-3',
+            "w-full rounded-2xl border border-border/60 dark:border-nejah-border-blue/50 shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left",
+            "bg-gradient-to-br from-card to-muted/30 dark:from-nejah-surface dark:to-nejah-surface/50",
+            collapsed && !isMobile ? "p-2 justify-center" : "p-3",
           )}
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden shrink-0">
@@ -260,13 +279,15 @@ export function TeacherPortalLayout({
           </div>
           {(!collapsed || isMobile) && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold text-foreground leading-tight truncate">{displayName}</p>
-              <p className="text-[10px] text-muted-foreground font-medium truncate">{displayTitle}</p>
+              <p className="text-sm font-extrabold text-foreground leading-tight truncate">
+                {displayName}
+              </p>
+              <p className="text-[10px] text-muted-foreground font-medium truncate">
+                {displayTitle}
+              </p>
             </div>
           )}
-          {(!collapsed || isMobile) && (
-            <User className="h-4 w-4 text-muted-foreground shrink-0" />
-          )}
+          {(!collapsed || isMobile) && <User className="h-4 w-4 text-muted-foreground shrink-0" />}
         </button>
       </div>
     </>
@@ -277,16 +298,15 @@ export function TeacherPortalLayout({
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col h-screen shrink-0 sidebar-transition overflow-hidden max-w-full',
-          'bg-card/90 dark:bg-nejah-surface/95 backdrop-blur-xl',
-          'border-r border-border/50 dark:border-nejah-border-blue/40',
-          collapsed ? 'w-20' : 'w-64',
+          "hidden lg:flex flex-col h-screen shrink-0 sidebar-transition overflow-hidden max-w-full",
+          "bg-card/90 dark:bg-nejah-surface/95 backdrop-blur-xl",
+          "border-r border-border/50 dark:border-nejah-border-blue/40",
+          collapsed ? "w-20" : "w-64",
         )}
       >
         <div className="flex flex-col h-full min-w-0 overflow-hidden w-full max-w-full">
           {sidebarContent(false)}
         </div>
-
       </aside>
 
       {/* ─── Mobile Top Bar ─── */}
@@ -335,10 +355,10 @@ export function TeacherPortalLayout({
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              initial={{ x: '-100%' }}
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 flex flex-col bg-card dark:bg-nejah-surface shadow-2xl"
             >
               <div className="flex items-center justify-end px-4 pt-4">
