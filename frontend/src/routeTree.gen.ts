@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as Teacher_zoomRouteImport } from './routes/teacher_zoom'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
@@ -23,6 +24,7 @@ import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replac
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
+import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -33,6 +35,7 @@ import { Route as Qirat_examsRouteImport } from './routes/qirat_exams'
 import { Route as Qirat_dashboardRouteImport } from './routes/qirat_dashboard'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as Parent_sessionsRouteImport } from './routes/parent_sessions'
 import { Route as Parent_notificationsRouteImport } from './routes/parent_notifications'
@@ -40,6 +43,7 @@ import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveSessionsRouteImport } from './routes/live-sessions'
 import { Route as HomeworkRouteImport } from './routes/homework'
+import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as Finance_teacherPaymentsRouteImport } from './routes/finance_teacher-payments'
 import { Route as Finance_studentPaymentsRouteImport } from './routes/finance_student-payments'
@@ -75,8 +79,15 @@ import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-session
 import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$sessionId'
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
 import { Route as TeachersIdIndexRouteImport } from './routes/teachers_.$id.index'
+import { Route as WebsiteSupportTicketsRouteImport } from './routes/website.support.tickets'
+import { Route as WebsiteSupportSitemapRouteImport } from './routes/website.support.sitemap'
+import { Route as WebsiteSupportPagesRouteImport } from './routes/website.support.pages'
+import { Route as WebsiteSupportHelpCenterRouteImport } from './routes/website.support.help-center'
+import { Route as WebsiteSupportAnalyticsRouteImport } from './routes/website.support.analytics'
 import { Route as TeachersIdStudentsRouteImport } from './routes/teachers_.$id.students'
 import { Route as TeachersIdProfileRouteImport } from './routes/teachers_.$id.profile'
+import { Route as HelpCenterCategorySlugRouteImport } from './routes/help-center_.category.$slug'
+import { Route as HelpCenterArticleSlugRouteImport } from './routes/help-center_.article.$slug'
 import { Route as TeachersIdStudentsStudentIdRouteImport } from './routes/teachers_.$id.students_.$studentId'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
@@ -93,6 +104,11 @@ const UsersRoute = UsersRouteImport.update({
 const TrackApplicationRoute = TrackApplicationRouteImport.update({
   id: '/track-application',
   path: '/track-application',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeachersRoute = TeachersRouteImport.update({
@@ -150,6 +166,11 @@ const Student_dashboardRoute = Student_dashboardRouteImport.update({
   path: '/student_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapRoute = SitemapRouteImport.update({
+  id: '/sitemap',
+  path: '/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -200,6 +221,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
@@ -233,6 +259,11 @@ const LiveSessionsRoute = LiveSessionsRouteImport.update({
 const HomeworkRoute = HomeworkRouteImport.update({
   id: '/homework',
   path: '/homework',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpCenterRoute = HelpCenterRouteImport.update({
+  id: '/help-center',
+  path: '/help-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -411,6 +442,32 @@ const TeachersIdIndexRoute = TeachersIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TeachersIdRoute,
 } as any)
+const WebsiteSupportTicketsRoute = WebsiteSupportTicketsRouteImport.update({
+  id: '/website/support/tickets',
+  path: '/website/support/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteSupportSitemapRoute = WebsiteSupportSitemapRouteImport.update({
+  id: '/website/support/sitemap',
+  path: '/website/support/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteSupportPagesRoute = WebsiteSupportPagesRouteImport.update({
+  id: '/website/support/pages',
+  path: '/website/support/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteSupportHelpCenterRoute =
+  WebsiteSupportHelpCenterRouteImport.update({
+    id: '/website/support/help-center',
+    path: '/website/support/help-center',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const WebsiteSupportAnalyticsRoute = WebsiteSupportAnalyticsRouteImport.update({
+  id: '/website/support/analytics',
+  path: '/website/support/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeachersIdStudentsRoute = TeachersIdStudentsRouteImport.update({
   id: '/students',
   path: '/students',
@@ -420,6 +477,16 @@ const TeachersIdProfileRoute = TeachersIdProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => TeachersIdRoute,
+} as any)
+const HelpCenterCategorySlugRoute = HelpCenterCategorySlugRouteImport.update({
+  id: '/help-center_/category/$slug',
+  path: '/help-center/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpCenterArticleSlugRoute = HelpCenterArticleSlugRouteImport.update({
+  id: '/help-center_/article/$slug',
+  path: '/help-center/article/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TeachersIdStudentsStudentIdRoute =
   TeachersIdStudentsStudentIdRouteImport.update({
@@ -452,6 +519,7 @@ export interface FileRoutesByFullPath {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -459,6 +527,7 @@ export interface FileRoutesByFullPath {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -469,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
+  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -480,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -499,8 +570,15 @@ export interface FileRoutesByFullPath {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/help-center/article/$slug': typeof HelpCenterArticleSlugRoute
+  '/help-center/category/$slug': typeof HelpCenterCategorySlugRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id/': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers/$id/students/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -524,6 +602,7 @@ export interface FileRoutesByTo {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -531,6 +610,7 @@ export interface FileRoutesByTo {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -541,6 +621,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
+  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -552,6 +633,7 @@ export interface FileRoutesByTo {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -570,8 +652,15 @@ export interface FileRoutesByTo {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/help-center/article/$slug': typeof HelpCenterArticleSlugRoute
+  '/help-center/category/$slug': typeof HelpCenterCategorySlugRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers/$id/students/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -596,6 +685,7 @@ export interface FileRoutesById {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -603,6 +693,7 @@ export interface FileRoutesById {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -613,6 +704,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
+  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -624,6 +716,7 @@ export interface FileRoutesById {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -643,8 +736,15 @@ export interface FileRoutesById {
   '/teachers_/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/help-center_/article/$slug': typeof HelpCenterArticleSlugRoute
+  '/help-center_/category/$slug': typeof HelpCenterCategorySlugRoute
   '/teachers_/$id/profile': typeof TeachersIdProfileRoute
   '/teachers_/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers_/$id/': typeof TeachersIdIndexRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers_/$id/students_/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -670,6 +770,7 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
+    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -677,6 +778,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -687,6 +789,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -698,6 +801,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -717,8 +821,15 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/help-center/article/$slug'
+    | '/help-center/category/$slug'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/help-center'
+    | '/website/support/pages'
+    | '/website/support/sitemap'
+    | '/website/support/tickets'
     | '/teachers/$id/'
     | '/teachers/$id/schedule/$day'
     | '/teachers/$id/students/$studentId'
@@ -742,6 +853,7 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
+    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -749,6 +861,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -759,6 +872,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -770,6 +884,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -788,8 +903,15 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/help-center/article/$slug'
+    | '/help-center/category/$slug'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/help-center'
+    | '/website/support/pages'
+    | '/website/support/sitemap'
+    | '/website/support/tickets'
     | '/teachers/$id'
     | '/teachers/$id/schedule/$day'
     | '/teachers/$id/students/$studentId'
@@ -813,6 +935,7 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
+    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -820,6 +943,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -830,6 +954,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -841,6 +966,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -860,8 +986,15 @@ export interface FileRouteTypes {
     | '/teachers_/create'
     | '/website/home'
     | '/website/resources'
+    | '/help-center_/article/$slug'
+    | '/help-center_/category/$slug'
     | '/teachers_/$id/profile'
     | '/teachers_/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/help-center'
+    | '/website/support/pages'
+    | '/website/support/sitemap'
+    | '/website/support/tickets'
     | '/teachers_/$id/'
     | '/teachers_/$id/schedule/$day'
     | '/teachers_/$id/students_/$studentId'
@@ -886,6 +1019,7 @@ export interface RootRouteChildren {
   Finance_studentPaymentsRoute: typeof Finance_studentPaymentsRoute
   Finance_teacherPaymentsRoute: typeof Finance_teacherPaymentsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HelpCenterRoute: typeof HelpCenterRoute
   HomeworkRoute: typeof HomeworkRoute
   LiveSessionsRoute: typeof LiveSessionsRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -893,6 +1027,7 @@ export interface RootRouteChildren {
   Parent_notificationsRoute: typeof Parent_notificationsRoute
   Parent_sessionsRoute: typeof Parent_sessionsRoute
   ParentsRoute: typeof ParentsRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   Qirat_dashboardRoute: typeof Qirat_dashboardRoute
@@ -903,6 +1038,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
   SettingsRoute: typeof SettingsRoute
+  SitemapRoute: typeof SitemapRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
@@ -914,6 +1050,7 @@ export interface RootRouteChildren {
   Teacher_studentsRoute: typeof Teacher_studentsRoute
   Teacher_zoomRoute: typeof Teacher_zoomRoute
   TeachersRoute: typeof TeachersRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
   ZoomSettingsRoute: typeof ZoomSettingsRoute
@@ -932,6 +1069,13 @@ export interface RootRouteChildren {
   TeachersCreateRoute: typeof TeachersCreateRoute
   WebsiteHomeRoute: typeof WebsiteHomeRoute
   WebsiteResourcesRoute: typeof WebsiteResourcesRoute
+  HelpCenterArticleSlugRoute: typeof HelpCenterArticleSlugRoute
+  HelpCenterCategorySlugRoute: typeof HelpCenterCategorySlugRoute
+  WebsiteSupportAnalyticsRoute: typeof WebsiteSupportAnalyticsRoute
+  WebsiteSupportHelpCenterRoute: typeof WebsiteSupportHelpCenterRoute
+  WebsiteSupportPagesRoute: typeof WebsiteSupportPagesRoute
+  WebsiteSupportSitemapRoute: typeof WebsiteSupportSitemapRoute
+  WebsiteSupportTicketsRoute: typeof WebsiteSupportTicketsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -955,6 +1099,13 @@ declare module '@tanstack/react-router' {
       path: '/track-application'
       fullPath: '/track-application'
       preLoaderRoute: typeof TrackApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teachers': {
@@ -1034,6 +1185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Student_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap': {
+      id: '/sitemap'
+      path: '/sitemap'
+      fullPath: '/sitemap'
+      preLoaderRoute: typeof SitemapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -1104,6 +1262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parents': {
       id: '/parents'
       path: '/parents'
@@ -1151,6 +1316,13 @@ declare module '@tanstack/react-router' {
       path: '/homework'
       fullPath: '/homework'
       preLoaderRoute: typeof HomeworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help-center': {
+      id: '/help-center'
+      path: '/help-center'
+      fullPath: '/help-center'
+      preLoaderRoute: typeof HelpCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -1398,6 +1570,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdIndexRouteImport
       parentRoute: typeof TeachersIdRoute
     }
+    '/website/support/tickets': {
+      id: '/website/support/tickets'
+      path: '/website/support/tickets'
+      fullPath: '/website/support/tickets'
+      preLoaderRoute: typeof WebsiteSupportTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/sitemap': {
+      id: '/website/support/sitemap'
+      path: '/website/support/sitemap'
+      fullPath: '/website/support/sitemap'
+      preLoaderRoute: typeof WebsiteSupportSitemapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/pages': {
+      id: '/website/support/pages'
+      path: '/website/support/pages'
+      fullPath: '/website/support/pages'
+      preLoaderRoute: typeof WebsiteSupportPagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/help-center': {
+      id: '/website/support/help-center'
+      path: '/website/support/help-center'
+      fullPath: '/website/support/help-center'
+      preLoaderRoute: typeof WebsiteSupportHelpCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/analytics': {
+      id: '/website/support/analytics'
+      path: '/website/support/analytics'
+      fullPath: '/website/support/analytics'
+      preLoaderRoute: typeof WebsiteSupportAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teachers_/$id/students': {
       id: '/teachers_/$id/students'
       path: '/students'
@@ -1411,6 +1618,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/teachers/$id/profile'
       preLoaderRoute: typeof TeachersIdProfileRouteImport
       parentRoute: typeof TeachersIdRoute
+    }
+    '/help-center_/category/$slug': {
+      id: '/help-center_/category/$slug'
+      path: '/help-center/category/$slug'
+      fullPath: '/help-center/category/$slug'
+      preLoaderRoute: typeof HelpCenterCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help-center_/article/$slug': {
+      id: '/help-center_/article/$slug'
+      path: '/help-center/article/$slug'
+      fullPath: '/help-center/article/$slug'
+      preLoaderRoute: typeof HelpCenterArticleSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/teachers_/$id/students_/$studentId': {
       id: '/teachers_/$id/students_/$studentId'
@@ -1480,6 +1701,7 @@ const rootRouteChildren: RootRouteChildren = {
   Finance_studentPaymentsRoute: Finance_studentPaymentsRoute,
   Finance_teacherPaymentsRoute: Finance_teacherPaymentsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  HelpCenterRoute: HelpCenterRoute,
   HomeworkRoute: HomeworkRoute,
   LiveSessionsRoute: LiveSessionsRouteWithChildren,
   LoginRoute: LoginRoute,
@@ -1487,6 +1709,7 @@ const rootRouteChildren: RootRouteChildren = {
   Parent_notificationsRoute: Parent_notificationsRoute,
   Parent_sessionsRoute: Parent_sessionsRoute,
   ParentsRoute: ParentsRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   Qirat_dashboardRoute: Qirat_dashboardRoute,
@@ -1497,6 +1720,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,
   SettingsRoute: SettingsRoute,
+  SitemapRoute: SitemapRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
@@ -1508,6 +1732,7 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_studentsRoute: Teacher_studentsRoute,
   Teacher_zoomRoute: Teacher_zoomRoute,
   TeachersRoute: TeachersRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
   ZoomSettingsRoute: ZoomSettingsRoute,
@@ -1526,6 +1751,13 @@ const rootRouteChildren: RootRouteChildren = {
   TeachersCreateRoute: TeachersCreateRoute,
   WebsiteHomeRoute: WebsiteHomeRoute,
   WebsiteResourcesRoute: WebsiteResourcesRoute,
+  HelpCenterArticleSlugRoute: HelpCenterArticleSlugRoute,
+  HelpCenterCategorySlugRoute: HelpCenterCategorySlugRoute,
+  WebsiteSupportAnalyticsRoute: WebsiteSupportAnalyticsRoute,
+  WebsiteSupportHelpCenterRoute: WebsiteSupportHelpCenterRoute,
+  WebsiteSupportPagesRoute: WebsiteSupportPagesRoute,
+  WebsiteSupportSitemapRoute: WebsiteSupportSitemapRoute,
+  WebsiteSupportTicketsRoute: WebsiteSupportTicketsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

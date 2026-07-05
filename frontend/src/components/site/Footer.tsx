@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { BookOpen, Facebook, Twitter, Instagram, Youtube, Mail, Phone } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
@@ -20,24 +21,24 @@ export function Footer() {
           <h4 className="font-display font-bold mb-4">{t.footer.quickLinks}</h4>
           <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li>
-              <a href="#about" className="hover:text-primary">
+              <a href="/#about" className="hover:text-primary">
                 {t.footer.aboutUs}
               </a>
             </li>
             <li>
-              <a href="#teachers" className="hover:text-primary">
+              <a href="/#teachers" className="hover:text-primary">
                 {t.footer.ourTeachers}
               </a>
             </li>
             <li>
-              <a href="#courses" className="hover:text-primary">
+              <Link to="/" className="hover:text-primary">
                 {t.footer.coursesLink}
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary">
+              <span className="text-nejah-slate-blue/60 cursor-not-allowed">
                 {t.footer.pricing}
-              </a>
+              </span>
             </li>
           </ul>
         </div>
@@ -46,24 +47,24 @@ export function Footer() {
           <h4 className="font-display font-bold mb-4">{t.footer.support}</h4>
           <ul className="space-y-2.5 text-sm text-nejah-slate-blue">
             <li>
-              <a href="#" className="hover:text-primary">
+              <Link to="/privacy-policy" className="hover:text-primary">
                 {t.footer.privacy}
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary">
+              <Link to="/terms-of-service" className="hover:text-primary">
                 {t.footer.terms}
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary">
+              <Link to="/sitemap" className="hover:text-primary">
                 {t.footer.sitemap}
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary">
+              <Link to="/help-center" className="hover:text-primary">
                 {t.footer.help}
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -96,12 +97,12 @@ export function Footer() {
       <div className="container-x flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-xs text-nejah-slate-blue md:flex-row">
         <span>{t.footer.rights}</span>
         <div className="flex gap-5">
-          <a href="#" className="hover:text-primary">
+          <Link to="/privacy-policy" className="hover:text-primary">
             {t.footer.privacyShort}
-          </a>
-          <a href="#" className="hover:text-primary">
+          </Link>
+          <Link to="/terms-of-service" className="hover:text-primary">
             {t.footer.termsShort}
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

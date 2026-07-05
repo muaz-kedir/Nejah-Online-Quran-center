@@ -28,8 +28,8 @@ export class UploadsController {
       }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.match(/^image\//)) {
-          cb(new BadRequestException('Only image files are allowed'), false);
+        if (!file.mimetype.match(/^image\//) && file.mimetype !== 'application/pdf') {
+          cb(new BadRequestException('Only image files and PDFs are allowed'), false);
           return;
         }
         cb(null, true);

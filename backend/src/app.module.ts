@@ -34,6 +34,7 @@ import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { WebsiteCmsModule } from './website-cms/website-cms.module';
+import { SupportPagesModule } from './support-pages/support-pages.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
 import { AppController } from './app.controller';
@@ -89,6 +90,7 @@ import { AppController } from './app.controller';
     FeeConfigModule,
     CurrencyModule,
     WebsiteCmsModule,
+    SupportPagesModule,
     UploadsModule,
     ScheduleModule.forRoot(),
     HealthModule,

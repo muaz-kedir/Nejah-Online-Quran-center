@@ -49,6 +49,13 @@ import { HomeMissionCard } from '../website-cms/entities/home-mission-card.entit
 import { HomeProgramsSection } from '../website-cms/entities/home-programs-section.entity';
 import { HomeProgram } from '../website-cms/entities/home-program.entity';
 import { Testimonial } from '../website-cms/entities/testimonial.entity';
+import { SupportPage } from '../support-pages/entities/support-page.entity';
+import { SitemapItem } from '../support-pages/entities/sitemap-item.entity';
+import { HelpCategory } from '../support-pages/entities/help-category.entity';
+import { HelpArticle } from '../support-pages/entities/help-article.entity';
+import { ArticleFeedback } from '../support-pages/entities/article-feedback.entity';
+import { ArticleVersion } from '../support-pages/entities/article-version.entity';
+import { SupportTicket } from '../support-pages/entities/support-ticket.entity';
 
 /** Every TypeORM entity — explicit registration avoids missing relation metadata on Render. */
 export const ALL_ENTITIES = [
@@ -103,4 +110,11 @@ export const ALL_ENTITIES = [
   HomeProgramsSection,
   HomeProgram,
   Testimonial,
+  SupportPage,
+  SitemapItem,
+  HelpCategory,
+  HelpArticle,
+  ArticleFeedback,
+  ArticleVersion,
+  SupportTicket,
 ];

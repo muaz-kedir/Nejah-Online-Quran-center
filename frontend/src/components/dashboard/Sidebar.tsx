@@ -1,13 +1,119 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
-import { menuByRole } from './menuConfig';
-import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { menuByRole, type MenuItem } from './menuConfig';
+import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { SilverDivider } from './design-system';
 
-export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+function NavItem({ item, collapsed, depth = 0 }: { item: MenuItem; collapsed: boolean; depth?: number }) {
   const location = useLocation();
+  const Icon = item.icon;
+  const isActive = item.path !== '#' && location.pathname.startsWith(item.path);
+  const hasChildren = item.children && item.children.length > 0;
+  const [expanded, setExpanded] = useState(isActive);
+
+  useEffect(() => {
+    if (isActive) setExpanded(true);
+  }, [isActive]);
+
+  if (hasChildren) {
+    if (collapsed) {
+      return (
+        <li>
+          <div
+            className={cn(
+              'group relative flex items-center justify-center rounded-xl p-3 transition-all duration-200 cursor-pointer',
+              isActive ? 'nav-item-active text-foreground' : 'text-foreground/60 nav-item-hover hover:text-foreground',
+            )}
+            onClick={() => setExpanded(!expanded)}
+            title={item.label}
+          >
+            <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground/50')} />
+            <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
+              {item.label}
+            </div>
+          </div>
+        </li>
+      );
+    }
+
+    return (
+      <li>
+        <div
+          className={cn(
+            'group relative flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer px-3 py-2.5',
+            isActive ? 'nav-item-active text-foreground' : 'text-foreground/60 nav-item-hover hover:text-foreground',
+          )}
+          onClick={() => setExpanded(!expanded)}
+        >
+          <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground/50')} />
+          <span className="flex-1 text-sm font-medium">{item.label}</span>
+          <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} />
+        </div>
+        {expanded && (
+          <ul className="ml-3 mt-0.5 space-y-0.5 border-l border-border/50 pl-2">
+            {item.children.map((child) => (
+              <NavItem key={child.path} item={child} collapsed={collapsed} depth={depth + 1} />
+            ))}
+          </ul>
+        )}
+      </li>
+    );
+  }
+
+  const label = item.label;
+
+  return (
+    <li>
+      <Link
+        to={item.path}
+        title={collapsed ? label : undefined}
+        className={cn(
+          'group relative flex items-center gap-3 rounded-xl transition-all duration-200',
+          collapsed ? 'justify-center p-3' : 'px-3 py-2.5',
+          isActive
+            ? 'nav-item-active text-foreground'
+            : 'text-foreground/60 nav-item-hover hover:text-foreground',
+        )}
+      >
+        {isActive && (
+          <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_8px_rgba(0,102,204,0.6)]" />
+        )}
+
+        <Icon
+          className={cn(
+            'h-5 w-5 flex-shrink-0 transition-transform duration-200',
+            isActive ? 'text-nejah-electric' : 'text-foreground/50 group-hover:text-foreground',
+            !collapsed && 'group-hover:scale-110',
+          )}
+        />
+
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-sm font-medium">{label}</span>
+            {item.badge && (
+              <span className="badge-live-pulse ml-auto min-w-[18px] text-center">
+                {item.badge}
+              </span>
+            )}
+          </>
+        )}
+
+        {collapsed && (
+          <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
+            {label}
+            {item.badge && (
+              <span className="badge-live-pulse ml-2">{item.badge}</span>
+            )}
+          </div>
+        )}
+      </Link>
+    </li>
+  );
+}
+
+export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
   const [mobileOpen, setMobileOpen] = useState(isOpen);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -38,19 +144,6 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
   const toggleCollapse = useCallback(() => setSidebarCollapsed(!sidebarCollapsed), [sidebarCollapsed, setSidebarCollapsed]);
 
   const menuItems = userRole ? (menuByRole[userRole] || menuByRole.student) : [];
-
-  const menuLabels: Record<string, string> = {
-    Dashboard: t.dashboard,
-    Students: t.students,
-    Teachers: t.teachers,
-    Parents: t.parents,
-    Classes: t.classes,
-    Attendance: t.attendance,
-    Reports: t.reports,
-    Settings: t.settings,
-    Messages: t.messages,
-    'Content Edition': t.contentEdition,
-  };
 
   return (
     <>
@@ -141,59 +234,9 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
           )}
           {userRole && (
           <ul className="space-y-0.5">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              const label = menuLabels[item.label] || item.label;
-
-              return (
-                <li key={`${item.path}-${item.label}`}>
-                  <Link
-                    to={item.path}
-                    title={sidebarCollapsed ? label : undefined}
-                    className={cn(
-                      'group relative flex items-center gap-3 rounded-xl transition-all duration-200',
-                      sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
-                      isActive
-                        ? 'nav-item-active text-foreground'
-                        : 'text-foreground/60 nav-item-hover hover:text-foreground',
-                    )}
-                  >
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_8px_rgba(0,102,204,0.6)]" />
-                    )}
-
-                    <Icon
-                      className={cn(
-                        'h-5 w-5 flex-shrink-0 transition-transform duration-200',
-                        isActive ? 'text-nejah-electric' : 'text-foreground/50 group-hover:text-foreground',
-                        !sidebarCollapsed && 'group-hover:scale-110',
-                      )}
-                    />
-
-                    {!sidebarCollapsed && (
-                      <>
-                        <span className="flex-1 text-sm font-medium">{label}</span>
-                        {item.badge && (
-                          <span className="badge-live-pulse ml-auto min-w-[18px] text-center">
-                            {item.badge}
-                          </span>
-                        )}
-                      </>
-                    )}
-
-                    {sidebarCollapsed && (
-                      <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
-                        {label}
-                        {item.badge && (
-                          <span className="badge-live-pulse ml-2">{item.badge}</span>
-                        )}
-                      </div>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
+            {menuItems.map((item) => (
+              <NavItem key={`${item.path}-${item.label}`} item={item} collapsed={sidebarCollapsed} />
+            ))}
           </ul>
           )}
         </nav>
@@ -232,3 +275,5 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
     </>
   );
 });
+
+export { Sidebar as default };
