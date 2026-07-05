@@ -250,9 +250,17 @@ export class AttendanceIntelligenceService {
     attendance.totalConnectedTimeMs = result.totalConnectedTimeMs;
     attendance.longestContinuousPresenceMs = result.longestContinuousPresenceMs;
     attendance.rejoinCount = result.rejoinCount;
-    attendance.attendanceStatus = result.attendanceStatus;
     attendance.firstJoinTime = result.firstJoinTime;
     attendance.lastLeaveTime = result.lastLeaveTime;
+
+    if (
+      (attendance.joinTime || attendance.firstJoinTime) &&
+      result.attendanceStatus === AttendanceStatus.ABSENT
+    ) {
+      attendance.attendanceStatus = AttendanceStatus.PARTIAL;
+    } else {
+      attendance.attendanceStatus = result.attendanceStatus;
+    }
 
     const saved = await this.attendanceRepository.save(attendance);
     return saved;

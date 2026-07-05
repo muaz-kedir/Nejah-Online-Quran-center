@@ -605,7 +605,7 @@ function TeacherDashboard() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-[0.2em] mb-2">
-                Assalamu Alaikum, Teacher
+                Assalamu Alaikum, {data?.teacher?.fullName?.split(" ")[0] || "Teacher"}
               </p>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground font-serif">
                 Dashboard Overview
@@ -1042,8 +1042,7 @@ function TeacherDashboard() {
                 {completedSessions.slice(0, 5).map((session: any) => (
                   <div
                     key={session.id || session.scheduleId}
-                    onClick={() => navigate({ to: '/live-sessions/$id', params: { id: session.id } })}
-                    className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm hover:shadow-md hover:border-emerald-500/20 transition-all cursor-pointer"
+                    className="group bg-card dark:bg-nejah-surface rounded-2xl p-5 border border-border dark:border-white/5 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 min-w-0 flex-1">

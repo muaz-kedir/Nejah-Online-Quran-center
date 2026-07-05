@@ -17,6 +17,7 @@ import { TeacherReplacementsService } from '../teacher-replacements/teacher-repl
 import { LiveSessionService } from '../zoom/live-session.service';
 import { SessionAttendanceService } from '../zoom/session-attendance.service';
 import { LiveSessionStatus } from '../zoom/enums/live-session-status.enum';
+import { LiveSession } from '../zoom/entities/live-session.entity';
 import { resolveLearningTrack, getTopicsForTrack, getNextTopic, QAIDAH_LESSONS, TAJWEED_TOPICS } from '../common/constants/learning-curricula';
 import { ProgressService } from '../progress/progress.service';
 import { ExamEvaluation } from '../exams/entities/exam-evaluation.entity';
@@ -533,7 +534,6 @@ export class StudentPortalService {
     });
 
     const liveSession = await this.liveSessionService.getStudentActiveLiveSession(student.id);
-    const upcomingSession = await this.liveSessionService.getStudentUpcomingTodaySession(student.id);
 
     const current = schedules
       .filter((s) => s.status === 'active' && s.dayOfWeek === today)
@@ -562,7 +562,21 @@ export class StudentPortalService {
         attendanceStatus: h.attendanceStatus,
       }));
 
-    return { current, upcoming, previous, liveClass: liveSession || upcomingSession };
+    return { current, upcoming, previous, liveClass: liveSession ? this.mapLiveSessionForStudent(liveSession) : null };
+  }
+
+  private mapLiveSessionForStudent(session: LiveSession) {
+    return {
+      id: session.id,
+      classTitle:
+        session.metadata?.className ||
+        session.schedule?.className ||
+        'Quran Class',
+      meetingLink: session.zoomJoinUrl,
+      status: session.status,
+      scheduledStart: session.scheduledStart,
+      teacher: session.teacher ? { fullName: session.teacher.fullName } : null,
+    };
   }
 
   private mapSchedule(s: Schedule, student: Student, status: string) {

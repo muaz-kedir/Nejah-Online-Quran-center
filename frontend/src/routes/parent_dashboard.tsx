@@ -1,6 +1,6 @@
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { apiUrl } from "@/lib/api";
+import { useState, useEffect, useRef } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
   Search,
   Bell,
@@ -8,36 +8,23 @@ import {
   BookOpen,
   Users,
   Clock,
-  LayoutDashboard,
   Calendar,
   ClipboardList,
-  FileText,
-  Settings,
-  LogOut,
-  Mic,
   TrendingUp,
   Award,
-  Plus,
-  Play,
-  Pause,
   ExternalLink,
-  Shield,
-  FileSpreadsheet,
   AlertCircle,
   CheckCircle2,
-  XCircle,
-  HelpCircle,
   User,
   Phone,
   Mail,
   MapPin,
-  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Progress as ProgressBar } from "@/components/ui/progress";
+
 import { toast } from "sonner";
 import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
 import { ParentPortalLayout } from "@/components/parents/ParentPortalLayout";
@@ -114,19 +101,23 @@ const StatCard = ({ icon: Icon, value, label, subValue, trend, color, onClick }:
 );
 
 // --- Topbar Component ---
-const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: string) => void }) => {
+const Topbar = ({ parent, onTabChange, searchQuery, onSearchChange }: { parent: any; onTabChange: (tab: string) => void; searchQuery: string; onSearchChange: (q: string) => void }) => {
   const { lang, setLang, translations } = useLanguage();
+  const t = (key: string) => translations[key] || key;
+  const navigate = useNavigate();
   
   return (
     <div className="h-24 hidden lg:flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
       <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
-          <h2 className="text-2xl font-black text-nejah-sapphire font-serif">Parent Portal</h2>
+          <h2 className="text-2xl font-black text-nejah-sapphire font-serif">{t('parentPortal')}</h2>
           
           <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
             <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search curriculum, teachers..." 
+                  placeholder={t('search')}
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
                   className="pl-12 bg-transparent border-none w-80 h-10 text-xs focus-visible:ring-0"
                 />
             </div>
@@ -136,7 +127,7 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
       <div className="flex items-center gap-8">
         {/* Language Switcher */}
         <div className="flex items-center gap-3 bg-background/50 px-4 py-2 rounded-2xl border border-border">
-            {['English', 'Amharic', 'Oromo'].map((l) => (
+            {['English', 'Arabic', 'Amharic', 'Oromo'].map((l) => (
                 <button 
                     key={l}
                     onClick={() => setLang(l as any)}
@@ -151,7 +142,7 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
         </div>
 
         <div className="flex items-center gap-3">
-            <button className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
+            <button onClick={() => navigate({ to: '/parent_notifications' })} className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
             </button>
@@ -165,7 +156,7 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
         >
           <div className="text-right">
              <p className="text-sm font-black text-nejah-sapphire leading-none group-hover:text-nejah-electric transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
-             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Primary Guardian</p>
+             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">{t('primaryGuardian')}</p>
           </div>
           <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire">
             {parent?.name?.charAt(0) || 'P'}
@@ -176,12 +167,15 @@ const Topbar = ({ parent, onTabChange }: { parent: any; onTabChange: (tab: strin
   );
 };
 
-const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
+const ChildCard = ({ child, onInspectProgress }: any) => {
+  const { translations } = useLanguage();
+  const t = (key: string) => translations[key] || key;
+  return (
   <div className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm hover:shadow-xl transition-all group overflow-hidden relative flex flex-col h-full">
     <div
       className={cn(
         "absolute top-0 left-0 w-full h-2.5",
-        child.name.includes("Lina") ? "bg-amber-400" : "bg-nejah-sapphire",
+        child.id.charCodeAt(child.id.length - 1) % 2 === 0 ? "bg-amber-400" : "bg-nejah-sapphire",
       )}
     />
 
@@ -197,7 +191,7 @@ const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
         {child.status}
       </Badge>
       <span className="text-xs text-muted-foreground font-bold">
-        Student ID: {child.id.substring(0, 8)}
+        {t("studentId")} {child.id.substring(0, 8)}
       </span>
     </div>
 
@@ -257,29 +251,35 @@ const ChildCard = ({ child, onInspectAttendance, onInspectProgress }: any) => (
       </div>
     </div>
 
-    <div className="mt-6 pt-4 border-t border-border flex gap-2">
-      <Button
-        onClick={() => onInspectAttendance(child.id)}
-        variant="outline"
-        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider border-nejah-electric/15 hover:bg-primary/10 text-foreground"
-      >
-        Attendance Log
-      </Button>
+    <div className="mt-6 pt-4 border-t border-border">
       <Button
         onClick={() => onInspectProgress(child.id)}
-        className="flex-1 rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider bg-nejah-sapphire hover:bg-background text-white"
+        className="w-full rounded-xl h-10 text-[10px] font-bold uppercase tracking-wider bg-nejah-sapphire hover:bg-background text-white"
       >
-        Progress Details
+        {t("progressDetails")}
       </Button>
     </div>
   </div>
-);
+  );
+};
 
 // --- Main Page ---
 function ParentDashboard({ initialTab }: { initialTab?: string }) {
+  const { translations } = useLanguage();
+  const t = (key: string) => translations[key] || key;
+  const getGrade = (score: number) => {
+    if (score >= 95) return 'A+';
+    if (score >= 85) return 'A';
+    if (score >= 75) return 'B+';
+    if (score >= 65) return 'B';
+    if (score >= 50) return 'C';
+    return 'D';
+  };
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(initialTab || "dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (initialTab) {
@@ -287,19 +287,29 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     }
   }, [initialTab]);
   const [selectedChildId, setSelectedChildId] = useState<string>("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Attendance details states
-  const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
-  const [attendanceStats, setAttendanceStats] = useState<any>(null);
-  const [loadingAttendance, setLoadingAttendance] = useState<boolean>(false);
+  // Poll for unread notifications
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl("/notifications/unread-count"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count ?? 0);
+        }
+      } catch { /* silent */ }
+    };
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Learning time states
   const [learningTime, setLearningTime] = useState<any>(null);
   const [loadingLearningTime, setLoadingLearningTime] = useState<boolean>(false);
-
-  // Recitations states
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
   // Profile Form state
   const [profileForm, setProfileForm] = useState({
@@ -309,96 +319,6 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     address: "",
     language: "English",
   });
-
-  const mockRecitations = [
-    {
-      id: "1",
-      studentId: "1",
-      childName: "Zaid Al-Mansour",
-      surah: "Surah Al-Mulk",
-      verses: "Verses 1-10",
-      date: "2026-05-24",
-      duration: "1:45",
-      teacherScore: "9.5/10",
-      remarks: "Beautiful pronunciation. Keep up the good work on Makhraj.",
-      file: "surah_al_mulk.mp3",
-    },
-    {
-      id: "2",
-      studentId: "1",
-      childName: "Zaid Al-Mansour",
-      surah: "Surah Al-Jinn",
-      verses: "Verses 1-5",
-      date: "2026-05-20",
-      duration: "1:12",
-      teacherScore: "8.8/10",
-      remarks: "Good flow, but make sure to emphasize the Qalqalah at verse 3.",
-      file: "surah_al_jinn.mp3",
-    },
-    {
-      id: "3",
-      studentId: "2",
-      childName: "Lina Al-Mansour",
-      surah: "Surah Al-Fatiha",
-      verses: "Full Surah",
-      date: "2026-05-25",
-      duration: "0:45",
-      teacherScore: "10/10",
-      remarks: "MashaAllah! Perfect recitation for her level.",
-      file: "surah_al_fatiha.mp3",
-    },
-    {
-      id: "4",
-      studentId: "2",
-      childName: "Lina Al-Mansour",
-      surah: "Surah An-Nas",
-      verses: "Full Surah",
-      date: "2026-05-18",
-      duration: "0:35",
-      teacherScore: "9.0/10",
-      remarks: "Excellent memorization, very confident.",
-      file: "surah_an_nas.mp3",
-    },
-  ];
-
-  const mockExams = [
-    {
-      id: "1",
-      studentId: "1",
-      childName: "Zaid Al-Mansour",
-      name: "Juz 30 Final Evaluation",
-      date: "2026-05-15",
-      subject: "Quran Hifz",
-      score: "94%",
-      grade: "A",
-      status: "Passed",
-      feedback: "Very strong memorization. Minor mistakes in Surah Al-Ghashiyah.",
-    },
-    {
-      id: "2",
-      studentId: "1",
-      childName: "Zaid Al-Mansour",
-      name: "Tajweed Rules Quiz",
-      date: "2026-05-02",
-      subject: "Tajweed Theory",
-      score: "88%",
-      grade: "B+",
-      status: "Passed",
-      feedback: "Clear understanding of Noon Sakinah and Tanween rules.",
-    },
-    {
-      id: "3",
-      studentId: "2",
-      childName: "Lina Al-Mansour",
-      name: "Arabic Alphabets Test",
-      date: "2026-05-22",
-      subject: "Arabic Basics",
-      score: "98%",
-      grade: "A+",
-      status: "Passed",
-      feedback: "Identifies all shapes of letters perfectly. Excellent progression.",
-    },
-  ];
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -422,41 +342,6 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     };
     fetchDashboard();
   }, []);
-
-  // Fetch student-specific attendance when child changes
-  useEffect(() => {
-    if (!selectedChildId) return;
-
-    const fetchChildAttendance = async () => {
-      setLoadingAttendance(true);
-      try {
-        const token = localStorage.getItem("token");
-        const [historyRes, statsRes] = await Promise.all([
-          fetch(apiUrl(`/attendance/student/history?studentId=${selectedChildId}`), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(apiUrl(`/attendance/student/stats?studentId=${selectedChildId}`), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (historyRes.ok) {
-          const history = await historyRes.json();
-          setAttendanceHistory(history);
-        }
-        if (statsRes.ok) {
-          const stats = await statsRes.json();
-          setAttendanceStats(stats);
-        }
-      } catch (err) {
-        console.error("Failed to fetch child attendance details", err);
-      } finally {
-        setLoadingAttendance(false);
-      }
-    };
-
-    fetchChildAttendance();
-  }, [selectedChildId]);
 
   // Fetch learning time for selected child
   useEffect(() => {
@@ -482,6 +367,32 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     fetchLearningTime();
   }, [selectedChildId]);
 
+  // Evaluations state
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [loadingEvaluations, setLoadingEvaluations] = useState(false);
+
+  // Fetch evaluations for selected child
+  useEffect(() => {
+    if (!selectedChildId) return;
+    const fetchEvaluations = async () => {
+      setLoadingEvaluations(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl(`/evaluations?studentId=${selectedChildId}`), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          setEvaluations(await res.json());
+        }
+      } catch (err) {
+        console.error("Failed to fetch evaluations", err);
+      } finally {
+        setLoadingEvaluations(false);
+      }
+    };
+    fetchEvaluations();
+  }, [selectedChildId]);
+
   // Load parent profiles into settings state
   useEffect(() => {
     if (data?.parent) {
@@ -494,11 +405,6 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
       });
     }
   }, [data]);
-
-  const handleInspectAttendance = (childId: string) => {
-    setSelectedChildId(childId);
-    setActiveTab("attendance");
-  };
 
   const handleInspectProgress = (childId: string) => {
     setSelectedChildId(childId);
@@ -520,14 +426,21 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
   const selectedChild =
     data?.children?.find((c: any) => c.id === selectedChildId) || data?.children?.[0];
 
+  const filteredChildren = data?.children?.filter((c: any) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return c.name?.toLowerCase().includes(q) || c.teacher?.toLowerCase().includes(q);
+  }) || [];
+
   return (
     <ParentPortalLayout
       activePath="/parent_dashboard"
       activeTab={activeTab}
       onTabChange={setActiveTab}
       parent={data?.parent}
+      unreadNotifications={unreadCount}
     >
-      <Topbar parent={data?.parent} onTabChange={setActiveTab} />
+      <Topbar parent={data?.parent} onTabChange={setActiveTab} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <main className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 lg:space-y-12 w-full">
           {/* ================================================================ */}
@@ -539,41 +452,36 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
                 <StatCard
                   icon={Users}
-                  value={data?.stats?.totalChildren || 2}
-                  label="Total Children"
-                  trend="+0%"
+                  value={data?.stats?.totalChildren ?? 0}
+                  label={t('totalChildren')}
                   color="emerald"
                   onClick={() => setActiveTab("children")}
                 />
                 <StatCard
                   icon={BookOpen}
-                  value={data?.stats?.activeClasses || 4}
-                  label="Active Classes"
-                  trend="Weekly"
+                  value={data?.stats?.activeClasses ?? 0}
+                  label={t('activeClasses')}
                   color="emerald"
                   onClick={() => setActiveTab("schedule")}
                 />
                 <StatCard
                   icon={Calendar}
-                  value={`${data?.stats?.attendanceRate || 98}%`}
-                  label="Attendance Rate"
-                  trend="Auto-tracked"
+                  value={`${data?.stats?.attendanceRate ?? 0}%`}
+                  label={t('attendanceRate')}
                   color="blue"
-                  onClick={() => setActiveTab("attendance")}
+                  onClick={() => setActiveTab("schedule")}
                 />
                 <StatCard
                   icon={Award}
-                  value={`${data?.stats?.memorizationProgress || 75}%`}
+                  value={`${data?.stats?.memorizationProgress ?? 0}%`}
                   label="Avg Memorization"
-                  trend="Juz 30"
                   color="amber"
                   onClick={() => setActiveTab("quran")}
                 />
                 <StatCard
                   icon={ClipboardList}
-                  value={data?.stats?.pendingHomework || 2}
+                  value={data?.stats?.pendingHomework ?? 0}
                   label="Pending HW"
-                  trend="Due soon"
                   color="red"
                   onClick={() => setActiveTab("homework")}
                 />
@@ -591,23 +499,22 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                 <div className="xl:col-span-8 space-y-8">
                   <div className="flex items-center justify-between">
                     <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                      Children Overview
+                      {t("childrenOverview")}
                     </h3>
                     <Button
                       onClick={() => setActiveTab("children")}
                       variant="ghost"
                       className="text-sm font-black text-nejah-sapphire flex items-center gap-2 hover:underline underline-offset-4"
                     >
-                      View All Profiles <ChevronRight className="h-4 w-4" />
+                      {t("viewAllProfiles")} <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {data?.children?.map((child: any) => (
+                    {filteredChildren.map((child: any) => (
                       <ChildCard
                         key={child.id}
                         child={child}
-                        onInspectAttendance={handleInspectAttendance}
                         onInspectProgress={handleInspectProgress}
                       />
                     ))}
@@ -627,45 +534,51 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                     </h3>
 
                     <div className="space-y-4 relative z-10">
-                      {data?.schedules?.slice(0, 3).map((session: any) => (
-                        <div
-                          key={session.id}
-                          className="bg-white/10 p-5 rounded-[28px] border border-white/5 backdrop-blur-sm group/item flex flex-col gap-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <p className="text-[10px] font-black text-nejah-electric uppercase tracking-widest leading-none">
-                                {session.childName}
-                              </p>
-                              <h4 className="text-sm font-black text-white group-hover/item:text-nejah-electric transition-colors mt-1">
-                                {session.className}
-                              </h4>
-                            </div>
-                            <Badge className="bg-background/70 text-foreground rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">
-                              {session.time}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] text-nejah-electric/80 mt-1">
-                            <span>Teacher: {session.teacher}</span>
-                            {session.meetingLink && (
-                              <a
-                                href={session.meetingLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1 text-amber-300 hover:text-white font-bold"
-                              >
-                                Join Link <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
+                      {data?.schedules?.length === 0 ? (
+                        <div className="bg-white/5 p-6 rounded-[28px] border border-white/5 text-center">
+                          <p className="text-xs text-white/60 italic">No classes scheduled for today.</p>
                         </div>
-                      ))}
+                      ) : (
+                        data?.schedules?.slice(0, 3).map((session: any) => (
+                          <div
+                            key={session.id}
+                            className="bg-white/10 p-5 rounded-[28px] border border-white/5 backdrop-blur-sm group/item flex flex-col gap-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <p className="text-[10px] font-black text-nejah-electric uppercase tracking-widest leading-none">
+                                  {session.childName}
+                                </p>
+                                <h4 className="text-sm font-black text-white group-hover/item:text-nejah-electric transition-colors mt-1">
+                                  {session.className}
+                                </h4>
+                              </div>
+                              <Badge className="bg-background/70 text-foreground rounded-xl px-2.5 py-1 border-none font-bold text-[9px] tabular-nums">
+                                {session.time}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-nejah-electric/80 mt-1">
+                              <span>Teacher: {session.teacher}</span>
+                              {session.meetingLink && (
+                                <a
+                                  href={session.meetingLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-1 text-amber-300 hover:text-white font-bold"
+                                >
+                                  {t("joinLink")} <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
 
                       <Button
                         onClick={() => setActiveTab("schedule")}
                         className="w-full mt-4 py-6 rounded-[28px] bg-amber-500 hover:bg-amber-600 text-nejah-sapphire font-black text-xs transition-all shadow-xl hover:scale-[1.02] border-none"
                       >
-                        Open Class Schedule
+                        {t("openClassSchedule")}
                       </Button>
                     </div>
                   </section>
@@ -687,7 +600,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               {Math.round(learningTime.totalHours * 10) / 10}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                              Total Hours
+                              {t("totalHours")}
                             </p>
                           </div>
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
@@ -703,7 +616,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               {Math.round(learningTime.averageMinutesPerSession || 0)}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                              Avg Min/Session
+                              {t("avgMinPerSession")}
                             </p>
                           </div>
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
@@ -711,7 +624,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               {learningTime.totalMinutes || 0}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                              Total Minutes
+                              {t("totalMinutes")}
                             </p>
                           </div>
                         </div>
@@ -722,36 +635,42 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                   {/* Recent Activities */}
                   <section className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm">
                     <h3 className="text-xl font-black text-nejah-sapphire font-serif mb-6 flex items-center justify-between">
-                      Recent Feedbacks
+                      {t("recentFeedbacks")}
                     </h3>
 
                     <div className="space-y-6">
-                      {data?.activities?.slice(0, 3).map((a: any) => (
-                        <div
-                          key={a.id}
-                          className="flex gap-4 group cursor-pointer"
-                          onClick={() => setActiveTab("quran")}
-                        >
-                          <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
-                            {a.type === "Result" ? (
-                              <Award className="h-5 w-5" />
-                            ) : (
-                              <BookOpen className="h-5 w-5" />
-                            )}
-                          </div>
-                          <div className="space-y-0.5">
-                            <h4 className="text-xs font-black text-foreground leading-tight group-hover:text-nejah-electric transition-colors">
-                              {a.title}
-                            </h4>
-                            <p className="text-[11px] text-muted-foreground font-medium leading-tight">
-                              {a.content}
-                            </p>
-                            <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">
-                              {new Date(a.date).toLocaleDateString()}
-                            </p>
-                          </div>
+                      {data?.activities?.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-xs text-muted-foreground italic">No recent feedbacks.</p>
                         </div>
-                      ))}
+                      ) : (
+                        data?.activities?.slice(0, 3).map((a: any) => (
+                          <div
+                            key={a.id}
+                            className="flex gap-4 group cursor-pointer"
+                            onClick={() => setActiveTab("quran")}
+                          >
+                            <div className="w-11 h-11 rounded-2xl bg-background/50 flex items-center justify-center shrink-0 text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-all border border-border">
+                              {a.type === "Result" ? (
+                                <Award className="h-5 w-5" />
+                              ) : (
+                                <BookOpen className="h-5 w-5" />
+                              )}
+                            </div>
+                            <div className="space-y-0.5">
+                              <h4 className="text-xs font-black text-foreground leading-tight group-hover:text-nejah-electric transition-colors">
+                                {a.title}
+                              </h4>
+                              <p className="text-[11px] text-muted-foreground font-medium leading-tight">
+                                {a.content}
+                              </p>
+                              <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">
+                                {new Date(a.date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     <Button
@@ -759,7 +678,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                       variant="ghost"
                       className="w-full mt-8 rounded-2xl bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-nejah-sapphire font-black text-xs h-12"
                     >
-                      View Remarks History
+                      {t("viewRemarksHistory")}
                     </Button>
                   </section>
                 </div>
@@ -774,7 +693,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
             <div className="space-y-8">
               <div>
                 <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                  Children Profiles
+                  {t("childrenProfiles")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
                   Detailed cards and active program paths for registered siblings.
@@ -782,11 +701,10 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {data?.children?.map((child: any) => (
+                {filteredChildren.map((child: any) => (
                   <ChildCard
                     key={child.id}
                     child={child}
-                    onInspectAttendance={handleInspectAttendance}
                     onInspectProgress={handleInspectProgress}
                   />
                 ))}
@@ -802,17 +720,17 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
                   <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                    Quran Memorization Progress
+                    {t("quranProgress")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Track child's milestones, Tajweed reviews, and revision comments.
+                    {t("quranProgress")}
                   </p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Select Child:
+                    {t("selectChild")}
                   </span>
                   <select
                     value={selectedChildId}
@@ -843,15 +761,15 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                             {selectedChild.name}
                           </h3>
                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                            Active Program: Hifz & Tajweed
+                            Active Program: {selectedChild.level || 'Quran Studies'}
                           </p>
                           <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">
-                              Current Milestone Surah: <strong>{selectedChild.currentSurah}</strong>
+                              {t("currentMilestoneSurah")} <strong>{selectedChild.currentSurah}</strong>
                             </p>
                             {(selectedChild.currentPage > 0 || selectedChild.currentAyah > 0) && (
                               <p className="text-xs text-muted-foreground">
-                                Last studied:{" "}
+                                {t("lastStudied")}{" "}
                                 {selectedChild.currentPage > 0
                                   ? `Page ${selectedChild.currentPage}`
                                   : ""}
@@ -864,16 +782,16 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                              Instructor: <strong>{selectedChild.teacher}</strong>
+                              {t("instructor")} <strong>{selectedChild.teacher}</strong>
                             </p>
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-2">
                             <Badge className="bg-primary/10 text-nejah-electric border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">
-                              Tajweed: Level 2
+                              {selectedChild.level || 'Active'}
                             </Badge>
                             <Badge className="bg-amber-50 text-amber-700 border-none font-bold text-[10px] uppercase tracking-wider px-3.5 py-1">
-                              Revision: Daily
+                              {selectedChild.teacher ? `Teacher: ${selectedChild.teacher}` : 'Assigned'}
                             </Badge>
                           </div>
                         </div>
@@ -884,7 +802,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               {selectedChild.memorization}%
                             </span>
                             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">
-                              Juz 30 Progress
+                              {selectedChild.level || 'Progress'}
                             </span>
                           </div>
                           <svg className="w-full h-full transform -rotate-90">
@@ -911,7 +829,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                     {/* Progress Remarks history */}
                     <div className="space-y-4">
                       <h4 className="text-lg font-black text-foreground font-serif">
-                        Remarks & Lessons Log
+                        {t("remarksLog")}
                       </h4>
 
                       <div className="space-y-4">
@@ -960,13 +878,13 @@ text-nejah-electric"
                   <div className="lg:col-span-4 space-y-6">
                     <div className="glass-panel bg-card rounded-[32px] p-6 border border-border shadow-sm space-y-6">
                       <h4 className="text-sm font-black text-foreground uppercase tracking-widest border-b border-border pb-3">
-                        Recent Daily Logs
+                        {t("recentDailyLogs")}
                       </h4>
 
                       <div className="space-y-3.5">
                         {(selectedChild.recentLogs?.length ?? 0) === 0 ? (
                           <p className="text-xs text-muted-foreground italic text-center py-4">
-                            No daily progress logged yet.
+                            {t("noDailyLogs")}
                           </p>
                         ) : (
                           selectedChild.recentLogs.map((log: any) => (
@@ -990,215 +908,8 @@ text-nejah-electric"
                       </div>
                     </div>
 
-                    <div className="bg-amber-500/5 border border-amber-500/10 rounded-[32px] p-6 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-700">
-                        <AlertCircle className="h-5 w-5" />
-                        <h4 className="text-sm font-black uppercase tracking-wider">Tajweed Tip</h4>
-                      </div>
-                      <p className="text-xs text-amber-800/80 leading-relaxed font-semibold">
-                        Ensure {selectedChild.name} revises Surat Al-Mulk daily paying close
-                        attention to "Ghunnah" lengths and "Mudood" markers.
-                      </p>
-                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* ================================================================ */}
-          {/* TAB: AUTOMATED ATTENDANCE */}
-          {/* ================================================================ */}
-          {activeTab === "attendance" && (
-            <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
-                <div>
-                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                    Automated Attendance Log
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Synchronized automatically in real-time when student joins/leaves online meeting
-                    links.
-                  </p>
-                </div>
-
-                {/* Child selector */}
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Select Child:
-                  </span>
-                  <select
-                    value={selectedChildId}
-                    onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
-                  >
-                    {data?.children?.map((c: any) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {selectedChild && (
-                <>
-                  {/* Attendance Stats Cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                        Average Attendance
-                      </p>
-                      <h4 className="text-3xl font-black text-nejah-sapphire font-serif">
-                        {attendanceStats?.attendanceRate || selectedChild.attendance}%
-                      </h4>
-                    </div>
-                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                        Late Arrivals
-                      </p>
-                      <h4 className="text-3xl font-black text-amber-600 font-serif">
-                        {attendanceStats?.lateCount || 0} Sessions
-                      </h4>
-                    </div>
-                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                        Absent Sessions
-                      </p>
-                      <h4 className="text-3xl font-black text-red-600 font-serif">
-                        {attendanceStats?.absentCount || 0} Sessions
-                      </h4>
-                    </div>
-                    <div className="bg-white p-6 rounded-3xl border border-border text-center space-y-1 shadow-sm">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                        Left Early
-                      </p>
-                      <h4 className="text-3xl font-black text-orange-600 font-serif">
-                        {attendanceStats?.leftEarlyCount || 0} Sessions
-                      </h4>
-                    </div>
-                  </div>
-
-                  {/* Attendance logs table */}
-                  <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm overflow-hidden p-8">
-                    <h4 className="text-xl font-black text-foreground font-serif mb-6">
-                      Attendance History
-                    </h4>
-
-                    {loadingAttendance ? (
-                      <div className="py-12 flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nejah-electric"></div>
-                      </div>
-                    ) : attendanceHistory.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-muted-foreground font-medium italic">
-                        No attendance logs found in the database.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="border-b border-border text-muted-foreground font-black uppercase tracking-wider">
-                              <th className="pb-4 pr-4">Date</th>
-                              <th className="pb-4 px-4">Class Session</th>
-                              <th className="pb-4 px-4">Instructor</th>
-                              <th className="pb-4 px-4 text-center">Status</th>
-                              <th className="pb-4 px-4">Join Time</th>
-                              <th className="pb-4 px-4">Leave Time</th>
-                              <th className="pb-4 px-4 text-center">Student Duration</th>
-                              <th className="pb-4 px-4 text-center">Teacher Duration</th>
-                              <th className="pb-4 pl-4 text-center">Late Alert</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border font-medium text-foreground">
-                            {attendanceHistory.map((log: any) => {
-                              const status = log.attendanceStatus;
-                              const sess = log.classSession || {};
-
-                              const displayJoin = log.joinTime
-                                ? new Date(log.joinTime).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "-";
-                              const displayLeave = log.leaveTime
-                                ? new Date(log.leaveTime).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "-";
-
-                              return (
-                                <tr key={log.id} className="hover:bg-muted/50 transition-colors">
-                                  <td className="py-4 pr-4 text-foreground font-black">
-                                    {new Date(
-                                      sess.sessionDate || log.createdAt,
-                                    ).toLocaleDateString()}
-                                  </td>
-                                  <td className="py-4 px-4 font-bold text-foreground">
-                                    {sess.classTitle || "Quran Lesson"}
-                                    <span className="block text-[10px] text-muted-foreground font-medium">
-                                      {sess.subject || "Quranic Studies"}
-                                    </span>
-                                  </td>
-                                  <td className="py-4 px-4 font-semibold text-muted-foreground">
-                                    {sess.teacher?.fullName || "Teacher"}
-                                  </td>
-                                  <td className="py-4 px-4 text-center">
-                                    <Badge
-                                      className={cn(
-                                        "text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-none",
-                                        status === "PRESENT"
-                                          ? "bg-primary/10 text-nejah-electric"
-                                          : status === "LATE"
-                                            ? "bg-amber-50 text-amber-700"
-                                            : status === "LEFT_EARLY"
-                                              ? "bg-orange-50 text-orange-700"
-                                              : "bg-red-50 text-red-700",
-                                      )}
-                                    >
-                                      {status}
-                                    </Badge>
-                                  </td>
-                                  <td className="py-4 px-4 tabular-nums text-muted-foreground">
-                                    {displayJoin}
-                                  </td>
-                                  <td className="py-4 px-4 tabular-nums text-muted-foreground">
-                                    {displayLeave}
-                                  </td>
-                                  <td className="py-4 px-4 text-center font-bold text-foreground tabular-nums">
-                                    {log.durationMinutes ? `${log.durationMinutes} min` : "-"}
-                                  </td>
-                                  <td className="py-4 px-4 text-center font-semibold text-muted-foreground tabular-nums">
-                                    {sess.teacherDuration ? `${sess.teacherDuration} min` : "-"}
-                                  </td>
-                                  <td className="py-4 pl-4 text-center">
-                                    {status === "LATE" ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md">
-                                        <AlertCircle className="h-3 w-3" /> Late Arrival
-                                      </span>
-                                    ) : status === "LEFT_EARLY" ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded-md">
-                                        <AlertCircle className="h-3 w-3" /> Left Call Early
-                                      </span>
-                                    ) : status === "PRESENT" ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-nejah-electric font-bold bg-primary/10 px-2 py-0.5 rounded-md">
-                                        <CheckCircle2 className="h-3 w-3" /> Punctual
-                                      </span>
-                                    ) : (
-                                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">
-                                        Missed
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </>
               )}
             </div>
           )}
@@ -1211,17 +922,17 @@ text-nejah-electric"
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
                   <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                    Homework Assignments
+                    {t("homeworkAssignments")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Review pending homework tasks and child submission statuses.
+                    {t("homeworkDesc")}
                   </p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Select Child:
+                    {t("selectChild")}
                   </span>
                   <select
                     value={selectedChildId}
@@ -1247,7 +958,7 @@ text-nejah-electric"
                       </div>
                       <div>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                          Total Homework
+                          {t("totalHomework")}
                         </p>
                         <h4 className="text-xl font-black text-foreground font-serif">
                           {data?.homework?.filter((h: any) => h.studentId === selectedChildId)
@@ -1322,7 +1033,7 @@ text-nejah-electric"
                                         : "bg-primary/10 text-nejah-electric",
                                   )}
                                 >
-                                  {hw.difficulty} Difficulty
+                                  {hw.difficulty} {t("difficulty")}
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-2xl">
@@ -1332,8 +1043,8 @@ text-nejah-electric"
 
                             <div className="flex items-center gap-6 shrink-0 justify-between md:justify-end border-t md:border-none pt-4 md:pt-0 border-border">
                               <div className="text-left md:text-right space-y-1">
-                                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
-                                  Due Date
+                                  <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                                    {t("dueDate")}
                                 </p>
                                 <p className="text-xs font-bold text-foreground tabular-nums">
                                   {new Date(hw.dueDate).toLocaleDateString()}
@@ -1370,17 +1081,17 @@ text-nejah-electric"
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
                   <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                    Exams & Test Results
+                    {t("examsAndResults")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Review official grades, evaluations, and comments from teachers.
+                    {t("examsDesc")}
                   </p>
                 </div>
 
                 {/* Child selector */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Select Child:
+                    {t("selectChild")}
                   </span>
                   <select
                     value={selectedChildId}
@@ -1401,57 +1112,69 @@ text-nejah-electric"
                   {/* Results list */}
                   <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm p-8 overflow-hidden">
                     <h4 className="text-xl font-black text-foreground font-serif mb-6">
-                      Evaluation Logs
+                      {t("evaluationLogs")}
                     </h4>
 
                     <div className="space-y-6">
-                      {mockExams
-                        .filter((e) => e.studentId === selectedChildId)
-                        .map((exam) => (
-                          <div
-                            key={exam.id}
-                            className="border-b border-border pb-6 last:border-none last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-6"
-                          >
-                            <div className="space-y-2 flex-1">
-                              <div className="flex items-center gap-3">
-                                <h4 className="text-base font-extrabold text-foreground">
-                                  {exam.name}
-                                </h4>
-                                <span className="text-[10px] text-muted-foreground font-bold">
-                                  {new Date(exam.date).toLocaleDateString()}
+                      {loadingEvaluations ? (
+                        <div className="py-12 flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nejah-electric"></div>
+                        </div>
+                      ) : evaluations.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-muted-foreground font-medium italic">
+                          {t("noEvaluations")} {selectedChild?.name || ""}.
+                        </div>
+                      ) : (
+                        evaluations.map((evalItem: any) => {
+                          const grade = getGrade(evalItem.score);
+                          const isPassed = evalItem.score >= 50;
+                          return (
+                            <div
+                              key={evalItem.id}
+                              className="border-b border-border pb-6 last:border-none last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                            >
+                              <div className="space-y-2 flex-1">
+                                <div className="flex items-center gap-3">
+                                  <h4 className="text-base font-extrabold text-foreground">
+                                    {evalItem.evaluationType} - {evalItem.programType}
+                                  </h4>
+                                  <span className="text-[10px] text-muted-foreground font-bold">
+                                    {new Date(evalItem.evaluationDate || evalItem.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+                                  {t("remarks")} "{evalItem.teacherComments || t("noData")}"
+                                </p>
+                                <span className="text-[10px] text-foreground font-bold bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  {t("subject")} {evalItem.programType} - {evalItem.currentLevel}
                                 </span>
                               </div>
-                              <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
-                                Remarks: "{exam.feedback}"
-                              </p>
-                              <span className="text-[10px] text-foreground font-bold bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                Subject: {exam.subject}
-                              </span>
-                            </div>
 
-                            <div className="flex items-center gap-6 shrink-0">
-                              <div className="text-center bg-primary/10 border border-nejah-electric/15 rounded-2xl p-4 w-20">
-                                <p className="text-xs font-bold text-muted-foreground leading-none">
-                                  Score
-                                </p>
-                                <p className="text-xl font-black text-nejah-sapphire font-serif mt-1">
-                                  {exam.score}
-                                </p>
+                              <div className="flex items-center gap-6 shrink-0">
+                                <div className="text-center bg-primary/10 border border-nejah-electric/15 rounded-2xl p-4 w-20">
+                                  <p className="text-xs font-bold text-muted-foreground leading-none">
+                                    {t("score")}
+                                  </p>
+                                  <p className="text-xl font-black text-nejah-sapphire font-serif mt-1">
+                                    {evalItem.score}%
+                                  </p>
+                                </div>
+                                <div className="text-center bg-amber-500/10 border border-amber-400/20 rounded-2xl p-4 w-20">
+                                  <p className="text-xs font-bold text-muted-foreground leading-none">
+                                    {t("grade")}
+                                  </p>
+                                  <p className="text-xl font-black text-amber-700 font-serif mt-1">
+                                    {grade}
+                                  </p>
+                                </div>
+                                <Badge className={`font-bold uppercase tracking-wider text-[9px] px-3.5 py-1 border-none shrink-0 ${isPassed ? 'bg-nejah-sapphire text-white' : 'bg-red-500 text-white'}`}>
+                                  {isPassed ? t("passed") : t("failed")}
+                                </Badge>
                               </div>
-                              <div className="text-center bg-amber-500/10 border border-amber-400/20 rounded-2xl p-4 w-20">
-                                <p className="text-xs font-bold text-muted-foreground leading-none">
-                                  Grade
-                                </p>
-                                <p className="text-xl font-black text-amber-700 font-serif mt-1">
-                                  {exam.grade}
-                                </p>
-                              </div>
-                              <Badge className="bg-nejah-sapphire text-white font-bold uppercase tracking-wider text-[9px] px-3.5 py-1 border-none shrink-0">
-                                {exam.status}
-                              </Badge>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1466,10 +1189,10 @@ text-nejah-electric"
             <div className="space-y-8">
               <div>
                 <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                  Class Schedules
+                  {t("classSchedules")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
-                  Full class slots mapping for all children registered under your guardianship.
+                  {t("scheduleDesc")}
                 </p>
               </div>
 
@@ -1478,220 +1201,73 @@ text-nejah-electric"
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground font-black uppercase tracking-wider">
-                        <th className="pb-4 pr-4">Student</th>
-                        <th className="pb-4 px-4">Class Title</th>
+                        <th className="pb-4 pr-4">{t("student")}</th>
+                        <th className="pb-4 px-4">{t("classTitle")}</th>
                         <th className="pb-4 px-4">Teacher</th>
-                        <th className="pb-4 px-4">Day of Week</th>
-                        <th className="pb-4 px-4 text-center">Scheduled Time</th>
-                        <th className="pb-4 px-4 text-center">Status</th>
-                        <th className="pb-4 pl-4 text-center">Actions</th>
+                        <th className="pb-4 px-4">{t("dayOfWeek")}</th>
+                        <th className="pb-4 px-4 text-center">{t("scheduledTime")}</th>
+                        <th className="pb-4 px-4 text-center">{t("status")}</th>
+                        <th className="pb-4 pl-4 text-center">{t("actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border font-medium text-foreground">
-                      {data?.schedules?.map((sc: any) => (
-                        <tr key={sc.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="py-4 pr-4 text-foreground font-black flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-foreground text-[10px]">
-                              {sc.childName?.charAt(0) || "S"}
+                      {data?.schedules?.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-16 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                              <Clock className="h-10 w-10 text-muted-foreground/40" />
+                              <p className="text-sm font-medium text-muted-foreground italic">
+                                No class schedules available.
+                              </p>
                             </div>
-                            {sc.childName}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-foreground">{sc.className}</td>
-                          <td className="py-4 px-4 font-semibold text-muted-foreground">
-                            {sc.teacher}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-foreground">
-                            {sc.dayOfWeek || "Monday"}
-                          </td>
-                          <td className="py-4 px-4 text-center tabular-nums text-muted-foreground font-semibold">
-                            {sc.time}
-                          </td>
-                          <td className="py-4 px-4 text-center">
-                            <Badge className="bg-primary/10 text-nejah-electric border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
-                              {sc.status || "Active"}
-                            </Badge>
-                          </td>
-                          <td className="py-4 pl-4 text-center">
-                            {sc.meetingLink ? (
-                              <Button
-                                onClick={() => window.open(sc.meetingLink, "_blank")}
-                                size="sm"
-                                className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
-                              >
-                                Join Room
-                              </Button>
-                            ) : (
-                              <span className="text-muted-foreground italic text-[10px]">
-                                No link yet
-                              </span>
-                            )}
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        data?.schedules?.map((sc: any) => (
+                          <tr key={sc.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="py-4 pr-4 text-foreground font-black flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-foreground text-[10px]">
+                                {sc.childName?.charAt(0) || "S"}
+                              </div>
+                              {sc.childName}
+                            </td>
+                            <td className="py-4 px-4 font-bold text-foreground">{sc.className}</td>
+                            <td className="py-4 px-4 font-semibold text-muted-foreground">
+                              {sc.teacher}
+                            </td>
+                            <td className="py-4 px-4 font-bold text-foreground">
+                              {sc.dayOfWeek || "Monday"}
+                            </td>
+                            <td className="py-4 px-4 text-center tabular-nums text-muted-foreground font-semibold">
+                              {sc.time}
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <Badge className="bg-primary/10 text-nejah-electric border-none font-bold uppercase tracking-wider text-[8px] px-2 py-0.5 rounded-full">
+                                {sc.status || "Active"}
+                              </Badge>
+                            </td>
+                            <td className="py-4 pl-4 text-center">
+                              {sc.meetingLink ? (
+                                <Button
+                                  onClick={() => window.open(sc.meetingLink, "_blank")}
+                                  size="sm"
+                                  className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
+                                >
+                                  {t("joinRoom")}
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground italic text-[10px]">
+                                  {t("noLinkYet")}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* ================================================================ */}
-          {/* TAB: RECITATION AUDIO */}
-          {/* ================================================================ */}
-          {activeTab === "recitations" && (
-            <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
-                <div>
-                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                    Student Recitations Audio
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">
-                    Listen to submitted Quran recitation audio recordings and check teacher scores.
-                  </p>
-                </div>
-
-                {/* Child selector */}
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Select Child:
-                  </span>
-                  <select
-                    value={selectedChildId}
-                    onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-nejah-electric"
-                  >
-                    {data?.children?.map((c: any) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {selectedChild && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Audios lists */}
-                  <div className="lg:col-span-2 space-y-4">
-                    {mockRecitations
-                      .filter((r) => r.studentId === selectedChildId)
-                      .map((audio) => {
-                        const isPlaying = playingAudioId === audio.id;
-                        return (
-                          <div
-                            key={audio.id}
-                            className="glass-panel bg-card rounded-3xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-6"
-                          >
-                            <div className="flex items-center gap-4">
-                              <Button
-                                onClick={() => setPlayingAudioId(isPlaying ? null : audio.id)}
-                                className={cn(
-                                  "w-12 h-12 rounded-full shrink-0 flex items-center justify-center border-none",
-                                  isPlaying
-                                    ? "bg-nejah-surface hover:bg-background text-white"
-                                    : "bg-primary/10 hover:bg-primary/15 text-nejah-sapphire",
-                                )}
-                              >
-                                {isPlaying ? (
-                                  <Pause className="h-5 w-5" />
-                                ) : (
-                                  <Play className="h-5 w-5 fill-nejah-sapphire" />
-                                )}
-                              </Button>
-
-                              <div className="space-y-1">
-                                <h4 className="text-sm font-extrabold text-foreground">
-                                  {audio.surah}
-                                </h4>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                                  {audio.verses} | Length: {audio.duration}
-                                </p>
-                                <p className="text-[9px] text-nejah-sapphire font-bold">
-                                  Uploaded on: {new Date(audio.date).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="text-right space-y-1 shrink-0">
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-xs font-black text-foreground font-serif">
-                                  Score: {audio.teacherScore}
-                                </span>
-                              </div>
-                              <Badge className="bg-primary/10 text-nejah-electric border-none text-[8px] font-bold uppercase tracking-wider px-2 py-0.5">
-                                Reviewed
-                              </Badge>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-
-                  {/* Player detail / teacher remarks */}
-                  <div className="glass-panel bg-card rounded-[32px] border border-border shadow-sm p-6 space-y-6">
-                    <h4 className="text-sm font-black text-foreground uppercase tracking-widest border-b border-border pb-3">
-                      Evaluation Remarks
-                    </h4>
-
-                    {playingAudioId ? (
-                      (() => {
-                        const activeRec = mockRecitations.find((r) => r.id === playingAudioId);
-                        if (!activeRec) return null;
-                        return (
-                          <div className="space-y-6">
-                            <div className="space-y-1.5">
-                              <h5 className="text-base font-black text-nejah-sapphire font-serif">
-                                {activeRec.surah}
-                              </h5>
-                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">
-                                {activeRec.verses}
-                              </p>
-                            </div>
-
-                            <div className="bg-primary/5 p-5 rounded-2xl border border-nejah-electric/15 space-y-3">
-                              <div className="flex items-center gap-2">
-                                <Award className="h-4 w-4 text-nejah-electric animate-bounce" />
-                                <span className="text-[10px] font-black text-foreground uppercase tracking-wider">
-                                  Teacher Comments
-                                </span>
-                              </div>
-                              <p className="text-xs italic font-medium leading-relaxed text-foreground/80">
-                                "{activeRec.remarks}"
-                              </p>
-                            </div>
-
-                            {/* Simulated waveform */}
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between text-[9px] font-bold text-muted-foreground">
-                                <span>Playing Recitation</span>
-                                <span>{activeRec.duration}</span>
-                              </div>
-                              <div className="h-6 flex items-center gap-0.5 justify-center">
-                                {[...Array(30)].map((_, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="w-1 bg-primary rounded-full animate-pulse"
-                                    style={{
-                                      height: `${Math.max(10, Math.sin(idx * 0.5) * 20 + 10)}%`,
-                                      animationDelay: `${idx * 0.05}s`,
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      <div className="py-12 text-center text-xs text-muted-foreground font-medium italic">
-                        Click the play icon on any audio file to inspect teacher evaluations and
-                        notes.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -1702,10 +1278,10 @@ text-nejah-electric"
             <div className="space-y-8 max-w-2xl">
               <div>
                 <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
-                  Profile Settings
+                  {t("profileSettings")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
-                  Review and manage your primary guardian details and configurations.
+                  {t("settingsDesc")}
                 </p>
               </div>
 
@@ -1713,7 +1289,7 @@ text-nejah-electric"
                 <form onSubmit={handleSaveProfile} className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                      Guardian Full Name
+                      {t("guardianFullName")}
                     </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1727,7 +1303,7 @@ text-nejah-electric"
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                      Email Address
+                      {t("emailAddress")}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1742,7 +1318,7 @@ text-nejah-electric"
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                      Phone Number
+                      {t("phoneNumber")}
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1756,7 +1332,7 @@ text-nejah-electric"
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                      Home Address
+                      {t("homeAddress")}
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1772,7 +1348,7 @@ text-nejah-electric"
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                      Preferred Language
+                      {t("preferredLanguage")}
                     </label>
                     <select
                       value={profileForm.language}
@@ -1789,7 +1365,7 @@ text-nejah-electric"
                     type="submit"
                     className="w-full h-12 bg-nejah-sapphire hover:bg-background text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider"
                   >
-                    Save Changes
+                    {t("saveChanges")}
                   </Button>
                 </form>
               </div>
@@ -1797,10 +1373,10 @@ text-nejah-electric"
               <div className="glass-panel bg-card rounded-[40px] border border-border shadow-sm p-10">
                 <div className="flex items-center gap-2 mb-4">
                   <Bell className="h-5 w-5 text-nejah-electric" />
-                  <h3 className="text-xl font-black text-foreground font-serif">Notification Settings</h3>
+                  <h3 className="text-xl font-black text-foreground font-serif">{t("notificationSettings")}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground font-medium mb-4">
-                  Manage push notifications to receive instant updates about your children's classes and activities.
+                  {t("notificationsDesc")}
                 </p>
                 <PushNotificationToggle variant="card" />
               </div>

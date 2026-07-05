@@ -47,9 +47,31 @@ export type HomeProgram = {
   level: LocalizedText;
   title: LocalizedText;
   description: LocalizedText;
+  detailedContent: LocalizedText;
   imageUrl: string | null;
   displayOrder: number;
   isActive: boolean;
+};
+
+export type Testimonial = {
+  id: string;
+  studentName: string;
+  parentName: string | null;
+  displayName: string;
+  studentType: 'child' | 'adult' | 'parent';
+  country: string;
+  city: string | null;
+  photo: string | null;
+  rating: number;
+  program: string | null;
+  learningDuration: string | null;
+  studentSince: string | null;
+  testimonialText: LocalizedText;
+  isFeatured: boolean;
+  isPublished: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export async function fetchPublicMissionContent() {
@@ -62,6 +84,12 @@ export async function fetchPublicProgramsContent() {
   const res = await fetch(apiUrl('/website/home/programs'));
   if (!res.ok) throw new Error('Failed to load programs content');
   return res.json() as Promise<{ section: HomeProgramsSection; programs: HomeProgram[] }>;
+}
+
+export async function fetchPublicTestimonials() {
+  const res = await fetch(apiUrl('/website/home/testimonials'));
+  if (!res.ok) throw new Error('Failed to load testimonials');
+  return res.json() as Promise<Testimonial[]>;
 }
 
 export async function uploadCmsImage(file: File): Promise<string> {

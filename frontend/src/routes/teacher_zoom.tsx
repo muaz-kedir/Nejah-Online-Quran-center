@@ -1,15 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
-import { PageHeader, GlassPanel } from "@/components/dashboard/design-system";
+import { PageHeader } from "@/components/dashboard/design-system";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { toast } from "sonner";
 import { requireAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
@@ -24,18 +21,11 @@ import {
   Play,
   CheckCircle2,
   XCircle,
-  FileText,
-  MessageSquareText,
   ClipboardList,
   Loader2,
-  Plus,
-  Sparkles,
   ChevronRight,
   AlertTriangle,
   X,
-  CalendarDays,
-  UserPlus,
-  Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/teacher_zoom")({
@@ -44,7 +34,6 @@ export const Route = createFileRoute("/teacher_zoom")({
 });
 
 function TeacherZoomPage() {
-  const navigate = useNavigate();
   const [upcoming, setUpcoming] = useState<any[]>([]);
   const [teacherSessions, setTeacherSessions] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
@@ -53,57 +42,13 @@ function TeacherZoomPage() {
   const [startingId, setStartingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [students, setStudents] = useState<any[]>([]);
-  const [scheduling, setScheduling] = useState(false);
   const [detailSessionId, setDetailSessionId] = useState<string | null>(null);
   const [detailSession, setDetailSession] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState({
-    studentId: "",
-    scheduledStart: new Date().toISOString().slice(0, 16),
-    notes: "",
-  });
 
   useEffect(() => {
     fetchAll();
   }, []);
-
-  const fetchStudents = async () => {
-    try {
-      const data = await api<any>("/teachers/students?limit=100");
-      setStudents(data.data || []);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const handleScheduleSession = async () => {
-    if (!scheduleForm.studentId || !scheduleForm.scheduledStart) {
-      toast.error("Please select a student and start time");
-      return;
-    }
-    setScheduling(true);
-    try {
-      const startDate = new Date(scheduleForm.scheduledStart);
-      await api("/live-sessions/with-zoom", {
-        method: "POST",
-        body: JSON.stringify({
-          studentId: scheduleForm.studentId,
-          scheduledStart: startDate.toISOString(),
-          notes: scheduleForm.notes || undefined,
-        }),
-      });
-      toast.success("Session scheduled! Zoom meeting created and student notified.");
-      setShowScheduleModal(false);
-      setScheduleForm({ studentId: "", scheduledStart: new Date().toISOString().slice(0, 16), notes: "" });
-      fetchAll();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to schedule session");
-    } finally {
-      setScheduling(false);
-    }
-  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -392,17 +337,7 @@ function TeacherZoomPage() {
           eyebrow="Teacher Workspace"
           title="My Zoom Sessions"
           description="Manage your live Zoom sessions, start classes, and review attendance."
-          actions={
-            <Button
-              onClick={() => {
-                setShowScheduleModal(true);
-                fetchStudents();
-              }}
-              className="bg-nejah-sapphire hover:bg-nejah-azure text-white rounded-xl h-10 px-5 gap-2 text-xs font-bold"
-            >
-              <Plus className="h-4 w-4" /> Schedule Session
-            </Button>
-          }
+
         />
 
         <div className="grid grid-cols-4 gap-4">
@@ -480,114 +415,6 @@ function TeacherZoomPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Schedule Session Modal */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-border dark:border-white/5"
-          >
-            <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
-              <div>
-                <h3 className="text-xl font-bold font-serif">Schedule Zoom Session</h3>
-                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
-                  A Zoom meeting will be auto-created and the student will be notified.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowScheduleModal(false)}
-                className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition-all"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="px-8 py-6 space-y-5">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                  Select Student <span className="text-red-500">*</span>
-                </Label>
-                <select
-                  value={scheduleForm.studentId}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, studentId: e.target.value })}
-                  className="w-full h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
-                >
-                  <option value="">-- Choose a student --</option>
-                  {students.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.fullName} {s.level ? `(${s.level})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                  Start Date & Time <span className="text-red-500">*</span>
-                </Label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="datetime-local"
-                    value={scheduleForm.scheduledStart}
-                    onChange={(e) =>
-                      setScheduleForm({ ...scheduleForm, scheduledStart: e.target.value })
-                    }
-                    className="flex-1 h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-nejah-electric"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setScheduleForm({ ...scheduleForm, scheduledStart: new Date().toISOString().slice(0, 16) })
-                    }
-                    className="h-12 px-4 rounded-xl text-xs font-bold bg-muted hover:bg-muted/80 transition-colors border border-border dark:border-white/10"
-                  >
-                    Now
-                  </button>
-                </div>
-                <p className="text-[10px] text-nejah-slate-blue font-medium mt-1">
-                  Session duration is auto-set to 60 minutes. Ends when you click "End Session".
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
-                  Notes (optional)
-                </Label>
-                <Textarea
-                  placeholder="Focus area, surah revision, etc."
-                  value={scheduleForm.notes}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
-                  className="rounded-xl border-border dark:border-white/10 text-sm"
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-8 pb-8 border-t border-border dark:border-white/5 pt-6">
-              <button
-                onClick={() => setShowScheduleModal(false)}
-                className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
-              >
-                Cancel
-              </button>
-              <Button
-                onClick={handleScheduleSession}
-                disabled={scheduling}
-                className="px-6 py-3 rounded-xl text-sm font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white gap-2"
-              >
-                {scheduling ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {scheduling ? "Scheduling..." : "Create & Notify Student"}
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {detailSessionId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDetailSessionId(null)}>

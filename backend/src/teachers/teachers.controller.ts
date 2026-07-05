@@ -12,6 +12,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { TeachersService } from './teachers.service';
+import { StudentManagementService } from '../students/student-management.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { QueryTeacherDto } from './dto/query-teacher.dto';
@@ -23,7 +24,10 @@ import { UserRole } from '../common/enums/user-role.enum';
 @Controller('teachers')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TeachersController {
-  constructor(private readonly teachersService: TeachersService) {}
+  constructor(
+    private readonly teachersService: TeachersService,
+    private readonly studentManagementService: StudentManagementService,
+  ) {}
 
   private authenticatedUserId(req: { user?: { id?: string } }): string {
     const userId = req.user?.id;
@@ -123,16 +127,22 @@ export class TeachersController {
     return this.teachersService.findAll(queryDto);
   }
 
-  @Get(':id')
+  @Get(':id/students')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  findOne(@Param('id') id: string) {
-    return this.teachersService.findOne(id);
+  getAssignedStudents(@Param('id') id: string) {
+    return this.studentManagementService.getAssignedStudentsForTeacher(id);
   }
 
   @Get(':id/analytics')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   getAnalytics(@Param('id') id: string) {
     return this.teachersService.getTeacherAnalytics(id);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  findOne(@Param('id') id: string) {
+    return this.teachersService.findOne(id);
   }
 
   @Patch(':id')

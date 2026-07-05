@@ -15,7 +15,6 @@ import {
   Wifi,
   FileText,
   BookOpen,
-  ListChecks,
   GraduationCap,
   MessageSquare,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 
 const API = API_BASE;
 const getToken = () => localStorage.getItem("token");
@@ -215,13 +215,29 @@ function ClassroomPage() {
       return;
     }
 
+    if (role === "student" && !isLiveSessionActive(classroom.session?.status)) {
+      toast.info("Your teacher has not started the session yet. Please wait.");
+      return;
+    }
+
     setJoining(true);
     try {
-      await fetch(`${API}/live-sessions/${sessionId}/join`, {
-        method: "POST",
-        headers: authHeaders(),
-      });
-      openExternalZoom(classroom);
+      if (role === "student") {
+        const result = await joinLiveSessionWhenActive(sessionId, classroom.session?.status);
+        toast.success(
+          result.alreadyJoined ? "Rejoined session — attendance already recorded" : "Attendance recorded — opening Zoom",
+        );
+      } else {
+        const res = await fetch(`${API}/live-sessions/${sessionId}/join`, {
+          method: "POST",
+          headers: authHeaders(),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || "Failed to join session");
+        }
+        openExternalZoom(classroom);
+      }
       loadClassroom();
     } catch (e: any) {
       toast.error(e.message || "Failed to join session");
@@ -342,7 +358,10 @@ function ClassroomPage() {
   const isTerminal = ["COMPLETED", "CANCELLED", "NO_SHOW", "EXPIRED"].includes(
     classroom?.session?.status,
   );
-  const canJoin = isLive || (isScheduled && classroom?.classroomStatus !== "not_available");
+  const canJoin =
+    role === "student"
+      ? isLive
+      : isLive || (isScheduled && classroom?.classroomStatus !== "not_available");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white">
@@ -556,14 +575,6 @@ function ClassroomPage() {
             <Button className="rounded-2xl" onClick={() => setShowNoteForm(!showNoteForm)}>
               <FileText className="h-4 w-4 mr-2" />
               {showNoteForm ? "Close Note Form" : "Post-Class Summary"}
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-2xl border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate({ to: `/live-sessions/${sessionId}` })}
-            >
-              <ListChecks className="h-4 w-4 mr-2" />
-              Session Details
             </Button>
           </div>
         )}

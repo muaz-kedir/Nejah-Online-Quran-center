@@ -28,6 +28,7 @@ import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
 import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -60,7 +61,15 @@ function StudentDashboard() {
   const { path: learningPath } = useLearningPath(profile?.student?.id);
 
   useEffect(() => {
-    Promise.all([api("/student/dashboard"), api("/student/profile").catch(() => null)])
+    const loadDashboard = () =>
+      api("/student/dashboard")
+        .then((dash) => setData(dash))
+        .catch((e) => {
+          console.error(e);
+          toast.error("Could not load your dashboard. Please refresh the page.");
+        });
+
+    Promise.all([loadDashboard(), api("/student/profile").catch(() => null)])
       .then(([dash, prof]) => {
         setData(dash);
         setProfile(prof);
@@ -69,11 +78,15 @@ function StudentDashboard() {
           setProfileForm({ phone: prof.student.phone || "", email: prof.student.email || "" });
         }
       })
-      .catch((e) => {
-        console.error(e);
-        toast.error("Could not load your dashboard. Please refresh the page.");
-      })
       .finally(() => setLoading(false));
+
+    const interval = setInterval(() => {
+      api("/student/dashboard")
+        .then((dash) => setData(dash))
+        .catch(() => {});
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // WebSocket for real-time notifications
@@ -89,10 +102,22 @@ function StudentDashboard() {
           duration: 10000,
           action: {
             label: "Join Now",
-            onClick: () =>
-              navigate({ to: "/classroom/$sessionId", params: { sessionId } }),
+            onClick: async () => {
+              try {
+                const result = await joinLiveSessionWhenActive(sessionId, "LIVE");
+                toast.success(
+                  result.alreadyJoined
+                    ? "Rejoined session — attendance already recorded"
+                    : "Attendance recorded — opening Zoom",
+                );
+                api("/student/dashboard").then((dash) => setData(dash)).catch(() => {});
+              } catch (e: any) {
+                toast.error(e.message || "Could not join session");
+              }
+            },
           },
         });
+        api("/student/dashboard").then((dash) => setData(dash)).catch(() => {});
       }
     },
   });
@@ -165,24 +190,27 @@ function StudentDashboard() {
       })
     : "—";
 
+  const isSessionLive = isLiveSessionActive(data?.liveClass?.status);
+
   const joinClass = async () => {
-    const sessionId = data?.liveClass?.id || data?.upcomingClass?.sessionId;
-    if (data?.liveClass?.status === "LIVE" && sessionId) {
-      try {
-        await fetch(apiUrl(`/live-sessions/${sessionId}/join`), {
-          method: "POST",
-          headers: apiHeaders(),
-        });
-      } catch {
-        /* join may fail if already joined */
-      }
-      navigate({ to: "/classroom/$sessionId", params: { sessionId } });
-    } else if (sessionId) {
-      toast.info("Your teacher has not started the session yet.");
-    } else if (data?.upcomingClass?.meetingLink) {
-      window.open(data.upcomingClass.meetingLink, "_blank");
-    } else {
-      toast.info("No live meeting available yet.");
+    if (!isSessionLive) {
+      toast.info("Your teacher has not started the session yet. The join button will activate when class is live.");
+      return;
+    }
+    const sessionId = data?.liveClass?.id;
+    if (!sessionId) {
+      toast.info("No live session available yet.");
+      return;
+    }
+    try {
+      const result = await joinLiveSessionWhenActive(sessionId, data.liveClass.status);
+      toast.success(
+        result.alreadyJoined
+          ? "Rejoined session — attendance already recorded"
+          : "Attendance recorded — opening Zoom",
+      );
+    } catch (e: any) {
+      toast.error(e.message || "Could not join session. Attendance was not recorded.");
     }
   };
 
@@ -569,17 +597,17 @@ function StudentDashboard() {
             {/* Upcoming / Live Class */}
             <div className="upcoming-class-gradient rounded-2xl text-white overflow-hidden animate-fade-in-up shadow-lg" style={{ animationDelay: '0.15s' }}>
               <div className="p-5 sm:p-6">
-                {data?.liveClass?.status === "LIVE" ? (
+                {isSessionLive ? (
                   <div className="flex items-center gap-2 mb-3">
                     <span className="live-pulse-dot" />
                     <span className="text-xs font-bold uppercase tracking-wider text-red-200">Live Now</span>
                   </div>
                 ) : (
                   <Badge className="bg-white/15 text-white/90 border-none mb-3 text-xs font-semibold">
-                    Upcoming Class
+                    {data?.upcomingClass ? "Upcoming Class" : "No Live Session"}
                   </Badge>
                 )}
-                {data?.liveClass?.status === "LIVE" ? (
+                {isSessionLive ? (
                   <>
                     <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
                     <p className="text-white/60 text-sm mt-1">
@@ -609,11 +637,12 @@ function StudentDashboard() {
                 )}
                 <div className="flex flex-col gap-2 mt-5">
                   <Button
-                    className="bg-white text-nejah-sapphire hover:bg-white/90 font-semibold rounded-xl shadow-md"
+                    className="bg-white text-nejah-sapphire hover:bg-white/90 font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={joinClass}
+                    disabled={!isSessionLive}
                   >
                     <Play className="h-4 w-4 mr-2" />
-                    {data?.liveClass?.status === "LIVE" ? "Join Session" : "Join Class"}
+                    {isSessionLive ? "Join Session" : "Waiting for teacher to start"}
                   </Button>
                   <Button
                     variant="outline"

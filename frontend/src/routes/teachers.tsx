@@ -34,7 +34,6 @@ import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/compone
 import { AddTeacherModal } from '@/components/teachers/AddTeacherModal';
 import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
-import { TeacherDetailsModal } from '@/components/teachers/TeacherDetailsModal';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 
@@ -110,7 +109,7 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
           <button
             onClick={() => onView(teacher)}
             className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
-            title="View Faculty Profile"
+            title="View Teacher Profile"
           >
             <Eye className="h-4.5 w-4.5" />
           </button>
@@ -153,7 +152,6 @@ function TeachersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
-  const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
 
   const fetchTeachers = useCallback(async (pageOverride?: number) => {
     setLoading(true);
@@ -229,7 +227,9 @@ function TeachersPage() {
     setMeta(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleViewTeacher = useCallback((teacher: any) => setViewingTeacher(teacher), []);
+  const handleViewTeacher = useCallback((teacher: any) => {
+    window.location.assign(`/teachers/${teacher.id}`);
+  }, []);
   const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
   const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
 
@@ -432,12 +432,6 @@ function TeachersPage() {
         onSuccess={fetchTeachers}
         teacherId={deletingTeacher?.id}
         teacherName={deletingTeacher?.fullName}
-      />
-
-      <TeacherDetailsModal
-        open={!!viewingTeacher}
-        onClose={() => setViewingTeacher(null)}
-        teacher={viewingTeacher}
       />
     </DashboardLayout>
   );

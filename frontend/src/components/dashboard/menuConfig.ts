@@ -3,7 +3,6 @@ import {
   Users,
   GraduationCap,
   BookOpen,
-  UserCheck,
   Calendar,
   BarChart3,
   Settings,
@@ -23,6 +22,14 @@ import {
   Video,
   VideoOff,
   Layout,
+  FileText,
+  GitBranch,
+  LifeBuoy,
+  Ticket,
+  ChevronDown,
+  Home,
+  BookMarked,
+  MessageSquareText,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -30,6 +37,7 @@ export interface MenuItem {
   icon: any;
   path: string;
   badge?: string;
+  children?: MenuItem[];
 }
 
 export const menuByRole: Record<string, MenuItem[]> = {
@@ -40,7 +48,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
     { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
@@ -50,8 +57,20 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-    { label: 'Website Management', icon: Layout, path: '/website/home' },
-    { label: 'Learning Resources', icon: FolderOpen, path: '/website/resources' },
+    {
+      label: 'Website CMS', icon: Layout, path: '#',
+      children: [
+        { label: 'Home Page', icon: Home, path: '/website/home' },
+        { label: 'Teachers', icon: GraduationCap, path: '/website/home' },
+        { label: 'Testimonials', icon: MessageSquareText, path: '/website/home' },
+        { label: 'Learning Resources', icon: BookMarked, path: '/website/resources' },
+        { label: 'Support Pages', icon: FileText, path: '/website/support/pages' },
+        { label: 'Sitemap', icon: GitBranch, path: '/website/support/sitemap' },
+        { label: 'Help Center', icon: LifeBuoy, path: '/website/support/help-center' },
+        { label: 'Support Tickets', icon: Ticket, path: '/website/support/tickets' },
+        { label: 'Support Analytics', icon: TrendingUp, path: '/website/support/analytics' },
+      ],
+    },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
@@ -61,8 +80,8 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
     { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
+    { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
@@ -83,11 +102,11 @@ export const menuByRole: Record<string, MenuItem[]> = {
   qirat_manager: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/qirat_dashboard' },
     { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
+    { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
-    { label: 'Attendance', icon: UserCheck, path: '/attendance' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
     { label: 'Quran Progress', icon: BookOpen, path: '/progress' },

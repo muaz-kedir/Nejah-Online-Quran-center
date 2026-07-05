@@ -1,18 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { Resend } from 'resend';
-import { getFrontendUrl } from '../config/frontend-url';
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter | null = null;
   private fromAddress: string;
-  private resend: Resend | null = null;
-  private resendFromAddress: string;
+  private previewUrl: string | null = null;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService) {}
+
+  async onModuleInit() {
+    await this.ensureTransporter();
+  }
+
+  private async ensureTransporter() {
     const host = this.configService.get('SMTP_HOST');
     const port = this.configService.get('SMTP_PORT');
     const user = this.configService.get('SMTP_USER');
@@ -28,58 +31,52 @@ export class EmailService {
         secure: parseInt(port, 10) === 465,
         auth: { user, pass },
       });
-      this.logger.log('SMTP transporter configured');
-    } else {
-      this.logger.warn('SMTP not configured – application emails will be logged to console only');
+      this.logger.log(`SMTP configured: ${host}:${port}`);
+      return;
     }
 
-    const resendApiKey = this.configService.get('RESEND_API_KEY');
-    this.resendFromAddress =
-      this.configService.get('EMAIL_FROM') ||
-      'Nejah Online Quran Center <noreply@nejah-center.com>';
-
-    if (resendApiKey) {
-      this.resend = new Resend(resendApiKey);
-      this.logger.log('Resend client configured');
-    } else {
-      this.logger.warn('RESEND_API_KEY not configured – password reset emails will be logged to console only');
-    }
+    const testAccount = await nodemailer.createTestAccount();
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    this.fromAddress = `"Nejah Online Quran Center" <${testAccount.user}>`;
+    this.logger.log(
+      `Ethereal email test account created: ${testAccount.user}`,
+    );
+    this.logger.log(
+      `View sent emails at https://ethereal.email/login (user: ${testAccount.user})`,
+    );
   }
 
   private async send(to: string, subject: string, html: string) {
-    if (this.transporter) {
-      try {
-        await this.transporter.sendMail({
-          from: this.fromAddress,
-          to,
-          subject,
-          html,
-        });
-        this.logger.log(`Email sent to ${to}: ${subject}`);
-      } catch (err) {
-        this.logger.error(`Failed to send email to ${to}: ${err.message}`);
-      }
-    } else {
+    await this.ensureTransporter();
+    if (!this.transporter) {
       this.logger.log(`[EMAIL LOG] To: ${to} | Subject: ${subject}\n${html}`);
+      return;
     }
-  }
 
-  private async sendViaResend(to: string, subject: string, html: string) {
-    if (this.resend) {
-      try {
-        await this.resend.emails.send({
-          from: this.resendFromAddress,
-          to,
-          subject,
-          html,
-        });
-        this.logger.log(`Resend email sent to ${to}: ${subject}`);
-      } catch (err) {
-        this.logger.error(`Failed to send Resend email to ${to}: ${err.message}`);
-        throw err;
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromAddress,
+        to,
+        subject,
+        html,
+      });
+      this.logger.log(`Email sent to ${to}: ${subject}`);
+
+      if (info.messageId) {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+          this.logger.log(`Preview: ${previewUrl}`);
+          this.previewUrl = previewUrl;
+        }
       }
-    } else {
-      this.logger.log(`[RESEND LOG] To: ${to} | Subject: ${subject}\n${html}`);
+    } catch (err) {
+      this.logger.error(`Failed to send email to ${to}: ${err.message}`);
+      this.logger.log(`[EMAIL FALLBACK LOG] To: ${to} | Subject: ${subject}\n${html}`);
     }
   }
 
@@ -119,36 +116,30 @@ export class EmailService {
 
   // ── Password reset emails (Resend) ──────────────────────────────
 
-  async sendPasswordResetEmail(toEmail: string, userName: string, resetToken: string) {
-    const resetUrl = `${getFrontendUrl()}/reset-password?token=${resetToken}`;
-
+  async sendNewPasswordEmail(toEmail: string, userName: string, newPassword: string) {
     const html = this.passwordResetWrap(`
-      <h2 style="color: #333;">Reset Your Password</h2>
+      <h2 style="color: #333;">Your New Password</h2>
       <p style="color: #666;">Assalamu Alaikum ${userName},</p>
       <p style="color: #666;">
         We received a request to reset your password.
-        Click the button below to create a new password.
-        This link expires in <strong>15 minutes</strong>.
+        Your new temporary password is:
       </p>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${resetUrl}"
-          style="background: #1D9E75; color: white; padding: 14px 32px;
-                 border-radius: 8px; text-decoration: none; font-size: 16px;
-                 font-weight: bold; display: inline-block;">
-          Reset My Password
-        </a>
+        <code
+          style="background: #f4f4f4; color: #111; padding: 14px 28px;
+                 border-radius: 8px; font-size: 20px; font-weight: bold;
+                 letter-spacing: 2px; display: inline-block; user-select: all;"
+        >${newPassword}</code>
       </div>
-      <p style="color: #999; font-size: 13px;">
-        If you did not request this, ignore this email.
-        Your password will not change.
+      <p style="color: #666;">
+        Please use this password to log in. You can change it later in your profile settings.
       </p>
-      <p style="color: #999; font-size: 12px;">
-        Or copy this link: <br/>
-        <a href="${resetUrl}" style="color: #1D9E75;">${resetUrl}</a>
+      <p style="color: #999; font-size: 13px;">
+        If you did not request this, ignore this email — your password has not been changed.
       </p>
     `);
 
-    await this.sendViaResend(toEmail, 'Reset Your Nejah Password', html);
+    await this.send(toEmail, 'Your Nejah New Password', html);
   }
 
   async sendPasswordChangedConfirmation(toEmail: string, userName: string) {
@@ -159,7 +150,7 @@ export class EmailService {
       <p style="color: #666;">If you did not make this change, contact support immediately.</p>
     `);
 
-    await this.sendViaResend(toEmail, 'Your Nejah Password Was Changed', html);
+    await this.send(toEmail, 'Your Nejah Password Was Changed', html);
   }
 
   // ── Application lifecycle emails ──────────────────────────────────

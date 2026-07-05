@@ -12,6 +12,10 @@ export class CreateHomeProgramDto {
   description: LocalizedText;
 
   @IsOptional()
+  @IsObject()
+  detailedContent?: LocalizedText;
+
+  @IsOptional()
   @IsString()
   imageUrl?: string | null;
 
@@ -37,6 +41,10 @@ export class UpdateHomeProgramDto {
   @IsOptional()
   @IsObject()
   description?: LocalizedText;
+
+  @IsOptional()
+  @IsObject()
+  detailedContent?: LocalizedText;
 
   @IsOptional()
   @IsString()

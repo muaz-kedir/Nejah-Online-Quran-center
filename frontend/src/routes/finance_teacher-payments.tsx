@@ -8,8 +8,9 @@ import { financeFetch, FinanceFilters, downloadCSV, exportPDF, authHeaders } fro
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Eye, Loader2, FileSpreadsheet } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Download, Eye, Loader2, FileSpreadsheet, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/finance_teacher-payments')({
@@ -23,6 +24,8 @@ function TeacherPaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
+  const [rateEdits, setRateEdits] = useState<Record<string, string>>({});
+  const [savingRate, setSavingRate] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -59,9 +62,45 @@ function TeacherPaymentsPage() {
 
   const openDetail = async (teacherId: string) => {
     try {
-      setDetail(await financeFetch(`/teacher-payments/${teacherId}`, filters));
+      const d = await financeFetch<any>(`/teacher-payments/${teacherId}`, filters);
+      setDetail(d);
+      const edits: Record<string, string> = {};
+      (d.assignedStudents || []).forEach((s: any) => {
+        if (s.feeAccountId) edits[s.feeAccountId] = String(s.teacherMonthlyBudget ?? '');
+      });
+      setRateEdits(edits);
     } catch (e: any) {
       toast.error(e.message);
+    }
+  };
+
+  const saveStudentBudget = async (feeAccountId: string) => {
+    const val = parseFloat(rateEdits[feeAccountId]);
+    if (isNaN(val) || val < 0) {
+      toast.error('Enter a valid budget amount');
+      return;
+    }
+    setSavingRate(feeAccountId);
+    try {
+      const res = await fetch(apiUrl(`/finance/student-payments/${feeAccountId}`), {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ teacherMonthlyBudget: val }),
+      });
+      if (!res.ok) throw new Error('Failed to update budget');
+      toast.success('Teacher budget updated');
+      if (detail) {
+        setDetail((prev: any) => ({
+          ...prev,
+          assignedStudents: (prev.assignedStudents || []).map((s: any) =>
+            s.feeAccountId === feeAccountId ? { ...s, teacherMonthlyBudget: val } : s,
+          ),
+        }));
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSavingRate(null);
     }
   };
 
@@ -120,8 +159,8 @@ function TeacherPaymentsPage() {
                 <TableCell className="font-medium">{r.teacherName}</TableCell>
                 <TableCell>{r.totalAssignedStudents}</TableCell>
                 <TableCell>{r.sessionsConducted}</TableCell>
-                <TableCell>${r.sessionRate}</TableCell>
-                <TableCell>${r.earnings}</TableCell>
+                <TableCell>ETB {r.sessionRate}</TableCell>
+                <TableCell>ETB {r.earnings}</TableCell>
                 <TableCell className="capitalize">{r.payrollStatus}</TableCell>
                 <TableCell><Button size="sm" variant="ghost" onClick={() => openDetail(r.teacherId)}><Eye className="h-4 w-4" /></Button></TableCell>
               </TableRow>
@@ -130,24 +169,91 @@ function TeacherPaymentsPage() {
         </Table>
       </div>
 
-      <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={!!detail} onOpenChange={() => { setDetail(null); setRateEdits({}); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{detail?.teacherName} — Earnings Detail</DialogTitle></DialogHeader>
           {detail && (
-            <div className="space-y-3 text-sm">
-              <p>Sessions: {detail.sessionsConducted} · Total: ${detail.earnings}</p>
-              {detail.assignedStudents?.map((s: any, i: number) => (
-                <div key={i} className="flex justify-between border-b border-white/5 py-2">
-                  <span>{s.studentName} {s.isReplacement && '(replacement)'}</span>
-                  <span>{s.sessionsConducted} sessions · ${s.earnings}</span>
-                </div>
-              ))}
+            <div className="space-y-4 text-sm">
+              <div className="flex gap-4 flex-wrap">
+                <span>Sessions Conducted: <strong>{detail.sessionsConducted}</strong></span>
+                <span>Total Earnings: <strong>ETB {detail.earnings}</strong></span>
+                <span>Monthly Salary: <strong>ETB {detail.monthlySalary || 0}</strong></span>
+              </div>
+
+              <div>
+                <p className="mb-2 font-medium">Students — Teacher Budget Assignment</p>
+                {detail.assignedStudents?.length === 0 && (
+                  <p className="text-nejah-slate-blue">No student details</p>
+                )}
+                {detail.assignedStudents?.map((s: any, i: number) => {
+                  const budget = parseFloat(rateEdits[s.feeAccountId] ?? '') || 0;
+                  const perSession = s.monthlySessions > 0 ? (budget / s.monthlySessions).toFixed(2) : '—';
+                  return (
+                    <div key={i} className="border-b border-white/5 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex-1 font-medium">
+                          {s.studentName} {s.isReplacement && <span className="text-nejah-slate-blue">(replacement)</span>}
+                        </span>
+                        <span className="text-nejah-slate-blue text-xs">{s.sessionsConducted}/{s.monthlySessions} sess</span>
+                      </div>
+                      {s.weeklySchedule?.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {s.weeklySchedule.map((sch: any, j: number) => (
+                            <span key={j} className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-nejah-slate-blue">
+                              {sch.day} {sch.startTime}–{sch.endTime}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-nejah-slate-blue w-32">Teacher budget/mo:</span>
+                        {s.feeAccountId ? (
+                          <>
+                            <Input
+                              type="number"
+                              className="h-8 w-24 text-xs"
+                              value={rateEdits[s.feeAccountId] ?? ''}
+                              onChange={(e) =>
+                                setRateEdits({ ...rateEdits, [s.feeAccountId]: e.target.value })
+                              }
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => saveStudentBudget(s.feeAccountId)}
+                              disabled={savingRate === s.feeAccountId}
+                            >
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            {budget > 0 && (
+                              <span className="text-xs text-nejah-slate-blue">
+                                = ETB {perSession}/session
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-xs text-nejah-slate-blue">No fee account</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
               {detail.replacements?.length > 0 && (
-                <div className="mt-4">
-                  <p className="font-medium">Replacement Periods</p>
+                <div>
+                  <p className="mb-2 font-medium">Replacement Periods</p>
                   {detail.replacements.map((r: any) => (
                     <p key={r.id} className="text-nejah-slate-blue">{r.startDate} → {r.endDate} ({r.status})</p>
                   ))}
+                </div>
+              )}
+
+              {detail.payroll && (
+                <div>
+                  <p className="mb-2 font-medium">Payroll</p>
+                  <p>Status: {detail.payroll.status} · Total: ETB {detail.payroll.totalEarnings}</p>
+                  {detail.payroll.paidAt && <p>Paid: {detail.payroll.paidAt}</p>}
                 </div>
               )}
             </div>

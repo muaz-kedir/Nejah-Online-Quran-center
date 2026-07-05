@@ -5,6 +5,7 @@ import { HomeMissionSection } from './entities/home-mission-section.entity';
 import { HomeMissionCard } from './entities/home-mission-card.entity';
 import { HomeProgramsSection } from './entities/home-programs-section.entity';
 import { HomeProgram } from './entities/home-program.entity';
+import { Testimonial } from './entities/testimonial.entity';
 import { UpdateHomeMissionSectionDto } from './dto/update-home-mission-section.dto';
 import {
   CreateHomeMissionCardDto,
@@ -15,6 +16,7 @@ import {
   CreateHomeProgramDto,
   UpdateHomeProgramDto,
 } from './dto/home-program.dto';
+import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
 import { LocalizedText } from './types/localized-text';
 
 const MISSION_SECTION_ID = 'default';
@@ -33,6 +35,8 @@ export class WebsiteCmsService implements OnModuleInit {
     private readonly programsSectionRepo: Repository<HomeProgramsSection>,
     @InjectRepository(HomeProgram)
     private readonly programRepo: Repository<HomeProgram>,
+    @InjectRepository(Testimonial)
+    private readonly testimonialRepo: Repository<Testimonial>,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -170,6 +174,11 @@ export class WebsiteCmsService implements OnModuleInit {
             ar: 'إتقان الحروف العربية والنطق الصحيح من خلال القاعدة النورانية.',
             am: 'የአረብኛ ፊደላትንና መሰረታዊ አነባበብ በኑራኒ ቃዒዳ ይቆጣጠሩ።',
           },
+          detailedContent: {
+            en: '<h2>What You Will Learn</h2><ul><li>Arabic alphabet recognition and pronunciation</li><li>Connecting letters to form words</li><li>Basic Tajweed rules for beginners</li><li>Reading short verses from the Quran</li></ul><h2>Course Structure</h2><p>This course uses the Noorani Qaida method, a time-tested approach that has helped millions of students worldwide learn to read the Quran. Each lesson builds on the previous one, ensuring a solid foundation.</p><h2>Who Is This For?</h2><ul><li>Complete beginners with no prior Arabic knowledge</li><li>Students who want to refresh their Quran reading skills</li><li>Children and adults starting their Quran journey</li></ul>',
+            ar: '<h2>ماذا ستتعلم</h2><ul><li>التعرف على الحروف العربية ونطقها</li><li>ربط الحروف لتكوين الكلمات</li><li>قواعد التجويد الأساسية للمبتدئين</li><li>قراءة آيات قصيرة من القرآن</li></ul><h2>هيكل الدورة</h2><p>تستخدم هذه الدورة طريقة القاعدة النورانية، وهي منهجية مثبتة ساعدت ملايين الطلاب حول العالم على تعلم قراءة القرآن. كل درس يبني على الذي قبله، مما يضمن أساساً متيناً.</p><h2>لمن هذه الدورة؟</h2><ul><li>المبتدئون تماماً دون معرفة سابقة بالعربية</li><li>الطلاب الذين يرغبون في تحديث مهارات قراءة القرآن</li><li>الأطفال والبالغون الذين يبدأون رحلتهم القرآنية</li></ul>',
+            am: '<h2>ምን ይማራሉ</h2><ul><li>የአረብኛ ፊደላትን መለየት እና አነባበብ</li><li>ፊደላትን በማገናኘት ቃላትን መፍጠር</li><li>መሰረታዊ የታጅዊድ ህጎች ለጀማሪዎች</li><li>አጫጭር የቁርዓን ጥቅሶችን ማንበብ</li></ul><h2>የኮርሱ መዋቅር</h2><p>ይህ ኮርስ በሚሊዮን የሚቆጠሩ ተማሪዎች ቁርዓን ማንበብ እንዲችሉ የረዳውን የኑራኒ ቃዒዳ ዘዴ ይጠቀማል። እያንዳንዱ ትምህርት በቀዳሚው ላይ ይገነባል።</p><h2>ለማን ነው?</h2><ul><li>ያለምንም የቅድመ የአረብኛ እውቀት ጀማሪዎች</li><li>የቁርዓን ንባብ ክህሎታቸውን ማደስ የሚፈልጉ ተማሪዎች</li><li>ልጆች እና ጎልማሶች የቁርዓን ጉዟቸውን የሚጀምሩ</li></ul>',
+          },
           displayOrder: 0,
           isActive: true,
         },
@@ -184,6 +193,11 @@ export class WebsiteCmsService implements OnModuleInit {
             en: 'Perfect your pronunciation and articulation for melodious recitation.',
             ar: 'إتقان النطق والمخارج للتلاوة العذبة.',
             am: 'ለምስጉን ንባብ አነባበብዎን ያሟሉ።',
+          },
+          detailedContent: {
+            en: '<h2>What You Will Learn</h2><ul><li>Articulation points (Makharij) of each letter</li><li>Characteristics (Sifaat) of letters</li><li>Rules of Noon Saakin and Tanween</li><li>Rules of Meem Saakin</li><li>Qalqalah, Madd, and Ghunnah</li></ul><h2>Course Structure</h2><p>Our Tajweed program is designed for students who already know how to read the Quran. You will work one-on-one with a certified Tajweed instructor who will guide you through each rule with practical application.</p><h2>Who Is This For?</h2><ul><li>Students who can read Quran but want to improve their recitation</li><li>Those preparing for Ijazah certification</li><li>Anyone who wants to recite the Quran as it was revealed</li></ul>',
+            ar: '<h2>ماذا ستتعلم</h2><ul><li>مخارج الحروف</li><li>صفات الحروف</li><li>أحكام النون الساكنة والتنوين</li><li>أحكام الميم الساكنة</li><li>القلقلة والمد والغنة</li></ul><h2>هيكل الدورة</h2><p>برنامج التجويد لدينا مصمم للطلاب الذين يعرفون بالفعل قراءة القرآن. ستعمل بشكل فردي مع معلم تجويد معتمد سيرشدك خلال كل قاعدة مع التطبيق العملي.</p><h2>لمن هذه الدورة؟</h2><ul><li>الطلاب الذين يمكنهم قراءة القرآن ولكن يرغبون في تحسين تلاوتهم</li><li>المستعدون للحصول على شهادة الإجازة</li><li>كل من يريد تلاوة القرآن كما أنزل</li></ul>',
+            am: '<h2>ምን ይማራሉ</h2><ul><li>የእያንዳንዱ ፊደል አነባበብ ነጥቦች (ማኻሪጅ)</li><li>የፊደላት ባህሪያት (ሲፋት)</li><li>የኑን ሳኪን እና ታንዊን ህጎች</li><li>የሚም ሳኪን ህጎች</li><li>ቃልቃላህ፣ ማድድ እና ጉናህ</li></ul><h2>የኮርሱ መዋቅር</h2><p>የእኛ የታጅዊድ ፕሮግራም ቁርዓን ማንበብ ለሚችሉ ተማሪዎች የተዘጋጀ ነው። ከተረጋገጠ የታጅዊድ አስተማሪ ጋር አብረው ይሰራሉ።</p><h2>ለማን ነው?</h2><ul><li>ቁርዓን ማንበብ የሚችሉ ነገር ግን ንባባቸውን ማሻሻል የሚፈልጉ</li><li>ለኢጃዛህ የምስክር ወረቀት የሚዘጋጁ</li><li>ቁርዓንን እንደተወረደ ማንበብ የሚፈልግ ማንኛውም ሰው</li></ul>',
           },
           displayOrder: 1,
           isActive: true,
@@ -200,6 +214,11 @@ export class WebsiteCmsService implements OnModuleInit {
             ar: 'مسار منظم لحفظ القرآن الكريم بإشراف ومراجعة من خبراء.',
             am: 'ቅዱስ ቁርዓንን ለማስታወስ የተደራጁ መንገድ።',
           },
+          detailedContent: {
+            en: '<h2>What You Will Learn</h2><ul><li>Systematic memorization techniques</li><li>Daily revision and Sabq (new lesson)</li><li>Weekly Manzil (review of memorized portions)</li><li>Tajweed application during memorization</li><li>Tafseer understanding of memorized verses</li></ul><h2>Course Structure</h2><p>Our Hifz program follows a proven methodology with daily Sabq (new memorization), Manzil (weekly review), and Tasmee (recitation to the teacher). Students receive personalized attention and progress tracking.</p><h2>Who Is This For?</h2><ul><li>Students committed to memorizing the entire Quran</li><li>Those who have basic Quran reading skills</li><li>Students of all ages with a strong desire to become Huffaz</li></ul>',
+            ar: '<h2>ماذا ستتعلم</h2><ul><li>تقنيات الحفظ المنهجية</li><li>المراجعة اليومية والسبق (الدرس الجديد)</li><li>المنزلة الأسبوعية (مراجعة المحفوظات)</li><li>تطبيق التجويد أثناء الحفظ</li><li>فهم تفسير الآيات المحفوظة</li></ul><h2>هيكل الدورة</h2><p>يتبع برنامج الحفظ لدينا منهجية مثبتة مع سبق يومي (حفظ جديد)، ومنزلة (مراجعة أسبوعية)، وتسميع (قراءة على المعلم). يحصل الطلاب على اهتمام شخصي ومتابعة التقدم.</p><h2>لمن هذه الدورة؟</h2><ul><li>الطلاب الملتزمون بحفظ القرآن كاملاً</li><li>من لديهم مهارات أساسية في قراءة القرآن</li><li>طلاب من جميع الأعمار لديهم رغبة قوية في أن يصبحوا حفظة</li></ul>',
+            am: '<h2>ምን ይማራሉ</h2><ul><li>ስልታዊ የማስታወስ ዘዴዎች</li><li>ዕለታዊ ክለሳ እና ሳብቅ (አዲስ ትምህርት)</li><li>ሳምንታዊ መንዚል (የተማረውን መከለስ)</li><li>በማስታወስ ወቅት የታጅዊድ አተገባበር</li><li>የተማሩትን ጥቅሶች ተፍሲር መረዳት</li></ul><h2>የኮርሱ መዋቅር</h2><p>የእኛ የሂፍዝ ፕሮግራም የተረጋገጠ ዘዴ ይከተላል። ተማሪዎች የግል ትኩረት እና የእድገት ክትትል ያገኛሉ።</p><h2>ለማን ነው?</h2><ul><li>ሙሉ ቁርዓንን ለማስታወስ የቆረጡ ተማሪዎች</li><li>መሰረታዊ የቁርዓን ንባብ ክህሎት ያላቸው</li><li>ሁፋዝ ለመሆን ጠንካራ ፍላጎት ያላቸው ሁሉ</li></ul>',
+          },
           displayOrder: 2,
           isActive: true,
         },
@@ -215,12 +234,79 @@ export class WebsiteCmsService implements OnModuleInit {
             ar: 'تعلم الفقه والحديث والسيرة والتاريخ لحياة إسلامية أصيلة.',
             am: 'ፊቅህ፣ ሐዲስ፣ ሲራና ታሪክን ለትክክለኛ ኑሮ ይማሩ።',
           },
+          detailedContent: {
+            en: '<h2>What You Will Learn</h2><ul><li>Fiqh of Worship (Purification, Prayer, Fasting, Zakat, Hajj)</li><li>Hadith studies and the science of narration</li><li>Seerah (Life of Prophet Muhammad ﷺ)</li><li>Islamic history and civilization</li><li>Contemporary Islamic issues</li></ul><h2>Course Structure</h2><p>Our Islamic Studies program covers the essential sciences every Muslim should know. The curriculum is designed to be comprehensive yet accessible, with live sessions and interactive discussions.</p><h2>Who Is This For?</h2><ul><li>Muslims seeking a deeper understanding of their faith</li><li>Students who want to learn about Islamic jurisprudence</li><li>Anyone interested in Islamic history and civilization</li><li>New Muslims looking to build a strong foundation</li></ul>',
+            ar: '<h2>ماذا ستتعلم</h2><ul><li>فقه العبادات (الطهارة، الصلاة، الصوم، الزكاة، الحج)</li><li>علوم الحديث ومصطلحه</li><li>السيرة النبوية</li><li>التاريخ والحضارة الإسلامية</li><li>القضايا الإسلامية المعاصرة</li></ul><h2>هيكل الدورة</h2><p>يغطي برنامج الدراسات الإسلامية لدينا العلوم الأساسية التي يجب أن يعرفها كل مسلم. تم تصميم المنهج ليكون شاملاً وسهل المنال، مع جلسات مباشرة ومناقشات تفاعلية.</p><h2>لمن هذه الدورة؟</h2><ul><li>المسلمون الذين يسعون لفهم أعمق لدينهم</li><li>الطلاب الذين يرغبون في تعلم الفقه الإسلامي</li><li>المهتمون بالتاريخ والحضارة الإسلامية</li><li>المسلمون الجدد الذين يبحثون عن أساس قوي</li></ul>',
+            am: '<h2>ምን ይማራሉ</h2><ul><li>የአምልኮ ፊቅህ (ንጽሕና፣ ሶላት፣ ጾም፣ ዘካ፣ ሐጅ)</li><li>የሐዲስ ጥናቶች እና የትረካ ሳይንስ</li><li>ሲራ (የነቢዩ ሙሐመድ ሕይወት ﷺ)</li><li>እስላማዊ ታሪክ እና ሥልጣኔ</li><li>ወቅታዊ እስላማዊ ጉዳዮች</li></ul><h2>የኮርሱ መዋቅር</h2><p>የእኛ የእስላማዊ ጥናቶች ፕሮግራም እያንዳንዱ ሙስሊም ማወቅ ያለበትን አስፈላጊ ሳይንሶች ይሸፍናል።</p><h2>ለማን ነው?</h2><ul><li>ሃይማኖታቸውን ጠለቅ ብለው ለመረዳት የሚፈልጉ ሙስሊሞች</li><li>ስለ እስላማዊ ፊቅህ መማር የሚፈልጉ ተማሪዎች</li><li>በእስላማዊ ታሪክ እና ሥልጣኔ የሚፈልግ ማንኛውም ሰው</li><li>ጠንካራ መሠረት መጣል የሚፈልጉ አዳዲስ ሙስሊሞች</li></ul>',
+          },
           displayOrder: 3,
           isActive: true,
         },
       ];
       await this.programRepo.save(programs.map((p) => this.programRepo.create(p)));
       this.logger.log('Seeded default home programs');
+    }
+
+    const testimonialCount = await this.testimonialRepo.count();
+    if (testimonialCount === 0) {
+      const defaultTestimonials: Partial<Testimonial>[] = [
+        {
+          studentName: 'Abdurahman',
+          displayName: 'Abdurahman',
+          studentType: 'adult',
+          country: 'United Kingdom',
+          city: 'London',
+          rating: 5,
+          program: 'Quran Reading',
+          learningDuration: '6 Months',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 0,
+          testimonialText: {
+            en: 'The flexibility of scheduling and the quality of teachers at Nejah Online Quran Center has allowed me to balance my Quran studies with a busy career. I highly recommend it.',
+            ar: 'مرونة الجدولة وجودة المعلمين في مركز نجاح لتعليم القرآن سمحت لي بموازنة دراستي للقرآن مع عملي المزدحم. أنصح به بشدة.',
+            am: 'የመማሪያ ጊዜዎች ተለዋዋጭነት እና በነጃህ የመስመር ላይ ቁርዓን ማዕከል ያሉ መምህራን ጥራት የቁርዓን ጥናቴን ከተጠመደ የሥራ ሕይወቴ ጋር ለማመጣጠን አስችሎኛል። በጣም እመክረዋለሁ።',
+          },
+        },
+        {
+          studentName: 'Fatima Hussein',
+          displayName: 'Fatima',
+          studentType: 'parent',
+          country: 'United States',
+          city: 'Minneapolis',
+          rating: 5,
+          program: 'Tajweed',
+          learningDuration: '1 Year',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 1,
+          testimonialText: {
+            en: 'I am amazed by the progress my children have made in just a few months. The teachers are incredibly patient, encouraging, and the interactive platform keeps them engaged.',
+            ar: 'أنا مندهشة من التقدم الذي أحرزه أطفالي في بضعة أشهر فقط. المعلمون صبورون للغاية ومشجعون، والمنصة التفاعلية تبقيهم متفاعلين.',
+            am: 'ልጆቼ በጥቂት ወራት ውስጥ ባሳዩት እድገት በጣም ተገርሜያለሁ። መምህራኑ በሚያስደንቅ ሁኔታ ታጋሽ እና አበረታች ናቸው، እና በይነተገናኝ መድረክ ላይ እንዲሳተፉ ያደርጋቸዋል።',
+          },
+        },
+        {
+          studentName: 'Khalid Al-Mansoor',
+          displayName: 'Khalid',
+          studentType: 'child',
+          country: 'Saudi Arabia',
+          city: 'Riyadh',
+          rating: 5,
+          program: 'Hifz Program',
+          learningDuration: '2 Years',
+          isFeatured: true,
+          isPublished: true,
+          displayOrder: 2,
+          testimonialText: {
+            en: 'Under the guidance of my teacher, I have memorized 5 Juz of the Quran. The focus on Tajweed and the daily progress reviews are excellent.',
+            ar: 'تحت إشراف معلمي، حفظت 5 أجزاء من القرآن. التركيز على التجويد والمراجعات اليومية للتقدم ممتازة.',
+            am: 'በመምህሬ መሪነት 5 ጁዝ ቁርአን መሐፈዝ ችያለሁ። በታጅዊድ ላይ ያለው ትኩረት እና ዕለታዊ የእድገት ግምገማዎች በጣም ጥሩ ናቸው።',
+          },
+        },
+      ];
+      await this.testimonialRepo.save(defaultTestimonials.map((t) => this.testimonialRepo.create(t)));
+      this.logger.log('Seeded default testimonials');
     }
   }
 
@@ -369,5 +455,59 @@ export class WebsiteCmsService implements OnModuleInit {
       ids.map((id, index) => this.programRepo.update(id, { displayOrder: index })),
     );
     return this.programRepo.find({ order: { displayOrder: 'ASC' } });
+  }
+
+  // --- Testimonials ---
+
+  async getPublicTestimonials(): Promise<Testimonial[]> {
+    return this.testimonialRepo.find({
+      where: { isPublished: true },
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async getAdminTestimonials(): Promise<Testimonial[]> {
+    return this.testimonialRepo.find({
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async createTestimonial(dto: CreateTestimonialDto): Promise<Testimonial> {
+    const maxOrder = await this.testimonialRepo
+      .createQueryBuilder('t')
+      .select('MAX(t.displayOrder)', 'max')
+      .getRawOne();
+    const displayOrder = dto.displayOrder ?? (Number(maxOrder?.max ?? -1) + 1);
+    const testimonial = this.testimonialRepo.create({
+      ...dto,
+      displayOrder,
+      isPublished: dto.isPublished ?? true,
+      isFeatured: dto.isFeatured ?? false,
+    });
+    return this.testimonialRepo.save(testimonial);
+  }
+
+  async updateTestimonial(id: string, dto: UpdateTestimonialDto): Promise<Testimonial> {
+    const testimonial = await this.testimonialRepo.findOne({ where: { id } });
+    if (!testimonial) throw new NotFoundException('Testimonial not found');
+    Object.assign(testimonial, dto);
+    return this.testimonialRepo.save(testimonial);
+  }
+
+  async deleteTestimonial(id: string): Promise<void> {
+    const result = await this.testimonialRepo.delete(id);
+    if (!result.affected) throw new NotFoundException('Testimonial not found');
+  }
+
+  async reorderTestimonials(ids: string[]): Promise<Testimonial[]> {
+    const testimonials = await this.testimonialRepo.find();
+    const idSet = new Set(ids);
+    if (idSet.size !== ids.length || ids.length !== testimonials.length) {
+      throw new NotFoundException('Invalid testimonial order payload');
+    }
+    await Promise.all(
+      ids.map((id, index) => this.testimonialRepo.update(id, { displayOrder: index })),
+    );
+    return this.testimonialRepo.find({ order: { displayOrder: 'ASC' } });
   }
 }

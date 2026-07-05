@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StudentsService } from './students.service';
 import { StudentsController } from './students.controller';
 import { StudentDashboardController } from './student-dashboard.controller';
-import { StudentPortalService } from './student-portal.service';
+import { StudentManagementService } from './student-management.service';
 import { AssignmentsController } from './assignments.controller';
 import { Student } from './entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
@@ -28,19 +28,23 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ParentsModule } from '../parents/parents.module';
 import { ZoomModule } from '../zoom/zoom.module';
 import { ProgressModule } from '../progress/progress.module';
+import { StudentPortalService } from './student-portal.service';
+import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
+import { LiveSession } from '../zoom/entities/live-session.entity';
+import { SessionAttendance } from '../zoom/entities/session-attendance.entity';
 
 @Module({
   imports: [
     SchedulesModule,
     UsersModule,
-    TeachersModule,
+    forwardRef(() => TeachersModule),
     ResourcesModule,
     AttendanceModule,
     TeacherReplacementsModule,
     NotificationsModule,
     ParentsModule,
     ZoomModule,
-    ProgressModule,
+    forwardRef(() => ProgressModule),
     TypeOrmModule.forFeature([
       Student,
       Teacher,
@@ -55,10 +59,13 @@ import { ProgressModule } from '../progress/progress.module';
       StudentAttendance,
       ClassSession,
       ExamEvaluation,
+      TeacherReplacement,
+      LiveSession,
+      SessionAttendance,
     ]),
   ],
   controllers: [StudentsController, StudentDashboardController, AssignmentsController],
-  providers: [StudentsService, StudentPortalService],
-  exports: [StudentsService, StudentPortalService, TypeOrmModule],
+  providers: [StudentsService, StudentPortalService, StudentManagementService],
+  exports: [StudentsService, StudentPortalService, StudentManagementService, TypeOrmModule],
 })
 export class StudentsModule {}

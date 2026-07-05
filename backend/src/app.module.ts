@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StudentsModule } from './students/students.module';
@@ -33,6 +34,7 @@ import { HealthModule } from './health/health.module';
 import { DatabaseModule } from './database/database.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { WebsiteCmsModule } from './website-cms/website-cms.module';
+import { SupportPagesModule } from './support-pages/support-pages.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
 import { AppController } from './app.controller';
@@ -47,8 +49,9 @@ import { AppController } from './app.controller';
 
     ThrottlerModule.forRoot([
       {
+        name: 'default',
         ttl: 60000,
-        limit: 10,
+        limit: 120,
       },
     ]),
 
@@ -87,6 +90,7 @@ import { AppController } from './app.controller';
     FeeConfigModule,
     CurrencyModule,
     WebsiteCmsModule,
+    SupportPagesModule,
     UploadsModule,
     ScheduleModule.forRoot(),
     HealthModule,
@@ -96,7 +100,7 @@ import { AppController } from './app.controller';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
   ],
 })

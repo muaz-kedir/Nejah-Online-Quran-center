@@ -3,6 +3,7 @@ import {
   registerFcmToken,
   unregisterFcmToken,
   getCurrentFcmToken,
+  removeTokenFromStorage,
   setupForegroundListener,
 } from '@/lib/fcm';
 import { initFirebase } from '@/lib/firebase';
@@ -53,7 +54,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     const query = isDev ? '?config=' + getFirebaseConfigForSw() : '';
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js' + query, {
       scope: '/',
+      updateViaCache: 'none',
     });
+    registration.update().catch(() => {});
     const swReady = await waitForServiceWorkerReady(30000);
     return swReady;
   } catch (error) {
@@ -92,13 +95,17 @@ export async function subscribeToPushNotifications(): Promise<boolean> {
     const json = subscription.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
 
-    await api('/push-notifications/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
-        deviceInfo: navigator.userAgent,
-      }),
-    });
+    try {
+      await api('/push-notifications/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+          deviceInfo: navigator.userAgent,
+        }),
+      });
+    } catch (err) {
+      console.warn('Browser subscription created but backend save failed — will retry on next page load', err);
+    }
 
     return true;
   } catch (err) {
@@ -140,12 +147,43 @@ export async function initializePwaPush(): Promise<boolean> {
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
 
   const existingFcm = getCurrentFcmToken();
-  if (existingFcm) return true;
+  if (existingFcm) {
+    try {
+      const { tokens } = await api<{ tokens: Array<{ fcmToken: string; isActive: boolean }> }>('/fcm/tokens');
+      const active = tokens.some((t) => t.fcmToken === existingFcm && t.isActive);
+      if (!active) {
+        console.warn('Stored FCM token is no longer active on backend — re-registering');
+        removeTokenFromStorage();
+      } else {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+  }
 
   const registration = await waitForServiceWorkerReady(15000);
   if (registration) {
     const existingSub = await registration.pushManager.getSubscription();
-    if (existingSub) return true;
+    if (existingSub) {
+      const json = existingSub.toJSON();
+      if (json.endpoint && json.keys?.p256dh && json.keys?.auth) {
+        const savedKey = 'pushSubSaved_' + json.endpoint.slice(-20);
+        if (!localStorage.getItem(savedKey)) {
+          try {
+            await api('/push-notifications/subscribe', {
+              method: 'POST',
+              body: JSON.stringify({
+                subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+                deviceInfo: navigator.userAgent,
+              }),
+            });
+            localStorage.setItem(savedKey, '1');
+          } catch { /* will retry next time */ }
+        }
+      }
+      return true;
+    }
   }
 
   const fcmOk = await registerFcmToken();
@@ -162,16 +200,37 @@ export async function initializePwaPush(): Promise<boolean> {
     });
     const json = sub.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
-    await api('/push-notifications/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
-        deviceInfo: navigator.userAgent,
-      }),
-    });
+    try {
+      await api('/push-notifications/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscription: { endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } },
+          deviceInfo: navigator.userAgent,
+        }),
+      });
+    } catch (err) {
+      console.warn('Browser subscription created (init) but backend save failed', err);
+    }
     return true;
   } catch {
     return false;
+  }
+}
+
+export async function updateNotificationBadge(count?: number): Promise<number> {
+  if (!('setAppBadge' in navigator)) return 0;
+  try {
+    const unread = count ?? (await api<{ count: number }>('/notifications/unread-count')).count;
+    await navigator.setAppBadge(unread);
+    return unread;
+  } catch { return 0; }
+}
+
+export async function clearNotificationBadge(): Promise<void> {
+  if ('clearAppBadge' in navigator) {
+    try { await navigator.clearAppBadge(); } catch { }
+  } else if ('setAppBadge' in navigator) {
+    try { await navigator.setAppBadge(0); } catch { }
   }
 }
 

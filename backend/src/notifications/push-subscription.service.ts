@@ -151,11 +151,22 @@ export class PushSubscriptionService implements OnModuleInit {
         payload,
       );
     } catch (error: any) {
-      if (error.statusCode === 410 || error.statusCode === 404) {
-        this.logger.warn(`Removing expired push subscription ${sub.id}`);
+      const statusCode = error.statusCode;
+      if (statusCode === 410 || statusCode === 404 || statusCode === 401) {
+        this.logger.warn(
+          `Removing invalid push subscription ${sub.id} (status ${statusCode}): ${error.message}`,
+        );
         await this.subscriptionRepository.delete(sub.id);
+      } else if (statusCode === 429) {
+        this.logger.warn(
+          `Rate limited while sending to ${sub.userId} (status ${statusCode}): ${error.message}`,
+        );
       } else {
-        this.logger.error(`Failed to send push to ${sub.userId}: ${error.message}`);
+        this.logger.error(
+          `Failed to send push to ${sub.userId} (status ${statusCode ?? 'unknown'}): ${error.message}${
+            error.body ? ` | body: ${error.body.slice(0, 200)}` : ''
+          }`,
+        );
       }
     }
   }

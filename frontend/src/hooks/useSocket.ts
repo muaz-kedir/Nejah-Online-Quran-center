@@ -1,8 +1,6 @@
 import { WS_URL } from "@/lib/api";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 
 type NotificationData = {
   id: string;
@@ -29,7 +27,6 @@ type SocketCallbacks = {
 export function useSocket(callbacks?: SocketCallbacks) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,32 +47,6 @@ export function useSocket(callbacks?: SocketCallbacks) {
 
     socket.on("notification:new", (notif: NotificationData) => {
       console.log("[WS] Notification:", notif);
-
-      const isSamePage = window.location.pathname.includes("/notifications");
-
-      if (!isSamePage) {
-        const handleClick = () => {
-          if (notif.data?.sessionId) {
-            window.location.href = `/classroom/${notif.data.sessionId}`;
-          }
-        };
-
-        const channelIcon =
-          {
-            MEETING_STARTED: "🎙️",
-            MEETING_ENDED: "✅",
-            ATTENDANCE_MARKED: "📋",
-            CLASS_ALERT: "🔔",
-            SYSTEM_ALERT: "ℹ️",
-          }[notif.channel] || "🔔";
-
-        toast(`${channelIcon} ${notif.title}`, {
-          description: notif.content,
-          duration: 8000,
-          action: notif.data?.sessionId ? { label: "View", onClick: handleClick } : undefined,
-        });
-      }
-
       callbacks?.onNotification?.(notif);
     });
 
