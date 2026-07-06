@@ -1,6 +1,6 @@
 import { redirect } from "@tanstack/react-router";
 
-const ROLE_DASHBOARDS: Record<string, string> = {
+export const ROLE_DASHBOARDS: Record<string, string> = {
   teacher: "/teacher_dashboard",
   student: "/student_dashboard",
   parent: "/parent_dashboard",
