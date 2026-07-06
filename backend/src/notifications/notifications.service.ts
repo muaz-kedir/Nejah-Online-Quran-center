@@ -466,6 +466,7 @@ export class NotificationsService {
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
     const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const classroomUrl = `/classroom/${sessionId}`;
     const enrolledCount =
       session.schedule?.scheduleStudents?.length ||
       (session.studentId ? 1 : 0) ||
@@ -475,15 +476,16 @@ export class NotificationsService {
     const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
 
     const learnerPayload = {
-      title: '📚 Class Started — Nejah',
+      title: 'Class Started — Nejah',
       body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
       icon: '/logo.png',
       badge: '/logo.png',
-      url: joinUrl,
+      url: classroomUrl,
       tag: `session-${sessionId}`,
       data: {
         sessionId,
-        url: joinUrl,
+        url: classroomUrl,
+        joinUrl,
         channel: 'MEETING_STARTED',
         className,
         teacherName,
@@ -497,7 +499,7 @@ export class NotificationsService {
 
     const adminPayload = {
       ...learnerPayload,
-      title: '📚 Session Started — Nejah Admin',
+      title: 'Session Started — Nejah Admin',
       body: `Teacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.`,
       url: `/live-sessions/${sessionId}`,
       data: {
@@ -587,7 +589,7 @@ export class NotificationsService {
     if (recipientIds.length > 0) {
       await this.sendCustomNotifications(
         recipientIds,
-        '📚 New Learning Resource',
+        'New Learning Resource',
         `A new ${resource.learningLevel !== 'All Levels' ? resource.learningLevel : ''} resource has been added: ${resource.titleEn || resource.titleAr || resource.titleAm || 'Resource'}`,
         { resourceId: resource.id, type: 'resource_added' },
         NotificationChannel.SYSTEM_ALERT,

@@ -39,7 +39,13 @@ function buildTree(items: SitemapItem[]): (SitemapItem & { children: SitemapItem
   return roots;
 }
 
-function SitemapTree({ items, depth = 0 }: { items: (SitemapItem & { children: SitemapItem[] })[]; depth?: number }) {
+function SitemapTree({
+  items,
+  depth = 0,
+}: {
+  items: (SitemapItem & { children: SitemapItem[] })[];
+  depth?: number;
+}) {
   return (
     <ul className={`space-y-2 ${depth > 0 ? "ml-6 mt-2 border-l border-border/50 pl-4" : ""}`}>
       {items.map((item) => (
@@ -68,15 +74,22 @@ function SitemapPageContent() {
       try {
         const data = await getVisibleSitemap();
         setItems(data || []);
-      } catch {}
-      finally { setLoading(false); }
+      } catch (err) {
+        console.error("Failed to load sitemap", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   const tree = buildTree(items);

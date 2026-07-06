@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { requireAuth } from "@/lib/auth";
@@ -16,8 +20,15 @@ import { LocalizedFields, ImageUploadField } from "@/components/website-cms/CmsF
 import { LocalizedRichTextField } from "@/components/website-cms/LocalizedRichTextField";
 import { uploadCmsImage } from "@/lib/home-cms";
 import {
-  getPages, getPage, createPage, updatePage, updatePageStatus,
-  type SupportPage, type LocalizedText, EMPTY_LOCALIZED, PageStatus,
+  getPages,
+  getPage,
+  createPage,
+  updatePage,
+  updatePageStatus,
+  type SupportPage,
+  type LocalizedText,
+  EMPTY_LOCALIZED,
+  PageStatus,
 } from "@/lib/support-pages";
 import { Loader2, Plus, Pencil, Trash2, Save, Eye, Globe } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,7 +68,9 @@ function SupportPagesCmsPage() {
     }
   };
 
-  useEffect(() => { loadPages(); }, []);
+  useEffect(() => {
+    loadPages();
+  }, []);
 
   const openNew = () => {
     setEditingPage(null);
@@ -84,7 +97,13 @@ function SupportPagesCmsPage() {
         slug: full.slug,
         title: { ...EMPTY_LOCALIZED, ...full.title },
         subtitle: { ...EMPTY_LOCALIZED, ...full.subtitle },
-        content: { ...EMPTY_LOCALIZED, ...full.content, en: full.content?.en || "", ar: full.content?.ar || "", am: full.content?.am || "" },
+        content: {
+          ...EMPTY_LOCALIZED,
+          ...full.content,
+          en: full.content?.en || "",
+          ar: full.content?.ar || "",
+          am: full.content?.am || "",
+        },
         metaTitle: { ...EMPTY_LOCALIZED, ...full.metaTitle },
         metaDescription: { ...EMPTY_LOCALIZED, ...full.metaDescription },
         metaKeywords: { ...EMPTY_LOCALIZED, ...full.metaKeywords },
@@ -158,7 +177,9 @@ function SupportPagesCmsPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </DashboardLayout>
     );
   }
@@ -170,12 +191,18 @@ function SupportPagesCmsPage() {
           eyebrow="Website CMS"
           title="Support Pages"
           description="Manage Privacy Policy, Terms of Service, and other support pages"
-          actions={<Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> New Page</Button>}
+          actions={
+            <Button onClick={openNew} className="gap-2">
+              <Plus className="h-4 w-4" /> New Page
+            </Button>
+          }
         />
 
         <GlassPanel className="p-6">
           {pages.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No support pages yet. Create one to get started.</p>
+            <p className="text-center text-muted-foreground py-8">
+              No support pages yet. Create one to get started.
+            </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-border">
               <table className="w-full text-sm text-left">
@@ -201,9 +228,27 @@ function SupportPagesCmsPage() {
                         <td className="py-3 px-4">{getStatusBadge(page.status)}</td>
                         <td className="py-3 px-4">
                           <div className="flex gap-1.5 text-[10px] font-mono">
-                            <span className={hasEn ? "text-green-600 font-bold" : "text-muted-foreground/40"}>EN</span>
-                            <span className={hasAr ? "text-green-600 font-bold" : "text-muted-foreground/40"}>AR</span>
-                            <span className={hasAm ? "text-green-600 font-bold" : "text-muted-foreground/40"}>AM</span>
+                            <span
+                              className={
+                                hasEn ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                              }
+                            >
+                              EN
+                            </span>
+                            <span
+                              className={
+                                hasAr ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                              }
+                            >
+                              AR
+                            </span>
+                            <span
+                              className={
+                                hasAm ? "text-green-600 font-bold" : "text-muted-foreground/40"
+                              }
+                            >
+                              AM
+                            </span>
                           </div>
                         </td>
                         <td className="py-3 px-4 text-xs text-muted-foreground">
@@ -212,14 +257,23 @@ function SupportPagesCmsPage() {
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             {page.status === PageStatus.PUBLISHED && (
-                              <Link to={`/${page.slug}`} target="_blank" className="p-2 hover:text-primary">
+                              <Link
+                                to={`/${page.slug}`}
+                                target="_blank"
+                                className="p-2 hover:text-primary"
+                              >
                                 <Eye className="h-4 w-4" />
                               </Link>
                             )}
                             <Button size="sm" variant="outline" onClick={() => openEdit(page)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDelete(page)}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600"
+                              onClick={() => handleDelete(page)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -233,7 +287,15 @@ function SupportPagesCmsPage() {
           )}
         </GlassPanel>
 
-        <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingPage(null); } }}>
+        <Dialog
+          open={showForm}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowForm(false);
+              setEditingPage(null);
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-3xl">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
@@ -252,8 +314,13 @@ function SupportPagesCmsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={form.status} onValueChange={(v: PageStatus) => setForm({ ...form, status: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.status}
+                    onValueChange={(v: PageStatus) => setForm({ ...form, status: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="draft">Draft</SelectItem>
                       <SelectItem value="published">Published</SelectItem>
@@ -263,28 +330,87 @@ function SupportPagesCmsPage() {
                 </div>
               </div>
 
-              <LocalizedFields label="Page Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-              <LocalizedFields label="Subtitle" value={form.subtitle} onChange={(v) => setForm({ ...form, subtitle: v })} multiline />
-              <LocalizedRichTextField label="Rich Content" value={form.content} onChange={(v) => setForm({ ...form, content: v })} />
+              <LocalizedFields
+                label="Page Title"
+                value={form.title}
+                onChange={(v) => setForm({ ...form, title: v })}
+              />
+              <LocalizedFields
+                label="Subtitle"
+                value={form.subtitle}
+                onChange={(v) => setForm({ ...form, subtitle: v })}
+                multiline
+              />
+              <LocalizedRichTextField
+                label="Rich Content"
+                value={form.content}
+                onChange={(v) => setForm({ ...form, content: v })}
+              />
 
               <GlassPanel className="p-4 space-y-4">
-                <h3 className="font-bold text-lg flex items-center gap-2"><Globe className="h-4 w-4" /> SEO Settings</h3>
-                <LocalizedFields label="Meta Title" value={form.metaTitle} onChange={(v) => setForm({ ...form, metaTitle: v })} />
-                <LocalizedFields label="Meta Description" value={form.metaDescription} onChange={(v) => setForm({ ...form, metaDescription: v })} multiline />
-                <LocalizedFields label="Meta Keywords" value={form.metaKeywords} onChange={(v) => setForm({ ...form, metaKeywords: v })} multiline />
-                <ImageUploadField label="Open Graph Image" imageUrl={form.ogImage} onChange={(url) => setForm({ ...form, ogImage: url })} onUpload={uploadCmsImage} />
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <Globe className="h-4 w-4" /> SEO Settings
+                </h3>
+                <LocalizedFields
+                  label="Meta Title"
+                  value={form.metaTitle}
+                  onChange={(v) => setForm({ ...form, metaTitle: v })}
+                />
+                <LocalizedFields
+                  label="Meta Description"
+                  value={form.metaDescription}
+                  onChange={(v) => setForm({ ...form, metaDescription: v })}
+                  multiline
+                />
+                <LocalizedFields
+                  label="Meta Keywords"
+                  value={form.metaKeywords}
+                  onChange={(v) => setForm({ ...form, metaKeywords: v })}
+                  multiline
+                />
+                <ImageUploadField
+                  label="Open Graph Image"
+                  imageUrl={form.ogImage}
+                  onChange={(url) => setForm({ ...form, ogImage: url })}
+                  onUpload={uploadCmsImage}
+                />
               </GlassPanel>
 
               <div className="flex items-center gap-3 pt-4 border-t">
-                <Button onClick={() => handleSave(PageStatus.DRAFT)} disabled={saving} variant="outline" className="gap-2">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                <Button
+                  onClick={() => handleSave(PageStatus.DRAFT)}
+                  disabled={saving}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   Save Draft
                 </Button>
-                <Button onClick={() => handleSave(PageStatus.PUBLISHED)} disabled={saving} className="gap-2">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                <Button
+                  onClick={() => handleSave(PageStatus.PUBLISHED)}
+                  disabled={saving}
+                  className="gap-2"
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Globe className="h-4 w-4" />
+                  )}
                   Publish
                 </Button>
-                <Button variant="outline" onClick={() => { setShowForm(false); setEditingPage(null); }}>Cancel</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingPage(null);
+                  }}
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           </DialogContent>

@@ -1,35 +1,38 @@
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Play, BookOpen, ChevronRight, Lock, Eye, EyeOff, Bell, MessageSquare, Calendar, GraduationCap, UserCheck, Sparkles, Bell as BellIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Progress as ProgressBar } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Play,
+  BookOpen,
+  ChevronRight,
+  Bell as BellIcon,
+  Sparkles,
+  GraduationCap,
+  UserCheck,
+  Calendar,
+  Lock,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { StudentPortalLayout, StudentPageLoader } from "@/components/student/StudentPortalLayout";
-import {
-  api,
-  apiHeaders,
-  requireStudentAuth,
-  storeStudentId,
-  studentPaths,
-} from "@/lib/student-portal";
+import { api, requireStudentAuth, storeStudentId, studentPaths } from "@/lib/student-portal";
+import { apiUrl, apiHeaders } from "@/lib/api";
 import { LearningPathCard, useLearningPath } from "@/components/progress/LearningPathCard";
 import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
-import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, NOTIFICATION_BG_COLORS } from "@/lib/notification-helpers";
+import {
+  NOTIFICATION_ICONS,
+  NOTIFICATION_COLORS,
+  NOTIFICATION_BG_COLORS,
+} from "@/lib/notification-helpers";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
 import { TelegramLink } from "@/components/ui/telegram-link";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
+import { TodayLesson } from "@/components/student/lessons/TodayLesson";
+import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
+import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
+import type { StudentDashboardData, StudentProfileData } from "@/lib/student-types";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -43,59 +46,40 @@ const dayLabels: Record<string, string> = {
 
 function StudentDashboard() {
   const navigate = useNavigate();
-  const [data, setData] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [data, setData] = useState<StudentDashboardData | null>(null);
+  const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-  const [showCurrentPw, setShowCurrentPw] = useState(false);
-  const [showNewPw, setShowNewPw] = useState(false);
-  const [showConfirmPw, setShowConfirmPw] = useState(false);
-  const [pwForm, setPwForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [changingPw, setChangingPw] = useState(false);
-  const [profileForm, setProfileForm] = useState({ phone: "", email: "" });
   const { path: learningPath } = useLearningPath(profile?.student?.id);
 
-  useEffect(() => {
-    const loadDashboard = () =>
-      api("/student/dashboard")
-        .then((dash) => setData(dash))
-        .catch((e) => {
-          console.error(e);
-          toast.error("Could not load your dashboard. Please refresh the page.");
-        });
+  const loadDashboard = useCallback(async () => {
+    try {
+      const dash = await api<StudentDashboardData>("/student/dashboard");
+      setData(dash);
+    } catch {
+      toast.error("Could not load your dashboard. Please refresh the page.");
+    }
+  }, []);
 
-    Promise.all([loadDashboard(), api("/student/profile").catch(() => null)])
-      .then(([dash, prof]) => {
-        setData(dash);
-        setProfile(prof);
+  useEffect(() => {
+    Promise.all([loadDashboard(), api<StudentProfileData>("/student/profile").catch(() => null)])
+      .then(([, prof]) => {
         if (prof?.student) {
           storeStudentId(prof.student.id);
-          setProfileForm({ phone: prof.student.phone || "", email: prof.student.email || "" });
         }
+        setProfile(prof);
       })
       .finally(() => setLoading(false));
 
-    const interval = setInterval(() => {
-      api("/student/dashboard")
-        .then((dash) => setData(dash))
-        .catch(() => {});
-    }, 15000);
-
+    const interval = setInterval(loadDashboard, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadDashboard]);
 
-  // WebSocket for real-time notifications
   useSocket({
     onNotification: (notif) => {
-      api("/student/dashboard")
-        .then((dash) => setData(dash))
-        .catch(() => {});
+      loadDashboard();
       if (notif.channel === "MEETING_STARTED" && notif.data?.sessionId) {
         const sessionId = notif.data.sessionId;
         toast(notif.title, {
@@ -111,68 +95,21 @@ function StudentDashboard() {
                     ? "Rejoined session — attendance already recorded"
                     : "Attendance recorded — opening Zoom",
                 );
-                api("/student/dashboard").then((dash) => setData(dash)).catch(() => {});
-              } catch (e: any) {
-                toast.error(e.message || "Could not join session");
+              } catch (e: unknown) {
+                toast.error(e instanceof Error ? e.message : "Could not join session");
               }
             },
           },
         });
-        api("/student/dashboard").then((dash) => setData(dash)).catch(() => {});
       }
     },
   });
-
-  const handleChangePassword = async () => {
-    if (
-      !pwForm.currentPassword ||
-      !pwForm.newPassword ||
-      pwForm.newPassword !== pwForm.confirmPassword
-    ) {
-      toast.error("Check password fields");
-      return;
-    }
-    setChangingPw(true);
-    try {
-      const res = await fetch(
-        apiUrl(`/users/change-password`),
-        {
-          method: "POST",
-          headers: apiHeaders(),
-          body: JSON.stringify(pwForm),
-        },
-      );
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "Failed");
-      toast.success("Password updated");
-      setChangePasswordOpen(false);
-      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setChangingPw(false);
-    }
-  };
-
-  const saveProfile = async () => {
-    try {
-      await fetch(apiUrl(`/users/profile`), {
-        method: "PATCH",
-        headers: apiHeaders(),
-        body: JSON.stringify({ phone: profileForm.phone, email: profileForm.email }),
-      });
-      toast.success("Profile updated");
-      setProfileOpen(false);
-    } catch {
-      toast.error("Could not update profile");
-    }
-  };
 
   if (loading) return <StudentPageLoader />;
 
   const student = data?.student;
   const welcome = data?.welcome;
   const progress = data?.progress;
-  const attendance = data?.attendance;
 
   const displayLevel = student?.level || welcome?.quranLevel || profile?.student?.level || "—";
   const displayTeacher =
@@ -195,7 +132,9 @@ function StudentDashboard() {
 
   const joinClass = async () => {
     if (!isSessionLive) {
-      toast.info("Your teacher has not started the session yet. The join button will activate when class is live.");
+      toast.info(
+        "Your teacher has not started the session yet. The join button will activate when class is live.",
+      );
       return;
     }
     const sessionId = data?.liveClass?.id;
@@ -204,18 +143,24 @@ function StudentDashboard() {
       return;
     }
     try {
-      const result = await joinLiveSessionWhenActive(sessionId, data.liveClass.status);
+      const result = await joinLiveSessionWhenActive(sessionId, data.liveClass!.status);
       toast.success(
         result.alreadyJoined
           ? "Rejoined session — attendance already recorded"
           : "Attendance recorded — opening Zoom",
       );
-    } catch (e: any) {
-      toast.error(e.message || "Could not join session. Attendance was not recorded.");
+    } catch (e: unknown) {
+      toast.error(
+        e instanceof Error ? e.message : "Could not join session. Attendance was not recorded.",
+      );
     }
   };
 
-  const firstName = welcome?.firstName || student?.firstName || localStorage.getItem('userName')?.split(" ")[0] || "Student";
+  const firstName =
+    welcome?.firstName ||
+    student?.firstName ||
+    localStorage.getItem("userName")?.split(" ")[0] ||
+    "Student";
 
   return (
     <StudentPortalLayout
@@ -226,7 +171,7 @@ function StudentDashboard() {
       onOpenProfile={() => setProfileOpen(true)}
     >
       <main className="flex-1 px-4 sm:px-6 lg:px-10 pb-8 lg:pb-10">
-        {/* ─── Hero Header ─── */}
+        {/* Hero Header */}
         <div className="hero-gradient rounded-2xl lg:rounded-3xl p-6 sm:p-8 mb-6 lg:mb-8 animate-fade-in-up border border-border/30 dark:border-nejah-border-blue/20">
           <div className="flex items-start justify-between">
             <div>
@@ -259,7 +204,10 @@ function StudentDashboard() {
 
         {/* Temporary teacher notice */}
         {student?.isTemporaryTeacher && student?.temporaryTeacher && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-sm text-amber-900 dark:text-amber-200 mb-6 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+          <div
+            className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-4 text-sm text-amber-900 dark:text-amber-200 mb-6 animate-fade-in-up"
+            style={{ animationDelay: "0.05s" }}
+          >
             <p className="font-bold mb-1">Temporary Teacher Assigned</p>
             <p>
               <strong>{student.temporaryTeacher.name}</strong> is teaching your classes from{" "}
@@ -271,12 +219,15 @@ function StudentDashboard() {
 
         {/* Learning Path */}
         {learningPath && (
-          <div className="glass-card-static p-5 sm:p-6 mb-6 lg:mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <div
+            className="glass-card-static p-5 sm:p-6 mb-6 lg:mb-8 animate-fade-in-up"
+            style={{ animationDelay: "0.1s" }}
+          >
             <LearningPathCard path={learningPath} />
           </div>
         )}
 
-        {/* ─── Main Grid ─── */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Left column — 2/3 */}
           <div className="lg:col-span-2 space-y-5 lg:space-y-6">
@@ -288,289 +239,94 @@ function StudentDashboard() {
                 onViewProgress={() => navigate({ to: studentPaths.progress })}
               />
             ) : (
-            <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-              <div className="gradient-accent-bar" />
-              <div className="p-5 sm:p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">
-                      Current Hifz Progress
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {progress?.currentSurah ? `${progress.currentSurah} · Ayah ${progress.currentAyah}` : 'Not started yet'}
-                    </p>
+              <div
+                className="glass-card overflow-hidden animate-fade-in-up"
+                style={{ animationDelay: "0.15s" }}
+              >
+                <div className="gradient-accent-bar" />
+                <div className="p-5 sm:p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">Current Hifz Progress</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {progress?.currentSurah
+                          ? `${progress.currentSurah} · Ayah ${progress.currentAyah}`
+                          : "Not started yet"}
+                      </p>
+                    </div>
+                    <Badge className="bg-nejah-electric/10 text-nejah-electric border border-nejah-electric/20 font-semibold">
+                      {progress?.rank || "Beginner"}
+                    </Badge>
                   </div>
-                  <Badge className="bg-nejah-electric/10 text-nejah-electric border border-nejah-electric/20 font-semibold">
-                    {progress?.rank || 'Beginner'}
-                  </Badge>
+                  <div className="relative h-2.5 bg-muted dark:bg-nejah-surface rounded-full mb-5 overflow-hidden">
+                    <div
+                      className="progress-gradient h-full transition-all duration-700 ease-out"
+                      style={{ width: `${progress?.percentage || 0}%` }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="stat-card">
+                      <p className="font-bold text-xl text-foreground">
+                        {progress?.memorizedSurahs ?? 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 font-medium">Surahs</p>
+                    </div>
+                    <div className="stat-card">
+                      <p className="font-bold text-xl text-foreground">
+                        {progress?.memorizedAyahs ?? 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 font-medium">Ayahs</p>
+                    </div>
+                    <div className="stat-card">
+                      <p className="font-bold text-xl text-foreground">
+                        {progress?.completedJuz ?? 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 font-medium">Juz</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-xl border-border/60 hover:border-nejah-electric/30 hover:bg-primary/5 transition-all"
+                    onClick={() => navigate({ to: studentPaths.progress })}
+                  >
+                    View Full Progress <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
-
-                {/* Progress bar */}
-                <div className="relative h-2.5 bg-muted dark:bg-nejah-surface rounded-full mb-5 overflow-hidden">
-                  <div
-                    className="progress-gradient h-full transition-all duration-700 ease-out"
-                    style={{ width: `${progress?.percentage || 0}%` }}
-                  />
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-5">
-                  <div className="stat-card">
-                    <p className="font-bold text-xl text-foreground">
-                      {progress?.memorizedSurahs ?? 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">Surahs</p>
-                  </div>
-                  <div className="stat-card">
-                    <p className="font-bold text-xl text-foreground">
-                      {progress?.memorizedAyahs ?? 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">Ayahs</p>
-                  </div>
-                  <div className="stat-card">
-                    <p className="font-bold text-xl text-foreground">
-                      {progress?.completedJuz ?? 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">Juz</p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl border-border/60 hover:border-nejah-electric/30 hover:bg-primary/5 transition-all"
-                  onClick={() => navigate({ to: studentPaths.progress })}
-                >
-                  View Full Progress <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
               </div>
-            </div>
             )}
 
-            {/* Today's Lesson - Level-Aware */}
-            <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            {/* Today's Lesson */}
+            <div
+              className="glass-card overflow-hidden animate-fade-in-up"
+              style={{ animationDelay: "0.2s" }}
+            >
               <div className="p-5 sm:p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="h-5 w-5 text-nejah-electric" />
                   <h3 className="text-lg font-bold text-foreground">
-                    {data?.todaysLesson?.level === 'Qaida Nooraniya'
+                    {data?.todaysLesson?.level === "Qaida Nooraniya"
                       ? "Today's Qaida Lesson"
-                      : data?.todaysLesson?.level === 'Tajweed Program'
+                      : data?.todaysLesson?.level === "Tajweed Program"
                         ? "Today's Tajweed Lesson"
-                        : data?.todaysLesson?.level === 'Hifz Program' || data?.todaysLesson?.level === "Hifz Muraja'a"
+                        : data?.todaysLesson?.level === "Hifz Program" ||
+                            data?.todaysLesson?.level === "Hifz Muraja'a"
                           ? "Today's Hifz Lesson"
                           : "Today's Lesson"}
                   </h3>
                 </div>
-
-                {(() => {
-                  const lesson = data?.todaysLesson;
-                  if (!lesson || lesson === '—') {
-                    return (
-                      <p className="text-sm text-muted-foreground text-center py-8">
-                        No lesson has been assigned for today. Please check back later or contact your teacher.
-                      </p>
-                    );
-                  }
-
-                  const level = lesson.level;
-
-                  // Qaida Nooraniya Layout
-                  if (level === 'Qaida Nooraniya') {
-                    return (
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                        {lesson.lessonNumber && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lesson</p>
-                            <p className="font-semibold text-foreground">Lesson {lesson.lessonNumber}</p>
-                          </div>
-                        )}
-                        {lesson.topicName && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Topic</p>
-                            <p className="font-semibold text-foreground">{lesson.topicName}</p>
-                          </div>
-                        )}
-                        {lesson.lines && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lines</p>
-                            <p className="font-semibold text-foreground">{lesson.lines}</p>
-                          </div>
-                        )}
-                        {lesson.page && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Page</p>
-                            <p className="font-semibold text-foreground">{lesson.page}</p>
-                          </div>
-                        )}
-                        {lesson.teacherNotes && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
-                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
-                          </div>
-                        )}
-                        {lesson.homework && (
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
-                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // Quran Reading Layout
-                  if (level === 'Quran Reading') {
-                    return (
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                        {lesson.surahName && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
-                            <p className="font-semibold text-foreground">{lesson.surahName}</p>
-                          </div>
-                        )}
-                        {lesson.startAyah && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{lesson.endAyah ? 'Read From' : 'Ayah'}</p>
-                            <p className="font-semibold text-foreground">Ayah {lesson.startAyah}</p>
-                          </div>
-                        )}
-                        {lesson.endAyah && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Read To</p>
-                            <p className="font-semibold text-foreground">Ayah {lesson.endAyah}</p>
-                          </div>
-                        )}
-                        {lesson.teacherNotes && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
-                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
-                          </div>
-                        )}
-                        {lesson.homework && (
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
-                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // Tajweed Layout
-                  if (level === 'Tajweed Program') {
-                    return (
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                        {lesson.rule && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Rule</p>
-                            <p className="font-semibold text-foreground">{lesson.rule}</p>
-                          </div>
-                        )}
-                        {lesson.lessonTitle && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Lesson</p>
-                            <p className="font-semibold text-foreground">{lesson.lessonTitle}</p>
-                          </div>
-                        )}
-                        {lesson.practice && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Practice</p>
-                            <p className="font-semibold text-foreground">{lesson.practice}</p>
-                          </div>
-                        )}
-                        {lesson.teacherNotes && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
-                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
-                          </div>
-                        )}
-                        {lesson.homework && (
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
-                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // Hifz Layout
-                  if (level === 'Hifz Program' || level === "Hifz Muraja'a") {
-                    return (
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                        {lesson.surahName && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
-                            <p className="font-semibold text-foreground">{lesson.surahName}</p>
-                          </div>
-                        )}
-                        {lesson.memorizationRange && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">{level === "Hifz Muraja'a" ? 'Revision Range' : 'New Memorization'}</p>
-                            <p className="font-semibold text-foreground">{lesson.memorizationRange}</p>
-                          </div>
-                        )}
-                        {lesson.revisionPortion && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Revision</p>
-                            <p className="font-semibold text-foreground">{lesson.revisionPortion}</p>
-                          </div>
-                        )}
-                        {lesson.dailyTarget && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Daily Target</p>
-                            <p className="font-semibold text-foreground">{lesson.dailyTarget}</p>
-                          </div>
-                        )}
-                        {lesson.teacherNotes && (
-                          <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
-                            <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
-                          </div>
-                        )}
-                        {lesson.homework && (
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
-                            <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  // Fallback: show whatever fields are available
-                  return (
-                    <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                      {lesson.surahName && (
-                        <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8">
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Surah</p>
-                          <p className="font-semibold text-foreground">{lesson.surahName}</p>
-                        </div>
-                      )}
-                      {lesson.teacherNotes && (
-                        <div className="bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl sm:col-span-2 border border-primary/8">
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Teacher Notes</p>
-                          <p className="font-semibold text-foreground">{lesson.teacherNotes}</p>
-                        </div>
-                      )}
-                      {lesson.homework && (
-                        <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl sm:col-span-2 border border-amber-100 dark:border-amber-800/50">
-                          <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider mb-1">Homework</p>
-                          <p className="font-semibold text-amber-900 dark:text-amber-100">{lesson.homework.title}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                <TodayLesson lesson={data?.todaysLesson} />
               </div>
             </div>
 
             {/* Recent Feedback */}
-            {data?.recentFeedback?.length > 0 && (
-              <div className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+            {data?.recentFeedback && data.recentFeedback.length > 0 && (
+              <div
+                className="glass-card overflow-hidden animate-fade-in-up"
+                style={{ animationDelay: "0.25s" }}
+              >
                 <div className="p-5 sm:p-6">
                   <h3 className="font-bold text-foreground mb-4">Recent Teacher Feedback</h3>
-                  {data.recentFeedback.slice(0, 2).map((f: any) => (
+                  {data.recentFeedback.slice(0, 2).map((f) => (
                     <div
                       key={f.id}
                       className="mb-4 last:mb-0 border-b border-border/40 dark:border-nejah-border-blue/30 pb-4 last:border-0"
@@ -578,7 +334,9 @@ function StudentDashboard() {
                       <p className="text-xs text-nejah-electric font-medium">
                         {f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ""}
                       </p>
-                      <p className="text-sm mt-1.5 italic text-muted-foreground">&quot;{f.summary}&quot;</p>
+                      <p className="text-sm mt-1.5 italic text-muted-foreground">
+                        &quot;{f.summary}&quot;
+                      </p>
                     </div>
                   ))}
                   <Button
@@ -596,12 +354,17 @@ function StudentDashboard() {
           {/* Right column — 1/3 */}
           <div className="space-y-5 lg:space-y-6">
             {/* Upcoming / Live Class */}
-            <div className="upcoming-class-gradient rounded-2xl text-white overflow-hidden animate-fade-in-up shadow-lg" style={{ animationDelay: '0.15s' }}>
+            <div
+              className="upcoming-class-gradient rounded-2xl text-white overflow-hidden animate-fade-in-up shadow-lg"
+              style={{ animationDelay: "0.15s" }}
+            >
               <div className="p-5 sm:p-6">
                 {isSessionLive ? (
                   <div className="flex items-center gap-2 mb-3">
                     <span className="live-pulse-dot" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-red-200">Live Now</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-red-200">
+                      Live Now
+                    </span>
                   </div>
                 ) : (
                   <Badge className="bg-white/15 text-white/90 border-none mb-3 text-xs font-semibold">
@@ -610,12 +373,12 @@ function StudentDashboard() {
                 )}
                 {isSessionLive ? (
                   <>
-                    <h3 className="text-xl font-bold">{data.liveClass.classTitle}</h3>
+                    <h3 className="text-xl font-bold">{data?.liveClass?.classTitle}</h3>
                     <p className="text-white/60 text-sm mt-1">
-                      Teacher: {data.liveClass.teacher?.fullName || displayTeacher}
+                      Teacher: {data?.liveClass?.teacher?.fullName || displayTeacher}
                     </p>
                     <p className="text-sm font-bold text-nejah-electric mt-1">
-                      {data.liveClass.scheduledStart
+                      {data?.liveClass?.scheduledStart
                         ? new Date(data.liveClass.scheduledStart).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -626,9 +389,7 @@ function StudentDashboard() {
                 ) : data?.upcomingClass ? (
                   <>
                     <h3 className="text-xl font-bold">{data.upcomingClass.name}</h3>
-                    <p className="text-white/60 text-sm mt-1">
-                      with {data.upcomingClass.teacher}
-                    </p>
+                    <p className="text-white/60 text-sm mt-1">with {data.upcomingClass.teacher}</p>
                     <p className="text-sm font-bold text-nejah-electric mt-1">
                       {data.upcomingClass.time}
                     </p>
@@ -660,14 +421,14 @@ function StudentDashboard() {
             <button
               type="button"
               className="glass-card w-full text-left p-5 sm:p-6 animate-fade-in-up"
-              style={{ animationDelay: '0.2s' }}
+              style={{ animationDelay: "0.2s" }}
               onClick={() => navigate({ to: studentPaths.progress })}
             >
               <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
                 Weekly Attendance
               </h4>
               <div className="flex justify-between px-2 mb-4">
-                {attendance?.weekly?.map((day: any) => {
+                {data?.attendance?.weekly?.map((day) => {
                   const wd = new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
                     weekday: "long",
                   });
@@ -681,47 +442,47 @@ function StudentDashboard() {
                             : "bg-muted dark:bg-nejah-surface"
                         }`}
                       />
-                      <span className="text-[10px] font-bold text-muted-foreground">
-                        {short}
-                      </span>
+                      <span className="text-[10px] font-bold text-muted-foreground">{short}</span>
                     </div>
                   );
                 })}
               </div>
               <p className="text-center text-sm font-bold text-foreground">
-                {attendance?.rate ?? 0}% · Present {attendance?.presentDays ?? 0} / Absent{" "}
-                {attendance?.absentDays ?? 0}
+                {data?.attendance?.rate ?? 0}% · Present {data?.attendance?.presentDays ?? 0} /
+                Absent {data?.attendance?.absentDays ?? 0}
               </p>
             </button>
 
             {/* Notifications */}
-            <div className="glass-card-static p-5 sm:p-6 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+            <div
+              className="glass-card-static p-5 sm:p-6 animate-fade-in-up"
+              style={{ animationDelay: "0.25s" }}
+            >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-foreground flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-nejah-electric" /> Notifications
+                  <BellIcon className="h-4 w-4 text-nejah-electric" /> Notifications
                 </h3>
-                {data?.unreadNotifications > 0 && (
+                {(data?.unreadNotifications ?? 0) > 0 && (
                   <Badge className="bg-red-500 text-white border-none text-[10px] font-bold px-2">
-                    {data.unreadNotifications}
+                    {data!.unreadNotifications}
                   </Badge>
                 )}
               </div>
-              {data?.notifications?.length ? (
+              {data?.notifications && data.notifications.length > 0 ? (
                 <ul className="space-y-2.5 text-sm">
-                  {data.notifications.slice(0, 3).map((n: any) => {
+                  {data.notifications.slice(0, 3).map((n) => {
                     const Icon = NOTIFICATION_ICONS[n.type || n.channel] || BellIcon;
-                    const iconColor = NOTIFICATION_COLORS[n.type || n.channel] || "text-nejah-electric";
+                    const iconColor =
+                      NOTIFICATION_COLORS[n.type || n.channel] || "text-nejah-electric";
                     const bgColor = NOTIFICATION_BG_COLORS[n.type || n.channel] || "";
                     return (
                       <li
                         key={n.id}
-                        className={`flex items-start gap-2.5 ${
-                          n.isRead
-                            ? "text-muted-foreground"
-                            : "font-medium text-foreground"
-                        }`}
+                        className={`flex items-start gap-2.5 ${n.isRead ? "text-muted-foreground" : "font-medium text-foreground"}`}
                       >
-                        <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center relative ${bgColor}`}>
+                        <div
+                          className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center relative ${bgColor}`}
+                        >
                           <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
                           {!n.isRead && (
                             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-nejah-electric ring-2 ring-background" />
@@ -733,9 +494,7 @@ function StudentDashboard() {
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  No notifications
-                </p>
+                <p className="text-sm text-muted-foreground">No notifications</p>
               )}
               <Button
                 variant="link"
@@ -749,7 +508,7 @@ function StudentDashboard() {
         </div>
       </main>
 
-      {/* ─── Settings Dialog ─── */}
+      {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="rounded-3xl">
           <DialogHeader>
@@ -777,122 +536,16 @@ function StudentDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── Profile Dialog ─── */}
-      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle>My Profile</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2 text-sm">
-            <p>
-              <strong>Name:</strong> {profile?.student?.fullName}
-            </p>
-            <p>
-              <strong>Level:</strong> {displayLevel}
-            </p>
-            <p>
-              <strong>Teacher:</strong> {displayTeacher}
-            </p>
-            <p>
-              <strong>Enrolled:</strong> {displayEnrolled}
-            </p>
-            <div>
-              <Label>Phone</Label>
-              <Input
-                value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input
-                value={profileForm.email}
-                onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2 pt-2 text-center">
-              <div className="stat-card">
-                <p className="font-bold text-foreground">
-                  {profile?.statistics?.attendancePercentage}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Attendance
-                </p>
-              </div>
-              <div className="stat-card">
-                <p className="font-bold text-foreground">
-                  {profile?.statistics?.progressPercentage}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Progress</p>
-              </div>
-              <div className="stat-card">
-                <p className="font-bold text-foreground">
-                  {profile?.statistics?.homeworkCompletionRate}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Homework</p>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={saveProfile} className="bg-nejah-sapphire rounded-xl">
-              Save Contact Info
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        profile={profile}
+        level={displayLevel}
+        teacher={displayTeacher}
+        enrolled={displayEnrolled}
+      />
 
-      {/* ─── Change Password Dialog ─── */}
-      <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-        <DialogContent className="rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            {(["currentPassword", "newPassword", "confirmPassword"] as const).map((field, i) => (
-              <div key={field}>
-                <Label>
-                  {field === "currentPassword"
-                    ? "Current"
-                    : field === "newPassword"
-                      ? "New"
-                      : "Confirm"}
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={
-                      (i === 0 ? showCurrentPw : i === 1 ? showNewPw : showConfirmPw)
-                        ? "text"
-                        : "password"
-                    }
-                    value={pwForm[field]}
-                    onChange={(e) => setPwForm({ ...pwForm, [field]: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    onClick={() => [setShowCurrentPw, setShowNewPw, setShowConfirmPw][i]((v) => !v)}
-                  >
-                    {(i === 0 ? showCurrentPw : i === 1 ? showNewPw : showConfirmPw) ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={handleChangePassword}
-              disabled={changingPw}
-              className="bg-nejah-sapphire rounded-xl"
-            >
-              {changingPw ? "Saving..." : "Update Password"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </StudentPortalLayout>
   );
 }

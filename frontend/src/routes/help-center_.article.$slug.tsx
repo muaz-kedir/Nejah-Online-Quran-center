@@ -9,7 +9,9 @@ import { useTheme } from "@/components/site/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  getArticleBySlug, getRelatedArticles, submitFeedback,
+  getArticleBySlug,
+  getRelatedArticles,
+  submitFeedback,
   type HelpArticle,
 } from "@/lib/support-pages";
 import { Loader2, ChevronRight, ThumbsUp, ThumbsDown } from "lucide-react";
@@ -17,9 +19,7 @@ import { Loader2, ChevronRight, ThumbsUp, ThumbsDown } from "lucide-react";
 export const Route = createFileRoute("/help-center_/article/$slug")({
   component: ArticleDetailPage,
   head: ({ params }) => ({
-    meta: [
-      { title: `Help Article - ${params.slug} - Nejah` },
-    ],
+    meta: [{ title: `Help Article - ${params.slug} - Nejah` }],
   }),
 });
 
@@ -68,7 +68,13 @@ function ArticleDetailPage() {
     return (
       <ThemeProvider>
         <Loader />
-        <div className="relative flex min-h-screen flex-col"><Navbar /><main className="flex-1 flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></main><Footer /></div>
+        <div className="relative flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </main>
+          <Footer />
+        </div>
       </ThemeProvider>
     );
   }
@@ -81,8 +87,12 @@ function ArticleDetailPage() {
           <Navbar />
           <main className="flex-1 container-x py-20 text-center">
             <h1 className="text-2xl font-bold">Article Not Found</h1>
-            <p className="text-muted-foreground mt-2">The article you're looking for doesn't exist or has been removed.</p>
-            <Link to="/help-center" className="text-primary hover:underline mt-4 inline-block">Back to Help Center</Link>
+            <p className="text-muted-foreground mt-2">
+              The article you're looking for doesn't exist or has been removed.
+            </p>
+            <Link to="/help-center" className="text-primary hover:underline mt-4 inline-block">
+              Back to Help Center
+            </Link>
           </main>
           <Footer />
         </div>
@@ -105,11 +115,16 @@ function ArticleDetailPage() {
             <div className="max-w-4xl mx-auto">
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
-                <Link to="/help-center" className="hover:text-primary">Help Center</Link>
+                <Link to="/help-center" className="hover:text-primary">
+                  Help Center
+                </Link>
                 <ChevronRight className="h-3 w-3" />
                 {article.category && (
                   <>
-                    <Link to={`/help-center/category/${article.category.slug}`} className="hover:text-primary">
+                    <Link
+                      to={`/help-center/category/${article.category.slug}`}
+                      className="hover:text-primary"
+                    >
                       {article.category.name?.[lang] || article.category.name?.en}
                     </Link>
                     <ChevronRight className="h-3 w-3" />
@@ -121,12 +136,16 @@ function ArticleDetailPage() {
               {/* Meta info */}
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
                 {article.author && <span>By {article.author}</span>}
-                {article.publishedAt && <span>Published: {new Date(article.publishedAt).toLocaleDateString()}</span>}
+                {article.publishedAt && (
+                  <span>Published: {new Date(article.publishedAt).toLocaleDateString()}</span>
+                )}
                 <span>{article.viewCount} views</span>
                 {article.tags && article.tags.length > 0 && (
                   <div className="flex gap-1.5 flex-wrap">
                     {article.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 rounded-full bg-muted text-xs">{tag}</span>
+                      <span key={tag} className="px-2 py-0.5 rounded-full bg-muted text-xs">
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 )}
@@ -163,7 +182,9 @@ function ArticleDetailPage() {
                     <ThumbsDown className="h-4 w-4" /> No ({article.notHelpfulCount})
                   </Button>
                 </div>
-                {feedbackGiven && <p className="text-sm text-muted-foreground mt-2">Thank you for your feedback!</p>}
+                {feedbackGiven && (
+                  <p className="text-sm text-muted-foreground mt-2">Thank you for your feedback!</p>
+                )}
               </div>
 
               {/* Related Articles */}

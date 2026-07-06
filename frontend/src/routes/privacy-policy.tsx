@@ -29,13 +29,20 @@ function PrivacyPolicyContent() {
       try {
         const data = await getPublishedPage("privacy-policy");
         setPage(data);
-      } catch { /* page not published yet */ }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.warn("Privacy policy page not published yet", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (!page) {
@@ -58,7 +65,9 @@ function PrivacyPolicyContent() {
         <h1 className="text-3xl md:text-4xl font-bold mb-2">{title}</h1>
         {subtitle && <p className="text-lg text-muted-foreground mb-4">{subtitle}</p>}
         {page.publishedAt && (
-          <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date(page.publishedAt).toLocaleDateString()}</p>
+          <p className="text-sm text-muted-foreground mb-8">
+            Last updated: {new Date(page.publishedAt).toLocaleDateString()}
+          </p>
         )}
         <div
           className="prose prose-lg dark:prose-invert max-w-none"
