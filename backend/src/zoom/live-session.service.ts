@@ -131,16 +131,8 @@ export class LiveSessionService {
         await this.notificationsService.sendCustomNotifications(
           recipients,
           'New Class Scheduled',
-          `Your class "${created.schedule?.className || 'Quran Class'}" has been scheduled for ${created.scheduledStart.toLocaleString()}.`,
-          {
-            sessionId: created.id,
-            url: classroomUrl,
-            joinUrl: created.zoomJoinUrl,
-            scheduledStart: created.scheduledStart.toISOString(),
-          },
-          undefined,
-          false,
-          classroomUrl,
+          `Your class "${created.schedule?.className || 'Quran Class'}" has been scheduled for ${created.scheduledStart.toLocaleString()}. Join link: ${created.zoomJoinUrl}`,
+          { sessionId: created.id, joinUrl: created.zoomJoinUrl, scheduledStart: created.scheduledStart.toISOString() },
         );
       } catch (err) {
         this.logger.error('Failed to send session scheduled notification', err);
