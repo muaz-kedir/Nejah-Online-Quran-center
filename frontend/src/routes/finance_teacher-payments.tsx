@@ -24,7 +24,7 @@ function TeacherPaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
-  const [rateEdits, setRateEdits] = useState<Record<string, string>>({});
+  const [rateEdits, setRateEdits] = useState<Record<string, { budget: string; rate: string }>>({});
   const [savingRate, setSavingRate] = useState<string | null>(null);
 
   const load = async () => {
@@ -64,9 +64,14 @@ function TeacherPaymentsPage() {
     try {
       const d = await financeFetch<any>(`/teacher-payments/${teacherId}`, filters);
       setDetail(d);
-      const edits: Record<string, string> = {};
+      const edits: Record<string, { budget: string; rate: string }> = {};
       (d.assignedStudents || []).forEach((s: any) => {
-        if (s.feeAccountId) edits[s.feeAccountId] = String(s.teacherMonthlyBudget ?? '');
+        if (s.feeAccountId) {
+          edits[s.feeAccountId] = {
+            budget: s.teacherMonthlyBudget != null ? String(s.teacherMonthlyBudget) : '',
+            rate: s.assignableRate || s.sessionRate ? String(s.assignableRate || s.sessionRate) : '',
+          };
+        }
       });
       setRateEdits(edits);
     } catch (e: any) {
@@ -74,26 +79,34 @@ function TeacherPaymentsPage() {
     }
   };
 
-  const saveStudentBudget = async (feeAccountId: string) => {
-    const val = parseFloat(rateEdits[feeAccountId]);
-    if (isNaN(val) || val < 0) {
-      toast.error('Enter a valid budget amount');
+  const saveStudentRate = async (feeAccountId: string) => {
+    const edits = rateEdits[feeAccountId];
+    if (!edits) return;
+    const budget = parseFloat(edits.budget);
+    const rate = parseFloat(edits.rate);
+    if ((isNaN(budget) || budget < 0) && (isNaN(rate) || rate < 0)) {
+      toast.error('Enter a valid budget or session rate');
       return;
     }
     setSavingRate(feeAccountId);
     try {
+      const body: Record<string, number> = {};
+      if (!isNaN(budget) && budget >= 0) body.teacherMonthlyBudget = budget;
+      if (!isNaN(rate) && rate >= 0) body.sessionRate = rate;
       const res = await fetch(apiUrl(`/finance/student-payments/${feeAccountId}`), {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({ teacherMonthlyBudget: val }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Failed to update budget');
-      toast.success('Teacher budget updated');
+      if (!res.ok) throw new Error('Failed to update rate');
+      toast.success('Teacher rate updated');
       if (detail) {
         setDetail((prev: any) => ({
           ...prev,
           assignedStudents: (prev.assignedStudents || []).map((s: any) =>
-            s.feeAccountId === feeAccountId ? { ...s, teacherMonthlyBudget: val } : s,
+            s.feeAccountId === feeAccountId
+              ? { ...s, teacherMonthlyBudget: budget, assignableRate: rate, sessionRate: rate }
+              : s,
           ),
         }));
       }
@@ -186,8 +199,24 @@ function TeacherPaymentsPage() {
                   <p className="text-nejah-slate-blue">No student details</p>
                 )}
                 {detail.assignedStudents?.map((s: any, i: number) => {
-                  const budget = parseFloat(rateEdits[s.feeAccountId] ?? '') || 0;
-                  const perSession = s.monthlySessions > 0 ? (budget / s.monthlySessions).toFixed(2) : '—';
+                  const daysPerWeek = s.weeklySchedule?.length || 0;
+                  let durationMinutes = 60;
+                  if (s.weeklySchedule?.length > 0) {
+                    const parts = s.weeklySchedule[0]?.startTime?.split(':') || [];
+                    const endParts = s.weeklySchedule[0]?.endTime?.split(':') || [];
+                    if (parts.length >= 2 && endParts.length >= 2) {
+                      durationMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]) - (parseInt(parts[0]) * 60 + parseInt(parts[1]));
+                    }
+                  }
+                  if (durationMinutes < 0) durationMinutes = 60;
+                  const monthlySessions = s.monthlySessions || (daysPerWeek * 4);
+
+                  const edits = rateEdits[s.feeAccountId] || { budget: '', rate: '' };
+                  const currentBudget = parseFloat(edits.budget);
+                  const currentRate = parseFloat(edits.rate);
+                  const displayBudget = isNaN(currentBudget) ? '' : edits.budget;
+                  const displayRate = isNaN(currentRate) ? '' : edits.rate;
+
                   return (
                     <div key={i} className="border-b border-white/5 py-3">
                       <div className="flex items-center gap-3">
@@ -196,45 +225,87 @@ function TeacherPaymentsPage() {
                         </span>
                         <span className="text-nejah-slate-blue text-xs">{s.sessionsConducted}/{s.monthlySessions} sess</span>
                       </div>
-                      {s.weeklySchedule?.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {s.weeklySchedule.map((sch: any, j: number) => (
-                            <span key={j} className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-nejah-slate-blue">
-                              {sch.day} {sch.startTime}–{sch.endTime}
-                            </span>
-                          ))}
+
+                      {daysPerWeek > 0 && (
+                        <div className="mt-1">
+                          <div className="flex flex-wrap gap-1">
+                            {s.weeklySchedule.map((sch: any, j: number) => (
+                              <span key={j} className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-nejah-slate-blue">
+                                {sch.day} {sch.startTime}–{sch.endTime}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="mt-1 text-xs text-nejah-slate-blue/70">
+                            {daysPerWeek} day{daysPerWeek > 1 ? 's' : ''}/wk × {durationMinutes} min/session = {monthlySessions} sessions/month
+                          </p>
                         </div>
                       )}
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-nejah-slate-blue w-32">Teacher budget/mo:</span>
-                        {s.feeAccountId ? (
-                          <>
-                            <Input
-                              type="number"
-                              className="h-8 w-24 text-xs"
-                              value={rateEdits[s.feeAccountId] ?? ''}
-                              onChange={(e) =>
-                                setRateEdits({ ...rateEdits, [s.feeAccountId]: e.target.value })
-                              }
-                            />
+
+                      {s.feeAccountId ? (
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-nejah-slate-blue w-20">Rate/session:</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs">ETB</span>
+                              <Input
+                                type="number"
+                                className="h-8 w-20 text-xs"
+                                placeholder="0"
+                                value={displayRate}
+                                onChange={(e) => {
+                                  const newRate = e.target.value;
+                                  const r = parseFloat(newRate);
+                                  const b = !isNaN(r) && monthlySessions > 0 ? (r * monthlySessions).toFixed(2) : '';
+                                  setRateEdits({
+                                    ...rateEdits,
+                                    [s.feeAccountId]: { budget: b, rate: newRate },
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-nejah-slate-blue w-16">Budget/mo:</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs">ETB</span>
+                              <Input
+                                type="number"
+                                className="h-8 w-20 text-xs"
+                                placeholder="0"
+                                value={displayBudget}
+                                onChange={(e) => {
+                                  const newBudget = e.target.value;
+                                  const b = parseFloat(newBudget);
+                                  const r = !isNaN(b) && monthlySessions > 0 ? (b / monthlySessions).toFixed(2) : '';
+                                  setRateEdits({
+                                    ...rateEdits,
+                                    [s.feeAccountId]: { budget: newBudget, rate: r },
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="col-span-2 flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => saveStudentBudget(s.feeAccountId)}
+                              onClick={() => saveStudentRate(s.feeAccountId)}
                               disabled={savingRate === s.feeAccountId}
                             >
                               <Save className="h-4 w-4" />
                             </Button>
-                            {budget > 0 && (
-                              <span className="text-xs text-nejah-slate-blue">
-                                = ETB {perSession}/session
+                            {s.assignableRate > 0 && (
+                              <span className="text-xs text-nejah-slate-blue/60">
+                                Current rate: ETB {s.assignableRate}/session
                               </span>
                             )}
-                          </>
-                        ) : (
-                          <span className="text-xs text-nejah-slate-blue">No fee account</span>
-                        )}
-                      </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <span className="text-xs text-nejah-slate-blue">No fee account — student needs active billing</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

@@ -13,6 +13,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SessionAttendance } from './entities/session-attendance.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 import { ZoomIntegration } from './entities/zoom-integration.entity';
 import { ScheduleStudent } from '../schedules/entities/schedule-student.entity';
 import { LiveSessionLookupService } from './live-session-lookup.service';
@@ -47,6 +49,8 @@ export class LiveSessionAttendanceReportService {
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
     @InjectRepository(ScheduleStudent)
     private readonly scheduleStudentRepository: Repository<ScheduleStudent>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
     private readonly reconciliationService: AttendanceReconciliationService,
     private readonly sessionAttendanceService: SessionAttendanceService,
@@ -405,8 +409,12 @@ export class LiveSessionAttendanceReportService {
 
       if (studentUserIds.length > 0) {
         try {
+          const qiratManagers = await this.userRepository.find({
+            where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+          });
+          const recipients = [...studentUserIds, ...qiratManagers.map((u) => u.id)];
           await this.notificationsService.sendCustomNotifications(
-            studentUserIds,
+            recipients,
             'Class Completed',
             `Your class has ended. Duration: ${session.durationMinutes || 'N/A'} minutes.`,
             { sessionId: session.id, durationMinutes: session.durationMinutes },

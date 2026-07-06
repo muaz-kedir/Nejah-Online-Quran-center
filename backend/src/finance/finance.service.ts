@@ -1193,8 +1193,10 @@ export class FinanceService {
       const adminIds = await this.getAdminUserIds();
       const earningsAmount = this.toNumber(calc.earnings);
       if (earningsAmount > 0 && record.status === 'pending') {
+        const recipients = [...adminIds];
+        if (teacher.userId) recipients.push(teacher.userId);
         await this.notificationsService.sendCustomNotifications(
-          adminIds,
+          [...new Set(recipients)],
           'Teacher Salary Due',
           `Teacher "${teacher.fullName}" has earned ${earningsAmount} ETB for ${month}. Please review and process the salary payment.`,
           { teacherId: teacher.id, teacherName: teacher.fullName, amount: earningsAmount, billingMonth: month },
@@ -1222,8 +1224,10 @@ export class FinanceService {
 
     const teacherName = record.teacher?.fullName || 'Teacher';
     const adminIds = await this.getAdminUserIds();
+    const recipients = [...adminIds];
+    if (record.teacher?.userId) recipients.push(record.teacher.userId);
     await this.notificationsService.sendCustomNotifications(
-      adminIds,
+      [...new Set(recipients)],
       'Teacher Salary Paid',
       `Salary payment of ${this.toNumber(record.totalEarnings)} ETB has been successfully recorded for Teacher ${teacherName}.`,
       { teacherId, teacherName, amount: this.toNumber(record.totalEarnings), billingMonth: month },

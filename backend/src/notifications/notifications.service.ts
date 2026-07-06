@@ -68,9 +68,9 @@ export class NotificationsService {
     });
     const parentUserIds = parents.filter((p) => p.user?.id).map((p) => p.user.id);
 
-    // Get admin and superadmin users
+    // Get admin, superadmin, and qirat manager users
     const admins = await this.userRepository.find({
-      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }, { role: UserRole.QIRAT_MANAGER }],
     });
     const adminUserIds = admins.map((a) => a.id);
 
@@ -539,7 +539,7 @@ export class NotificationsService {
     }
 
     const admins = await this.userRepository.find({
-      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }, { role: UserRole.QIRAT_MANAGER }],
     });
     const adminUserIds = admins.map((admin) => admin.id);
 
@@ -570,7 +570,7 @@ export class NotificationsService {
     }
 
     await this.pushSubscriptionService.sendToUserTypes(
-      [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER],
       adminPayload,
     );
   }
