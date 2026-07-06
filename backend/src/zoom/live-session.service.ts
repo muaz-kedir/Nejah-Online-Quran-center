@@ -15,6 +15,8 @@ import { SessionAttendanceService } from './session-attendance.service';
 import { LiveSessionAttendanceReportService } from './live-session-attendance-report.service';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 import {
   getAppTimezone,
   startOfDayInZone,
@@ -42,6 +44,8 @@ export class LiveSessionService {
     private readonly studentRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private readonly teacherRepository: Repository<Teacher>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly zoomService: ZoomService,
     private readonly notificationsService: NotificationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
@@ -120,8 +124,12 @@ export class LiveSessionService {
     const created = await this.findById(session.id);
     if (created.student?.userId) {
       try {
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipients = [created.student.userId, ...qiratManagers.map((u) => u.id)];
         await this.notificationsService.sendCustomNotifications(
-          [created.student.userId],
+          recipients,
           'New Class Scheduled',
           `Your class "${created.schedule?.className || 'Quran Class'}" has been scheduled for ${created.scheduledStart.toLocaleString()}. Join link: ${created.zoomJoinUrl}`,
           { sessionId: created.id, joinUrl: created.zoomJoinUrl, scheduledStart: created.scheduledStart.toISOString() },
@@ -255,8 +263,12 @@ export class LiveSessionService {
     const cancelled = await this.findById(id);
     if (cancelled.student?.userId) {
       try {
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipients = [cancelled.student.userId, ...qiratManagers.map((u) => u.id)];
         await this.notificationsService.sendCustomNotifications(
-          [cancelled.student.userId],
+          recipients,
           'Class Cancelled',
           `Your class "${cancelled.schedule?.className || 'Quran Class'}" scheduled for ${cancelled.scheduledStart.toLocaleString()} has been cancelled.`,
           { sessionId: id },
@@ -952,9 +964,13 @@ export class LiveSessionService {
 
     try {
       const studentUserIds = await this.resolveStudentUserIds(session);
-      if (studentUserIds.length > 0) {
+      const qiratManagers = await this.userRepository.find({
+        where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+      });
+      const recipients = [...studentUserIds, ...qiratManagers.map((u) => u.id)];
+      if (recipients.length > 0) {
         await this.notificationsService.sendCustomNotifications(
-          studentUserIds,
+          recipients,
           'Session No-Show',
           `The session scheduled for ${session.scheduledStart.toLocaleString()} was marked as no-show because no participants joined.`,
           { sessionId: session.id, status: 'no_show' },
@@ -988,9 +1004,13 @@ export class LiveSessionService {
 
     try {
       const studentUserIds = await this.resolveStudentUserIds(session);
-      if (studentUserIds.length > 0) {
+      const qiratManagers = await this.userRepository.find({
+        where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+      });
+      const recipients = [...studentUserIds, ...qiratManagers.map((u) => u.id)];
+      if (recipients.length > 0) {
         await this.notificationsService.sendCustomNotifications(
-          studentUserIds,
+          recipients,
           'Session Expired',
           `The session scheduled for ${session.scheduledStart.toLocaleString()} has expired because it was not started on time.`,
           { sessionId: session.id, status: 'expired' },

@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, LessThan } from 'typeorm';
-import { Interval } from '@nestjs/schedule';
+
 import axios from 'axios';
 import { randomBytes } from 'crypto';
 import { TelegramSubscription } from './entities/telegram-subscription.entity';
@@ -22,7 +22,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private botUsername: string;
   private configured = false;
   private lastUpdateId = 0;
-  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+  private pollingTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -55,7 +55,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     await this.deleteWebhook();
     this.cleanupExpiredCodes();
-    await this.pollUpdates();
+    this.startPollingLoop();
   }
 
   onModuleDestroy() {
@@ -73,8 +73,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private conflictCount = 0;
-
   private async pollUpdates() {
     if (!this.configured) return;
 
@@ -88,8 +86,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         timeout: 35000,
       });
 
-      this.conflictCount = 0;
-
       if (data.ok && data.result?.length) {
         for (const update of data.result) {
           if (update.update_id >= this.lastUpdateId) {
@@ -99,21 +95,20 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         }
       }
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 409) {
-        this.conflictCount++;
-        if (this.conflictCount <= 3) {
-          this.logger.warn('Poll conflict (409) — another instance may be polling. Retrying...');
-        }
+      if (err?.response?.status === 409) {
+        this.logger.debug('Poll conflict (409) — another instance may be polling');
       } else if ((err as any)?.code !== 'ECONNABORTED') {
         this.logger.warn(`Poll updates error: ${(err as Error).message}`);
       }
     }
   }
 
-  @Interval(5000)
-  async handlePollTick() {
+  private async startPollingLoop() {
+    this.pollingTimer = null;
     await this.pollUpdates();
+    if (this.configured) {
+      this.pollingTimer = setTimeout(() => this.startPollingLoop(), 1000);
+    }
   }
 
   private async handleUpdate(update: any) {
@@ -270,9 +265,9 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   private stopPolling() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
+    if (this.pollingTimer) {
+      clearTimeout(this.pollingTimer);
+      this.pollingTimer = null;
     }
   }
 }

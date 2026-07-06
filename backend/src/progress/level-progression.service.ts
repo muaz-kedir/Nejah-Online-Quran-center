@@ -580,7 +580,7 @@ export class LevelProgressionService {
     }
 
     const admins = await this.userRepository.find({
-      where: { role: In([UserRole.ADMIN, UserRole.SUPER_ADMIN]) },
+      where: { role: In([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER]) },
     });
     recipientIds.push(...admins.map((a) => a.id));
 
@@ -605,7 +605,7 @@ export class LevelProgressionService {
       if (teacher?.userId) recipientIds.push(teacher.userId);
     }
     const admins = await this.userRepository.find({
-      where: { role: In([UserRole.ADMIN, UserRole.SUPER_ADMIN]) },
+      where: { role: In([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER]) },
     });
     recipientIds.push(...admins.map((a) => a.id));
 

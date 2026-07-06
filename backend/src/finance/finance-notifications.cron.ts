@@ -207,6 +207,24 @@ export class FinanceNotificationsCron {
       false,
       '/finance_teacher-payments',
     );
+
+    for (const record of pendingPayrolls) {
+      const teacherName = record.teacher?.fullName || 'Teacher';
+      const teacherUserId = record.teacher?.userId;
+      if (!teacherUserId) continue;
+      const amount = parseFloat(String(record.totalEarnings)) || 0;
+      if (amount <= 0) continue;
+
+      await this.notificationsService.sendCustomNotifications(
+        [teacherUserId],
+        'Your Monthly Salary',
+        `Your salary for ${month} has been calculated: ${amount} ETB based on ${record.totalSessions} session(s). It will be processed shortly.`,
+        { billingMonth: month, amount, sessions: record.totalSessions },
+        NotificationChannel.PAYMENT_REMINDER,
+        false,
+        '/finance_teacher-payments',
+      );
+    }
   }
 
   @Cron('0 9 1 * *')

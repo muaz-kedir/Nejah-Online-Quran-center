@@ -60,6 +60,8 @@ export class TeachersService {
     private liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(SessionAttendance)
     private sessionAttendanceRepository: Repository<SessionAttendance>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => TeacherReplacementsService))
@@ -334,8 +336,12 @@ export class TeachersService {
           ? `${studentNames[0]} has been assigned to you`
           : `${studentNames.length} students have been assigned to you: ${studentNames.join(', ')}`;
 
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipients = [teacher.userId, ...qiratManagers.map((u) => u.id)];
         await this.notificationsService.sendCustomNotifications(
-          [teacher.userId],
+          recipients,
           title,
           message,
           { studentIds, teacherId: teacher.id },

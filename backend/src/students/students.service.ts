@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere, ILike, IsNull } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
@@ -25,6 +26,8 @@ export class StudentsService {
     private parentsRepository: Repository<Parent>,
     @InjectRepository(Schedule)
     private schedulesRepository: Repository<Schedule>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
   ) {}
@@ -261,9 +264,13 @@ export class StudentsService {
     if (previousTeacherId && student) {
       try {
         const teacher = await this.teachersRepository.findOne({ where: { id: previousTeacherId }, relations: ['user'] });
-        if (teacher?.userId) {
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipientIds = [teacher?.userId, ...qiratManagers.map((u) => u.id)].filter(Boolean) as string[];
+        if (recipientIds.length > 0) {
           await this.notificationsService.sendCustomNotifications(
-            [teacher.userId],
+            recipientIds,
             'Student Removed',
             `${student.fullName || 'A student'} has been removed from your roster`,
             { studentId: id, studentName: student.fullName },

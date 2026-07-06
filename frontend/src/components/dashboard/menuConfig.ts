@@ -105,7 +105,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
-    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },

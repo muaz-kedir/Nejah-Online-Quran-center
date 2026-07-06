@@ -937,7 +937,7 @@ export class TeacherReplacementsService {
     if (student?.parent?.user?.id) recipientUserIds.add(student.parent.user.id);
 
     const admins = await this.usersRepository.find({
-      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }, { role: UserRole.QIRAT_MANAGER }],
     });
     admins.forEach((a) => recipientUserIds.add(a.id));
 
