@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
+import { ThemeProvider } from '@/components/site/ThemeProvider';
 import { initializePwaPush, setupForegroundListener, updateNotificationBadge } from "@/lib/push-notifications";
 import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
@@ -237,9 +238,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-        <PWADownloadPrompt />
+        <ThemeProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+          <PWADownloadPrompt />
+        </ThemeProvider>
       </AppProvider>
     </QueryClientProvider>
   );
