@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
-type Language = 'en' | 'ar' | 'fr';
+type Language = 'en' | 'ar' | 'fr' | 'am' | 'om';
 
 interface Translations {
   dashboard: string;
@@ -29,6 +29,14 @@ interface Translations {
   systemAlerts: string;
   viewAllNotifications: string;
   manageAllStaff: string;
+  myClasses: string;
+  myProgress: string;
+  homework: string;
+  resources: string;
+  logout: string;
+  loading: string;
+  studentPortal: string;
+  notifications: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -58,6 +66,14 @@ const translations: Record<Language, Translations> = {
     systemAlerts: 'System Alerts',
     viewAllNotifications: 'VIEW ALL NOTIFICATIONS',
     manageAllStaff: 'MANAGE ALL STAFF',
+    myClasses: 'My Classes',
+    myProgress: 'My Progress',
+    homework: 'Homework',
+    resources: 'Resources',
+    logout: 'Logout',
+    loading: 'Loading...',
+    studentPortal: 'Student Portal',
+    notifications: 'Notifications',
   },
   ar: {
     dashboard: 'لوحة التحكم',
@@ -85,6 +101,14 @@ const translations: Record<Language, Translations> = {
     systemAlerts: 'تنبيهات النظام',
     viewAllNotifications: 'عرض كل التنبيهات',
     manageAllStaff: 'إدارة الكادر',
+    myClasses: 'فصولي',
+    myProgress: 'تقدمي',
+    homework: 'الواجبات',
+    resources: 'الموارد',
+    logout: 'تسجيل خروج',
+    loading: 'جارٍ التحميل...',
+    studentPortal: 'بوابة الطالب',
+    notifications: 'الإشعارات',
   },
   fr: {
     dashboard: 'Tableau de bord',
@@ -112,6 +136,84 @@ const translations: Record<Language, Translations> = {
     systemAlerts: 'Alertes Système',
     viewAllNotifications: 'VOIR TOUTES LES NOTIFICATIONS',
     manageAllStaff: 'GÉRER LE PERSONNEL',
+    myClasses: 'Mes Cours',
+    myProgress: 'Ma Progression',
+    homework: 'Devoirs',
+    resources: 'Ressources',
+    logout: 'Déconnexion',
+    loading: 'Chargement...',
+    studentPortal: 'Portail Étudiant',
+    notifications: 'Notifications',
+  },
+  am: {
+    dashboard: 'ዳሽቦርድ',
+    students: 'ተማሪዎች',
+    teachers: 'አስተማሪዎች',
+    parents: 'ወላጆች',
+    classes: 'ክፍሎች',
+    attendance: 'መገኘት',
+    reports: 'ሪፖርቶች',
+    settings: 'ቅንብሮች',
+    messages: 'መልዕክቶች',
+    contentEdition: 'የይዘት አርትዖት',
+    searchPlaceholder: 'በኮንሶል ውስጥ ፈልግ...',
+    managementOverview: 'የአስተዳደር አጠቃላይ እይታ',
+    greeting: 'እንኳን ደህና መጡ',
+    welcomeMessage: 'እንኳን ወደ ኔጃህ የመስመር ላይ ቁርአን ማዕከል በደህና መጡ። ተቋማችን በአሁኑ ጊዜ 1,240 ንቁ ተማሪዎችን ያገለግላል።',
+    totalStudents: 'ጠቅላላ ተማሪዎች',
+    totalTeachers: 'ጠቅላላ አስተማሪዎች',
+    activeClasses: 'ንቁ ክፍሎች',
+    attendanceRate: 'የመገኘት መጠን',
+    recentStudents: 'የቅርብ ጊዜ ተማሪዎች',
+    viewAll: 'ሁሉንም ተማሪዎች ይመልከቱ',
+    todaysClasses: 'የዛሬ ክፍሎች',
+    staffOverview: 'የሰራተኞች አጠቃላይ እይታ',
+    systemAlerts: 'የስርዓት ማንቂያዎች',
+    viewAllNotifications: 'ሁሉንም ማሳወቂያዎች ይመልከቱ',
+    manageAllStaff: 'ሁሉንም ሰራተኞች ያስተዳድሩ',
+    myClasses: 'ክፍሎቼ',
+    myProgress: 'እድገቴ',
+    homework: 'የቤት ስራ',
+    resources: 'መርጃዎች',
+    logout: 'ውጣ',
+    loading: 'በመጫን ላይ...',
+    studentPortal: 'የተማሪ ፖርታል',
+    notifications: 'ማሳወቂያዎች',
+  },
+  om: {
+    dashboard: 'Daashboordii',
+    students: 'Barattoota',
+    teachers: 'Barsiistota',
+    parents: 'Matayya',
+    classes: 'Kutaa',
+    attendance: 'Argamuu',
+    reports: 'Gabaasa',
+    settings: 'Saajjattoo',
+    messages: 'Ergaa',
+    contentEdition: 'Gulaallii Qabiyyee',
+    searchPlaceholder: 'Konsoolii keessa barbaadi...',
+    managementOverview: 'ARGAMA BULCHIINSA WALIGALAA',
+    greeting: 'Baga nagaan dhufte',
+    welcomeMessage: 'Baga nagaan gara Nejah Online Quran Center dhufte. Dhaabbiin kee amma barattoota socho\'aa 1,240 tajaajila.',
+    totalStudents: 'Barattoota Waligalaa',
+    totalTeachers: 'Barsiistota Waligalaa',
+    activeClasses: 'Kutaa Socho\'aa',
+    attendanceRate: 'Hamma Argamuu',
+    recentStudents: 'Barattoota Dhihootti',
+    viewAll: 'Barattoota hunda laali',
+    todaysClasses: 'Kutaa Har\'aa',
+    staffOverview: 'Argama Hooggansa',
+    systemAlerts: 'Hubachiisa Sirnaa',
+    viewAllNotifications: 'BEKSIISA HUNDA LAALI',
+    manageAllStaff: 'HOOGGANSA HUNDA BULCHI',
+    myClasses: 'Kutaa Koo',
+    myProgress: 'Fayyaa Koo',
+    homework: 'Hoji Manaa',
+    resources: 'Qabeenya',
+    logout: 'Ba\u2019i',
+    loading: 'Fe\'aa jira...',
+    studentPortal: 'Balbala Barataa',
+    notifications: 'Beeksisa',
   },
 };
 

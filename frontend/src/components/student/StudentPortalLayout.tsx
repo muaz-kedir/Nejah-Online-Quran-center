@@ -16,19 +16,27 @@ import {
   X,
   Sun,
   Moon,
+  Globe,
+  Check,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
 import { logout } from "@/lib/auth";
+import { useApp } from "@/context/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
 
-const menuItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: studentPaths.dashboard },
-  { label: "My Classes", icon: Users, path: studentPaths.classes },
-  { label: "My Progress", icon: TrendingUp, path: studentPaths.progress },
-  { label: "Homework", icon: ClipboardList, path: studentPaths.homework },
-  { label: "Resources", icon: FolderOpen, path: studentPaths.resources },
-  { label: "Notifications", icon: Bell, path: studentPaths.notifications },
+const LANGUAGES = [
+  { code: 'en' as const, label: 'English', flag: '🇬🇧' },
+  { code: 'am' as const, label: 'አማርኛ', flag: '🇪🇹' },
+  { code: 'om' as const, label: 'Afaan Oromoo', flag: '🇪🇹' },
 ];
 
 type Props = {
@@ -81,6 +89,17 @@ export function StudentPortalLayout({
     root.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  const { language, setLanguage, t } = useApp();
+
+  const menuItems = [
+    { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
+    { label: t.myClasses, icon: Users, path: studentPaths.classes },
+    { label: t.myProgress, icon: TrendingUp, path: studentPaths.progress },
+    { label: t.homework, icon: ClipboardList, path: studentPaths.homework },
+    { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
+    { label: t.notifications, icon: Bell, path: studentPaths.notifications },
+  ];
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -158,7 +177,7 @@ export function StudentPortalLayout({
               Nejah
             </h1>
             <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">
-              Student Portal
+              {t.studentPortal}
             </p>
           </div>
         )}
@@ -178,6 +197,42 @@ export function StudentPortalLayout({
             <Moon className="h-4 w-4 transition-transform duration-500 -rotate-12" />
           )}
         </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
+                "text-muted-foreground hover:text-foreground hover:bg-primary/8",
+              )}
+              title="Change Language"
+            >
+              <Globe className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Language
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-border/20" />
+            {LANGUAGES.map((lang) => (
+              <DropdownMenuItem
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={cn(
+                  'cursor-pointer text-foreground focus:bg-primary/10',
+                  language === lang.code && 'font-medium text-nejah-electric',
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <span>{lang.flag}</span>
+                  <span>{lang.label}</span>
+                </span>
+                {language === lang.code && <Check className="h-3.5 w-3.5" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Navigation */}
@@ -250,11 +305,11 @@ export function StudentPortalLayout({
               )}
             >
               <Settings className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && <span>Settings</span>}
+              {(!collapsed || isMobile) && <span>{t.settings}</span>}
             </button>
             {collapsed && !isMobile && (
               <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-                Settings
+                {t.settings}
               </div>
             )}
           </div>
@@ -269,11 +324,11 @@ export function StudentPortalLayout({
             )}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {(!collapsed || isMobile) && <span>Logout</span>}
+            {(!collapsed || isMobile) && <span>{t.logout}</span>}
           </button>
           {collapsed && !isMobile && (
             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-              Logout
+              {t.logout}
             </div>
           )}
         </div>
@@ -309,7 +364,7 @@ export function StudentPortalLayout({
                 {displayName}
               </p>
               <p className="text-[10px] text-muted-foreground font-medium truncate">
-                {student?.level || "Student"} Program
+                {student?.level || t.studentPortal} Program
               </p>
             </div>
           )}
@@ -393,6 +448,39 @@ export function StudentPortalLayout({
               </span>
             )}
           </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="p-2 rounded-xl hover:bg-primary/10 transition-colors"
+                title="Change Language"
+              >
+                <Globe className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
+              <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Language
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border/20" />
+              {LANGUAGES.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={cn(
+                    'cursor-pointer text-foreground focus:bg-primary/10',
+                    language === lang.code && 'font-medium text-nejah-electric',
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </span>
+                  {language === lang.code && <Check className="h-3.5 w-3.5" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             type="button"
             onClick={onOpenProfile}
@@ -457,6 +545,11 @@ export function StudentPortalLayout({
 }
 
 export function StudentPageLoader() {
+  let loadingText = 'Loading...';
+  try {
+    const { t } = useApp();
+    loadingText = t.loading;
+  } catch {}
   return (
     <div className="flex h-screen items-center justify-center dark:bg-background bg-gray-50/80">
       <div className="flex flex-col items-center gap-4">
@@ -464,7 +557,7 @@ export function StudentPageLoader() {
           <div className="w-12 h-12 rounded-full border-[3px] border-primary/20" />
           <div className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-transparent border-t-nejah-electric animate-spin" />
         </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading...</p>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">{loadingText}</p>
       </div>
     </div>
   );
