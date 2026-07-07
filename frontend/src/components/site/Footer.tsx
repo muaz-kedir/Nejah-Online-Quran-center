@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Facebook, Twitter, Instagram, Youtube, Mail, Phone } from "lucide-react";
+import { BookOpen, Facebook, Instagram, Youtube, Mail, Phone } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 export function Footer() {
@@ -91,13 +91,6 @@ export function Footer() {
               className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
             >
               <Instagram className="size-4" />
-            </a>
-            <a
-              href="#"
-              aria-label="Twitter"
-              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
-            >
-              <Twitter className="size-4" />
             </a>
             <a
               href="#"
