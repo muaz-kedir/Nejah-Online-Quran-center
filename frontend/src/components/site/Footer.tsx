@@ -56,16 +56,7 @@ export function Footer() {
                 {t.footer.terms}
               </Link>
             </li>
-            <li>
-              <Link to="/sitemap" className="hover:text-primary">
-                {t.footer.sitemap}
-              </Link>
-            </li>
-            <li>
-              <Link to="/help-center" className="hover:text-primary">
-                {t.footer.help}
-              </Link>
-            </li>
+
           </ul>
         </div>
 
