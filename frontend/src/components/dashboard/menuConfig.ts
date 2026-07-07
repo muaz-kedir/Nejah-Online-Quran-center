@@ -42,17 +42,36 @@ export const menuByRole: Record<string, MenuItem[]> = {
   super_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Staff Management', icon: Shield, path: '/admins' },
-    { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
-    { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
-    { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
-    { label: 'Homework', icon: ClipboardList, path: '/homework' },
-    { label: 'Schedules', icon: Calendar, path: '/schedules' },
-    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
-    { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
-    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
-    { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
+
+    {
+      label: 'Qirat Manager', icon: BookMarked, path: '#',
+      children: [
+        { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
+        { label: 'Students', icon: Users, path: '/students' },
+        { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
+        { label: 'Homework', icon: ClipboardList, path: '/homework' },
+        { label: 'Schedules', icon: Calendar, path: '/schedules' },
+        { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
+        { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
+        { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
+        { label: 'Exams & Evaluations', icon: CheckCircle, path: '/qirat_exams' },
+      ],
+    },
+
+    {
+      label: 'Finance', icon: DollarSign, path: '#',
+      children: [
+        { label: 'Finance Dashboard', icon: LayoutDashboard, path: '/finance_dashboard' },
+        { label: 'Student Payments', icon: Receipt, path: '/finance_student-payments' },
+        { label: 'Family Payments', icon: UsersRound, path: '/finance_family-payments' },
+        { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
+        { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
+        { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+      ],
+    },
+
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     {
@@ -67,6 +86,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
         { label: 'Support Analytics', icon: TrendingUp, path: '/website/support/analytics' },
       ],
     },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
   ],
@@ -81,6 +101,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ],
