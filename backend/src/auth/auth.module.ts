@@ -10,6 +10,7 @@ import { ParentsModule } from '../parents/parents.module';
 import { StudentsModule } from '../students/students.module';
 import { Student } from '../students/entities/student.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Student]),
+    TelegramModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
