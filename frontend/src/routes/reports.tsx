@@ -55,7 +55,7 @@ import {
 
 export const Route = createFileRoute('/reports')({
   component: ReportsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 const API = API_BASE;
