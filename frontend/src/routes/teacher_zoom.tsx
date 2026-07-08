@@ -120,7 +120,7 @@ function TeacherZoomPage() {
       const session =
         upcoming.find((s: any) => s.id === sessionId) ||
         teacherSessions.find((s: any) => s.id === sessionId);
-      if (session?.zoomJoinUrl) window.open(session.zoomJoinUrl, "_blank");
+      if (session?.zoomJoinUrl) window.location.href = session.zoomJoinUrl;
       fetchAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to start session");
