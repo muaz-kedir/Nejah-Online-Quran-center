@@ -58,7 +58,10 @@ function StudentPaymentsPage() {
       const res = await fetch(apiUrl(`/students?search=${encodeURIComponent(q)}&limit=10`), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) setStudents(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        setStudents(json.data || []);
+      }
     } catch {}
   };
 

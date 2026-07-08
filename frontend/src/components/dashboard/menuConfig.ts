@@ -91,6 +91,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
+    { label: 'Audit Log', icon: FileText, path: '/audit-logs' },
   ],
   // admin role removed — admins use qirat_manager or finance_manager menus
   student: [
