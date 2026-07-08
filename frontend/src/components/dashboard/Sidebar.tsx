@@ -1,10 +1,11 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { menuByRole, type MenuItem } from './menuConfig';
 import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { SilverDivider } from './design-system';
+import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
 
 function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; collapsed: boolean; depth?: number; notifCount?: number }) {
   const location = useLocation();
@@ -121,8 +122,10 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
 
 export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: { isOpen: boolean; onToggle: () => void; notifCount?: number }) {
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(isOpen);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -136,20 +139,23 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
   }, [isOpen]);
 
   const handleLogout = useCallback(() => {
-    import('@/lib/push-notifications').then(m =>
-      m.unsubscribeFromPushNotifications().catch(() => {}),
-    );
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userId');
-    window.location.href = '/login';
+    setShowLogoutConfirm(true);
   }, []);
+
+  const confirmLogout = useCallback(() => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+      import('@/lib/push-notifications').then(m =>
+        m.unsubscribeFromPushNotifications().catch(() => {}),
+      );
+    }, 0);
+  }, [navigate]);
 
   const toggleCollapse = useCallback(() => setSidebarCollapsed(!sidebarCollapsed), [sidebarCollapsed, setSidebarCollapsed]);
 
-  const menuItems = userRole ? (menuByRole[userRole] || menuByRole.student) : [];
+  const resolvedRole = userRole === 'admin' ? 'qirat_manager' : userRole;
+  const menuItems = resolvedRole ? (menuByRole[resolvedRole] || menuByRole.student) : [];
 
   return (
     <>
@@ -278,6 +284,14 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
           </div>
         )}
       </aside>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+        userName={userRole ? localStorage.getItem('userName') || undefined : undefined}
+        userRole={userRole || undefined}
+      />
     </>
   );
 });
