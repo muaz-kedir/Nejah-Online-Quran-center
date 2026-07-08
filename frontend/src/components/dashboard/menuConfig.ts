@@ -88,7 +88,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
       ],
     },
     { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
-    { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
     { label: 'Audit Log', icon: FileText, path: '/audit-logs' },
