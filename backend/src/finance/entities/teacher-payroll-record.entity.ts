@@ -35,6 +35,9 @@ export class TeacherPayrollRecord {
   @Column({ default: 'pending' })
   status: string;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  paymentMethod: string | null;
+
   @Column({ type: 'timestamp', nullable: true })
   paidAt: Date;
 
