@@ -56,7 +56,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 export const Route = createFileRoute('/teacher-applications_/$id')({
   component: ApplicationDetailPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 function ApplicationDetailContent() {

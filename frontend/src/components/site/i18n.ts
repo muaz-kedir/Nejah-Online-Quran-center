@@ -69,17 +69,7 @@ type TDict = {
     string
   >;
   teachers: Record<
-    | "title"
-    | "bookTrial"
-    | "t1Name"
-    | "t1Spec"
-    | "t1Exp"
-    | "t2Name"
-    | "t2Spec"
-    | "t2Exp"
-    | "t3Name"
-    | "t3Spec"
-    | "t3Exp",
+    "title" | "bookTrial",
     string
   >;
   testimonials: Record<
@@ -216,15 +206,6 @@ export const translations: Record<Lang, TDict> = {
     teachers: {
       title: "Meet Our Expert Scholars",
       bookTrial: "Detail",
-      t1Name: "Sheikh Ahmad Al-Farsi",
-      t1Spec: "Tajweed & Hifz",
-      t1Exp: "12+ years experience teaching students of all ages across the globe.",
-      t2Name: "Ustadha Amina Khan",
-      t2Spec: "Quran for Kids",
-      t2Exp: "Expert in child psychology and engaging online learning methodologies.",
-      t3Name: "Sheikh Omar Hassan",
-      t3Spec: "Islamic Studies",
-      t3Exp: "Masters in Islamic Law with a passion for teaching traditional sciences.",
     },
     testimonials: {
       r1Name: "Sarah Williams",
@@ -353,15 +334,6 @@ export const translations: Record<Lang, TDict> = {
     teachers: {
       title: "تعرّف على علمائنا الخبراء",
       bookTrial: "احجز تجريبيًا",
-      t1Name: "الشيخ أحمد الفارسي",
-      t1Spec: "تجويد وحفظ",
-      t1Exp: "أكثر من 12 عامًا في تعليم الطلاب من جميع الأعمار حول العالم.",
-      t2Name: "الأستاذة آمنة خان",
-      t2Spec: "قرآن للأطفال",
-      t2Exp: "خبيرة في علم نفس الطفل وأساليب التعلم التفاعلية عبر الإنترنت.",
-      t3Name: "الشيخ عمر حسن",
-      t3Spec: "العلوم الإسلامية",
-      t3Exp: "ماجستير في الشريعة وشغف بتعليم العلوم التقليدية.",
     },
     testimonials: {
       r1Name: "سارة ويليامز",
@@ -489,15 +461,6 @@ export const translations: Record<Lang, TDict> = {
     teachers: {
       title: "ባለሙያ ምሁራኖቻችንን ይተዋወቁ",
       bookTrial: "ሙከራ ይዙ",
-      t1Name: "ሼክ አህመድ አል-ፋርሲ",
-      t1Spec: "ታጅዊድና ሂፍዝ",
-      t1Exp: "12+ ዓመታት በዓለም ዙሪያ ላሉ ተማሪዎች የማስተማር ልምድ።",
-      t2Name: "ኡስታዛ አሚና ካን",
-      t2Spec: "ቁርዓን ለልጆች",
-      t2Exp: "በልጆች ሥነ-ልቦናና በመስመር ላይ ትምህርት ባለሙያ።",
-      t3Name: "ሼክ ኦማር ሐሰን",
-      t3Spec: "እስላማዊ ጥናቶች",
-      t3Exp: "በእስላማዊ ሕግ ማስተርስ ያላቸውና ባህላዊ ሳይንሶችን የሚያስተምሩ።",
     },
     testimonials: {
       r1Name: "ሳራ ዊሊያምስ",

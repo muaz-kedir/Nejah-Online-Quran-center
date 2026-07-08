@@ -31,7 +31,7 @@ import { getLinkedStudentId } from "@/lib/student-portal";
 
 export const Route = createFileRoute("/class-session_/$id")({
   component: ClassSessionPage,
-  beforeLoad: () => requireAuth(["admin", "super_admin", "qirat_manager", "teacher", "student"]),
+  beforeLoad: () => requireAuth(["super_admin", "qirat_manager", "teacher", "student"]),
 });
 
 function ClassSessionPage() {

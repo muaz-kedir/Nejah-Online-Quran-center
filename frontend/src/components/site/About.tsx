@@ -49,7 +49,7 @@ export function About() {
               <BookOpen className="size-3.5" />
               {missionTitle}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">{missionHeading}</h2>
+            <h2 className="heading-premium text-2xl sm:text-3xl mb-4">{missionHeading}</h2>
             <p className="text-muted-foreground leading-relaxed">{missionDescription}</p>
           </motion.div>
           <motion.div
@@ -75,7 +75,10 @@ export function About() {
           </motion.div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="relative grid md:grid-cols-3 gap-6">
+          <div className="data-line-h top-1/2 left-[12%] right-[12%] md:block" />
+          <div className="data-line-dot top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 md:block" />
+          <div className="data-line-dot top-1/2 left-2/3 -translate-x-1/2 -translate-y-1/2 md:block" />
           {missionCards.map((card, i) => {
             const title = pickLocalized(card.title, lang);
             const desc = pickLocalized(card.description, lang);

@@ -8,6 +8,10 @@ import { financeFetch, FinanceFilters, statusBadgeVariant, downloadCSV, exportPD
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Check, ChevronsUpDown, Plus, CalendarDays, CreditCard, Wallet, Building, Landmark, Smartphone, Banknote } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -33,6 +37,111 @@ function StudentPaymentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [convertTarget, setConvertTarget] = useState('USD');
   const [convertResult, setConvertResult] = useState<{ from: string; to: string; rate: number } | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentOpen, setStudentOpen] = useState(false);
+  const [calendarType, setCalendarType] = useState<'gregorian' | 'ethiopian'>('gregorian');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [ethiopianDate, setEthiopianDate] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [currency, setCurrency] = useState('ETB');
+  const [payNotes, setPayNotes] = useState('');
+  const [studentFeeAccount, setStudentFeeAccount] = useState<any>(null);
+  const [feeConfigs, setFeeConfigs] = useState<any[]>([]);
+  const [submittingForm, setSubmittingForm] = useState(false);
+
+  const searchStudents = async (q: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/students?search=${encodeURIComponent(q)}&limit=10`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setStudents(await res.json());
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (studentSearch.length >= 2) searchStudents(studentSearch);
+    else setStudents([]);
+  }, [studentSearch]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch(apiUrl('/fee-config'), { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.ok && r.json())
+      .then((data) => setFeeConfigs(data || []))
+      .catch(() => {});
+  }, []);
+
+  const selectStudent = async (student: any) => {
+    setSelectedStudent(student);
+    setStudentOpen(false);
+    setStudentSearch(student.fullName || student.name);
+    setPayAmount('');
+    setStudentFeeAccount(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/finance/student-payments?search=${encodeURIComponent(student.fullName || student.name)}&limit=1`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data && data.data.length > 0) {
+          setStudentFeeAccount(data.data[0]);
+          setPayAmount(String(data.data[0].monthlyFee || ''));
+        }
+      }
+      const matchingFee = feeConfigs.find((f) => {
+        const level = student.level || student.program || '';
+        return f.learningGoal?.name?.toLowerCase().includes(level.toLowerCase()) ||
+               level.toLowerCase().includes(f.learningGoal?.name?.toLowerCase());
+      });
+      if (matchingFee && !payAmount) setPayAmount(String(matchingFee.amount));
+    } catch {}
+  };
+
+  const recordStudentPayment = async () => {
+    if (!selectedStudent || !payAmount) {
+      toast.error('Please select a student and enter an amount');
+      return;
+    }
+    setSubmittingForm(true);
+    try {
+      const token = localStorage.getItem('token');
+      const body: any = {
+        amount: parseFloat(payAmount),
+        type: 'payment',
+        paymentMethod: paymentMethod || undefined,
+        transactionDate: calendarType === 'gregorian' ? paymentDate : ethiopianDate,
+        description: payNotes || undefined,
+      };
+      if (studentFeeAccount) {
+        const res = await fetch(apiUrl(`/finance/student-payments/${studentFeeAccount.id}/transactions`), {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('Failed to record payment');
+        toast.success('Payment recorded successfully');
+      } else {
+        toast.error('No fee account found for this student. Sync fee accounts first.');
+        setSubmittingForm(false);
+        return;
+      }
+      setPayAmount('');
+      setPayNotes('');
+      setSelectedStudent(null);
+      setStudentSearch('');
+      setStudentFeeAccount(null);
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
 
   const convertCurrency = async () => {
     try {
@@ -156,6 +265,200 @@ function StudentPaymentsPage() {
           </span>
         )}
       </div>
+
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => setShowForm(!showForm)}
+          className="gap-2"
+        >
+          <Plus className={cn('h-4 w-4 transition-transform', showForm && 'rotate-45')} />
+          {showForm ? 'Close Payment Form' : 'Record Manual Payment'}
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="glass-panel rounded-2xl p-6 mb-6 space-y-5">
+          <h3 className="font-semibold text-foreground">Record Student Payment</h3>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Student Search */}
+            <div>
+              <Label>Search Student</Label>
+              <Popover open={studentOpen} onOpenChange={setStudentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={studentOpen}
+                    className="w-full justify-between h-10"
+                  >
+                    {selectedStudent
+                      ? (selectedStudent.fullName || selectedStudent.name)
+                      : 'Search for a student...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Type student name..."
+                      value={studentSearch}
+                      onValueChange={setStudentSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No students found</CommandEmpty>
+                      <CommandGroup>
+                        {students.map((s) => (
+                          <CommandItem
+                            key={s.id}
+                            value={s.fullName || s.name}
+                            onSelect={() => selectStudent(s)}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedStudent?.id === s.id ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            <div>
+                              <p>{s.fullName || s.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {s.level || s.program || ''}{s.parentName ? ` · Parent: ${s.parentName}` : ''}
+                              </p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Amount */}
+            <div>
+              <Label>Amount ({currency})</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                placeholder="e.g. 1500"
+              />
+            </div>
+
+            {/* Calendar Type Toggle */}
+            <div>
+              <Label>Calendar System</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={calendarType === 'gregorian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('gregorian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Gregorian
+                </Button>
+                <Button
+                  type="button"
+                  variant={calendarType === 'ethiopian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('ethiopian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Ethiopian
+                </Button>
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <Label>Date</Label>
+              {calendarType === 'gregorian' ? (
+                <Input
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                />
+              ) : (
+                <Input
+                  value={ethiopianDate}
+                  onChange={(e) => setEthiopianDate(e.target.value)}
+                  placeholder="YYYY-MM-DD (Ethiopian)"
+                />
+              )}
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="credit_card">Credit/Debit Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Currency */}
+            <div>
+              <Label>Currency</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ETB">ETB - Ethiopian Birr</SelectItem>
+                  <SelectItem value="USD">USD - US Dollar</SelectItem>
+                  <SelectItem value="EUR">EUR - Euro</SelectItem>
+                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                  <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+                  <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Fee Config Info */}
+            {studentFeeAccount && (
+              <div className="md:col-span-2 rounded-xl bg-muted/30 p-3 text-sm">
+                <p className="font-medium mb-1">Current Fee Account</p>
+                <div className="grid grid-cols-3 gap-2 text-muted-foreground">
+                  <span>Monthly Fee: <strong>ETB {studentFeeAccount.monthlyFee}</strong></span>
+                  <span>Paid: <strong>ETB {studentFeeAccount.amountPaid}</strong></span>
+                  <span>Balance: <strong>ETB {studentFeeAccount.remainingBalance}</strong></span>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <Label>Notes (optional)</Label>
+              <Input
+                value={payNotes}
+                onChange={(e) => setPayNotes(e.target.value)}
+                placeholder="Payment notes or reference..."
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={recordStudentPayment}
+            disabled={submittingForm || !selectedStudent || !payAmount}
+            className="w-full"
+          >
+            {submittingForm ? 'Recording...' : 'Record Payment'}
+          </Button>
+        </div>
+      )}
 
       <div className="glass-panel overflow-hidden rounded-2xl">
         <Table>

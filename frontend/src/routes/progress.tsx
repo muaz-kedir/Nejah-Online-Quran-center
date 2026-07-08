@@ -28,7 +28,7 @@ const API = API_BASE;
 
 export const Route = createFileRoute('/progress')({
   component: ProgressPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function ProgressPage() {
@@ -57,11 +57,11 @@ function ProgressPage() {
   const userRole = () => localStorage.getItem('userRole');
   const isTeacherOrAdmin = () => {
     const role = userRole();
-    return role === 'teacher' || role === 'admin' || role === 'super_admin';
+    return role === 'teacher' || role === 'super_admin';
   };
   const isSuperAdminOrAdmin = () => {
     const role = userRole();
-    return role === 'admin' || role === 'super_admin';
+    return role === 'super_admin';
   };
 
   const fetchProgressLogs = async (studentId: string) => {

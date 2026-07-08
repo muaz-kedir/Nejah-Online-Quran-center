@@ -60,6 +60,7 @@ import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebsiteTeachersRouteImport } from './routes/website.teachers'
 import { Route as WebsiteResourcesRouteImport } from './routes/website.resources'
 import { Route as WebsiteHomeRouteImport } from './routes/website.home'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
@@ -340,6 +341,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebsiteTeachersRoute = WebsiteTeachersRouteImport.update({
+  id: '/website/teachers',
+  path: '/website/teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WebsiteResourcesRoute = WebsiteResourcesRouteImport.update({
   id: '/website/resources',
   path: '/website/resources',
@@ -531,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
@@ -607,6 +614,7 @@ export interface FileRoutesByTo {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/teachers_/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers_/$id/profile': typeof TeachersIdProfileRoute
   '/teachers_/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
@@ -764,6 +773,7 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
     | '/website/support/analytics'
@@ -840,6 +850,7 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
     | '/website/support/analytics'
@@ -917,6 +928,7 @@ export interface FileRouteTypes {
     | '/teachers_/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers_/$id/profile'
     | '/teachers_/$id/students'
     | '/website/support/analytics'
@@ -994,6 +1006,7 @@ export interface RootRouteChildren {
   TeachersCreateRoute: typeof TeachersCreateRoute
   WebsiteHomeRoute: typeof WebsiteHomeRoute
   WebsiteResourcesRoute: typeof WebsiteResourcesRoute
+  WebsiteTeachersRoute: typeof WebsiteTeachersRoute
   WebsiteSupportAnalyticsRoute: typeof WebsiteSupportAnalyticsRoute
   WebsiteSupportPagesRoute: typeof WebsiteSupportPagesRoute
   WebsiteSupportTicketsRoute: typeof WebsiteSupportTicketsRoute
@@ -1358,6 +1371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/website/teachers': {
+      id: '/website/teachers'
+      path: '/website/teachers'
+      fullPath: '/website/teachers'
+      preLoaderRoute: typeof WebsiteTeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/website/resources': {
       id: '/website/resources'
       path: '/website/resources'
@@ -1628,6 +1648,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeachersCreateRoute: TeachersCreateRoute,
   WebsiteHomeRoute: WebsiteHomeRoute,
   WebsiteResourcesRoute: WebsiteResourcesRoute,
+  WebsiteTeachersRoute: WebsiteTeachersRoute,
   WebsiteSupportAnalyticsRoute: WebsiteSupportAnalyticsRoute,
   WebsiteSupportPagesRoute: WebsiteSupportPagesRoute,
   WebsiteSupportTicketsRoute: WebsiteSupportTicketsRoute,

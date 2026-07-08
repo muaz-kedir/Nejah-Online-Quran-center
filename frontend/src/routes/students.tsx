@@ -78,7 +78,7 @@ function getDateRange(range: string) {
 
 export const Route = createFileRoute('/students')({
   component: StudentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function StudentsPage() {

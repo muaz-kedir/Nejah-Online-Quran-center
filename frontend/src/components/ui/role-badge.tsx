@@ -4,8 +4,6 @@ import { cn } from '@/lib/utils';
 const roleStyles: Record<string, string> = {
   super_admin:
     'bg-purple-100 dark:bg-purple-500/15 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-500/25',
-  admin:
-    'bg-blue-100 dark:bg-blue-500/15 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-500/25',
   teacher:
     'bg-primary/10 text-nejah-electric border-nejah-electric/20',
   student:
@@ -20,7 +18,6 @@ const roleStyles: Record<string, string> = {
 
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
-  admin: 'Admin',
   teacher: 'Teacher',
   student: 'Student',
   parent: 'Parent',

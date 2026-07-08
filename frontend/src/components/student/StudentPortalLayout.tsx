@@ -19,8 +19,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
-import { logout } from "@/lib/auth";
+import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useApp } from "@/context/AppContext";
+import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 
 
@@ -59,14 +60,6 @@ export function StudentPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme") as "light" | "dark" | null;
-      if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "light";
-  });
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -86,10 +79,6 @@ export function StudentPortalLayout({
     { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
     { label: t.notifications, icon: Bell, path: studentPaths.notifications },
   ];
-
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
 
   // Sync from prop and auto-refresh from summary API
   useEffect(() => {
@@ -141,7 +130,13 @@ export function StudentPortalLayout({
     };
   }, [mobileOpen]);
 
-  const handleLogout = logout;
+  const handleLogout = () => setShowLogoutConfirm(true);
+  const confirmLogout = () => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+    }, 0);
+  };
 
   const displayName = student?.fullName || student?.name || "Student";
 
@@ -458,6 +453,12 @@ export function StudentPortalLayout({
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
         {children}
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+      />
     </div>
   );
 }

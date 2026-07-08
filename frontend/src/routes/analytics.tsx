@@ -21,7 +21,7 @@ import {
 
 export const Route = createFileRoute('/analytics')({
   component: AnalyticsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
