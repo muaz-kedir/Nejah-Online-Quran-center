@@ -59,7 +59,7 @@ function StudentDashboard() {
       const dash = await api<StudentDashboardData>("/student/dashboard");
       setData(dash);
     } catch {
-      toast.error("Could not load your dashboard. Please refresh the page.");
+      // silent — polling will retry
     }
   }, []);
 

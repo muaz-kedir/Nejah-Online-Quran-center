@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Facebook, Instagram, Youtube, Mail, Phone, ChevronUp, Sparkles } from "lucide-react";
+import { BookOpen, Facebook, Instagram, Youtube, Mail, Phone } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 export function Footer() {
@@ -114,6 +114,33 @@ export function Footer() {
               <span className="text-white/60 group-hover:text-white/80 transition-colors duration-200">0925697363</span>
             </li>
           </ul>
+          <div className="flex gap-2 mt-4">
+            <a
+              href="https://www.facebook.com/profile.php?id=61581323069796"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Facebook className="size-4" />
+            </a>
+            <a
+              href="https://www.instagram.com/nejah_quran_center?igsh=ZzJrb252ZmxkYng1"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Instagram className="size-4" />
+            </a>
+            <a
+              href="#"
+              aria-label="Youtube"
+              className="size-9 grid place-items-center rounded-full bg-white/5 hover:bg-primary transition"
+            >
+              <Youtube className="size-4" />
+            </a>
+          </div>
         </div>
       </div>
 

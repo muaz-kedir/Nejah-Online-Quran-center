@@ -199,7 +199,7 @@ function ClassroomPage() {
   const openExternalZoom = (access: ClassroomAccess) => {
     const url = role === "teacher" ? access.startUrl || access.joinUrl : access.joinUrl;
     if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.location.href = url;
       toast.success("Opened Zoom in a new tab");
     } else {
       toast.error("Meeting link not available yet");
