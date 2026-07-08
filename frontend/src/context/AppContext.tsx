@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark';
 type Language = 'en';
 
 interface Translations {
@@ -94,8 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setTheme((localStorage.getItem('theme') as Theme) || 'light');
-      setLanguageState('en');
+      setLanguageState((localStorage.getItem('language') as Language) || 'en');
       setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
     }
   }, []);
