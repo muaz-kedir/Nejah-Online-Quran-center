@@ -37,7 +37,7 @@ import { formatRelativeTime, formatFullDate } from '@/lib/notification-helpers';
 
 export const Route = createFileRoute('/qirat_notifications')({
   component: QiratNotificationsPage,
-  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin', 'admin']),
+  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin']),
 });
 
 const CHANNEL_LABELS: Record<string, string> = {

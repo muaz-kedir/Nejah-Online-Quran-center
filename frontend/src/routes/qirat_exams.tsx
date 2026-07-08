@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 export const Route = createFileRoute('/qirat_exams')({
   component: QiratExamsPage,
-  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin', 'admin']),
+  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin']),
 });
 
 function QiratExamsPage() {

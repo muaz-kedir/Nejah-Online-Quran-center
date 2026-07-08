@@ -51,7 +51,7 @@ import {
 
 export const Route = createFileRoute('/live-sessions')({
   component: LiveSessionsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager', 'teacher']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager', 'teacher']),
 });
 
 function LiveSessionsPage() {

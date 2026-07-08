@@ -3,14 +3,16 @@ import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
+import { requireAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Plus, Pencil, Trash2, DollarSign, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, DollarSign, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
 
 const API = API_BASE;
 
@@ -24,7 +26,10 @@ interface FeeConfig {
   currency: string;
 }
 
-export const Route = createFileRoute('/fee_settings')({ component: FeeSettingsPage });
+export const Route = createFileRoute('/fee_settings')({
+  component: FeeSettingsPage,
+  beforeLoad: () => requireAuth(['super_admin', 'finance_manager']),
+});
 
 function FeeSettingsPage() {
   const [fees, setFees] = useState<FeeConfig[]>([]);
@@ -34,6 +39,8 @@ function FeeSettingsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<FeeConfig | null>(null);
   const [form, setForm] = useState({ learningGoalId: '', country: '', amount: '', currency: 'ETB' });
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : '';
+  const isReadonly = userRole === 'finance_manager';
 
   const token = () => localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` };
@@ -117,10 +124,19 @@ function FeeSettingsPage() {
 
       <GlassPanel>
         <div className="flex justify-between items-center mb-6">
-          <p className="text-sm text-muted-foreground">{fees.length} fee configuration(s)</p>
-          <Button onClick={openCreate} className="bg-primary hover:bg-nejah-azure text-white">
-            <Plus className="h-4 w-4 mr-2" /> Add Fee
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            {fees.length} fee configuration(s)
+            {isReadonly && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                <Lock className="h-3 w-3 mr-1" /> Read-only
+              </Badge>
+            )}
+          </p>
+          {!isReadonly && (
+            <Button onClick={openCreate} className="bg-primary hover:bg-nejah-azure text-white">
+              <Plus className="h-4 w-4 mr-2" /> Add Fee
+            </Button>
+          )}
         </div>
 
         {loading ? (
@@ -150,12 +166,18 @@ function FeeSettingsPage() {
                     <td className="py-3 px-4 font-medium">{fee.amount.toLocaleString()}</td>
                     <td className="py-3 px-4">{fee.currency}</td>
                     <td className="py-3 px-4 text-right space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(fee)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(fee.id)} className="text-red-500 hover:text-red-700">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isReadonly ? (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => openEdit(fee)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(fee.id)} className="text-red-500 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -165,69 +187,71 @@ function FeeSettingsPage() {
         )}
       </GlassPanel>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent aria-describedby={undefined} className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Fee' : 'Add Fee Configuration'}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Learning Goal</Label>
-              <Select value={form.learningGoalId} onValueChange={(v) => setForm({ ...form, learningGoalId: v })}>
-                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-                  <SelectValue placeholder="Select goal..." />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-                  {goals.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {!isReadonly && (
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent aria-describedby={undefined} className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+            <DialogHeader>
+              <DialogTitle>{editing ? 'Edit Fee' : 'Add Fee Configuration'}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Learning Goal</Label>
+                <Select value={form.learningGoalId} onValueChange={(v) => setForm({ ...form, learningGoalId: v })}>
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    <SelectValue placeholder="Select goal..." />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    {goals.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Country</Label>
+                <Input
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  placeholder="e.g. Ethiopia"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Monthly Amount</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  placeholder="e.g. 1500"
+                  className="dark:bg-nejah-surface dark:border-nejah-border-blue"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Currency</Label>
+                <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
+                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                    <SelectItem value="ETB">ETB - Ethiopian Birr</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+                    <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Country</Label>
-              <Input
-                value={form.country}
-                onChange={(e) => setForm({ ...form, country: e.target.value })}
-                placeholder="e.g. Ethiopia"
-                className="dark:bg-nejah-surface dark:border-nejah-border-blue"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Monthly Amount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                placeholder="e.g. 1500"
-                className="dark:bg-nejah-surface dark:border-nejah-border-blue"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Currency</Label>
-              <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
-                <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-                  <SelectItem value="ETB">ETB - Ethiopian Birr</SelectItem>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
-                  <SelectItem value="AED">AED - UAE Dirham</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button onClick={handleSave} className="bg-primary hover:bg-nejah-azure text-white">{editing ? 'Update' : 'Create'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button onClick={handleSave} className="bg-primary hover:bg-nejah-azure text-white">{editing ? 'Update' : 'Create'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </DashboardLayout>
   );
 }

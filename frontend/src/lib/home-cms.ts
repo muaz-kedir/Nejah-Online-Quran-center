@@ -1,4 +1,5 @@
 import { apiUrl, apiAssetUrl } from './api';
+export { apiUrl };
 
 export type CmsLang = 'en' | 'ar' | 'am';
 
@@ -53,6 +54,19 @@ export type HomeProgram = {
   isActive: boolean;
 };
 
+export type HomeTeacher = {
+  id: string;
+  userId: string | null;
+  fullName: string;
+  specialization: string;
+  experience: string | null;
+  imageUrl: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Testimonial = {
   id: string;
   studentName: string;
@@ -90,6 +104,12 @@ export async function fetchPublicTestimonials() {
   const res = await fetch(apiUrl('/website/home/testimonials'));
   if (!res.ok) throw new Error('Failed to load testimonials');
   return res.json() as Promise<Testimonial[]>;
+}
+
+export async function fetchPublicTeachers() {
+  const res = await fetch(apiUrl('/website/home/teachers'));
+  if (!res.ok) throw new Error('Failed to load teachers');
+  return res.json() as Promise<HomeTeacher[]>;
 }
 
 export async function uploadCmsImage(file: File): Promise<string> {

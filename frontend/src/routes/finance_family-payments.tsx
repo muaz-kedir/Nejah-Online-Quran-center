@@ -12,7 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, Loader2 } from 'lucide-react';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Download, Eye, Loader2, Plus, ChevronsUpDown, Check, CalendarDays } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/finance_family-payments')({
@@ -30,6 +34,22 @@ function FamilyPaymentsPage() {
   const [payType, setPayType] = useState('payment');
   const [payDescription, setPayDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [parentSearch, setParentSearch] = useState('');
+  const [parents, setParents] = useState<any[]>([]);
+  const [selectedParent, setSelectedParent] = useState<any>(null);
+  const [parentOpen, setParentOpen] = useState(false);
+  const [parentStudents, setParentStudents] = useState<any[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [calendarType, setCalendarType] = useState<'gregorian' | 'ethiopian'>('gregorian');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [ethiopianDate, setEthiopianDate] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [currency, setCurrency] = useState('ETB');
+  const [formAmount, setFormAmount] = useState('');
+  const [parentFeeAccounts, setParentFeeAccounts] = useState<any[]>([]);
+  const [formNotes, setFormNotes] = useState('');
+  const [submittingForm, setSubmittingForm] = useState(false);
 
   const load = async () => {
     try {
@@ -45,6 +65,132 @@ function FamilyPaymentsPage() {
   useEffect(() => {
     load();
   }, [filters]);
+
+  const searchParents = async (q: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/parents/search?search=${encodeURIComponent(q)}`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setParents(await res.json());
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (parentSearch.length >= 2) searchParents(parentSearch);
+    else setParents([]);
+  }, [parentSearch]);
+
+  const selectParent = async (parent: any) => {
+    setSelectedParent(parent);
+    setParentOpen(false);
+    setParentSearch(parent.fullName || parent.name);
+    setSelectedStudents([]);
+    setParentStudents([]);
+    setParentFeeAccounts([]);
+    setFormAmount('');
+    try {
+      const token = localStorage.getItem('token');
+      const studentsRes = await fetch(apiUrl(`/parents/${parent.id}/students`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (studentsRes.ok) {
+        const students = await studentsRes.json();
+        setParentStudents(Array.isArray(students) ? students : []);
+      }
+      const feeRes = await fetch(apiUrl(`/finance/student-payments?parentId=${parent.id}&limit=50`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (feeRes.ok) {
+        const data = await feeRes.json();
+        setParentFeeAccounts(data.data || []);
+      }
+    } catch {}
+  };
+
+  const toggleStudent = (studentId: string) => {
+    setSelectedStudents((prev) =>
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId],
+    );
+  };
+
+  const selectAllStudents = () => {
+    if (selectedStudents.length === parentStudents.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(parentStudents.map((s) => s.id));
+    }
+  };
+
+  const recordFamilyPayment = async () => {
+    if (!selectedParent || selectedStudents.length === 0 || !formAmount) {
+      toast.error('Please select a parent and at least one student, and enter an amount');
+      return;
+    }
+    setSubmittingForm(true);
+    try {
+      const token = localStorage.getItem('token');
+      const body: any = {
+        amount: parseFloat(formAmount),
+        type: 'payment',
+        paymentMethod: paymentMethod || undefined,
+        transactionDate: calendarType === 'gregorian' ? paymentDate : ethiopianDate,
+        description: formNotes || undefined,
+      };
+      let successCount = 0;
+      for (const studentId of selectedStudents) {
+        const account = parentFeeAccounts.find(
+          (a) => a.studentId === studentId || a.studentId === studentId,
+        );
+        if (account) {
+          const res = await fetch(apiUrl(`/finance/student-payments/${account.id}/transactions`), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (res.ok) successCount++;
+        } else {
+          const student = parentStudents.find((s) => s.id === studentId);
+          if (student) {
+            const syncRes = await fetch(apiUrl('/finance/sync'), {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ studentIds: [studentId] }),
+            });
+            if (syncRes.ok) {
+              const synced = await syncRes.json();
+              const newAccount = Array.isArray(synced) ? synced.find((a: any) => a.studentId === studentId) : null;
+              if (newAccount) {
+                const res = await fetch(apiUrl(`/finance/student-payments/${newAccount.id}/transactions`), {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body),
+                });
+                if (res.ok) successCount++;
+              }
+            }
+          }
+        }
+      }
+      if (successCount > 0) {
+        toast.success(`Payment recorded for ${successCount} student(s)`);
+        setFormAmount('');
+        setFormNotes('');
+        setSelectedStudents([]);
+        setSelectedParent(null);
+        setParentSearch('');
+        setParentStudents([]);
+        setParentFeeAccounts([]);
+        load();
+      } else {
+        toast.error('Failed to record payment. Try syncing fee accounts first.');
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
 
   const openDetail = async (fam: any) => {
     if (fam.type !== 'bundled' || !fam.id) {
@@ -130,6 +276,230 @@ function FamilyPaymentsPage() {
           </Button>
         </div>
       </div>
+
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => setShowForm(!showForm)}
+          className="gap-2"
+        >
+          <Plus className={cn('h-4 w-4 transition-transform', showForm && 'rotate-45')} />
+          {showForm ? 'Close Form' : 'Record Family Payment'}
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="glass-panel rounded-2xl p-6 mb-6 space-y-5">
+          <h3 className="font-semibold text-foreground">Record Parent / Family Payment</h3>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Parent Search */}
+            <div className="md:col-span-2">
+              <Label>Search Parent <span className="text-xs text-muted-foreground">(only parents with students shown)</span></Label>
+              <Popover open={parentOpen} onOpenChange={setParentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={parentOpen}
+                    className="w-full justify-between h-10"
+                  >
+                    {selectedParent
+                      ? (selectedParent.fullName || selectedParent.name)
+                      : 'Search for a parent...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[500px] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Type parent name..."
+                      value={parentSearch}
+                      onValueChange={setParentSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No parents found</CommandEmpty>
+                      <CommandGroup>
+                        {parents.map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.fullName || p.name}
+                            onSelect={() => selectParent(p)}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedParent?.id === p.id ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            <div>
+                              <p>{p.fullName || p.name}</p>
+                              <p className="text-xs text-muted-foreground">{p.email || p.phoneNumber || ''}</p>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Students (shown when parent is selected) */}
+            {selectedParent && parentStudents.length > 0 && (
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Select Students</Label>
+                  <Button variant="ghost" size="sm" onClick={selectAllStudents} className="text-xs">
+                    {selectedStudents.length === parentStudents.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                </div>
+                <div className="space-y-2 rounded-xl border border-border p-3">
+                  {parentStudents.map((s) => {
+                    const account = parentFeeAccounts.find((a) => a.studentId === s.id);
+                    return (
+                      <label
+                        key={s.id}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={selectedStudents.includes(s.id)}
+                          onCheckedChange={() => toggleStudent(s.id)}
+                        />
+                        <div className="flex-1 flex justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{s.fullName || s.name}</p>
+                            <p className="text-xs text-muted-foreground">{s.level || s.program || ''}</p>
+                          </div>
+                          {account && (
+                            <span className="text-xs text-muted-foreground">
+                              Fee: ETB {account.monthlyFee} | Balance: ETB {account.remainingBalance}
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {selectedParent && parentStudents.length === 0 && (
+              <div className="md:col-span-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-sm text-amber-600">
+                This parent has no students assigned.
+              </div>
+            )}
+
+            {/* Amount */}
+            <div>
+              <Label>Amount ({currency})</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formAmount}
+                onChange={(e) => setFormAmount(e.target.value)}
+                placeholder="e.g. 1500"
+              />
+            </div>
+
+            {/* Calendar Type Toggle */}
+            <div>
+              <Label>Calendar System</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={calendarType === 'gregorian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('gregorian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Gregorian
+                </Button>
+                <Button
+                  type="button"
+                  variant={calendarType === 'ethiopian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('ethiopian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Ethiopian
+                </Button>
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <Label>Date</Label>
+              {calendarType === 'gregorian' ? (
+                <Input
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                />
+              ) : (
+                <Input
+                  value={ethiopianDate}
+                  onChange={(e) => setEthiopianDate(e.target.value)}
+                  placeholder="YYYY-MM-DD (Ethiopian)"
+                />
+              )}
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="credit_card">Credit/Debit Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Currency */}
+            <div>
+              <Label>Currency</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ETB">ETB - Ethiopian Birr</SelectItem>
+                  <SelectItem value="USD">USD - US Dollar</SelectItem>
+                  <SelectItem value="EUR">EUR - Euro</SelectItem>
+                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                  <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+                  <SelectItem value="AED">AED - UAE Dirham</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <Label>Notes (optional)</Label>
+              <Input
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                placeholder="Payment notes or reference..."
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={recordFamilyPayment}
+            disabled={submittingForm || !selectedParent || selectedStudents.length === 0 || !formAmount}
+            className="w-full"
+          >
+            {submittingForm ? 'Recording...' : `Record Payment for ${selectedStudents.length} student(s)`}
+          </Button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin" /></div>

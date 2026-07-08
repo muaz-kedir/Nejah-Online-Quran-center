@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { WebsiteCmsService } from './website-cms.service';
@@ -25,6 +26,7 @@ import {
   UpdateHomeProgramDto,
 } from './dto/home-program.dto';
 import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
+import { CreateHomeTeacherDto, UpdateHomeTeacherDto } from './dto/home-teacher.dto';
 import { ReorderDto } from './dto/reorder.dto';
 
 @Controller('website/admin/home')
@@ -118,5 +120,37 @@ export class WebsiteCmsAdminController {
   @Post('testimonials/reorder')
   reorderTestimonials(@Body() dto: ReorderDto) {
     return this.cmsService.reorderTestimonials(dto.ids);
+  }
+
+  // --- Teachers ---
+
+  @Get('teachers/search-users')
+  searchUsers(@Query('q') q: string) {
+    return this.cmsService.searchUsers(q);
+  }
+
+  @Get('teachers')
+  getTeachers() {
+    return this.cmsService.getAdminTeachers();
+  }
+
+  @Post('teachers')
+  createTeacher(@Body() dto: CreateHomeTeacherDto) {
+    return this.cmsService.createTeacher(dto);
+  }
+
+  @Patch('teachers/:id')
+  updateTeacher(@Param('id') id: string, @Body() dto: UpdateHomeTeacherDto) {
+    return this.cmsService.updateTeacher(id, dto);
+  }
+
+  @Delete('teachers/:id')
+  deleteTeacher(@Param('id') id: string) {
+    return this.cmsService.deleteTeacher(id);
+  }
+
+  @Post('teachers/reorder')
+  reorderTeachers(@Body() dto: ReorderDto) {
+    return this.cmsService.reorderTeachers(dto.ids);
   }
 }

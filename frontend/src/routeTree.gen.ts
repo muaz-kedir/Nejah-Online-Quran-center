@@ -24,7 +24,6 @@ import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replac
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
-import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -43,7 +42,6 @@ import { Route as Parent_dashboardRouteImport } from './routes/parent_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveSessionsRouteImport } from './routes/live-sessions'
 import { Route as HomeworkRouteImport } from './routes/homework'
-import { Route as HelpCenterRouteImport } from './routes/help-center'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as Finance_teacherPaymentsRouteImport } from './routes/finance_teacher-payments'
 import { Route as Finance_studentPaymentsRouteImport } from './routes/finance_student-payments'
@@ -62,6 +60,7 @@ import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebsiteTeachersRouteImport } from './routes/website.teachers'
 import { Route as WebsiteResourcesRouteImport } from './routes/website.resources'
 import { Route as WebsiteHomeRouteImport } from './routes/website.home'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
@@ -80,14 +79,10 @@ import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$ses
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
 import { Route as TeachersIdIndexRouteImport } from './routes/teachers_.$id.index'
 import { Route as WebsiteSupportTicketsRouteImport } from './routes/website.support.tickets'
-import { Route as WebsiteSupportSitemapRouteImport } from './routes/website.support.sitemap'
 import { Route as WebsiteSupportPagesRouteImport } from './routes/website.support.pages'
-import { Route as WebsiteSupportHelpCenterRouteImport } from './routes/website.support.help-center'
 import { Route as WebsiteSupportAnalyticsRouteImport } from './routes/website.support.analytics'
 import { Route as TeachersIdStudentsRouteImport } from './routes/teachers_.$id.students'
 import { Route as TeachersIdProfileRouteImport } from './routes/teachers_.$id.profile'
-import { Route as HelpCenterCategorySlugRouteImport } from './routes/help-center_.category.$slug'
-import { Route as HelpCenterArticleSlugRouteImport } from './routes/help-center_.article.$slug'
 import { Route as TeachersIdStudentsStudentIdRouteImport } from './routes/teachers_.$id.students_.$studentId'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
@@ -164,11 +159,6 @@ const StudentsRoute = StudentsRouteImport.update({
 const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapRoute = SitemapRouteImport.update({
-  id: '/sitemap',
-  path: '/sitemap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -261,11 +251,6 @@ const HomeworkRoute = HomeworkRouteImport.update({
   path: '/homework',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HelpCenterRoute = HelpCenterRouteImport.update({
-  id: '/help-center',
-  path: '/help-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -354,6 +339,11 @@ const AdminsRoute = AdminsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteTeachersRoute = WebsiteTeachersRouteImport.update({
+  id: '/website/teachers',
+  path: '/website/teachers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WebsiteResourcesRoute = WebsiteResourcesRouteImport.update({
@@ -447,22 +437,11 @@ const WebsiteSupportTicketsRoute = WebsiteSupportTicketsRouteImport.update({
   path: '/website/support/tickets',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WebsiteSupportSitemapRoute = WebsiteSupportSitemapRouteImport.update({
-  id: '/website/support/sitemap',
-  path: '/website/support/sitemap',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WebsiteSupportPagesRoute = WebsiteSupportPagesRouteImport.update({
   id: '/website/support/pages',
   path: '/website/support/pages',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WebsiteSupportHelpCenterRoute =
-  WebsiteSupportHelpCenterRouteImport.update({
-    id: '/website/support/help-center',
-    path: '/website/support/help-center',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const WebsiteSupportAnalyticsRoute = WebsiteSupportAnalyticsRouteImport.update({
   id: '/website/support/analytics',
   path: '/website/support/analytics',
@@ -477,16 +456,6 @@ const TeachersIdProfileRoute = TeachersIdProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => TeachersIdRoute,
-} as any)
-const HelpCenterCategorySlugRoute = HelpCenterCategorySlugRouteImport.update({
-  id: '/help-center_/category/$slug',
-  path: '/help-center/category/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpCenterArticleSlugRoute = HelpCenterArticleSlugRouteImport.update({
-  id: '/help-center_/article/$slug',
-  path: '/help-center/article/$slug',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const TeachersIdStudentsStudentIdRoute =
   TeachersIdStudentsStudentIdRouteImport.update({
@@ -519,7 +488,6 @@ export interface FileRoutesByFullPath {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -538,7 +506,6 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
-  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -570,14 +537,11 @@ export interface FileRoutesByFullPath {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
-  '/help-center/article/$slug': typeof HelpCenterArticleSlugRoute
-  '/help-center/category/$slug': typeof HelpCenterCategorySlugRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
-  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
   '/website/support/pages': typeof WebsiteSupportPagesRoute
-  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
   '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id/': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -602,7 +566,6 @@ export interface FileRoutesByTo {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -621,7 +584,6 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
-  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -652,14 +614,11 @@ export interface FileRoutesByTo {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
-  '/help-center/article/$slug': typeof HelpCenterArticleSlugRoute
-  '/help-center/category/$slug': typeof HelpCenterCategorySlugRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
-  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
   '/website/support/pages': typeof WebsiteSupportPagesRoute
-  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
   '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -685,7 +644,6 @@ export interface FileRoutesById {
   '/finance_student-payments': typeof Finance_studentPaymentsRoute
   '/finance_teacher-payments': typeof Finance_teacherPaymentsRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/help-center': typeof HelpCenterRoute
   '/homework': typeof HomeworkRoute
   '/live-sessions': typeof LiveSessionsRouteWithChildren
   '/login': typeof LoginRoute
@@ -704,7 +662,6 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRoute
-  '/sitemap': typeof SitemapRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -736,14 +693,11 @@ export interface FileRoutesById {
   '/teachers_/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
-  '/help-center_/article/$slug': typeof HelpCenterArticleSlugRoute
-  '/help-center_/category/$slug': typeof HelpCenterCategorySlugRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers_/$id/profile': typeof TeachersIdProfileRoute
   '/teachers_/$id/students': typeof TeachersIdStudentsRoute
   '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
-  '/website/support/help-center': typeof WebsiteSupportHelpCenterRoute
   '/website/support/pages': typeof WebsiteSupportPagesRoute
-  '/website/support/sitemap': typeof WebsiteSupportSitemapRoute
   '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers_/$id/': typeof TeachersIdIndexRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
@@ -770,7 +724,6 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
-    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -789,7 +742,6 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
-    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -821,14 +773,11 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
-    | '/help-center/article/$slug'
-    | '/help-center/category/$slug'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
     | '/website/support/analytics'
-    | '/website/support/help-center'
     | '/website/support/pages'
-    | '/website/support/sitemap'
     | '/website/support/tickets'
     | '/teachers/$id/'
     | '/teachers/$id/schedule/$day'
@@ -853,7 +802,6 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
-    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -872,7 +820,6 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
-    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -903,14 +850,11 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
-    | '/help-center/article/$slug'
-    | '/help-center/category/$slug'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
     | '/website/support/analytics'
-    | '/website/support/help-center'
     | '/website/support/pages'
-    | '/website/support/sitemap'
     | '/website/support/tickets'
     | '/teachers/$id'
     | '/teachers/$id/schedule/$day'
@@ -935,7 +879,6 @@ export interface FileRouteTypes {
     | '/finance_student-payments'
     | '/finance_teacher-payments'
     | '/forgot-password'
-    | '/help-center'
     | '/homework'
     | '/live-sessions'
     | '/login'
@@ -954,7 +897,6 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
-    | '/sitemap'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -986,14 +928,11 @@ export interface FileRouteTypes {
     | '/teachers_/create'
     | '/website/home'
     | '/website/resources'
-    | '/help-center_/article/$slug'
-    | '/help-center_/category/$slug'
+    | '/website/teachers'
     | '/teachers_/$id/profile'
     | '/teachers_/$id/students'
     | '/website/support/analytics'
-    | '/website/support/help-center'
     | '/website/support/pages'
-    | '/website/support/sitemap'
     | '/website/support/tickets'
     | '/teachers_/$id/'
     | '/teachers_/$id/schedule/$day'
@@ -1019,7 +958,6 @@ export interface RootRouteChildren {
   Finance_studentPaymentsRoute: typeof Finance_studentPaymentsRoute
   Finance_teacherPaymentsRoute: typeof Finance_teacherPaymentsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  HelpCenterRoute: typeof HelpCenterRoute
   HomeworkRoute: typeof HomeworkRoute
   LiveSessionsRoute: typeof LiveSessionsRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -1038,7 +976,6 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
   SettingsRoute: typeof SettingsRoute
-  SitemapRoute: typeof SitemapRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
@@ -1069,12 +1006,9 @@ export interface RootRouteChildren {
   TeachersCreateRoute: typeof TeachersCreateRoute
   WebsiteHomeRoute: typeof WebsiteHomeRoute
   WebsiteResourcesRoute: typeof WebsiteResourcesRoute
-  HelpCenterArticleSlugRoute: typeof HelpCenterArticleSlugRoute
-  HelpCenterCategorySlugRoute: typeof HelpCenterCategorySlugRoute
+  WebsiteTeachersRoute: typeof WebsiteTeachersRoute
   WebsiteSupportAnalyticsRoute: typeof WebsiteSupportAnalyticsRoute
-  WebsiteSupportHelpCenterRoute: typeof WebsiteSupportHelpCenterRoute
   WebsiteSupportPagesRoute: typeof WebsiteSupportPagesRoute
-  WebsiteSupportSitemapRoute: typeof WebsiteSupportSitemapRoute
   WebsiteSupportTicketsRoute: typeof WebsiteSupportTicketsRoute
 }
 
@@ -1183,13 +1117,6 @@ declare module '@tanstack/react-router' {
       path: '/student_dashboard'
       fullPath: '/student_dashboard'
       preLoaderRoute: typeof Student_dashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap': {
-      id: '/sitemap'
-      path: '/sitemap'
-      fullPath: '/sitemap'
-      preLoaderRoute: typeof SitemapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -1318,13 +1245,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeworkRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/help-center': {
-      id: '/help-center'
-      path: '/help-center'
-      fullPath: '/help-center'
-      preLoaderRoute: typeof HelpCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -1449,6 +1369,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/teachers': {
+      id: '/website/teachers'
+      path: '/website/teachers'
+      fullPath: '/website/teachers'
+      preLoaderRoute: typeof WebsiteTeachersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/website/resources': {
@@ -1577,25 +1504,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WebsiteSupportTicketsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/website/support/sitemap': {
-      id: '/website/support/sitemap'
-      path: '/website/support/sitemap'
-      fullPath: '/website/support/sitemap'
-      preLoaderRoute: typeof WebsiteSupportSitemapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/website/support/pages': {
       id: '/website/support/pages'
       path: '/website/support/pages'
       fullPath: '/website/support/pages'
       preLoaderRoute: typeof WebsiteSupportPagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/website/support/help-center': {
-      id: '/website/support/help-center'
-      path: '/website/support/help-center'
-      fullPath: '/website/support/help-center'
-      preLoaderRoute: typeof WebsiteSupportHelpCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/website/support/analytics': {
@@ -1618,20 +1531,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/teachers/$id/profile'
       preLoaderRoute: typeof TeachersIdProfileRouteImport
       parentRoute: typeof TeachersIdRoute
-    }
-    '/help-center_/category/$slug': {
-      id: '/help-center_/category/$slug'
-      path: '/help-center/category/$slug'
-      fullPath: '/help-center/category/$slug'
-      preLoaderRoute: typeof HelpCenterCategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help-center_/article/$slug': {
-      id: '/help-center_/article/$slug'
-      path: '/help-center/article/$slug'
-      fullPath: '/help-center/article/$slug'
-      preLoaderRoute: typeof HelpCenterArticleSlugRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/teachers_/$id/students_/$studentId': {
       id: '/teachers_/$id/students_/$studentId'
@@ -1701,7 +1600,6 @@ const rootRouteChildren: RootRouteChildren = {
   Finance_studentPaymentsRoute: Finance_studentPaymentsRoute,
   Finance_teacherPaymentsRoute: Finance_teacherPaymentsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  HelpCenterRoute: HelpCenterRoute,
   HomeworkRoute: HomeworkRoute,
   LiveSessionsRoute: LiveSessionsRouteWithChildren,
   LoginRoute: LoginRoute,
@@ -1720,7 +1618,6 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,
   SettingsRoute: SettingsRoute,
-  SitemapRoute: SitemapRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
@@ -1751,12 +1648,9 @@ const rootRouteChildren: RootRouteChildren = {
   TeachersCreateRoute: TeachersCreateRoute,
   WebsiteHomeRoute: WebsiteHomeRoute,
   WebsiteResourcesRoute: WebsiteResourcesRoute,
-  HelpCenterArticleSlugRoute: HelpCenterArticleSlugRoute,
-  HelpCenterCategorySlugRoute: HelpCenterCategorySlugRoute,
+  WebsiteTeachersRoute: WebsiteTeachersRoute,
   WebsiteSupportAnalyticsRoute: WebsiteSupportAnalyticsRoute,
-  WebsiteSupportHelpCenterRoute: WebsiteSupportHelpCenterRoute,
   WebsiteSupportPagesRoute: WebsiteSupportPagesRoute,
-  WebsiteSupportSitemapRoute: WebsiteSupportSitemapRoute,
   WebsiteSupportTicketsRoute: WebsiteSupportTicketsRoute,
 }
 export const routeTree = rootRouteImport

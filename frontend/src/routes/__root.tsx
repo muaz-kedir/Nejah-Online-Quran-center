@@ -8,7 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -118,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "canonical", href: SITE_URL },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: appCss },
+
     ],
     scripts: [
       {

@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/teachers_/$id/students')({
   component: AssignedStudentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function AssignedStudentsPage() {

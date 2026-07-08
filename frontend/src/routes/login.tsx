@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,7 +21,7 @@ import { ROLE_DASHBOARDS } from "@/lib/auth";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
-import { NotificationPrompt } from "@/components/auth/NotificationPrompt";
+
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -52,9 +52,7 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
-  const [pendingRole, setPendingRole] = useState<string | null>(null);
-  const dialogCloseIntentional = useRef(false);
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -118,26 +116,16 @@ function LoginPage() {
         localStorage.removeItem("studentId");
       }
 
-      toast.success("Welcome back, " + data.user.name + "!");
-
       const role = data.user.role;
-      const hasPush = "PushManager" in window && "serviceWorker" in navigator;
-      const notificationGranted = "Notification" in window && Notification.permission === "granted";
+      setIsLoading(false);
+      redirectToDashboard(role);
 
-      if (hasPush && !notificationGranted) {
-        setPendingRole(role);
-        setShowNotificationPrompt(true);
-        setIsLoading(false);
-        return;
-      }
-
-      if (hasPush && notificationGranted) {
+      // Push notification setup — non-blocking, runs after navigation
+      if ("PushManager" in window && "serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
         import("@/lib/push-notifications").then((m) =>
           m.subscribeToPushNotifications().catch(() => {}),
         );
       }
-
-      redirectToDashboard(role);
     } catch (error: unknown) {
       toast.error(
         error instanceof Error ? error.message : "Invalid credentials. Please try again.",
@@ -149,23 +137,7 @@ function LoginPage() {
 
   function redirectToDashboard(role: string) {
     const target = ROLE_DASHBOARDS[role] || "/dashboard";
-    window.location.href = target;
-  }
-
-  function handleNotificationEnable() {
-    dialogCloseIntentional.current = true;
-    setShowNotificationPrompt(false);
-    import("@/lib/push-notifications").then((m) =>
-      m.subscribeToPushNotifications().then(() => {
-        if (pendingRole) redirectToDashboard(pendingRole);
-      }),
-    );
-  }
-
-  function handleNotificationDismiss() {
-    dialogCloseIntentional.current = true;
-    setShowNotificationPrompt(false);
-    if (pendingRole) redirectToDashboard(pendingRole);
+    navigate({ to: target, replace: true });
   }
 
   return (
@@ -345,19 +317,6 @@ function LoginPage() {
           </form>
         </Form>
       </AuthPageLayout>
-
-      <NotificationPrompt
-        open={showNotificationPrompt}
-        onOpenChange={(open) => {
-          if (!open && pendingRole && !dialogCloseIntentional.current) {
-            setShowNotificationPrompt(false);
-            redirectToDashboard(pendingRole);
-          }
-          dialogCloseIntentional.current = false;
-        }}
-        onEnable={handleNotificationEnable}
-        onDismiss={handleNotificationDismiss}
-      />
     </>
   );
 }

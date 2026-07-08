@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -12,11 +12,12 @@ import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/api';
 import { getRoleLabel } from '@/components/ui/role-badge';
+import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
 
 interface TopbarProps {
   onMenuClick: () => void;
+  notifCount: number;
 }
 
 const LANGUAGES = [
@@ -25,20 +26,16 @@ const LANGUAGES = [
   { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
 ];
 
-function TopbarInner({ onMenuClick }: TopbarProps) {
+const getIsDark = () =>
+  typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
   const navigate = useNavigate();
-  const { theme, toggleTheme, language, setLanguage, t } = useApp();
-  const [notifCount, setNotifCount] = useState(0);
+  const { language, setLanguage, t } = useApp();
+  const [isDark, setIsDark] = useState(getIsDark);
   const [userName, setUserName] = useState('Admin User');
   const [userRole, setUserRole] = useState('super_admin');
-
-  const fetchNotifCount = useCallback(async () => {
-    try {
-      const data = await api<any[]>('/notifications');
-      const unread = Array.isArray(data) ? data.filter((n: any) => !n.isRead).length : 0;
-      setNotifCount(unread);
-    } catch {}
-  }, []);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const loadUserData = () => {
@@ -48,22 +45,33 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
 
     if (typeof window !== 'undefined') {
       loadUserData();
-      fetchNotifCount();
       window.addEventListener('profileUpdated', loadUserData);
-      const interval = setInterval(fetchNotifCount, 30000);
       return () => {
-        clearInterval(interval);
         window.removeEventListener('profileUpdated', loadUserData);
       };
     }
-  }, [fetchNotifCount]);
+  }, []);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const nowDark = root.classList.contains('dark');
+    root.classList.toggle('dark', !nowDark);
+    localStorage.setItem('theme', !nowDark ? 'dark' : 'light');
+    setIsDark(!nowDark);
+  };
 
   const handleLogout = () => {
-    import('@/lib/push-notifications').then(m =>
-      m.unsubscribeFromPushNotifications().catch(() => {}),
-    );
-    localStorage.clear();
-    navigate({ to: '/login' });
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+      import('@/lib/push-notifications').then(m =>
+        m.unsubscribeFromPushNotifications().catch(() => {}),
+      );
+    }, 0);
   };
 
   const iconBtn = cn(
@@ -98,13 +106,13 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
       <div className="ml-auto flex items-center gap-1">
         <button
           onClick={toggleTheme}
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           className={iconBtn}
         >
-          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
-        {userRole !== 'super_admin' && userRole !== 'finance_manager' && (
+        {userRole !== 'super_admin' && userRole !== 'finance_manager' && userRole !== 'qirat_manager' && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={iconBtn} title="Change Language">
@@ -140,6 +148,7 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
           <button className={iconBtn} onClick={() => {
             const role = localStorage.getItem('userRole');
             const paths: Record<string, string> = {
+              super_admin: '/teacher_notifications',
               teacher: '/teacher_notifications',
               student: '/student/notifications',
               qirat_manager: '/qirat_notifications',
@@ -187,7 +196,16 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => navigate({ to: '/settings' })}
+              onClick={() => {
+                const role = localStorage.getItem('userRole');
+                const settingsPaths: Record<string, string> = {
+                  super_admin: '/settings',
+                  teacher: '/settings',
+                  qirat_manager: '/qirat_settings',
+                  finance_manager: '/finance_settings',
+                };
+                navigate({ to: settingsPaths[role || ''] || '/settings' });
+              }}
               className="text-foreground focus:bg-primary/10"
             >
               <Settings className="mr-2 h-4 w-4" />
@@ -204,6 +222,14 @@ function TopbarInner({ onMenuClick }: TopbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+        userName={userName}
+        userRole={userRole}
+      />
     </header>
   );
 }

@@ -14,15 +14,17 @@ import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/qirat_settings')({
   component: QiratSettingsPage,
-  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin', 'admin']),
+  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin']),
 });
 
 function QiratSettingsPage() {
   const [name, setName] = useState(localStorage.getItem('userName') || '');
   const [email] = useState(localStorage.getItem('userEmail') || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const save = async () => {
+  const saveProfile = async () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -42,22 +44,53 @@ function QiratSettingsPage() {
     }
   };
 
+  const changePassword = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/users/change-password`), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword: newPassword }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to change password');
+      }
+      toast.success('Password changed');
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <PageHeader eyebrow="Account" title="Profile Settings" description="Manage your Qirat Manager profile" />
-      <div className="glass-panel max-w-lg space-y-4 rounded-2xl p-6">
-        <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div><Label>Email</Label><Input value={email} disabled /></div>
-        <Button onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Profile'}</Button>
-      </div>
-      <div className="glass-panel max-w-lg space-y-4 rounded-2xl p-6 mt-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Bell className="h-5 w-5 text-nejah-electric" />
-          <p className="font-medium">Notification Settings</p>
+      <div className="glass-panel max-w-lg space-y-6 rounded-2xl p-6">
+        <div className="space-y-3">
+          <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div><Label>Email</Label><Input value={email} disabled /></div>
+          <Button onClick={saveProfile} disabled={saving}>Save Profile</Button>
         </div>
-        <PushNotificationToggle variant="card" />
-        <div className="border-t mt-4 pt-4">
-          <TelegramLink />
+        <div className="space-y-3 border-t border-white/10 pt-6">
+          <p className="font-medium">Change Password</p>
+          <div><Label>Current Password</Label><Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></div>
+          <div><Label>New Password</Label><Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></div>
+          <Button variant="outline" onClick={changePassword} disabled={saving}>Update Password</Button>
+        </div>
+        <div className="space-y-3 border-t border-white/10 pt-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Bell className="h-5 w-5 text-nejah-electric" />
+            <p className="font-medium">Notification Settings</p>
+          </div>
+          <PushNotificationToggle variant="card" />
+          <div className="border-t mt-4 pt-4">
+            <TelegramLink />
+          </div>
         </div>
       </div>
     </DashboardLayout>

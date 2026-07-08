@@ -17,7 +17,7 @@ import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 function SettingsPage() {

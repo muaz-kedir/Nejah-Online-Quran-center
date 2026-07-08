@@ -19,4 +19,9 @@ export class WebsiteCmsPublicController {
   getTestimonials() {
     return this.cmsService.getPublicTestimonials();
   }
+
+  @Get('teachers')
+  getTeachers() {
+    return this.cmsService.getPublicTeachers();
+  }
 }
