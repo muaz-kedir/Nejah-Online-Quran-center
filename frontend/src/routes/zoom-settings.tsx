@@ -72,12 +72,12 @@ type PlatformConfigStatus = {
   hasSecretToken: boolean;
 };
 
-const ADMIN_ROLES = ['admin', 'super_admin'];
+const ADMIN_ROLES = ['super_admin'];
 
 export const Route = createFileRoute('/zoom-settings')({
   ssr: false,
   component: ZoomSettingsPage,
-  beforeLoad: () => requireAuth(['teacher', 'admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['teacher', 'super_admin']),
 });
 
 function ZoomSettingsPage() {
