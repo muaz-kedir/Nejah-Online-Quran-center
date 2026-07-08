@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark';
 type Language = 'en' | 'ar' | 'fr' | 'am' | 'om';
 
 interface Translations {
@@ -218,8 +217,6 @@ const translations: Record<Language, Translations> = {
 };
 
 interface AppContextType {
-  theme: Theme;
-  toggleTheme: () => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   t: Translations;
@@ -230,27 +227,15 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
   const [language, setLanguageState] = useState<Language>('en');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Only set initial values on client side to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setTheme((localStorage.getItem('theme') as Theme) || 'light');
       setLanguageState((localStorage.getItem('language') as Language) || 'en');
       setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
     }
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-      localStorage.setItem('theme', theme);
-    }
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -271,8 +256,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        theme,
-        toggleTheme,
         language,
         setLanguage,
         t: translations[language],
