@@ -28,7 +28,7 @@ export function FloatingActions() {
         )}
       </AnimatePresence>
       <a
-        href="https://wa.me/15558009300"
+        href="https://wa.me/251960600660"
         target="_blank"
         rel="noreferrer"
         aria-label="WhatsApp"
