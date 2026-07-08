@@ -55,6 +55,7 @@ import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
 import { Route as DebugUserRouteImport } from './routes/debug-user'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as Currency_settingsRouteImport } from './routes/currency_settings'
+import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -316,6 +317,11 @@ const Currency_settingsRoute = Currency_settingsRouteImport.update({
   path: '/currency_settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditLogsRoute = AuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -475,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
@@ -553,6 +560,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
@@ -631,6 +639,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
@@ -711,6 +720,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
@@ -789,6 +799,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
@@ -866,6 +877,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
@@ -945,6 +957,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
   AttendanceRoute: typeof AttendanceRoute
+  AuditLogsRoute: typeof AuditLogsRoute
   Currency_settingsRoute: typeof Currency_settingsRoute
   DashboardRoute: typeof DashboardRoute
   DebugUserRoute: typeof DebugUserRoute
@@ -1336,6 +1349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Currency_settingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-logs': {
+      id: '/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/attendance': {
       id: '/attendance'
       path: '/attendance'
@@ -1587,6 +1607,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
   AttendanceRoute: AttendanceRoute,
+  AuditLogsRoute: AuditLogsRoute,
   Currency_settingsRoute: Currency_settingsRoute,
   DashboardRoute: DashboardRoute,
   DebugUserRoute: DebugUserRoute,

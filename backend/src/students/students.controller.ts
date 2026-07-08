@@ -46,6 +46,7 @@ export class StudentsController {
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
     UserRole.QIRAT_MANAGER,
+    UserRole.FINANCE_MANAGER,
     UserRole.TEACHER,
     UserRole.PARENT,
   )

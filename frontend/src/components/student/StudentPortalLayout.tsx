@@ -61,13 +61,9 @@ export function StudentPortalLayout({
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  const { theme, toggleTheme } = useTheme();
 
   const { t } = useApp();
 

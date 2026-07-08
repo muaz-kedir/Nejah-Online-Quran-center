@@ -20,13 +20,13 @@ export class ParentsController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.FINANCE_MANAGER, UserRole.TEACHER)
   findAll(@Query() queryDto: QueryParentDto) {
     return this.parentsService.findAll(queryDto);
   }
 
   @Get('search')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.FINANCE_MANAGER)
   search(@Query('search') search: string) {
     return this.parentsService.search(search);
   }
