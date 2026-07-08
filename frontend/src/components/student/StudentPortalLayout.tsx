@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
 import { logout } from "@/lib/auth";
 import { useApp } from "@/context/AppContext";
+import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 
 const LANGUAGES = [
@@ -73,24 +74,11 @@ export function StudentPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme") as "light" | "dark" | null;
-      if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "light";
-  });
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
   const { language, setLanguage, t } = useApp();
+  const { theme, toggleTheme } = useTheme();
 
   const menuItems = [
     { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
@@ -100,10 +88,6 @@ export function StudentPortalLayout({
     { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
     { label: t.notifications, icon: Bell, path: studentPaths.notifications },
   ];
-
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
 
   // Sync from prop and auto-refresh from summary API
   useEffect(() => {
