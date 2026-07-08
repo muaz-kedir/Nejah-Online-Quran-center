@@ -59,6 +59,7 @@ import { HelpArticle } from '../support-pages/entities/help-article.entity';
 import { ArticleFeedback } from '../support-pages/entities/article-feedback.entity';
 import { ArticleVersion } from '../support-pages/entities/article-version.entity';
 import { SupportTicket } from '../support-pages/entities/support-ticket.entity';
+import { AuditLog } from '../audit/entities/audit-log.entity';
 
 /** Every TypeORM entity — explicit registration avoids missing relation metadata on Render. */
 export const ALL_ENTITIES = [
@@ -123,4 +124,5 @@ export const ALL_ENTITIES = [
   SupportTicket,
   TelegramSubscription,
   TelegramLinkingCode,
+  AuditLog,
 ];

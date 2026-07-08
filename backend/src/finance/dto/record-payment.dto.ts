@@ -70,4 +70,21 @@ export class GeneratePayrollDto {
   @IsOptional()
   @IsString()
   billingMonth?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salary?: number;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
