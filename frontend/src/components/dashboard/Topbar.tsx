@@ -1,5 +1,5 @@
 import { memo, useState, useEffect } from 'react';
-import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check } from 'lucide-react';
+import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check, RotateCw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,7 +75,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
   };
 
   const iconBtn = cn(
-    'flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200',
+    'flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 cursor-pointer',
     'text-nejah-slate-blue hover:bg-primary/10 hover:text-nejah-electric',
   );
 
@@ -110,6 +110,14 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
           className={iconBtn}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+
+        <button
+          onClick={() => window.location.reload()}
+          title="Refresh page from database"
+          className={iconBtn}
+        >
+          <RotateCw className="h-4 w-4" />
         </button>
 
         {userRole !== 'super_admin' && userRole !== 'finance_manager' && userRole !== 'qirat_manager' && (
