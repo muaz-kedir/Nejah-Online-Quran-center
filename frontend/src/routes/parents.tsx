@@ -38,7 +38,7 @@ import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/parents')({
   component: ParentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 const getInitials = (name: string) => {
