@@ -112,6 +112,7 @@ export class LiveSessionService {
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
+      session.teacherId,
     );
 
     session.zoomMeetingId = meeting.meetingId;
@@ -743,9 +744,13 @@ export class LiveSessionService {
   }
 
   private async ensureZoomMeeting(session: LiveSession): Promise<void> {
-    if (!this.zoomService.isPlatformConfigured()) {
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+    });
+
+    if (!this.zoomService.isPlatformConfigured() && !integration) {
       throw new BadRequestException(
-        'Zoom platform is not configured. Contact your administrator.',
+        'Zoom platform is not configured and teacher has no Zoom connection. Contact your administrator.',
       );
     }
 
@@ -757,6 +762,7 @@ export class LiveSessionService {
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
+      session.teacherId,
     );
 
     session.zoomMeetingId = meeting.meetingId;
