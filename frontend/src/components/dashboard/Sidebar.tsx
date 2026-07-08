@@ -1,12 +1,13 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { menuByRole, type MenuItem } from './menuConfig';
 import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { SilverDivider } from './design-system';
+import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
 
-function NavItem({ item, collapsed, depth = 0 }: { item: MenuItem; collapsed: boolean; depth?: number }) {
+function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; collapsed: boolean; depth?: number; notifCount?: number }) {
   const location = useLocation();
   const Icon = item.icon;
   const isActive = item.path !== '#' && location.pathname.startsWith(item.path);
@@ -53,8 +54,8 @@ function NavItem({ item, collapsed, depth = 0 }: { item: MenuItem; collapsed: bo
         </div>
         {expanded && (
           <ul className="ml-3 mt-0.5 space-y-0.5 border-l border-border/50 pl-2">
-            {item.children.map((child) => (
-              <NavItem key={child.path} item={child} collapsed={collapsed} depth={depth + 1} />
+            {item.children!.map((child) => (
+              <NavItem key={child.path} item={child} collapsed={collapsed} depth={depth + 1} notifCount={notifCount} />
             ))}
           </ul>
         )}
@@ -92,20 +93,26 @@ function NavItem({ item, collapsed, depth = 0 }: { item: MenuItem; collapsed: bo
         {!collapsed && (
           <>
             <span className="flex-1 text-sm font-medium">{label}</span>
-            {item.badge && (
+            {(item.label === 'Notifications' && notifCount !== undefined && notifCount > 0) ? (
+              <span className="badge-live-pulse ml-auto min-w-[18px] text-center">
+                {notifCount > 9 ? '9+' : notifCount}
+              </span>
+            ) : item.badge ? (
               <span className="badge-live-pulse ml-auto min-w-[18px] text-center">
                 {item.badge}
               </span>
-            )}
+            ) : null}
           </>
         )}
 
         {collapsed && (
           <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
             {label}
-            {item.badge && (
+            {(item.label === 'Notifications' && notifCount !== undefined && notifCount > 0) ? (
+              <span className="badge-live-pulse ml-2">{notifCount > 9 ? '9+' : notifCount}</span>
+            ) : item.badge ? (
               <span className="badge-live-pulse ml-2">{item.badge}</span>
-            )}
+            ) : null}
           </div>
         )}
       </Link>
@@ -113,10 +120,12 @@ function NavItem({ item, collapsed, depth = 0 }: { item: MenuItem; collapsed: bo
   );
 }
 
-export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: { isOpen: boolean; onToggle: () => void; notifCount?: number }) {
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(isOpen);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -130,20 +139,23 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
   }, [isOpen]);
 
   const handleLogout = useCallback(() => {
-    import('@/lib/push-notifications').then(m =>
-      m.unsubscribeFromPushNotifications().catch(() => {}),
-    );
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userId');
-    window.location.href = '/login';
+    setShowLogoutConfirm(true);
   }, []);
+
+  const confirmLogout = useCallback(() => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+      import('@/lib/push-notifications').then(m =>
+        m.unsubscribeFromPushNotifications().catch(() => {}),
+      );
+    }, 0);
+  }, [navigate]);
 
   const toggleCollapse = useCallback(() => setSidebarCollapsed(!sidebarCollapsed), [sidebarCollapsed, setSidebarCollapsed]);
 
-  const menuItems = userRole ? (menuByRole[userRole] || menuByRole.student) : [];
+  const resolvedRole = userRole === 'admin' ? 'qirat_manager' : userRole;
+  const menuItems = resolvedRole ? (menuByRole[resolvedRole] || menuByRole.student) : [];
 
   return (
     <>
@@ -235,7 +247,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
           {userRole && (
           <ul className="space-y-0.5">
             {menuItems.map((item) => (
-              <NavItem key={`${item.path}-${item.label}`} item={item} collapsed={sidebarCollapsed} />
+              <NavItem key={`${item.path}-${item.label}`} item={item} collapsed={sidebarCollapsed} notifCount={notifCount} />
             ))}
           </ul>
           )}
@@ -272,6 +284,14 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle }: { isOpen: boo
           </div>
         )}
       </aside>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+        userName={userRole ? localStorage.getItem('userName') || undefined : undefined}
+        userRole={userRole || undefined}
+      />
     </>
   );
 });

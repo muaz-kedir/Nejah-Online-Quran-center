@@ -39,7 +39,7 @@ import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/teachers')({
   component: TeachersPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 const getStatusBadge = (s: string) => {

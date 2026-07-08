@@ -19,17 +19,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
-import { logout } from "@/lib/auth";
+import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
+import { useApp } from "@/context/AppContext";
+import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 
-const menuItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: studentPaths.dashboard },
-  { label: "My Classes", icon: Users, path: studentPaths.classes },
-  { label: "My Progress", icon: TrendingUp, path: studentPaths.progress },
-  { label: "Homework", icon: ClipboardList, path: studentPaths.homework },
-  { label: "Resources", icon: FolderOpen, path: studentPaths.resources },
-  { label: "Notifications", icon: Bell, path: studentPaths.notifications },
-];
+
 
 type Props = {
   activePath: string;
@@ -65,14 +60,6 @@ export function StudentPortalLayout({
     }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme") as "light" | "dark" | null;
-      if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "light";
-  });
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -82,9 +69,16 @@ export function StudentPortalLayout({
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
+  const { t } = useApp();
+
+  const menuItems = [
+    { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
+    { label: t.myClasses, icon: Users, path: studentPaths.classes },
+    { label: t.myProgress, icon: TrendingUp, path: studentPaths.progress },
+    { label: t.homework, icon: ClipboardList, path: studentPaths.homework },
+    { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
+    { label: t.notifications, icon: Bell, path: studentPaths.notifications },
+  ];
 
   // Sync from prop and auto-refresh from summary API
   useEffect(() => {
@@ -136,7 +130,13 @@ export function StudentPortalLayout({
     };
   }, [mobileOpen]);
 
-  const handleLogout = logout;
+  const handleLogout = () => setShowLogoutConfirm(true);
+  const confirmLogout = () => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+    }, 0);
+  };
 
   const displayName = student?.fullName || student?.name || "Student";
 
@@ -158,7 +158,7 @@ export function StudentPortalLayout({
               Nejah
             </h1>
             <p className="text-[10px] text-nejah-electric font-bold uppercase tracking-widest mt-0.5">
-              Student Portal
+              {t.studentPortal}
             </p>
           </div>
         )}
@@ -250,11 +250,11 @@ export function StudentPortalLayout({
               )}
             >
               <Settings className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && <span>Settings</span>}
+              {(!collapsed || isMobile) && <span>{t.settings}</span>}
             </button>
             {collapsed && !isMobile && (
               <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-                Settings
+                {t.settings}
               </div>
             )}
           </div>
@@ -269,11 +269,11 @@ export function StudentPortalLayout({
             )}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {(!collapsed || isMobile) && <span>Logout</span>}
+            {(!collapsed || isMobile) && <span>{t.logout}</span>}
           </button>
           {collapsed && !isMobile && (
             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-              Logout
+              {t.logout}
             </div>
           )}
         </div>
@@ -309,7 +309,7 @@ export function StudentPortalLayout({
                 {displayName}
               </p>
               <p className="text-[10px] text-muted-foreground font-medium truncate">
-                {student?.level || "Student"} Program
+                {student?.level || t.studentPortal} Program
               </p>
             </div>
           )}
@@ -393,6 +393,7 @@ export function StudentPortalLayout({
               </span>
             )}
           </button>
+
           <button
             type="button"
             onClick={onOpenProfile}
@@ -452,11 +453,22 @@ export function StudentPortalLayout({
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
         {children}
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+      />
     </div>
   );
 }
 
 export function StudentPageLoader() {
+  let loadingText = 'Loading...';
+  try {
+    const { t } = useApp();
+    loadingText = t.loading;
+  } catch {}
   return (
     <div className="flex h-screen items-center justify-center dark:bg-background bg-gray-50/80">
       <div className="flex flex-col items-center gap-4">
@@ -464,7 +476,7 @@ export function StudentPageLoader() {
           <div className="w-12 h-12 rounded-full border-[3px] border-primary/20" />
           <div className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-transparent border-t-nejah-electric animate-spin" />
         </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading...</p>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">{loadingText}</p>
       </div>
     </div>
   );

@@ -168,9 +168,9 @@ export function Navbar() {
               </Button>
             </Link>
             <Link to="/register">
-              <Button className="rounded-full shadow-[0_0_16px_rgba(0,102,204,0.35)]">
-                {t.nav.register}
-              </Button>
+              <button className="btn-metallic !min-h-[40px] !min-w-0 !px-5 !py-2">
+                <span className="text-sm">{t.nav.register}</span>
+              </button>
             </Link>
           </div>
 

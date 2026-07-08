@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 export const Route = createFileRoute('/qirat_dashboard')({
   component: QiratDashboardPage,
-  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin', 'admin']),
+  beforeLoad: () => requireAuth(['qirat_manager', 'super_admin']),
 });
 
 function QiratDashboardPage() {

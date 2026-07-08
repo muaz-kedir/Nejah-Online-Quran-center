@@ -21,7 +21,7 @@ import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/schedules')({
   component: SchedulesPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function SchedulesPage() {
