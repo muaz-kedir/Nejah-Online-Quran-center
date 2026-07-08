@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Clock, Sparkles, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
 import { useTheme } from "./ThemeProvider";
 
 const highlightValues = ["2,000+", "1-on-1", "24 / 7"] as const;
@@ -58,22 +57,13 @@ export function CTA() {
 
               <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <Link to="/register">
-                  <Button
-                    size="lg"
-                    className="h-12 rounded-full px-8 text-base font-semibold shadow-nejah-glow"
-                  >
-                    {t.cta.register}
-                    <ArrowRight className="ms-2 size-4 rtl:rotate-180" />
-                  </Button>
+                  <button className="btn-metallic">
+                    <span>{t.cta.register} <ArrowRight className="ms-2 size-4 rtl:rotate-180 inline" /></span>
+                  </button>
                 </Link>
-                <Button
-                  onClick={handleContactClick}
-                  size="lg"
-                  variant="outline"
-                  className="h-12 rounded-full border-white/25 bg-white/5 px-8 text-base text-white hover:border-white/40 hover:bg-white/10"
-                >
-                  {t.cta.contact}
-                </Button>
+                <button onClick={handleContactClick} className="btn-metallic-outline !border-white/25 !bg-white/5 !text-white hover:!border-white/40 hover:!bg-white/10 [&>span]:!text-white">
+                  <span>{t.cta.contact}</span>
+                </button>
               </div>
 
               <p className="mt-5 font-mono text-[11px] uppercase tracking-widest text-white/45">
