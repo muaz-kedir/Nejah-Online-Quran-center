@@ -39,7 +39,7 @@ export function Courses() {
             <div className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] text-nejah-electric">
               {sectionHeader}
             </div>
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">
+            <h2 className="heading-premium mb-4 text-3xl md:text-4xl lg:text-5xl">
               {mainTitle}
             </h2>
             <p className="text-base text-nejah-slate-blue md:text-lg">{description}</p>
@@ -52,7 +52,8 @@ export function Courses() {
           </a>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="data-line-h top-1/2 left-[10%] right-[10%] hidden lg:block" />
           {programs.map((program, i) => {
             const badge = pickLocalized(program.level, lang);
             const title = pickLocalized(program.title, lang);
