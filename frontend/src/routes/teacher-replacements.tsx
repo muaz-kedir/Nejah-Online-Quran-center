@@ -21,7 +21,7 @@ import {
 
 export const Route = createFileRoute('/teacher-replacements')({
   component: TeacherReplacementsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 const STATUS_COLORS: Record<string, string> = {
