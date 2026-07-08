@@ -1,11 +1,14 @@
 import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { HomeMissionSection } from './entities/home-mission-section.entity';
 import { HomeMissionCard } from './entities/home-mission-card.entity';
 import { HomeProgramsSection } from './entities/home-programs-section.entity';
 import { HomeProgram } from './entities/home-program.entity';
 import { Testimonial } from './entities/testimonial.entity';
+import { HomeTeacher } from './entities/home-teacher.entity';
+import { User } from '../users/entities/user.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
 import { UpdateHomeMissionSectionDto } from './dto/update-home-mission-section.dto';
 import {
   CreateHomeMissionCardDto,
@@ -17,6 +20,7 @@ import {
   UpdateHomeProgramDto,
 } from './dto/home-program.dto';
 import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
+import { CreateHomeTeacherDto, UpdateHomeTeacherDto } from './dto/home-teacher.dto';
 import { LocalizedText } from './types/localized-text';
 
 const MISSION_SECTION_ID = 'default';
@@ -37,6 +41,12 @@ export class WebsiteCmsService implements OnModuleInit {
     private readonly programRepo: Repository<HomeProgram>,
     @InjectRepository(Testimonial)
     private readonly testimonialRepo: Repository<Testimonial>,
+    @InjectRepository(HomeTeacher)
+    private readonly homeTeacherRepo: Repository<HomeTeacher>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+    @InjectRepository(Teacher)
+    private readonly teacherRepo: Repository<Teacher>,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -509,5 +519,100 @@ export class WebsiteCmsService implements OnModuleInit {
       ids.map((id, index) => this.testimonialRepo.update(id, { displayOrder: index })),
     );
     return this.testimonialRepo.find({ order: { displayOrder: 'ASC' } });
+  }
+
+  // --- Teachers ---
+
+  async getPublicTeachers(): Promise<HomeTeacher[]> {
+    return this.homeTeacherRepo.find({
+      where: { isActive: true },
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async getAdminTeachers(): Promise<HomeTeacher[]> {
+    return this.homeTeacherRepo.find({
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
+  async searchUsers(q: string): Promise<User[]> {
+    if (!q || q.length < 2) return [];
+    return this.userRepo.find({
+      where: [
+        { name: ILike(`%${q}%`) },
+        { email: ILike(`%${q}%`) },
+      ],
+      take: 20,
+      order: { name: 'ASC' },
+    });
+  }
+
+  async createTeacher(dto: CreateHomeTeacherDto): Promise<HomeTeacher> {
+    const maxOrder = await this.homeTeacherRepo
+      .createQueryBuilder('t')
+      .select('MAX(t.displayOrder)', 'max')
+      .getRawOne();
+    const displayOrder = dto.displayOrder ?? (Number(maxOrder?.max ?? -1) + 1);
+    const teacher = this.homeTeacherRepo.create({
+      ...dto,
+      displayOrder,
+      isActive: dto.isActive ?? true,
+    });
+    const saved = await this.homeTeacherRepo.save(teacher);
+
+    if (saved.userId) {
+      await this.syncTeacherRecord(saved.userId, saved.specialization, saved.experience);
+    }
+
+    return saved;
+  }
+
+  async updateTeacher(id: string, dto: UpdateHomeTeacherDto): Promise<HomeTeacher> {
+    const teacher = await this.homeTeacherRepo.findOne({ where: { id } });
+    if (!teacher) throw new NotFoundException('Home teacher not found');
+    Object.assign(teacher, dto);
+    const saved = await this.homeTeacherRepo.save(teacher);
+
+    if (saved.userId) {
+      await this.syncTeacherRecord(saved.userId, saved.specialization, saved.experience);
+    }
+
+    return saved;
+  }
+
+  async deleteTeacher(id: string): Promise<void> {
+    const result = await this.homeTeacherRepo.delete(id);
+    if (!result.affected) throw new NotFoundException('Home teacher not found');
+  }
+
+  async reorderTeachers(ids: string[]): Promise<HomeTeacher[]> {
+    const teachers = await this.homeTeacherRepo.find();
+    const idSet = new Set(ids);
+    if (idSet.size !== ids.length || ids.length !== teachers.length) {
+      throw new NotFoundException('Invalid teacher order payload');
+    }
+    await Promise.all(
+      ids.map((id, index) => this.homeTeacherRepo.update(id, { displayOrder: index })),
+    );
+    return this.homeTeacherRepo.find({ order: { displayOrder: 'ASC' } });
+  }
+
+  private async syncTeacherRecord(
+    userId: string,
+    specialization: string,
+    experience: string | null,
+  ): Promise<void> {
+    const existingTeacher = await this.teacherRepo.findOne({ where: { userId } });
+    if (existingTeacher) {
+      existingTeacher.specialization = specialization;
+      if (experience !== null) {
+        const parsed = parseInt(experience, 10);
+        if (!isNaN(parsed)) {
+          existingTeacher.experience = parsed;
+        }
+      }
+      await this.teacherRepo.save(existingTeacher);
+    }
   }
 }
