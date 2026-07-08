@@ -46,12 +46,12 @@ function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loadin
 }
 
 function AdminsPage() {
-  const [tab, setTab] = useState<'admin' | 'finance_manager' | 'qirat_manager'>('admin');
+  const [tab, setTab] = useState<'finance_manager' | 'qirat_manager'>('finance_manager');
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const [defaultRole, setDefaultRole] = useState('admin');
+  const [defaultRole, setDefaultRole] = useState('finance_manager');
 
   const fetchUsers = async () => {
     try {
@@ -88,26 +88,16 @@ function AdminsPage() {
         actions={
           <Button onClick={() => openAdd(tab)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add {tab === 'admin' ? 'Admin' : tab === 'finance_manager' ? 'Finance Manager' : 'Qirat Manager'}
+            Add {tab === 'finance_manager' ? 'Finance Manager' : 'Qirat Manager'}
           </Button>
         }
       />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as 'admin' | 'finance_manager' | 'qirat_manager')} className="mb-6">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'finance_manager' | 'qirat_manager')} className="mb-6">
         <TabsList>
-          <TabsTrigger value="admin"><Shield className="mr-2 h-4 w-4" /> Admins</TabsTrigger>
           <TabsTrigger value="finance_manager"><Wallet className="mr-2 h-4 w-4" /> Finance Managers</TabsTrigger>
           <TabsTrigger value="qirat_manager"><BookOpen className="mr-2 h-4 w-4" /> Qirat Managers</TabsTrigger>
         </TabsList>
-        <TabsContent value="admin" className="mt-4">
-          <div className="relative mb-6 max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
-            <Input placeholder="Search admins..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <StaffGrid users={users} loading={loading} icon={Shield} color="bg-primary/15 text-nejah-electric" />
-          </div>
-        </TabsContent>
         <TabsContent value="finance_manager" className="mt-4">
           <div className="relative mb-6 max-w-md">
             <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
