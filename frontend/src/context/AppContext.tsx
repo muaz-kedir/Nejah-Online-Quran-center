@@ -136,7 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setTheme((localStorage.getItem('theme') as Theme) || 'light');
-      setLanguageState((localStorage.getItem('language') as Language) || 'en');
+      setLanguageState('en');
       setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
     }
   }, []);
