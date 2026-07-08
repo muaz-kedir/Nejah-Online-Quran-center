@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/teacher_notifications')({
   component: TeacherNotificationsPage,
-  beforeLoad: () => requireAuth(['teacher', 'admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['teacher', 'super_admin']),
 });
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -262,7 +262,7 @@ function TeacherNotificationsPage() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
-  const Layout = userRole === 'super_admin' || userRole === 'admin' ? DashboardLayout : TeacherLayout;
+  const Layout = userRole === 'super_admin' ? DashboardLayout : TeacherLayout;
 
   return (
     <Layout>
