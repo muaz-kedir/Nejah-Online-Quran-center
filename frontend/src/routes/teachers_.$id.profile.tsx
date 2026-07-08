@@ -56,7 +56,7 @@ import { TeacherRecentlyCompletedSessions } from '@/components/teachers/TeacherR
 
 export const Route = createFileRoute('/teachers_/$id/profile')({
   component: TeacherProfilePage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function TeacherProfilePage() {
