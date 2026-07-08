@@ -99,12 +99,16 @@ export class FinanceController {
 
   @Post('teacher-payments/generate-payroll')
   generatePayroll(@Body() dto: GeneratePayrollDto) {
-    return this.financeService.generatePayroll(dto.billingMonth);
+    return this.financeService.generatePayroll(dto.billingMonth, dto.teacherId, dto.salary, dto.paymentMethod, dto.status);
   }
 
   @Patch('teacher-payments/:teacherId/payroll/mark-paid')
-  markPayrollAsPaid(@Param('teacherId') teacherId: string, @Query('billingMonth') billingMonth?: string) {
-    return this.financeService.markPayrollAsPaid(teacherId, billingMonth);
+  markPayrollAsPaid(
+    @Param('teacherId') teacherId: string,
+    @Query('billingMonth') billingMonth?: string,
+    @Body() body?: { status?: string },
+  ) {
+    return this.financeService.markPayrollAsPaid(teacherId, billingMonth, body?.status);
   }
 
   @Get('revenue-analytics')
