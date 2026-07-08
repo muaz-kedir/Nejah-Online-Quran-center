@@ -1056,6 +1056,7 @@ export class FinanceService {
           sessionRate: calc.sessionRate,
           earnings: calc.earnings,
           payrollStatus: payroll?.status || 'pending',
+          paymentMethod: payroll?.paymentMethod || null,
           monthlySalary: this.toNumber(t.monthlySalary),
         };
       }),
@@ -1139,22 +1140,36 @@ export class FinanceService {
             id: payroll.id,
             status: payroll.status,
             totalEarnings: this.toNumber(payroll.totalEarnings),
+            paymentMethod: payroll.paymentMethod,
+            billingMonth: payroll.billingMonth,
             paidAt: payroll.paidAt,
           }
         : null,
     };
   }
 
-  async generatePayroll(billingMonth?: string) {
+  async generatePayroll(billingMonth?: string, teacherId?: string, salaryOverride?: number, paymentMethod?: string, status?: string) {
     const month = billingMonth || this.getCurrentBillingMonth();
-    const teachers = await this.teacherRepo.find({ where: { status: 'active' } });
+    let teachers = await this.teacherRepo.find({ where: { status: 'active' } });
+
+    if (teacherId) {
+      const teacher = await this.teacherRepo.findOne({ where: { id: teacherId } });
+      if (!teacher) throw new NotFoundException('Teacher not found');
+      teachers = [teacher];
+    }
+
     const generated: TeacherPayrollRecord[] = [];
 
     for (const teacher of teachers) {
-      const calc = await this.calculateTeacherEarnings(teacher.id, month);
+      const calc = salaryOverride != null
+        ? { sessionsConducted: 0, earnings: salaryOverride, details: [] }
+        : await this.calculateTeacherEarnings(teacher.id, month);
+
       let record = await this.payrollRepo.findOne({
         where: { teacherId: teacher.id, billingMonth: month },
       });
+
+      const recordStatus = status || 'pending';
 
       if (!record) {
         record = this.payrollRepo.create({
@@ -1162,11 +1177,18 @@ export class FinanceService {
           billingMonth: month,
           totalSessions: calc.sessionsConducted,
           totalEarnings: calc.earnings,
-          status: 'pending',
+          status: recordStatus,
+          paymentMethod: paymentMethod || null,
+          paidAt: recordStatus === 'paid' ? new Date() : null,
         });
       } else {
         record.totalSessions = calc.sessionsConducted;
         record.totalEarnings = calc.earnings;
+        if (paymentMethod) record.paymentMethod = paymentMethod;
+        if (status) {
+          record.status = status;
+          if (status === 'paid') record.paidAt = new Date();
+        }
       }
 
       const saved = await this.payrollRepo.save(record);
@@ -1210,7 +1232,7 @@ export class FinanceService {
     return { billingMonth: month, generated: generated.length, records: generated };
   }
 
-  async markPayrollAsPaid(teacherId: string, billingMonth?: string) {
+  async markPayrollAsPaid(teacherId: string, billingMonth?: string, newStatus?: string) {
     const month = billingMonth || this.getCurrentBillingMonth();
     const record = await this.payrollRepo.findOne({
       where: { teacherId, billingMonth: month },
@@ -1218,23 +1240,30 @@ export class FinanceService {
     });
     if (!record) throw new NotFoundException('Payroll record not found');
 
-    record.status = 'paid';
-    record.paidAt = new Date();
+    const status = newStatus || 'paid';
+    record.status = status;
+    if (status === 'paid') {
+      record.paidAt = record.paidAt || new Date();
+    } else {
+      record.paidAt = null;
+    }
     await this.payrollRepo.save(record);
 
     const teacherName = record.teacher?.fullName || 'Teacher';
-    const adminIds = await this.getAdminUserIds();
-    const recipients = [...adminIds];
-    if (record.teacher?.userId) recipients.push(record.teacher.userId);
-    await this.notificationsService.sendCustomNotifications(
-      [...new Set(recipients)],
-      'Teacher Salary Paid',
-      `Salary payment of ${this.toNumber(record.totalEarnings)} ETB has been successfully recorded for Teacher ${teacherName}.`,
-      { teacherId, teacherName, amount: this.toNumber(record.totalEarnings), billingMonth: month },
-      NotificationChannel.PAYMENT_RECEIVED,
-      false,
-      '/finance_teacher-payments',
-    );
+    if (status === 'paid') {
+      const adminIds = await this.getAdminUserIds();
+      const recipients = [...adminIds];
+      if (record.teacher?.userId) recipients.push(record.teacher.userId);
+      await this.notificationsService.sendCustomNotifications(
+        [...new Set(recipients)],
+        'Teacher Salary Paid',
+        `Salary payment of ${this.toNumber(record.totalEarnings)} ETB has been successfully recorded for Teacher ${teacherName}.`,
+        { teacherId, teacherName, amount: this.toNumber(record.totalEarnings), billingMonth: month },
+        NotificationChannel.PAYMENT_RECEIVED,
+        false,
+        '/finance_teacher-payments',
+      );
+    }
 
     return { success: true, record };
   }

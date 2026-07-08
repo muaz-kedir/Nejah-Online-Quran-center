@@ -37,6 +37,7 @@ import { WebsiteCmsModule } from './website-cms/website-cms.module';
 import { SupportPagesModule } from './support-pages/support-pages.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { AuditModule } from './audit/audit.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
 import { AppController } from './app.controller';
 
@@ -93,6 +94,7 @@ import { AppController } from './app.controller';
     WebsiteCmsModule,
     SupportPagesModule,
     UploadsModule,
+    AuditModule,
     TelegramModule,
     ScheduleModule.forRoot(),
     HealthModule,
