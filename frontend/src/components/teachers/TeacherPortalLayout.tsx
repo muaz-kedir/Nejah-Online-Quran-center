@@ -15,7 +15,7 @@ import {
   Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { logout } from "@/lib/auth";
+import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { apiUrl } from "@/lib/api";
@@ -66,6 +66,7 @@ export function TeacherPortalLayout({
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [liveUnread, setLiveUnread] = useState(0);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   // Poll unread count from API
@@ -118,12 +119,18 @@ export function TeacherPortalLayout({
     };
   }, [mobileOpen]);
 
-  const handleLogout = logout;
+  const handleLogout = () => setShowLogoutConfirm(true);
+  const confirmLogout = () => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+    }, 0);
+  };
 
   const displayName = teacher?.fullName || teacher?.name || "Teacher";
   const userRole = typeof window !== "undefined" ? localStorage.getItem("userRole") || "" : "";
   const displayTitle =
-    userRole === "teacher" ? "Teacher" : userRole === "admin" ? "Admin" : "Teacher";
+    userRole === "teacher" ? "Teacher" : "Teacher";
   const avatarUrl = teacher?.avatarUrl || teacher?.avatar;
   const initials = teacher?.initials || displayName.charAt(0);
 
@@ -418,6 +425,12 @@ export function TeacherPortalLayout({
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
         {children}
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+      />
     </div>
   );
 }

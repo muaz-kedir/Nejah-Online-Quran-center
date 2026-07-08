@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
-import { logout } from "@/lib/auth";
+import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
@@ -77,6 +77,7 @@ export function StudentPortalLayout({
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { language, setLanguage, t } = useApp();
   const { theme, toggleTheme } = useTheme();
 
@@ -139,7 +140,13 @@ export function StudentPortalLayout({
     };
   }, [mobileOpen]);
 
-  const handleLogout = logout;
+  const handleLogout = () => setShowLogoutConfirm(true);
+  const confirmLogout = () => {
+    navigate({ to: '/login', replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+    }, 0);
+  };
 
   const displayName = student?.fullName || student?.name || "Student";
 
@@ -524,6 +531,12 @@ export function StudentPortalLayout({
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
         {children}
       </div>
+
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={confirmLogout}
+      />
     </div>
   );
 }
