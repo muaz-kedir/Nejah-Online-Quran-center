@@ -374,6 +374,96 @@ export class ZoomService implements OnModuleInit {
     );
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  Per-teacher OAuth token management                                  */
+  /* ------------------------------------------------------------------ */
+
+  async getTeacherAccessToken(teacherId: string): Promise<string | null> {
+    const integration = await this.getTeacherIntegration(teacherId);
+    if (!integration || integration.connectionStatus !== 'connected') {
+      return null;
+    }
+
+    if (!integration.accessTokenEncrypted && !integration.refreshTokenEncrypted) {
+      return null;
+    }
+
+    if (integration.tokenExpiresAt && new Date() < integration.tokenExpiresAt) {
+      const decrypted = this.encryptionService.decrypt(integration.accessTokenEncrypted);
+      if (decrypted) return decrypted;
+    }
+
+    return this.refreshTeacherToken(integration);
+  }
+
+  async refreshTeacherToken(integration: ZoomIntegration): Promise<string | null> {
+    const oauthClientId = this.resolveOAuthClientId();
+    const oauthClientSecret = this.resolveOAuthClientSecret();
+    if (!oauthClientId || !oauthClientSecret) {
+      return null;
+    }
+
+    const refreshToken = this.encryptionService.decrypt(integration.refreshTokenEncrypted);
+    if (!refreshToken) {
+      return null;
+    }
+
+    const credentials = Buffer.from(`${oauthClientId}:${oauthClientSecret}`).toString('base64');
+
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post(
+          'https://zoom.us/oauth/token',
+          new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+          }).toString(),
+          {
+            headers: {
+              Authorization: `Basic ${credentials}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          },
+        ),
+      );
+
+      const newAccessToken = this.encryptionService.encrypt(data.access_token) || data.access_token;
+      const newRefreshToken = data.refresh_token
+        ? this.encryptionService.encrypt(data.refresh_token) || data.refresh_token
+        : integration.refreshTokenEncrypted;
+
+      integration.accessTokenEncrypted = newAccessToken;
+      integration.refreshTokenEncrypted = newRefreshToken;
+      integration.tokenExpiresAt = new Date(Date.now() + (data.expires_in - 60) * 1000);
+      await this.zoomIntegrationRepository.save(integration);
+
+      return data.access_token;
+    } catch (error) {
+      this.logger.error(
+        `Zoom token refresh failed for teacher ${integration.teacherId}: ${error?.response?.data?.reason || error?.message}`,
+      );
+      return null;
+    }
+  }
+
+  private resolveOAuthClientId(): string {
+    return (
+      this.configService.get<string>('ZOOM_OAUTH_CLIENT_ID') ||
+      process.env.ZOOM_OAUTH_CLIENT_ID ||
+      this.clientId ||
+      ''
+    );
+  }
+
+  private resolveOAuthClientSecret(): string {
+    return (
+      this.configService.get<string>('ZOOM_OAUTH_CLIENT_SECRET') ||
+      process.env.ZOOM_OAUTH_CLIENT_SECRET ||
+      this.clientSecret ||
+      ''
+    );
+  }
+
   async verifyPlatformAuth(): Promise<{ ok: true; source: 'env' | 'database' }> {
     await this.getAccessToken();
     const source = this.lastSuccessfulCredentialSource || this.credentialsSource;
@@ -389,6 +479,15 @@ export class ZoomService implements OnModuleInit {
     body?: unknown,
   ): Promise<T> {
     const token = await this.getAccessToken();
+    return this.zoomRequestWithToken<T>(method, path, token, body);
+  }
+
+  private async zoomRequestWithToken<T>(
+    method: HttpMethod,
+    path: string,
+    token: string,
+    body?: unknown,
+  ): Promise<T> {
     const url = path.startsWith('http')
       ? path
       : `${this.apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
@@ -399,10 +498,10 @@ export class ZoomService implements OnModuleInit {
           method,
           url,
           data: body,
-            headers: {
+          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            },
+          },
         }),
       );
       return response.data as T;
@@ -427,16 +526,30 @@ export class ZoomService implements OnModuleInit {
     topic: string,
     startTime: Date,
     durationMinutes: number,
+    teacherId?: string,
   ): Promise<ZoomMeetingResult> {
-    this.assertPlatformConfigured();
+    let token: string;
 
-    const meeting = await this.zoomRequest<{
+    if (teacherId) {
+      const teacherToken = await this.getTeacherAccessToken(teacherId);
+      if (teacherToken) {
+        token = teacherToken;
+      } else {
+        this.assertPlatformConfigured();
+        token = await this.getAccessToken();
+      }
+    } else {
+      this.assertPlatformConfigured();
+      token = await this.getAccessToken();
+    }
+
+    const meeting = await this.zoomRequestWithToken<{
       id: number;
       uuid: string;
       join_url: string;
       start_url: string;
       password?: string;
-    }>('POST', '/users/me/meetings', {
+    }>('POST', '/users/me/meetings', token, {
       topic,
       type: 2,
       start_time: startTime.toISOString(),
@@ -653,9 +766,9 @@ export class ZoomService implements OnModuleInit {
     );
   }
 
-  /** Meeting SDK app key — same as ZOOM_CLIENT_ID. */
+  /** Meeting SDK app key — same as ZOOM_CLIENT_ID or ZOOM_OAUTH_CLIENT_ID. */
   getOAuthClientId(): string | null {
-    return this.clientId || null;
+    return this.resolveOAuthClientId() || null;
   }
 
   generateMeetingSdkSignature(meetingNumber: string, role: 0 | 1): string | null {
@@ -1244,7 +1357,7 @@ export class ZoomService implements OnModuleInit {
     return saved;
   }
 
-  private async syncTeacherZoomFields(
+  async syncTeacherZoomFields(
     teacherId: string,
     fields: {
       zoomConnected: boolean;

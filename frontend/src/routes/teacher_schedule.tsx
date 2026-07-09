@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
-import { Calendar, Clock, ChevronLeft, ChevronRight, MapPin, Wifi } from 'lucide-react';
+import { Calendar, Clock, ChevronLeft, ChevronRight, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -156,7 +156,7 @@ function TeacherSchedulePage() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">{schedule.studentName}</h3>
+                              <h3 className="text-lg font-bold text-foreground">{schedule.studentName}</h3>
                               <Badge className={cn(
                                 "text-xs px-3 py-1 rounded-lg",
                                 schedule.status === 'active' ? "bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric" :
@@ -227,7 +227,7 @@ function TeacherSchedulePage() {
                               </div>
                             </td>
                             <td className="py-4 px-6">
-                              <p className="text-sm font-bold text-nejah-sapphire text-foreground">{schedule.studentName}</p>
+                              <p className="text-sm font-bold text-foreground">{schedule.studentName}</p>
                             </td>
                             <td className="py-4 px-6">
                               <Badge className={cn(
@@ -240,12 +240,8 @@ function TeacherSchedulePage() {
                             </td>
                             <td className="py-4 px-6">
                               <div className="flex items-center gap-1 text-sm text-muted-foreground dark:text-muted-foreground">
-                                {schedule.meetingLink ? (
-                                  <Wifi className="h-3 w-3 text-primary" />
-                                ) : (
-                                  <MapPin className="h-3 w-3 text-muted-foreground" />
-                                )}
-                                <span>{schedule.meetingLink ? 'Online' : 'In-Person'}</span>
+                                <Wifi className="h-3 w-3 text-primary" />
+                                <span>Online</span>
                               </div>
                             </td>
                           </tr>
