@@ -4,10 +4,12 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Eye, Loader2, Users } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, Eye, Loader2, Users, Calendar } from 'lucide-react';
 import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
 
 export const Route = createFileRoute('/teachers_/$id/students')({
   component: AssignedStudentsPage,
@@ -19,13 +21,20 @@ function AssignedStudentsPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [teacherName, setTeacherName] = useState('');
+  const [teacher, setTeacher] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
+
+  // Schedule Modal State
+  const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
+  const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
+  const [scheduleStudentId, setScheduleStudentId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api<any>(`/teachers/${teacherId}/students`);
       setTeacherName(data.teacher?.fullName || 'Teacher');
+      setTeacher({ id: teacherId, fullName: data.teacher?.fullName || 'Teacher' });
       setStudents(data.students || []);
     } catch (e: any) {
       setStudents([]);
@@ -72,9 +81,10 @@ function AssignedStudentsPage() {
                   <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <th className="py-3 px-4 font-semibold">Student Name</th>
                     <th className="py-3 px-4 font-semibold">Student ID</th>
-                    <th className="py-3 px-4 font-semibold">Current Learning Level</th>
-                    <th className="py-3 px-4 font-semibold">Current Lesson</th>
-                    <th className="py-3 px-4 font-semibold">Country</th>
+                    <th className="py-3 px-4 font-semibold">Level</th>
+                    <th className="py-3 px-4 font-semibold">Lesson</th>
+                    <th className="py-3 px-4 font-semibold">Attendance</th>
+                    <th className="py-3 px-4 font-semibold">Progress</th>
                     <th className="py-3 px-4 font-semibold">Status</th>
                     <th className="py-3 px-4 font-semibold">Assigned Date</th>
                     <th className="py-3 px-4 font-semibold text-right">Actions</th>
@@ -86,8 +96,36 @@ function AssignedStudentsPage() {
                       <td className="py-3 px-4 font-semibold text-foreground">{s.fullName}</td>
                       <td className="py-3 px-4 font-mono text-xs">{s.studentCode}</td>
                       <td className="py-3 px-4">{s.level}</td>
-                      <td className="py-3 px-4 max-w-[200px] truncate">{s.currentLesson}</td>
-                      <td className="py-3 px-4">{s.country}</td>
+                      <td className="py-3 px-4 max-w-[180px] truncate">{s.currentLesson}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <div className="flex-1 h-1.5 bg-muted dark:bg-nejah-surface rounded-full overflow-hidden">
+                            <div
+                              className={cn(
+                                'h-full rounded-full',
+                                s.attendanceRate < 50 ? 'bg-red-500' : 'bg-primary',
+                              )}
+                              style={{ width: `${s.attendanceRate}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold tabular-nums text-muted-foreground min-w-[32px] text-right">
+                            {s.attendanceRate}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <div className="flex-1 h-1.5 bg-muted dark:bg-nejah-surface rounded-full overflow-hidden">
+                            <div
+                              className="bg-amber-600 h-full rounded-full"
+                              style={{ width: `${s.progressRate}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold tabular-nums text-muted-foreground min-w-[32px] text-right">
+                            {s.progressRate}%
+                          </span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4">
                         <Badge
                           className={cn(
@@ -100,7 +138,7 @@ function AssignedStudentsPage() {
                           {s.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground">
+                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                         {s.assignedDate
                           ? new Date(s.assignedDate).toLocaleDateString(undefined, {
                               year: 'numeric',
@@ -110,21 +148,36 @@ function AssignedStudentsPage() {
                           : '—'}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                          onClick={() =>
-                            navigate({
-                              to: '/teachers/$id/students/$studentId',
-                              params: { id: teacherId, studentId: s.id },
-                              search: { tab: 'schedule' },
-                            })
-                          }
-                        >
-                          <Eye className="h-4 w-4" />
-                          View Details
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1 text-xs"
+                            onClick={() => {
+                              setScheduleStudentId(s.id);
+                              setScheduleToEdit(null);
+                              setIsEditScheduleOpen(true);
+                            }}
+                          >
+                            <Calendar className="h-3.5 w-3.5" />
+                            Schedule
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            onClick={() =>
+                              navigate({
+                                to: '/teachers/$id/students/$studentId',
+                                params: { id: teacherId, studentId: s.id },
+                                search: { tab: 'schedule' },
+                              })
+                            }
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -134,6 +187,24 @@ function AssignedStudentsPage() {
           )}
         </GlassPanel>
       </div>
+
+      <EditScheduleModal
+        open={isEditScheduleOpen}
+        onClose={() => {
+          setIsEditScheduleOpen(false);
+          setScheduleToEdit(null);
+          setScheduleStudentId(null);
+        }}
+        onSuccess={() => {
+          setIsEditScheduleOpen(false);
+          setScheduleToEdit(null);
+          setScheduleStudentId(null);
+          load();
+        }}
+        teacher={teacher}
+        schedule={scheduleToEdit}
+        defaultStudentId={scheduleStudentId || undefined}
+      />
     </DashboardLayout>
   );
 }
