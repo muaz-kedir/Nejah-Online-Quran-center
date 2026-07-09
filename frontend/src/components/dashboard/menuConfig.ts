@@ -22,6 +22,13 @@ import {
   Video,
   VideoOff,
   Layout,
+  FileText,
+  Ticket,
+  ChevronDown,
+  Home,
+  Wallet,
+  BookMarked,
+  MessageSquareText,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -29,6 +36,7 @@ export interface MenuItem {
   icon: any;
   path: string;
   badge?: string;
+  children?: MenuItem[];
 }
 
 export const menuByRole: Record<string, MenuItem[]> = {
@@ -37,36 +45,57 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Staff Management', icon: Shield, path: '/admins' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
-    { label: 'Students', icon: Users, path: '/students' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
-    { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
-    { label: 'Homework', icon: ClipboardList, path: '/homework' },
-    { label: 'Schedules', icon: Calendar, path: '/schedules' },
-    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
-    { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
-    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
-    { label: 'Finance Center', icon: DollarSign, path: '/finance_dashboard' },
+
+    {
+      label: 'Qirat Manager', icon: BookMarked, path: '#',
+      children: [
+        { label: 'Students', icon: Users, path: '/students' },
+        { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
+        { label: 'Homework', icon: ClipboardList, path: '/homework' },
+        { label: 'Schedules', icon: Calendar, path: '/schedules' },
+        { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
+        { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
+        { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
+        { label: 'Exams & Evaluations', icon: CheckCircle, path: '/qirat_exams' },
+      ],
+    },
+
+    {
+      label: 'Finance', icon: DollarSign, path: '#',
+      children: [
+        { label: 'Finance Dashboard', icon: LayoutDashboard, path: '/finance_dashboard' },
+        { label: 'Student Payments', icon: Receipt, path: '/finance_student-payments' },
+        { label: 'Family Payments', icon: UsersRound, path: '/finance_family-payments' },
+        { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
+        { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
+        { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+        { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
+        { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
+      ],
+    },
+
+    { label: 'Net Profit', icon: TrendingUp, path: '/finance_profit' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-    { label: 'Website Management', icon: Layout, path: '/website/home' },
-    { label: 'Learning Resources', icon: FolderOpen, path: '/website/resources' },
+    {
+      label: 'Website CMS', icon: Layout, path: '#',
+      children: [
+        // { label: 'Home Page', icon: Home, path: '/website/home' },
+        { label: 'Teachers', icon: GraduationCap, path: '/website/teachers' },
+        // { label: 'Testimonials', icon: MessageSquareText, path: '/website/home' },
+        // { label: 'Learning Resources', icon: BookMarked, path: '/website/resources' },
+        // { label: 'Support Pages', icon: FileText, path: '/website/support/pages' },
+        // { label: 'Support Tickets', icon: Ticket, path: '/website/support/tickets' },
+        // { label: 'Support Analytics', icon: TrendingUp, path: '/website/support/analytics' },
+      ],
+    },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
+    { label: 'Audit Log', icon: FileText, path: '/audit-logs' },
   ],
-  admin: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
-    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
-    { label: 'Students', icon: Users, path: '/students' },
-    { label: 'Parents', icon: UsersRound, path: '/parents' },
-    { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
-    { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
-    { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
-    { label: 'Reports', icon: BarChart3, path: '/reports' },
-    { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
-    { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
-  ],
+  // admin role removed — admins use qirat_manager or finance_manager menus
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/student_dashboard' },
     { label: 'My Classes', icon: Users, path: '/student/classes' },
@@ -84,7 +113,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
-    { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
     { label: 'Schedules', icon: Calendar, path: '/schedules' },
     { label: 'Homework', icon: ClipboardList, path: '/homework' },
@@ -101,6 +129,8 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
     { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
     { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+    { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
+    { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Notifications', icon: Bell, path: '/finance_notifications' },
     { label: 'Profile Settings', icon: UserCircle, path: '/finance_settings' },
   ],

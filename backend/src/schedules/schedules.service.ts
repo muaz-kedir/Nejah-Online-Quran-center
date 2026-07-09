@@ -12,6 +12,8 @@ import { Schedule } from './entities/schedule.entity';
 import { ScheduleStudent } from './entities/schedule-student.entity';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { matchesDayOfWeek } from '../common/utils/day-of-week.util';
@@ -33,6 +35,8 @@ export class SchedulesService {
     private studentsRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private teachersRepository: Repository<Teacher>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     @Inject(forwardRef(() => ScheduleSessionGeneratorService))
     private scheduleSessionGenerator: ScheduleSessionGeneratorService,
     @Inject(forwardRef(() => LiveSessionService))
@@ -393,8 +397,12 @@ export class SchedulesService {
         ? `A new class "${schedule.className || 'Quran Class'}" has been scheduled on ${schedule.dayOfWeek} at ${schedule.startTimeString}`
         : `Your class "${schedule.className || 'Quran Class'}" on ${schedule.dayOfWeek} at ${schedule.startTimeString} has been updated`;
 
+      const qiratManagers = await this.userRepository.find({
+        where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+      });
+      const recipients = [teacher.userId, ...qiratManagers.map((u) => u.id)];
       await this.notificationsService.sendCustomNotifications(
-        [teacher.userId],
+        recipients,
         title,
         message,
         {

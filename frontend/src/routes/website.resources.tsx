@@ -320,5 +320,5 @@ function WebsiteResources() {
 
 export const Route = createFileRoute('/website/resources')({
   component: WebsiteResources,
-  beforeLoad: () => requireAuth(['super_admin', 'admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });

@@ -22,7 +22,7 @@ const TABS: { id: TabId; label: string; icon: typeof Calendar }[] = [
 
 export const Route = createFileRoute('/teachers_/$id/students_/$studentId')({
   component: StudentDetailsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
   validateSearch: (search: Record<string, unknown>) => ({
     tab: (['schedule', 'attendance', 'progress'].includes(search.tab as string)
       ? search.tab

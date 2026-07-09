@@ -1,7 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FinanceService } from './finance.service';
 import { FinanceController } from './finance.controller';
+import { FinanceNotificationsCron } from './finance-notifications.cron';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { StudentFeeAccount } from './entities/student-fee-account.entity';
 import { PaymentTransaction } from './entities/payment-transaction.entity';
 import { FamilyBillingGroup } from './entities/family-billing-group.entity';
@@ -15,6 +17,8 @@ import { Schedule } from '../schedules/entities/schedule.entity';
 import { ClassSession } from '../attendance/entities/class-session.entity';
 import { StudentAttendance } from '../attendance/entities/student-attendance.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
+import { FinanceExpense } from './entities/finance-expense.entity';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
@@ -32,10 +36,13 @@ import { TeacherReplacement } from '../teacher-replacements/entities/teacher-rep
       ClassSession,
       StudentAttendance,
       TeacherReplacement,
+      FinanceExpense,
+      User,
     ]),
+    forwardRef(() => NotificationsModule),
   ],
   controllers: [FinanceController],
-  providers: [FinanceService],
+  providers: [FinanceService, FinanceNotificationsCron],
   exports: [FinanceService],
 })
 export class FinanceModule {}

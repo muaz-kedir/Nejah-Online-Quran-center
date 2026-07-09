@@ -47,6 +47,11 @@ export class UpdateStudentFeeDto {
   @IsOptional()
   @IsString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  teacherMonthlyBudget?: number;
 }
 
 export class BundleFamilyDto {
@@ -65,4 +70,21 @@ export class GeneratePayrollDto {
   @IsOptional()
   @IsString()
   billingMonth?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salary?: number;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

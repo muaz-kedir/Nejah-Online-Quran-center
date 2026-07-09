@@ -51,6 +51,11 @@ export function statusBadgeVariant(status: string): 'default' | 'secondary' | 'd
   }
 }
 
+export function formatCurrency(n: number | string | undefined | null): string {
+  const v = typeof n === 'string' ? parseFloat(n) : (n ?? 0);
+  return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function downloadCSV(filename: string, rows: Record<string, unknown>[], title?: string) {
   if (!rows.length) return;
   const escape = (v: unknown) => {

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as Teacher_zoomRouteImport } from './routes/teacher_zoom'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
@@ -33,6 +34,7 @@ import { Route as Qirat_examsRouteImport } from './routes/qirat_exams'
 import { Route as Qirat_dashboardRouteImport } from './routes/qirat_dashboard'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ParentsRouteImport } from './routes/parents'
 import { Route as Parent_sessionsRouteImport } from './routes/parent_sessions'
 import { Route as Parent_notificationsRouteImport } from './routes/parent_notifications'
@@ -46,18 +48,22 @@ import { Route as Finance_studentPaymentsRouteImport } from './routes/finance_st
 import { Route as Finance_settingsRouteImport } from './routes/finance_settings'
 import { Route as Finance_revenueRouteImport } from './routes/finance_revenue'
 import { Route as Finance_reportsRouteImport } from './routes/finance_reports'
+import { Route as Finance_profitRouteImport } from './routes/finance_profit'
 import { Route as Finance_notificationsRouteImport } from './routes/finance_notifications'
 import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
+import { Route as Finance_expensesRouteImport } from './routes/finance_expenses'
 import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
 import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
 import { Route as DebugUserRouteImport } from './routes/debug-user'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as Currency_settingsRouteImport } from './routes/currency_settings'
+import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebsiteTeachersRouteImport } from './routes/website.teachers'
 import { Route as WebsiteResourcesRouteImport } from './routes/website.resources'
 import { Route as WebsiteHomeRouteImport } from './routes/website.home'
 import { Route as TeachersCreateRouteImport } from './routes/teachers_.create'
@@ -75,6 +81,9 @@ import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-session
 import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$sessionId'
 import { Route as ClassSessionIdRouteImport } from './routes/class-session_.$id'
 import { Route as TeachersIdIndexRouteImport } from './routes/teachers_.$id.index'
+import { Route as WebsiteSupportTicketsRouteImport } from './routes/website.support.tickets'
+import { Route as WebsiteSupportPagesRouteImport } from './routes/website.support.pages'
+import { Route as WebsiteSupportAnalyticsRouteImport } from './routes/website.support.analytics'
 import { Route as TeachersIdStudentsRouteImport } from './routes/teachers_.$id.students'
 import { Route as TeachersIdProfileRouteImport } from './routes/teachers_.$id.profile'
 import { Route as TeachersIdStudentsStudentIdRouteImport } from './routes/teachers_.$id.students_.$studentId'
@@ -93,6 +102,11 @@ const UsersRoute = UsersRouteImport.update({
 const TrackApplicationRoute = TrackApplicationRouteImport.update({
   id: '/track-application',
   path: '/track-application',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeachersRoute = TeachersRouteImport.update({
@@ -200,6 +214,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
@@ -265,6 +284,11 @@ const Finance_reportsRoute = Finance_reportsRouteImport.update({
   path: '/finance_reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Finance_profitRoute = Finance_profitRouteImport.update({
+  id: '/finance_profit',
+  path: '/finance_profit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
   id: '/finance_notifications',
   path: '/finance_notifications',
@@ -273,6 +297,11 @@ const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
 const Finance_familyPaymentsRoute = Finance_familyPaymentsRouteImport.update({
   id: '/finance_family-payments',
   path: '/finance_family-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_expensesRoute = Finance_expensesRouteImport.update({
+  id: '/finance_expenses',
+  path: '/finance_expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
@@ -300,6 +329,11 @@ const Currency_settingsRoute = Currency_settingsRouteImport.update({
   path: '/currency_settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditLogsRoute = AuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -323,6 +357,11 @@ const AdminsRoute = AdminsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteTeachersRoute = WebsiteTeachersRouteImport.update({
+  id: '/website/teachers',
+  path: '/website/teachers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WebsiteResourcesRoute = WebsiteResourcesRouteImport.update({
@@ -411,6 +450,21 @@ const TeachersIdIndexRoute = TeachersIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TeachersIdRoute,
 } as any)
+const WebsiteSupportTicketsRoute = WebsiteSupportTicketsRouteImport.update({
+  id: '/website/support/tickets',
+  path: '/website/support/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteSupportPagesRoute = WebsiteSupportPagesRouteImport.update({
+  id: '/website/support/pages',
+  path: '/website/support/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteSupportAnalyticsRoute = WebsiteSupportAnalyticsRouteImport.update({
+  id: '/website/support/analytics',
+  path: '/website/support/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeachersIdStudentsRoute = TeachersIdStudentsRouteImport.update({
   id: '/students',
   path: '/students',
@@ -439,13 +493,16 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -459,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -480,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -499,8 +558,12 @@ export interface FileRoutesByFullPath {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id/': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers/$id/students/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -511,13 +574,16 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -531,6 +597,7 @@ export interface FileRoutesByTo {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -552,6 +619,7 @@ export interface FileRoutesByTo {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -570,8 +638,12 @@ export interface FileRoutesByTo {
   '/teachers/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers/$id/profile': typeof TeachersIdProfileRoute
   '/teachers/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers/$id': typeof TeachersIdIndexRoute
   '/teachers/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers/$id/students/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -583,13 +655,16 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
   '/attendance': typeof AttendanceRoute
+  '/audit-logs': typeof AuditLogsRoute
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -603,6 +678,7 @@ export interface FileRoutesById {
   '/parent_notifications': typeof Parent_notificationsRoute
   '/parent_sessions': typeof Parent_sessionsRoute
   '/parents': typeof ParentsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/qirat_dashboard': typeof Qirat_dashboardRoute
@@ -624,6 +700,7 @@ export interface FileRoutesById {
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-settings': typeof ZoomSettingsRoute
@@ -643,8 +720,12 @@ export interface FileRoutesById {
   '/teachers_/create': typeof TeachersCreateRoute
   '/website/home': typeof WebsiteHomeRoute
   '/website/resources': typeof WebsiteResourcesRoute
+  '/website/teachers': typeof WebsiteTeachersRoute
   '/teachers_/$id/profile': typeof TeachersIdProfileRoute
   '/teachers_/$id/students': typeof TeachersIdStudentsRoute
+  '/website/support/analytics': typeof WebsiteSupportAnalyticsRoute
+  '/website/support/pages': typeof WebsiteSupportPagesRoute
+  '/website/support/tickets': typeof WebsiteSupportTicketsRoute
   '/teachers_/$id/': typeof TeachersIdIndexRoute
   '/teachers_/$id/schedule/$day': typeof TeachersIdScheduleDayRoute
   '/teachers_/$id/students_/$studentId': typeof TeachersIdStudentsStudentIdRoute
@@ -657,13 +738,16 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -677,6 +761,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -698,6 +783,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -717,8 +803,12 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/pages'
+    | '/website/support/tickets'
     | '/teachers/$id/'
     | '/teachers/$id/schedule/$day'
     | '/teachers/$id/students/$studentId'
@@ -729,13 +819,16 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -749,6 +842,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -770,6 +864,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -788,8 +883,12 @@ export interface FileRouteTypes {
     | '/teachers/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers/$id/profile'
     | '/teachers/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/pages'
+    | '/website/support/tickets'
     | '/teachers/$id'
     | '/teachers/$id/schedule/$day'
     | '/teachers/$id/students/$studentId'
@@ -800,13 +899,16 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/apply-as-teacher'
     | '/attendance'
+    | '/audit-logs'
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -820,6 +922,7 @@ export interface FileRouteTypes {
     | '/parent_notifications'
     | '/parent_sessions'
     | '/parents'
+    | '/privacy-policy'
     | '/profile'
     | '/progress'
     | '/qirat_dashboard'
@@ -841,6 +944,7 @@ export interface FileRouteTypes {
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
+    | '/terms-of-service'
     | '/track-application'
     | '/users'
     | '/zoom-settings'
@@ -860,8 +964,12 @@ export interface FileRouteTypes {
     | '/teachers_/create'
     | '/website/home'
     | '/website/resources'
+    | '/website/teachers'
     | '/teachers_/$id/profile'
     | '/teachers_/$id/students'
+    | '/website/support/analytics'
+    | '/website/support/pages'
+    | '/website/support/tickets'
     | '/teachers_/$id/'
     | '/teachers_/$id/schedule/$day'
     | '/teachers_/$id/students_/$studentId'
@@ -873,13 +981,16 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
   AttendanceRoute: typeof AttendanceRoute
+  AuditLogsRoute: typeof AuditLogsRoute
   Currency_settingsRoute: typeof Currency_settingsRoute
   DashboardRoute: typeof DashboardRoute
   DebugUserRoute: typeof DebugUserRoute
   Fee_settingsRoute: typeof Fee_settingsRoute
   Finance_dashboardRoute: typeof Finance_dashboardRoute
+  Finance_expensesRoute: typeof Finance_expensesRoute
   Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
   Finance_notificationsRoute: typeof Finance_notificationsRoute
+  Finance_profitRoute: typeof Finance_profitRoute
   Finance_reportsRoute: typeof Finance_reportsRoute
   Finance_revenueRoute: typeof Finance_revenueRoute
   Finance_settingsRoute: typeof Finance_settingsRoute
@@ -893,6 +1004,7 @@ export interface RootRouteChildren {
   Parent_notificationsRoute: typeof Parent_notificationsRoute
   Parent_sessionsRoute: typeof Parent_sessionsRoute
   ParentsRoute: typeof ParentsRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   Qirat_dashboardRoute: typeof Qirat_dashboardRoute
@@ -914,6 +1026,7 @@ export interface RootRouteChildren {
   Teacher_studentsRoute: typeof Teacher_studentsRoute
   Teacher_zoomRoute: typeof Teacher_zoomRoute
   TeachersRoute: typeof TeachersRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
   ZoomSettingsRoute: typeof ZoomSettingsRoute
@@ -932,6 +1045,10 @@ export interface RootRouteChildren {
   TeachersCreateRoute: typeof TeachersCreateRoute
   WebsiteHomeRoute: typeof WebsiteHomeRoute
   WebsiteResourcesRoute: typeof WebsiteResourcesRoute
+  WebsiteTeachersRoute: typeof WebsiteTeachersRoute
+  WebsiteSupportAnalyticsRoute: typeof WebsiteSupportAnalyticsRoute
+  WebsiteSupportPagesRoute: typeof WebsiteSupportPagesRoute
+  WebsiteSupportTicketsRoute: typeof WebsiteSupportTicketsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -955,6 +1072,13 @@ declare module '@tanstack/react-router' {
       path: '/track-application'
       fullPath: '/track-application'
       preLoaderRoute: typeof TrackApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teachers': {
@@ -1104,6 +1228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parents': {
       id: '/parents'
       path: '/parents'
@@ -1195,6 +1326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Finance_reportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance_profit': {
+      id: '/finance_profit'
+      path: '/finance_profit'
+      fullPath: '/finance_profit'
+      preLoaderRoute: typeof Finance_profitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance_notifications': {
       id: '/finance_notifications'
       path: '/finance_notifications'
@@ -1207,6 +1345,13 @@ declare module '@tanstack/react-router' {
       path: '/finance_family-payments'
       fullPath: '/finance_family-payments'
       preLoaderRoute: typeof Finance_familyPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_expenses': {
+      id: '/finance_expenses'
+      path: '/finance_expenses'
+      fullPath: '/finance_expenses'
+      preLoaderRoute: typeof Finance_expensesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance_dashboard': {
@@ -1244,6 +1389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Currency_settingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-logs': {
+      id: '/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/attendance': {
       id: '/attendance'
       path: '/attendance'
@@ -1277,6 +1429,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/teachers': {
+      id: '/website/teachers'
+      path: '/website/teachers'
+      fullPath: '/website/teachers'
+      preLoaderRoute: typeof WebsiteTeachersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/website/resources': {
@@ -1398,6 +1557,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeachersIdIndexRouteImport
       parentRoute: typeof TeachersIdRoute
     }
+    '/website/support/tickets': {
+      id: '/website/support/tickets'
+      path: '/website/support/tickets'
+      fullPath: '/website/support/tickets'
+      preLoaderRoute: typeof WebsiteSupportTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/pages': {
+      id: '/website/support/pages'
+      path: '/website/support/pages'
+      fullPath: '/website/support/pages'
+      preLoaderRoute: typeof WebsiteSupportPagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website/support/analytics': {
+      id: '/website/support/analytics'
+      path: '/website/support/analytics'
+      fullPath: '/website/support/analytics'
+      preLoaderRoute: typeof WebsiteSupportAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teachers_/$id/students': {
       id: '/teachers_/$id/students'
       path: '/students'
@@ -1467,13 +1647,16 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
   AttendanceRoute: AttendanceRoute,
+  AuditLogsRoute: AuditLogsRoute,
   Currency_settingsRoute: Currency_settingsRoute,
   DashboardRoute: DashboardRoute,
   DebugUserRoute: DebugUserRoute,
   Fee_settingsRoute: Fee_settingsRoute,
   Finance_dashboardRoute: Finance_dashboardRoute,
+  Finance_expensesRoute: Finance_expensesRoute,
   Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
   Finance_notificationsRoute: Finance_notificationsRoute,
+  Finance_profitRoute: Finance_profitRoute,
   Finance_reportsRoute: Finance_reportsRoute,
   Finance_revenueRoute: Finance_revenueRoute,
   Finance_settingsRoute: Finance_settingsRoute,
@@ -1487,6 +1670,7 @@ const rootRouteChildren: RootRouteChildren = {
   Parent_notificationsRoute: Parent_notificationsRoute,
   Parent_sessionsRoute: Parent_sessionsRoute,
   ParentsRoute: ParentsRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   Qirat_dashboardRoute: Qirat_dashboardRoute,
@@ -1508,6 +1692,7 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_studentsRoute: Teacher_studentsRoute,
   Teacher_zoomRoute: Teacher_zoomRoute,
   TeachersRoute: TeachersRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
   ZoomSettingsRoute: ZoomSettingsRoute,
@@ -1526,6 +1711,10 @@ const rootRouteChildren: RootRouteChildren = {
   TeachersCreateRoute: TeachersCreateRoute,
   WebsiteHomeRoute: WebsiteHomeRoute,
   WebsiteResourcesRoute: WebsiteResourcesRoute,
+  WebsiteTeachersRoute: WebsiteTeachersRoute,
+  WebsiteSupportAnalyticsRoute: WebsiteSupportAnalyticsRoute,
+  WebsiteSupportPagesRoute: WebsiteSupportPagesRoute,
+  WebsiteSupportTicketsRoute: WebsiteSupportTicketsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

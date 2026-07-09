@@ -24,6 +24,8 @@ import { Resource } from '../resources/resources.entity';
 import { ResourceDownload } from '../resources/resource-download.entity';
 import { PushSubscription } from '../notifications/entities/push-subscription.entity';
 import { FcmToken } from '../notifications/entities/fcm-token.entity';
+import { TelegramSubscription } from '../telegram/entities/telegram-subscription.entity';
+import { TelegramLinkingCode } from '../telegram/entities/telegram-linking-code.entity';
 import { TeacherApplication } from '../teacher-applications/entities/teacher-application.entity';
 import { TeacherApplicationSettings } from '../teacher-applications/entities/teacher-application-settings.entity';
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
@@ -48,6 +50,16 @@ import { HomeMissionSection } from '../website-cms/entities/home-mission-section
 import { HomeMissionCard } from '../website-cms/entities/home-mission-card.entity';
 import { HomeProgramsSection } from '../website-cms/entities/home-programs-section.entity';
 import { HomeProgram } from '../website-cms/entities/home-program.entity';
+import { Testimonial } from '../website-cms/entities/testimonial.entity';
+import { HomeTeacher } from '../website-cms/entities/home-teacher.entity';
+import { SupportPage } from '../support-pages/entities/support-page.entity';
+import { SitemapItem } from '../support-pages/entities/sitemap-item.entity';
+import { HelpCategory } from '../support-pages/entities/help-category.entity';
+import { HelpArticle } from '../support-pages/entities/help-article.entity';
+import { ArticleFeedback } from '../support-pages/entities/article-feedback.entity';
+import { ArticleVersion } from '../support-pages/entities/article-version.entity';
+import { SupportTicket } from '../support-pages/entities/support-ticket.entity';
+import { AuditLog } from '../audit/entities/audit-log.entity';
 
 /** Every TypeORM entity — explicit registration avoids missing relation metadata on Render. */
 export const ALL_ENTITIES = [
@@ -101,4 +113,16 @@ export const ALL_ENTITIES = [
   HomeMissionCard,
   HomeProgramsSection,
   HomeProgram,
+  Testimonial,
+  HomeTeacher,
+  SupportPage,
+  SitemapItem,
+  HelpCategory,
+  HelpArticle,
+  ArticleFeedback,
+  ArticleVersion,
+  SupportTicket,
+  TelegramSubscription,
+  TelegramLinkingCode,
+  AuditLog,
 ];

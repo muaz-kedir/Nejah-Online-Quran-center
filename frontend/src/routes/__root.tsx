@@ -8,13 +8,14 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
+import { ThemeProvider } from '@/components/site/ThemeProvider';
 import { initializePwaPush, setupForegroundListener, updateNotificationBadge } from "@/lib/push-notifications";
 import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
@@ -67,7 +68,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
           >
             Try again
           </button>
@@ -117,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "canonical", href: SITE_URL },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: appCss },
+
     ],
     scripts: [
       {
@@ -237,9 +238,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-        <PWADownloadPrompt />
+        <ThemeProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+          <PWADownloadPrompt />
+        </ThemeProvider>
       </AppProvider>
     </QueryClientProvider>
   );

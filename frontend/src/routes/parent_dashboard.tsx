@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
 import { ParentPortalLayout } from "@/components/parents/ParentPortalLayout";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { TelegramLink } from "@/components/ui/telegram-link";
 
 
 // --- Stat Card Component ---
@@ -1379,6 +1380,9 @@ text-nejah-electric"
                   {t("notificationsDesc")}
                 </p>
                 <PushNotificationToggle variant="card" />
+                <div className="mt-4 border-t pt-4">
+                  <TelegramLink />
+                </div>
               </div>
             </div>
           )}

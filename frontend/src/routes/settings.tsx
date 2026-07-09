@@ -13,10 +13,11 @@ import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { AmbientSection, PageHeader } from '@/components/dashboard/design-system';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
+import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 function SettingsPage() {
@@ -81,6 +82,9 @@ function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <PushNotificationToggle variant="card" />
+                <div className="border-t border-border pt-4">
+                  <TelegramLink />
+                </div>
                 <div className="border-t border-border pt-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>

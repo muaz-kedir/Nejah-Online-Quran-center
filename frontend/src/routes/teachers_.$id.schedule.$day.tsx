@@ -23,7 +23,7 @@ import { getScheduleSearchText, getScheduleStudentLabel } from '@/lib/schedule-d
 
 export const Route = createFileRoute('/teachers_/$id/schedule/$day')({
   component: TeacherDailySchedulePage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function TeacherDailySchedulePage() {

@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowRight, Megaphone } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -41,30 +41,34 @@ export const SystemAlerts = memo(function SystemAlerts() {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const response = await fetch(apiUrl('/notifications?limit=5'), { headers: apiHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const data = await response.json();
+      const items = Array.isArray(data) ? data : data?.items || data?.data || [];
+      const mapped: Alert[] = items.map((n: any) => ({
+        id: n.id,
+        type: mapChannelToType(n.channel || n.type),
+        title: n.title,
+        description: n.content || '',
+        time: formatRelativeTime(n.createdAt),
+      }));
+      setAlerts(mapped);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const response = await fetch(apiUrl('/notifications?limit=5'), { headers: apiHeaders() });
-        if (!response.ok) throw new Error('Failed to fetch notifications');
-        const data = await response.json();
-        const items = Array.isArray(data) ? data : data?.items || data?.data || [];
-        const mapped: Alert[] = items.map((n: any) => ({
-          id: n.id,
-          type: mapChannelToType(n.channel || n.type),
-          title: n.title,
-          description: n.content || '',
-          time: formatRelativeTime(n.createdAt),
-        }));
-        setAlerts(mapped);
-      } catch {
-        setAlerts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAlerts();
-  }, []);
+    intervalRef.current = setInterval(fetchAlerts, 60000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [fetchAlerts]);
 
   const criticalCount = alerts.filter((a) => a.type === 'error').length;
 

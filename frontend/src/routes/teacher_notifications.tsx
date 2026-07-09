@@ -2,6 +2,7 @@ import { apiUrl, api } from "@/lib/api";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
 import { Bell, AlertCircle, CheckCircle, MessageSquare, Info, Search, X, Trash2, Mail, MailOpen, Calendar, UserPlus, UserMinus, Clock, RefreshCw, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/teacher_notifications')({
   component: TeacherNotificationsPage,
-  beforeLoad: () => requireAuth(['teacher', 'admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['teacher', 'super_admin']),
 });
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -142,7 +143,7 @@ function TeacherNotificationsPage() {
   const [deleting, setDeleting] = useState<string[]>([]);
   const [marking, setMarking] = useState<string[]>([]);
   const limit = 10;
-  const pollingRef = useRef<ReturnType<typeof setInterval>>();
+  const pollingRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const fetchNotifications = useCallback(async (p = page, s = search, f = filter) => {
     setLoading(true);
@@ -260,9 +261,11 @@ function TeacherNotificationsPage() {
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+  const Layout = userRole === 'super_admin' ? DashboardLayout : TeacherLayout;
 
   return (
-    <TeacherLayout>
+    <Layout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -512,6 +515,6 @@ function TeacherNotificationsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </TeacherLayout>
+    </Layout>
   );
 }

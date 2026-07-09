@@ -16,6 +16,8 @@ import { StudentManagementService } from '../students/student-management.service
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { QueryTeacherDto } from './dto/query-teacher.dto';
+import { CreateComplaintDto } from './dto/create-complaint.dto';
+import { ResolveComplaintDto } from './dto/resolve-complaint.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -122,7 +124,7 @@ export class TeachersController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.FINANCE_MANAGER)
   findAll(@Query() queryDto: QueryTeacherDto) {
     return this.teachersService.findAll(queryDto);
   }
@@ -165,6 +167,31 @@ export class TeachersController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   remove(@Param('id') id: string) {
     return this.teachersService.remove(id);
+  }
+
+  @Post(':id/complaints')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  async createComplaint(@Req() req: any, @Param('id') id: string, @Body() dto: CreateComplaintDto) {
+    const userId = this.authenticatedUserId(req);
+    return this.teachersService.createComplaint(id, userId, dto);
+  }
+
+  @Get(':id/complaints')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  async getComplaints(@Param('id') id: string) {
+    return this.teachersService.getTeacherComplaints(id);
+  }
+
+  @Patch(':id/complaints/:complaintId/resolve')
+  @Roles(UserRole.SUPER_ADMIN)
+  async resolveComplaint(
+    @Req() req: any,
+    @Param('complaintId') complaintId: string,
+    @Body() dto: ResolveComplaintDto,
+    @Query('status') status: string,
+  ) {
+    const userId = this.authenticatedUserId(req);
+    return this.teachersService.resolveComplaint(complaintId, userId, (status as 'resolved' | 'dismissed') || 'resolved', dto);
   }
 
   @Post(':id/assign-students')

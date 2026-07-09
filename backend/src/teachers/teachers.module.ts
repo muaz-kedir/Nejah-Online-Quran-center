@@ -5,6 +5,7 @@ import { TeachersController } from './teachers.controller';
 import { TeacherDashboardController } from './teacher-dashboard.controller';
 import { Teacher } from './entities/teacher.entity';
 import { TeacherNote } from './entities/teacher-note.entity';
+import { TeacherComplaint } from './entities/teacher-complaint.entity';
 import { Student } from '../students/entities/student.entity';
 import { UsersModule } from '../users/users.module';
 import { Schedule } from '../schedules/entities/schedule.entity';
@@ -28,6 +29,7 @@ import { StudentsModule } from '../students/students.module';
     TypeOrmModule.forFeature([
       Teacher,
       TeacherNote,
+      TeacherComplaint,
       Student,
       Schedule,
       Homework,

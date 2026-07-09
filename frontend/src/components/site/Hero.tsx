@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle, Sparkles, Users, GraduationCap, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 import { useTheme } from "./ThemeProvider";
 
 export function Hero() {
@@ -17,7 +17,7 @@ export function Hero() {
             <Sparkles className="size-3.5" />
             {t.hero.badge}
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] mb-6">
+          <h1 className="heading-premium text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-6">
             {t.hero.title1}<br />
             {t.hero.title2}{" "}
             <span className="text-gradient">{t.hero.title3}</span>
@@ -26,12 +26,14 @@ export function Hero() {
             {t.hero.desc}
           </p>
           <div className="flex flex-wrap gap-3 mb-10">
-            <Button size="lg" className="h-12 rounded-full px-6 shadow-nejah-glow">
-              {t.hero.getStarted} <ArrowRight className="ms-1 size-4 rtl:rotate-180" />
-            </Button>
-            <Button size="lg" variant="outline" className="rounded-full h-12 px-6">
-              <PlayCircle className="me-1 size-4" /> {t.hero.bookTrial}
-            </Button>
+            <Link to="/register">
+              <button className="btn-metallic">
+                <span>{t.hero.getStarted} <ArrowRight className="ms-1 size-4 rtl:rotate-180 inline" /></span>
+              </button>
+            </Link>
+            <button className="btn-metallic-outline">
+              <span><PlayCircle className="me-1 size-4 inline" /> {t.hero.bookTrial}</span>
+            </button>
           </div>
           <div className="flex items-center gap-6">
             <div className="flex -space-x-2 rtl:space-x-reverse">

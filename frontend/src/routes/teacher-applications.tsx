@@ -51,7 +51,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 export const Route = createFileRoute('/teacher-applications')({
   component: TeacherApplicationsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 function TeacherApplicationsContent() {

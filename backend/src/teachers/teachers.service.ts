@@ -14,10 +14,13 @@ import { Student } from '../students/entities/student.entity';
 import { Progress } from '../progress/entities/progress.entity';
 import { ProgressLog } from '../progress/entities/progress-log.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
+import { TeacherComplaint } from './entities/teacher-complaint.entity';
 import { UsersService } from '../users/users.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { QueryTeacherDto } from './dto/query-teacher.dto';
+import { CreateComplaintDto } from './dto/create-complaint.dto';
+import { ResolveComplaintDto } from './dto/resolve-complaint.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -60,6 +63,10 @@ export class TeachersService {
     private liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(SessionAttendance)
     private sessionAttendanceRepository: Repository<SessionAttendance>,
+    @InjectRepository(TeacherComplaint)
+    private complaintsRepository: Repository<TeacherComplaint>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => TeacherReplacementsService))
@@ -138,7 +145,7 @@ export class TeachersService {
     };
   }
 
-  async findOne(id: string): Promise<Teacher> {
+  async findOne(id: string) {
     const teacher = await this.teachersRepository.findOne({
       where: { id },
       relations: ['user', 'students', 'schedules', 'schedules.student'],
@@ -148,7 +155,19 @@ export class TeachersService {
       throw new NotFoundException('Teacher not found');
     }
 
-    return teacher;
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[new Date().getDay()];
+    const activeSchedules = teacher.schedules?.filter(s => s.status === 'active') || [];
+    const todayClasses = activeSchedules.filter(s => s.dayOfWeek === todayName).length;
+    const weeklyClasses = activeSchedules.length;
+    const monthlyClasses = weeklyClasses * 4;
+
+    return {
+      ...teacher,
+      todayClasses,
+      weeklyClasses,
+      monthlyClasses,
+    };
   }
 
   async findByUserId(userId: string): Promise<Teacher> {
@@ -334,8 +353,12 @@ export class TeachersService {
           ? `${studentNames[0]} has been assigned to you`
           : `${studentNames.length} students have been assigned to you: ${studentNames.join(', ')}`;
 
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipients = [teacher.userId, ...qiratManagers.map((u) => u.id)];
         await this.notificationsService.sendCustomNotifications(
-          [teacher.userId],
+          recipients,
           title,
           message,
           { studentIds, teacherId: teacher.id },
@@ -1017,5 +1040,55 @@ export class TeachersService {
         totalPages: Math.max(1, Math.ceil(total / limit)),
       },
     };
+  }
+
+  async createComplaint(teacherId: string, submittedById: string, dto: CreateComplaintDto): Promise<TeacherComplaint> {
+    const teacher = await this.teachersRepository.findOne({ where: { id: teacherId } });
+    if (!teacher) throw new NotFoundException('Teacher not found');
+
+    const complaint = this.complaintsRepository.create({
+      teacherId,
+      submittedById,
+      reason: dto.reason,
+      details: dto.details,
+      status: 'pending',
+    });
+    const saved = await this.complaintsRepository.save(complaint);
+
+    // Notify all super admins
+    const superAdmins = await this.userRepository.find({ where: { role: UserRole.SUPER_ADMIN, isActive: true } });
+    if (superAdmins.length > 0) {
+      await this.notificationsService.sendCustomNotifications(
+        superAdmins.map(u => u.id),
+        'Teacher Complaint Submitted',
+        `${teacher.fullName} has received a new complaint: ${dto.reason}`,
+        { teacherId, complaintId: saved.id, type: 'teacher_complaint' },
+        NotificationChannel.SYSTEM_ALERT,
+        false,
+        '/teachers',
+      );
+    }
+
+    return saved;
+  }
+
+  async getTeacherComplaints(teacherId: string): Promise<TeacherComplaint[]> {
+    return this.complaintsRepository.find({
+      where: { teacherId },
+      relations: ['submittedBy', 'resolvedBy'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async resolveComplaint(complaintId: string, resolvedById: string, status: 'resolved' | 'dismissed', dto: ResolveComplaintDto): Promise<TeacherComplaint> {
+    const complaint = await this.complaintsRepository.findOne({ where: { id: complaintId }, relations: ['teacher'] });
+    if (!complaint) throw new NotFoundException('Complaint not found');
+
+    complaint.status = status;
+    complaint.resolvedById = resolvedById;
+    complaint.resolvedAt = new Date();
+    if (dto.resolutionNotes) complaint.resolutionNotes = dto.resolutionNotes;
+
+    return this.complaintsRepository.save(complaint);
   }
 }

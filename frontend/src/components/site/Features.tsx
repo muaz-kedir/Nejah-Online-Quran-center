@@ -16,14 +16,15 @@ export function Features() {
   return (
     <section className="py-20 md:py-28">
       <div className="container-x grid lg:grid-cols-2 gap-12 items-center">
-        <div>
+        <div className="relative">
           <div className="text-xs font-bold tracking-[0.2em] text-primary uppercase mb-3">
             {t.features.eyebrow}
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10">
+          <h2 className="heading-premium text-3xl md:text-4xl lg:text-5xl mb-10">
             {t.features.title1}<br />{t.features.title2}
           </h2>
-          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-7">
+          <div className="relative grid sm:grid-cols-2 gap-x-6 gap-y-7">
+            <div className="data-line-v top-12 bottom-4 left-1/2 -translate-x-1/2 md:block" />
             {items.map((it, i) => (
               <motion.div
                 key={it.title}

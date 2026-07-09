@@ -9,6 +9,8 @@ import { LiveSession } from './entities/live-session.entity';
 import { LiveSessionStatus } from './enums/live-session-status.enum';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Student } from '../students/entities/student.entity';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 
 @Injectable()
 export class ScheduleSessionsCron {
@@ -24,6 +26,8 @@ export class ScheduleSessionsCron {
     private readonly liveSessionRepository: Repository<LiveSession>,
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -86,7 +90,10 @@ export class ScheduleSessionsCron {
         if (this.notifiedSessions.has(reminderKey)) continue;
 
         const studentUserIds = await this.resolveStudentUserIds(session);
-        const recipientIds = [...studentUserIds];
+        const qiratManagers = await this.userRepository.find({
+          where: { role: UserRole.QIRAT_MANAGER, isActive: true },
+        });
+        const recipientIds = [...studentUserIds, ...qiratManagers.map((u) => u.id)];
 
         if (recipientIds.length > 0) {
           await this.notificationsService.sendCustomNotifications(

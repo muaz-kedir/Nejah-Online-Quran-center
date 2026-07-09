@@ -41,22 +41,14 @@ export class LiveSessionController {
   ) {}
 
   @Post()
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async create(@Request() req, @Body() dto: CreateLiveSessionDto) {
-    if (req.user.role === UserRole.TEACHER) {
-      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      dto.teacherId = teacher.id;
-    }
     return this.liveSessionService.create(dto);
   }
 
   @Post('with-zoom')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async createWithZoom(@Request() req, @Body() dto: CreateLiveSessionDto) {
-    if (req.user.role === UserRole.TEACHER) {
-      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      dto.teacherId = teacher.id;
-    }
     return this.liveSessionService.createWithZoom(dto);
   }
 

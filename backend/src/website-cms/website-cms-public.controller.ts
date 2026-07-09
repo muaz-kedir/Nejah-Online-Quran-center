@@ -14,4 +14,14 @@ export class WebsiteCmsPublicController {
   getPrograms() {
     return this.cmsService.getPublicProgramsContent();
   }
+
+  @Get('testimonials')
+  getTestimonials() {
+    return this.cmsService.getPublicTestimonials();
+  }
+
+  @Get('teachers')
+  getTeachers() {
+    return this.cmsService.getPublicTeachers();
+  }
 }

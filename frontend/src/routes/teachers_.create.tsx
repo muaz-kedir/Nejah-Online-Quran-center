@@ -228,13 +228,14 @@ import {
   FileText,
   Camera,
   Lock,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/teachers_/create')({
   component: AddTeacherPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function AddTeacherPage() {
@@ -264,6 +265,7 @@ function AddTeacherPage() {
     additionalComments: '',
     weeklySchedule: '',
     hourlyRate: 20,
+    monthlySalary: '',
     notes: '',
     avatarUrl: '',
     status: 'active',
@@ -297,7 +299,7 @@ function AddTeacherPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'experience' || name === 'hourlyRate' ? Number(value) : value,
+      [name]: name === 'experience' || name === 'hourlyRate' || name === 'monthlySalary' ? Number(value) : value,
     }));
   };
 
@@ -376,7 +378,7 @@ function AddTeacherPage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
@@ -639,7 +641,7 @@ function AddTeacherPage() {
                         key={lang}
                         type="button"
                         onClick={() => handleMultiSelect('languages', lang)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.languages.includes(lang) ? 'bg-primary text-white border-primary/600' : 'bg-muted text-muted-foreground border-border hover:bg-muted dark:bg-nejah-surface dark:border-nejah-border-blue dark:text-muted-foreground'}`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer ${formData.languages.includes(lang) ? 'bg-primary text-white border-primary/600' : 'bg-muted text-muted-foreground border-border hover:bg-muted dark:bg-nejah-surface dark:border-nejah-border-blue dark:text-muted-foreground'}`}
                       >
                         {lang}
                       </button>
@@ -731,7 +733,7 @@ function AddTeacherPage() {
                         key={slot}
                         type="button"
                         onClick={() => handleMultiSelect('teachingTimeAvailability', slot)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${formData.teachingTimeAvailability.includes(slot) ? 'bg-blue-600 text-white border-blue-600' : 'bg-muted text-muted-foreground border-border hover:bg-muted dark:bg-nejah-surface dark:border-nejah-border-blue dark:text-muted-foreground'}`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer ${formData.teachingTimeAvailability.includes(slot) ? 'bg-blue-600 text-white border-blue-600' : 'bg-muted text-muted-foreground border-border hover:bg-muted dark:bg-nejah-surface dark:border-nejah-border-blue dark:text-muted-foreground'}`}
                       >
                         {slot}
                       </button>
@@ -812,6 +814,23 @@ function AddTeacherPage() {
                       value={formData.hourlyRate}
                       onChange={handleInputChange}
                       placeholder="20"
+                      className="pl-9 bg-nejah-sapphire/40 border-none text-white placeholder-nejah-slate-blue/60 rounded-xl h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-nejah-electric uppercase tracking-wider">
+                    Monthly Salary (ETB)
+                  </label>
+                  <div className="relative">
+                    <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-nejah-electric" />
+                    <Input
+                      type="number"
+                      name="monthlySalary"
+                      value={formData.monthlySalary}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 5000"
                       className="pl-9 bg-nejah-sapphire/40 border-none text-white placeholder-nejah-slate-blue/60 rounded-xl h-11"
                     />
                   </div>

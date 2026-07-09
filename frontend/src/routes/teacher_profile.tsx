@@ -11,6 +11,7 @@ import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
+import { TelegramLink } from '@/components/ui/telegram-link';
 
 export const Route = createFileRoute('/teacher_profile')({
   component: TeacherProfilePage,
@@ -405,6 +406,9 @@ function TeacherProfilePage() {
           Manage your push notification preferences to stay updated on class sessions and student activities.
         </p>
         <PushNotificationToggle variant="card" />
+        <div className="border-t mt-4 pt-4">
+          <TelegramLink />
+        </div>
       </div>
 
       {/* Edit Teacher Modal */}

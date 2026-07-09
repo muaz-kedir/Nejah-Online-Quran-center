@@ -112,6 +112,9 @@ export class Teacher {
   @Column({ type: 'timestamp', nullable: true })
   zoomConnectedAt: Date;
 
+  @Column({ type: 'int', default: 1 })
+  salaryDay: number;
+
   @OneToMany(() => Student, (student) => student.teacher)
   students: Student[];
 

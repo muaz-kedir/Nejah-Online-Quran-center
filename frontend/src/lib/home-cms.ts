@@ -1,4 +1,5 @@
 import { apiUrl, apiAssetUrl } from './api';
+export { apiUrl };
 
 export type CmsLang = 'en' | 'ar' | 'am';
 
@@ -47,9 +48,44 @@ export type HomeProgram = {
   level: LocalizedText;
   title: LocalizedText;
   description: LocalizedText;
+  detailedContent: LocalizedText;
   imageUrl: string | null;
   displayOrder: number;
   isActive: boolean;
+};
+
+export type HomeTeacher = {
+  id: string;
+  userId: string | null;
+  fullName: string;
+  specialization: string;
+  experience: string | null;
+  imageUrl: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Testimonial = {
+  id: string;
+  studentName: string;
+  parentName: string | null;
+  displayName: string;
+  studentType: 'child' | 'adult' | 'parent';
+  country: string;
+  city: string | null;
+  photo: string | null;
+  rating: number;
+  program: string | null;
+  learningDuration: string | null;
+  studentSince: string | null;
+  testimonialText: LocalizedText;
+  isFeatured: boolean;
+  isPublished: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export async function fetchPublicMissionContent() {
@@ -62,6 +98,18 @@ export async function fetchPublicProgramsContent() {
   const res = await fetch(apiUrl('/website/home/programs'));
   if (!res.ok) throw new Error('Failed to load programs content');
   return res.json() as Promise<{ section: HomeProgramsSection; programs: HomeProgram[] }>;
+}
+
+export async function fetchPublicTestimonials() {
+  const res = await fetch(apiUrl('/website/home/testimonials'));
+  if (!res.ok) throw new Error('Failed to load testimonials');
+  return res.json() as Promise<Testimonial[]>;
+}
+
+export async function fetchPublicTeachers() {
+  const res = await fetch(apiUrl('/website/home/teachers'));
+  if (!res.ok) throw new Error('Failed to load teachers');
+  return res.json() as Promise<HomeTeacher[]>;
 }
 
 export async function uploadCmsImage(file: File): Promise<string> {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { FinanceService } from './finance.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -12,6 +12,8 @@ import {
   BundleFamilyDto,
   GeneratePayrollDto,
 } from './dto/record-payment.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 @Controller('finance')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -68,6 +70,11 @@ export class FinanceController {
     return this.financeService.getFamilyPaymentDetail(id);
   }
 
+  @Patch('family-payments/:id')
+  updateFamilyPayment(@Param('id') id: string, @Body() dto: UpdateStudentFeeDto) {
+    return this.financeService.updateFamilyPayment(id, dto);
+  }
+
   @Post('family-payments/:id/transactions')
   recordFamilyPayment(
     @Param('id') id: string,
@@ -92,7 +99,16 @@ export class FinanceController {
 
   @Post('teacher-payments/generate-payroll')
   generatePayroll(@Body() dto: GeneratePayrollDto) {
-    return this.financeService.generatePayroll(dto.billingMonth);
+    return this.financeService.generatePayroll(dto.billingMonth, dto.teacherId, dto.salary, dto.paymentMethod, dto.status);
+  }
+
+  @Patch('teacher-payments/:teacherId/payroll/mark-paid')
+  markPayrollAsPaid(
+    @Param('teacherId') teacherId: string,
+    @Query('billingMonth') billingMonth?: string,
+    @Body() body?: { status?: string },
+  ) {
+    return this.financeService.markPayrollAsPaid(teacherId, billingMonth, body?.status);
   }
 
   @Get('revenue-analytics')
@@ -103,5 +119,35 @@ export class FinanceController {
   @Get('reports/:type')
   getFinancialReport(@Param('type') type: string, @Query() query: FinanceQueryDto) {
     return this.financeService.getFinancialReport(type, query);
+  }
+
+  @Get('expenses')
+  getExpenses(@Query() query: FinanceQueryDto) {
+    return this.financeService.getExpenses(query);
+  }
+
+  @Get('expenses/:id')
+  getExpenseDetail(@Param('id') id: string) {
+    return this.financeService.getExpenseDetail(id);
+  }
+
+  @Post('expenses')
+  createExpense(@Body() dto: CreateExpenseDto, @CurrentUser() user: { id: string }) {
+    return this.financeService.createExpense(dto, user.id);
+  }
+
+  @Patch('expenses/:id')
+  updateExpense(@Param('id') id: string, @Body() dto: UpdateExpenseDto) {
+    return this.financeService.updateExpense(id, dto);
+  }
+
+  @Delete('expenses/:id')
+  deleteExpense(@Param('id') id: string) {
+    return this.financeService.deleteExpense(id);
+  }
+
+  @Get('net-profit')
+  getNetProfit(@Query('billingMonth') billingMonth?: string) {
+    return this.financeService.getNetProfit(billingMonth);
   }
 }

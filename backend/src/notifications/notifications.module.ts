@@ -13,11 +13,13 @@ import { Student } from '../students/entities/student.entity';
 import { Parent } from '../parents/entities/parent.entity';
 import { User } from '../users/entities/user.entity';
 import { WebsocketModule } from '../websocket/websocket.module';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Notification, PushSubscription, FcmToken, Student, Parent, User]),
     forwardRef(() => WebsocketModule),
+    TelegramModule,
   ],
   controllers: [NotificationsController, PushSubscriptionController, FcmController],
   providers: [NotificationsService, PushSubscriptionService, FcmService],

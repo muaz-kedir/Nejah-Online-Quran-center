@@ -21,6 +21,9 @@ export class HomeProgram {
   @Column({ type: 'jsonb', default: {} })
   description: LocalizedText;
 
+  @Column({ type: 'jsonb', default: {} })
+  detailedContent: LocalizedText;
+
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
 

@@ -23,7 +23,7 @@ export function HowItWorks() {
         </motion.h2>
 
         <div className="relative grid md:grid-cols-3 gap-10 md:gap-6">
-          <div className="hidden md:block absolute top-8 left-[16%] right-[16%] h-px bg-primary-foreground/30" />
+          <div className="data-line-h top-8 left-[16%] right-[16%] md:block" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3) 15%, rgba(255,255,255,0.3) 85%, transparent)' }} />
           {steps.map((s, i) => (
             <motion.div
               key={s.title}

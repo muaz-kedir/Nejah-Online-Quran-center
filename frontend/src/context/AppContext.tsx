@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark';
-type Language = 'en' | 'ar' | 'fr';
+type Language = 'en';
 
 interface Translations {
   dashboard: string;
@@ -29,6 +28,14 @@ interface Translations {
   systemAlerts: string;
   viewAllNotifications: string;
   manageAllStaff: string;
+  myClasses: string;
+  myProgress: string;
+  homework: string;
+  resources: string;
+  logout: string;
+  loading: string;
+  studentPortal: string;
+  notifications: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -58,66 +65,19 @@ const translations: Record<Language, Translations> = {
     systemAlerts: 'System Alerts',
     viewAllNotifications: 'VIEW ALL NOTIFICATIONS',
     manageAllStaff: 'MANAGE ALL STAFF',
+    myClasses: 'My Classes',
+    myProgress: 'My Progress',
+    homework: 'Homework',
+    resources: 'Resources',
+    logout: 'Logout',
+    loading: 'Loading...',
+    studentPortal: 'Student Portal',
+    notifications: 'Notifications',
   },
-  ar: {
-    dashboard: 'لوحة التحكم',
-    students: 'الطلاب',
-    teachers: 'المعلمون',
-    parents: 'أولياء الأمور',
-    classes: 'الفصول',
-    attendance: 'الحضور',
-    reports: 'التقارير',
-    settings: 'الإعدادات',
-    messages: 'الرسائل',
-    contentEdition: 'تحرير المحتوى',
-    searchPlaceholder: 'البحث في لوحة التحكم...',
-    managementOverview: 'نظرة إدارية عامة',
-    greeting: 'السلام عليكم',
-    welcomeMessage: 'مرحبًا بعودتك إلى مركز نجاح. يخدم مؤسستك حاليًا 1,240 طالبًا نشطًا.',
-    totalStudents: 'إجمالي الطلاب',
-    totalTeachers: 'إجمالي المعلمين',
-    activeClasses: 'الفصول النشطة',
-    attendanceRate: 'معدل الحضور',
-    recentStudents: 'الطلاب الأخيرون',
-    viewAll: 'عرض كل الطلاب',
-    todaysClasses: 'فصول اليوم',
-    staffOverview: 'نظرة على الكادر',
-    systemAlerts: 'تنبيهات النظام',
-    viewAllNotifications: 'عرض كل التنبيهات',
-    manageAllStaff: 'إدارة الكادر',
-  },
-  fr: {
-    dashboard: 'Tableau de bord',
-    students: 'Étudiants',
-    teachers: 'Enseignants',
-    parents: 'Parents',
-    classes: 'Classes',
-    attendance: 'Présence',
-    reports: 'Rapports',
-    settings: 'Paramètres',
-    messages: 'Messages',
-    contentEdition: 'Édition de contenu',
-    searchPlaceholder: 'Rechercher dans la console...',
-    managementOverview: 'APERÇU DE GESTION',
-    greeting: 'Assalamu Alaikum',
-    welcomeMessage: 'Bienvenue au centre de commande Nejah. Votre institution sert actuellement 1 240 apprenants actifs.',
-    totalStudents: 'Total Étudiants',
-    totalTeachers: 'Total Enseignants',
-    activeClasses: 'Classes Actives',
-    attendanceRate: 'Taux de Présence',
-    recentStudents: 'Étudiants Récents',
-    viewAll: 'Voir tous les étudiants',
-    todaysClasses: "Cours d'aujourd'hui",
-    staffOverview: 'Aperçu du Personnel',
-    systemAlerts: 'Alertes Système',
-    viewAllNotifications: 'VOIR TOUTES LES NOTIFICATIONS',
-    manageAllStaff: 'GÉRER LE PERSONNEL',
-  },
+
 };
 
 interface AppContextType {
-  theme: Theme;
-  toggleTheme: () => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   t: Translations;
@@ -128,33 +88,20 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
   const [language, setLanguageState] = useState<Language>('en');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Only set initial values on client side to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setTheme((localStorage.getItem('theme') as Theme) || 'light');
       setLanguageState((localStorage.getItem('language') as Language) || 'en');
       setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-      localStorage.setItem('theme', theme);
-    }
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang);
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = lang;
     }
   };
@@ -169,8 +116,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        theme,
-        toggleTheme,
         language,
         setLanguage,
         t: translations[language],

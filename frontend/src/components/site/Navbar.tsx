@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 
 const linkHrefs = [
-  { href: "#home", key: "home" as const },
+  { href: "/", key: "home" as const },
   { href: "#about", key: "about" as const },
   { href: "#courses", key: "courses" as const },
   { href: "#teachers", key: "teachers" as const },
   { href: "#testimonials", key: "testimonials" as const },
-  { href: "#contact", key: "contact" as const },
+  { href: "#contact-section", key: "contact" as const },
 ];
+
+function isHash(href: string) {
+  return href.startsWith("#");
+}
 
 const langs = [
   { code: "en" as const, label: "English" },
@@ -71,21 +75,32 @@ export function Navbar() {
         }`}
       >
         <nav className="container-x flex items-center justify-between h-16 md:h-20">
-          <a href="#home" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <img src="/logo.png" alt="Nejah" className="h-9 w-auto" />
-          </a>
+          </Link>
 
           <div className="hidden lg:flex items-center gap-1">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
-              >
-                {l.label}
-                <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-              </a>
-            ))}
+            {links.map((l) =>
+              isHash(l.href) ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+                >
+                  {l.label}
+                  <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+                >
+                  {l.label}
+                  <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                </Link>
+              )
+            )}
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
@@ -153,9 +168,9 @@ export function Navbar() {
               </Button>
             </Link>
             <Link to="/register">
-              <Button className="rounded-full shadow-[0_0_16px_rgba(0,102,204,0.35)]">
-                {t.nav.register}
-              </Button>
+              <button className="btn-metallic !min-h-[40px] !min-w-0 !px-5 !py-2">
+                <span className="text-sm">{t.nav.register}</span>
+              </button>
             </Link>
           </div>
 
@@ -201,19 +216,36 @@ export function Navbar() {
 
                 <div className="flex-1 overflow-y-auto overscroll-contain bg-background px-4 py-6">
                   <div className="flex flex-col gap-1">
-                    {links.map((l, i) => (
-                      <motion.a
-                        key={l.href}
-                        href={l.href}
-                        onClick={() => setMobileOpen(false)}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="px-4 py-4 rounded-xl text-xl font-semibold text-foreground hover:bg-primary/10 transition-colors"
-                      >
-                        {l.label}
-                      </motion.a>
-                    ))}
+                    {links.map((l, i) =>
+                      isHash(l.href) ? (
+                        <motion.a
+                          key={l.href}
+                          href={l.href}
+                          onClick={() => setMobileOpen(false)}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="px-4 py-4 rounded-xl text-xl font-semibold text-foreground hover:bg-primary/10 transition-colors"
+                        >
+                          {l.label}
+                        </motion.a>
+                      ) : (
+                        <motion.div
+                          key={l.href}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                        >
+                          <Link
+                            to={l.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="block px-4 py-4 rounded-xl text-xl font-semibold text-foreground hover:bg-primary/10 transition-colors"
+                          >
+                            {l.label}
+                          </Link>
+                        </motion.div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -226,7 +258,11 @@ export function Navbar() {
                     >
                       {mounted && (
                         <>
-                          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                          {theme === "dark" ? (
+                            <Sun className="size-4" />
+                          ) : (
+                            <Moon className="size-4" />
+                          )}
                           {theme === "dark" ? "Light" : "Dark"}
                         </>
                       )}

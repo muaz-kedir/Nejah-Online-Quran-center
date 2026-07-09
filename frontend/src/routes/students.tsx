@@ -78,7 +78,7 @@ function getDateRange(range: string) {
 
 export const Route = createFileRoute('/students')({
   component: StudentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin', 'qirat_manager']),
+  beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 
 function StudentsPage() {
@@ -487,40 +487,40 @@ function StudentsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setViewingStudent(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setViewingProgress(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors cursor-pointer"
                             title="View Progress"
                           >
                             <BookOpen className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setChangingStatusStudent(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-amber-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-amber-600 transition-colors cursor-pointer"
                             title="Change Status"
                           >
                             <RefreshCw className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => setManagingLevelStudent(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                             title="Manage Level"
                           >
                             <GraduationCap className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setEditingStudent(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-blue-600 transition-colors cursor-pointer"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => setDeletingStudent(student)}
-                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-red-600 transition-colors"
+                            className="p-2 hover:bg-muted dark:hover:bg-nejah-surface rounded-lg text-muted-foreground hover:text-red-600 transition-colors cursor-pointer"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

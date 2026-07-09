@@ -1,4 +1,4 @@
-import { API_BASE, apiUrl } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -50,7 +50,7 @@ function ForgotPasswordPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Request failed");
-      toast.success("Instructions sent! Please check your email.");
+      toast.success("A new password has been sent to your email!");
       setIsSent(true);
     } catch (error: any) {
       toast.error(error.message || "Failed to process request. Please try again.");
@@ -62,12 +62,12 @@ function ForgotPasswordPage() {
   return (
     <AuthPageLayout
       title="Forgot your password?"
-      subtitle="Enter your email address and we'll send you a link to reset it."
+      subtitle="Enter your email address and we'll send you a new password."
     >
       {isSent ? (
         <div className="space-y-4 py-4 text-center">
           <div className="rounded-xl border border-nejah-electric/20 bg-primary/10 p-4 text-sm text-foreground">
-            Check your inbox at <strong>{form.getValues("email")}</strong> for recovery instructions.
+            A new password has been sent to <strong>{form.getValues("email")}</strong>. Use it to log in.
           </div>
           <Button variant="outline" onClick={() => navigate({ to: "/login" })} className="w-full">
             Back to Login

@@ -71,5 +71,5 @@ function DashboardPage() {
 
 export const Route = createFileRoute('/dashboard')({
   component: DashboardPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });

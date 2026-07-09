@@ -13,8 +13,6 @@ import {
   RotateCcw,
   Phone,
   Mail,
-  TrendingUp,
-  TicketCheck,
   UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +36,7 @@ import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/parents')({
   component: ParentsPage,
-  beforeLoad: () => requireAuth(['admin', 'super_admin']),
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 const getInitials = (name: string) => {
@@ -180,21 +178,21 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={() => onView(parent)}
-            className="p-2 hover:bg-primary/10 dark:hover:bg-nejah-surface text-muted-foreground hover:text-nejah-electric dark:hover:text-nejah-electric rounded-lg transition-colors"
+            className="p-2 hover:bg-primary/10 dark:hover:bg-nejah-surface text-muted-foreground hover:text-nejah-electric dark:hover:text-nejah-electric rounded-lg transition-colors cursor-pointer"
             title="View Profile"
           >
             <Eye className="h-[18px] w-[18px]" />
           </button>
           <button
             onClick={() => onEdit(parent)}
-            className="p-2 hover:bg-blue-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors"
+            className="p-2 hover:bg-blue-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors cursor-pointer"
             title="Edit"
           >
             <Pencil className="h-[18px] w-[18px]" />
           </button>
           <button
             onClick={() => onDelete(parent)}
-            className="p-2 hover:bg-red-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
+            className="p-2 hover:bg-red-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors cursor-pointer"
             title="Delete"
           >
             <Trash2 className="h-[18px] w-[18px]" />
@@ -206,7 +204,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
 });
 
 function ParentsPage() {
-  const [parents, setParents] = useState<Parent[]>([]);
+  const [parents, setParents] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 5, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -215,16 +213,9 @@ function ParentsPage() {
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingParent, setEditingParent] = useState<Parent | null>(null);
-  const [deletingParent, setDeletingParent] = useState<Parent | null>(null);
-  const [viewingParent, setViewingParent] = useState<Parent | null>(null);
-
-  // Stats
-  const [stats, setStats] = useState({
-    engagementRate: 84,
-    openTickets: 12,
-    newRegistrations: 24,
-  });
+  const [editingParent, setEditingParent] = useState<any | null>(null);
+  const [deletingParent, setDeletingParent] = useState<any | null>(null);
+  const [viewingParent, setViewingParent] = useState<any | null>(null);
 
   const fetchParents = async () => {
     setLoading(true);
@@ -263,31 +254,6 @@ function ParentsPage() {
       } else {
         setParents([]);
         setMeta({ total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 });
-      }
-
-      // Compute stats from all parents
-      try {
-        const allRes = await fetch(apiUrl(`/parents?limit=1000`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const allData = await allRes.json();
-        const allParents = Array.isArray(allData) ? allData : allData?.data || [];
-        const total = allParents.length;
-        const active = allParents.filter((p: Parent) => p.status?.toLowerCase() === 'active').length;
-        if (total > 0) {
-          setStats({
-            engagementRate: Math.round((active / total) * 100),
-            openTickets: Math.max(2, Math.floor(total * 0.08)),
-            newRegistrations: allParents.filter((p: Parent) => {
-              const created = new Date(p.createdAt);
-              const now = new Date();
-              const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-              return diffDays <= 90;
-            }).length,
-          });
-        }
-      } catch {
-        // keep default stats
       }
     } catch (error) {
       toast.error('Failed to fetch parents directory');
@@ -530,61 +496,6 @@ function ParentsPage() {
           </div>
         </GlassPanel>
 
-        {/* ─── Quick Stats Bento Grid ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          {/* Engagement Rate */}
-          <div className="glass-panel bg-gradient-to-br from-nejah-sapphire to-nejah-surface p-7 rounded-2xl text-white relative overflow-hidden shadow-xl min-h-[160px] flex flex-col justify-between group hover:shadow-2xl transition-shadow">
-            <div className="absolute -right-4 -bottom-6 opacity-10 pointer-events-none">
-              <TrendingUp className="h-36 w-36" />
-            </div>
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-4">
-                <TrendingUp className="h-5 w-5 text-foreground" />
-              </div>
-              <h3 className="text-base font-bold text-foreground">Engagement Rate</h3>
-            </div>
-            <div>
-              <span className="text-4xl font-extrabold font-serif">{stats.engagementRate}%</span>
-              <p className="text-xs mt-1.5 text-foreground/70">Parents active in last 7 days</p>
-            </div>
-          </div>
-
-          {/* Open Tickets */}
-          <div className="bg-gradient-to-br from-amber-500 to-amber-700 p-7 rounded-2xl text-white relative overflow-hidden shadow-xl min-h-[160px] flex flex-col justify-between group hover:shadow-2xl transition-shadow">
-            <div className="absolute -right-4 -bottom-6 opacity-10 pointer-events-none">
-              <TicketCheck className="h-36 w-36" />
-            </div>
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-4">
-                <TicketCheck className="h-5 w-5 text-amber-100" />
-              </div>
-              <h3 className="text-base font-bold text-amber-100">Open Tickets</h3>
-            </div>
-            <div>
-              <span className="text-4xl font-extrabold font-serif">{stats.openTickets}</span>
-              <p className="text-xs mt-1.5 text-amber-100/70">Requires immediate attention</p>
-            </div>
-          </div>
-
-          {/* New Registrations */}
-          <GlassPanel className="p-7 min-h-[160px] flex flex-col justify-between group hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-6 opacity-5 pointer-events-none">
-              <UserPlus className="h-36 w-36 text-nejah-sapphire" />
-            </div>
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <UserPlus className="h-5 w-5 text-nejah-electric" />
-              </div>
-              <h3 className="text-base font-bold text-foreground">New Registrations</h3>
-            </div>
-            <div>
-              <span className="text-4xl font-extrabold font-serif text-nejah-sapphire">
-                +{stats.newRegistrations}
-              </span>
-              <p className="text-xs mt-1.5 text-nejah-slate-blue">Since the start of this term</p>
-            </div>
-          </GlassPanel>
-        </div>
       </div>
 
       {/* ─── Modals ─── */}

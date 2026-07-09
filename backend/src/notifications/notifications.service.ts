@@ -9,6 +9,7 @@ import { ClassSession } from '../attendance/entities/class-session.entity';
 import { AppGateway } from '../websocket/websocket.gateway';
 import { PushSubscriptionService } from './push-subscription.service';
 import { FcmService } from './fcm.service';
+import { TelegramService } from '../telegram/telegram.service';
 import {
   Notification,
   NotificationType,
@@ -42,6 +43,7 @@ export class NotificationsService {
     private appGateway: AppGateway,
     private pushSubscriptionService: PushSubscriptionService,
     private fcmService: FcmService,
+    private telegramService: TelegramService,
   ) {}
 
   async notifyMeetingStarted(session: ClassSession, assignedStudentIds: string[]): Promise<void> {
@@ -66,9 +68,9 @@ export class NotificationsService {
     });
     const parentUserIds = parents.filter((p) => p.user?.id).map((p) => p.user.id);
 
-    // Get admin and superadmin users
+    // Get admin, superadmin, and qirat manager users
     const admins = await this.userRepository.find({
-      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }, { role: UserRole.QIRAT_MANAGER }],
     });
     const adminUserIds = admins.map((a) => a.id);
 
@@ -474,7 +476,7 @@ export class NotificationsService {
     const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
 
     const learnerPayload = {
-      title: '📚 Class Started — Nejah',
+      title: 'Class Started — Nejah',
       body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
       icon: '/logo.png',
       badge: '/logo.png',
@@ -497,7 +499,7 @@ export class NotificationsService {
 
     const adminPayload = {
       ...learnerPayload,
-      title: '📚 Session Started — Nejah Admin',
+      title: 'Session Started — Nejah Admin',
       body: `Teacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.`,
       url: `/live-sessions/${sessionId}`,
       data: {
@@ -520,6 +522,9 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
+      await this.telegramService.sendToUsers(studentParentIds,
+        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\nTap to join: ${joinUrl}`,
+      );
       await this.fcmService.sendToUsers(studentParentIds, {
         title: learnerPayload.title,
         body: learnerPayload.body,
@@ -534,7 +539,7 @@ export class NotificationsService {
     }
 
     const admins = await this.userRepository.find({
-      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }],
+      where: [{ role: UserRole.ADMIN }, { role: UserRole.SUPER_ADMIN }, { role: UserRole.QIRAT_MANAGER }],
     });
     const adminUserIds = admins.map((admin) => admin.id);
 
@@ -548,6 +553,9 @@ export class NotificationsService {
         true,
       );
       await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+      await this.telegramService.sendToUsers(adminUserIds,
+        `Session Started — Admin\n\nTeacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.\nView: /live-sessions/${sessionId}`,
+      );
       await this.fcmService.sendToUsers(adminUserIds, {
         title: adminPayload.title,
         body: adminPayload.body,
@@ -562,7 +570,7 @@ export class NotificationsService {
     }
 
     await this.pushSubscriptionService.sendToUserTypes(
-      [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER],
       adminPayload,
     );
   }
@@ -581,7 +589,7 @@ export class NotificationsService {
     if (recipientIds.length > 0) {
       await this.sendCustomNotifications(
         recipientIds,
-        '📚 New Learning Resource',
+        'New Learning Resource',
         `A new ${resource.learningLevel !== 'All Levels' ? resource.learningLevel : ''} resource has been added: ${resource.titleEn || resource.titleAr || resource.titleAm || 'Resource'}`,
         { resourceId: resource.id, type: 'resource_added' },
         NotificationChannel.SYSTEM_ALERT,
