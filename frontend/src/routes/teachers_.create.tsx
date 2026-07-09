@@ -1,5 +1,5 @@
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Country } from 'country-state-city';
-import { getCountryIsoByName, getUniqueCityNamesByCountryName } from '@/lib/geo-data';
+import { getCountryIsoByName } from '@/lib/geo-data';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
 
 // List of all world countries (ISO 3166‑1 English short names)
@@ -243,6 +243,17 @@ function AddTeacherPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Form State
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    import('country-state-city').then(({ City: C }) => {
+      const iso = getCountryIsoByName(formData.country);
+      if (!iso) { setCityOptions([]); return; }
+      const cities = C.getCitiesOfCountry(iso) ?? [];
+      setCityOptions([...new Set(cities.map((c) => c.name))]);
+    });
+  }, [formData.country]);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -542,7 +553,7 @@ function AddTeacherPage() {
                       <SelectValue placeholder="Select City" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                      {getUniqueCityNamesByCountryName(formData.country).map((cityName) => (
+                      {cityOptions.map((cityName) => (
                           <SelectItem key={cityName} value={cityName}>
                             {cityName}
                           </SelectItem>
