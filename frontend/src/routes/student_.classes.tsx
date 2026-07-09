@@ -87,7 +87,7 @@ function StudentClasses() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-xl font-bold text-nejah-sapphire font-serif">{cls.className || cls.name}</h3>
+              <h3 className="text-xl font-bold text-nejah-sapphire text-foreground font-serif">{cls.className || cls.name}</h3>
               {isLive ? (
                 <span className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold animate-pulse">
                   <div className="w-2 h-2 rounded-full bg-red-500" />
@@ -132,7 +132,7 @@ function StudentClasses() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>
             <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-2">Student Portal</p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif tracking-tight">My Classes</h1>
+            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif tracking-tight">My Classes</h1>
             <p className="text-muted-foreground mt-2">Manage your schedule and access live sessions.</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -182,9 +182,9 @@ function StudentClasses() {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-full bg-nejah-blue/10 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-nejah-sapphire" />
+                <Clock className="w-4 h-4 text-nejah-sapphire dark:text-nejah-electric" />
               </div>
-              <h2 className="text-2xl font-bold text-nejah-sapphire font-serif">Today's Schedule</h2>
+              <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Today's Schedule</h2>
             </div>
             {data.current?.length ? (
               <div className="space-y-4">
@@ -193,7 +193,7 @@ function StudentClasses() {
             ) : (
               <div className="bg-muted/30 border border-dashed rounded-[24px] p-10 text-center flex flex-col items-center justify-center">
                 <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-bold text-nejah-sapphire">No classes today</h3>
+                <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">No classes today</h3>
                 <p className="text-muted-foreground text-sm max-w-sm mt-2">You don't have any classes scheduled for today. Enjoy your day or review your previous lessons!</p>
               </div>
             )}
@@ -202,9 +202,9 @@ function StudentClasses() {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-full bg-nejah-blue/10 flex items-center justify-center">
-                <CalendarDays className="w-4 h-4 text-nejah-sapphire" />
+                <CalendarDays className="w-4 h-4 text-nejah-sapphire dark:text-nejah-electric" />
               </div>
-              <h2 className="text-2xl font-bold text-nejah-sapphire font-serif">Upcoming Schedule</h2>
+              <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Upcoming Schedule</h2>
             </div>
             {data.upcoming?.length ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,9 +218,9 @@ function StudentClasses() {
           <section>
              <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-full bg-nejah-blue/10 flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-nejah-sapphire" />
+                <BookOpen className="w-4 h-4 text-nejah-sapphire dark:text-nejah-electric" />
               </div>
-              <h2 className="text-2xl font-bold text-nejah-sapphire font-serif">Class History</h2>
+              <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Class History</h2>
             </div>
             
             {data.previous?.length ? (
@@ -229,7 +229,7 @@ function StudentClasses() {
                   <div key={c.id} className="bg-card hover:bg-muted/30 transition-colors rounded-[24px] p-6 border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="font-bold text-nejah-sapphire text-lg">
+                        <span className="font-bold text-nejah-sapphire text-foreground text-lg">
                           {c.classDate ? new Date(c.classDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' }) : '—'}
                         </span>
                         {getAttendanceBadge(c.attendanceStatus)}
