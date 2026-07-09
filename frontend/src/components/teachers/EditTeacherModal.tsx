@@ -22,8 +22,8 @@ import { toast } from 'sonner';
 import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, MapPin, Clock, Wifi, Megaphone } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { Country, City } from 'country-state-city';
-import { getCountryIsoByName } from '@/lib/geo-data';
+import { Country } from 'country-state-city';
+import { getCountryIsoByName, getUniqueCityNames } from '@/lib/geo-data';
 import { buildUpdateTeacherPayload } from '@/lib/teacher-payload';
 
 const API = API_BASE;
@@ -205,11 +205,15 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher, apiEndpoin
     fileInputRef.current?.click();
   };
 
-  const cityOptions = useMemo(() => {
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+
+  useEffect(() => {
     const iso = getCountryIsoByName(formData.country);
-    if (!iso) return [];
-    const cities = City.getCitiesOfCountry(iso) ?? [];
-    return [...new Set(cities.map((c) => c.name))];
+    if (iso) {
+      getUniqueCityNames(iso).then(setCityOptions);
+    } else {
+      setCityOptions([]);
+    }
   }, [formData.country]);
 
   return (
