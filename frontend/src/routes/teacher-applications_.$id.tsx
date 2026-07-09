@@ -220,7 +220,7 @@ function ApplicationDetailContent() {
                   </div>
                   {doc.url ? (
                     <a href={`${backendUrl}${doc.url}`} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-primary hover:text-nejah-sapphire text-xs font-medium transition-colors">
+                      className="flex items-center gap-1 text-primary hover:text-nejah-sapphire dark:hover:text-nejah-electric text-xs font-medium transition-colors">
                       <Download className="h-3.5 w-3.5" /> Download
                     </a>
                   ) : (
