@@ -88,6 +88,8 @@ export class StudentManagementService {
           currentLesson,
           country: student.country || student.currentResidency || '—',
           status: student.status,
+          attendanceRate: Number(student.attendanceRate) || 0,
+          progressRate: Number(student.progressRate) || 0,
           assignedDate: student.updatedAt || student.createdAt,
         };
       }),
