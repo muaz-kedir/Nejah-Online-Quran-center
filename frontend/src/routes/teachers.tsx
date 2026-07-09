@@ -1,6 +1,6 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -768,10 +768,10 @@ function TeachersPage() {
     setMeta(prev => ({ ...prev, page: 1 }));
   };
 
-  const [viewingTeacher, setViewingTeacher] = useState<any | null>(null);
+  const navigate = useNavigate();
   const handleViewTeacher = useCallback((teacher: any) => {
-    setViewingTeacher(teacher);
-  }, []);
+    navigate({ to: '/teachers/$id/profile', params: { id: teacher.id } });
+  }, [navigate]);
   const handleEditTeacher = useCallback((teacher: any) => setEditingTeacher(teacher), []);
   const handleDeleteTeacher = useCallback((teacher: any) => setDeletingTeacher(teacher), []);
 
@@ -977,8 +977,8 @@ function TeachersPage() {
       />
 
       <TeacherDetailModal
-        teacher={viewingTeacher}
-        onClose={() => setViewingTeacher(null)}
+        teacher={null}
+        onClose={() => {}}
         userRole={userRole}
         onEdit={handleEditTeacher}
         onRefresh={fetchTeachers}

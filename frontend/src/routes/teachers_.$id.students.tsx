@@ -4,12 +4,14 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, Eye, Loader2, Users, Calendar } from 'lucide-react';
 import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
+
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const getTodayName = () => DAYS[new Date().getDay()];
 
 export const Route = createFileRoute('/teachers_/$id/students')({
   component: AssignedStudentsPage,
@@ -21,6 +23,7 @@ function AssignedStudentsPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [teacherName, setTeacherName] = useState('');
+  const [unassignedStudents, setUnassignedStudents] = useState<any[]>([]);
   const [teacher, setTeacher] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
 
@@ -32,10 +35,14 @@ function AssignedStudentsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api<any>(`/teachers/${teacherId}/students`);
-      setTeacherName(data.teacher?.fullName || 'Teacher');
-      setTeacher({ id: teacherId, fullName: data.teacher?.fullName || 'Teacher' });
-      setStudents(data.students || []);
+      const [studentsData, unassignedData] = await Promise.all([
+        api<any>(`/teachers/${teacherId}/students`),
+        api<any>(`/students/unassigned`).catch(() => []),
+      ]);
+      setTeacherName(studentsData.teacher?.fullName || 'Teacher');
+      setTeacher({ id: teacherId, fullName: studentsData.teacher?.fullName || 'Teacher', students: studentsData.students || [] });
+      setStudents(studentsData.students || []);
+      setUnassignedStudents(Array.isArray(unassignedData) ? unassignedData : []);
     } catch (e: any) {
       setStudents([]);
     } finally {
@@ -203,7 +210,9 @@ function AssignedStudentsPage() {
         }}
         teacher={teacher}
         schedule={scheduleToEdit}
+        defaultDay={getTodayName()}
         defaultStudentId={scheduleStudentId || undefined}
+        unassignedStudents={unassignedStudents}
       />
     </DashboardLayout>
   );
