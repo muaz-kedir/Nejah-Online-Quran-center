@@ -110,7 +110,7 @@ const Topbar = ({ parent, onTabChange, searchQuery, onSearchChange }: { parent: 
   return (
     <div className="h-24 hidden lg:flex items-center justify-between px-12 bg-card/80 backdrop-blur-md sticky top-0 z-20 w-full border-b border-border shadow-sm">
       <div className="flex items-center gap-6 w-full max-w-7xl mx-auto">
-          <h2 className="text-2xl font-black text-nejah-sapphire font-serif">{t('parentPortal')}</h2>
+          <h2 className="text-2xl font-black text-nejah-sapphire text-foreground font-serif">{t('parentPortal')}</h2>
           
           <div className="hidden lg:flex items-center bg-background/50 p-1.5 rounded-2xl border border-border ml-auto">
             <div className="relative group">
@@ -134,7 +134,7 @@ const Topbar = ({ parent, onTabChange, searchQuery, onSearchChange }: { parent: 
                     onClick={() => setLang(l as any)}
                     className={cn(
                         "text-[10px] font-bold uppercase tracking-widest transition-all px-2 py-0.5",
-                        lang === l ? "text-nejah-sapphire underline underline-offset-4 decoration-2" : "text-muted-foreground hover:text-muted-foreground"
+                        lang === l ? "text-nejah-sapphire text-foreground underline underline-offset-4 decoration-2" : "text-muted-foreground hover:text-muted-foreground"
                     )}
                 >
                     {l}
@@ -143,7 +143,7 @@ const Topbar = ({ parent, onTabChange, searchQuery, onSearchChange }: { parent: 
         </div>
 
         <div className="flex items-center gap-3">
-            <button onClick={() => navigate({ to: '/parent_notifications' })} className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire transition-all hover:shadow-sm">
+            <button onClick={() => navigate({ to: '/parent_notifications' })} className="relative p-2.5 bg-background/50 rounded-2xl text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric transition-all hover:shadow-sm">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full animate-pulse" />
             </button>
@@ -156,10 +156,10 @@ const Topbar = ({ parent, onTabChange, searchQuery, onSearchChange }: { parent: 
           className="flex items-center gap-4 group cursor-pointer"
         >
           <div className="text-right">
-             <p className="text-sm font-black text-nejah-sapphire leading-none group-hover:text-nejah-electric transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
+             <p className="text-sm font-black text-nejah-sapphire text-foreground leading-none group-hover:text-nejah-electric transition-colors">{parent?.name || 'Ahmed Al-Mansour'}</p>
              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">{t('primaryGuardian')}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire">
+          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-nejah-electric/10 shadow-md transform group-hover:scale-105 transition-transform bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-foreground">
             {parent?.name?.charAt(0) || 'P'}
           </div>
         </div>
@@ -214,7 +214,7 @@ const ChildCard = ({ child, onInspectProgress }: any) => {
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
           Teacher
         </p>
-        <p className="text-xs font-black text-nejah-sapphire leading-tight truncate">
+        <p className="text-xs font-black text-nejah-sapphire text-foreground leading-tight truncate">
           {child.teacher}
         </p>
       </div>
@@ -222,7 +222,7 @@ const ChildCard = ({ child, onInspectProgress }: any) => {
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
           Memorization
         </p>
-        <p className="text-xs font-black text-nejah-sapphire">{child.memorization}%</p>
+        <p className="text-xs font-black text-nejah-sapphire text-foreground">{child.memorization}%</p>
       </div>
     </div>
 
@@ -231,7 +231,7 @@ const ChildCard = ({ child, onInspectProgress }: any) => {
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
           Current Surah
         </p>
-        <p className="text-xs font-bold text-nejah-sapphire truncate max-w-[120px]">
+        <p className="text-xs font-bold text-nejah-sapphire text-foreground truncate max-w-[120px]">
           {child.currentSurah}
         </p>
         {(child.currentPage > 0 || child.currentAyah > 0) && (
@@ -243,7 +243,7 @@ const ChildCard = ({ child, onInspectProgress }: any) => {
         )}
       </div>
       <div className="text-right">
-        <p className="text-[20px] font-black text-nejah-sapphire leading-none mb-1">
+        <p className="text-[20px] font-black text-nejah-sapphire text-foreground leading-none mb-1">
           {child.attendance}%
         </p>
         <p className="text-[9px] font-bold text-nejah-electric uppercase tracking-widest">
@@ -499,13 +499,13 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                 {/* Left Column: Children list */}
                 <div className="xl:col-span-8 space-y-8">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                    <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                       {t("childrenOverview")}
                     </h3>
                     <Button
                       onClick={() => setActiveTab("children")}
                       variant="ghost"
-                      className="text-sm font-black text-nejah-sapphire flex items-center gap-2 hover:underline underline-offset-4"
+                      className="text-sm font-black text-nejah-sapphire text-foreground flex items-center gap-2 hover:underline underline-offset-4"
                     >
                       {t("viewAllProfiles")} <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -577,7 +577,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
 
                       <Button
                         onClick={() => setActiveTab("schedule")}
-                        className="w-full mt-4 py-6 rounded-[28px] bg-amber-500 hover:bg-amber-600 text-nejah-sapphire font-black text-xs transition-all shadow-xl hover:scale-[1.02] border-none"
+                        className="w-full mt-4 py-6 rounded-[28px] bg-amber-500 hover:bg-amber-600 text-nejah-sapphire text-foreground font-black text-xs transition-all shadow-xl hover:scale-[1.02] border-none"
                       >
                         {t("openClassSchedule")}
                       </Button>
@@ -587,7 +587,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                   {/* Learning Time */}
                   {learningTime && (
                     <section className="glass-panel bg-gradient-to-br from-nejah-sapphire/5 to-primary/5 rounded-[40px] p-8 border border-primary/10 shadow-sm">
-                      <h3 className="text-xl font-black text-nejah-sapphire font-serif mb-6 flex items-center gap-2">
+                      <h3 className="text-xl font-black text-nejah-sapphire text-foreground font-serif mb-6 flex items-center gap-2">
                         <TrendingUp className="h-5 w-5 text-nejah-electric" /> Learning Time
                       </h3>
                       {loadingLearningTime ? (
@@ -597,7 +597,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                       ) : (
                         <div className="grid grid-cols-2 gap-4">
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
-                            <p className="text-2xl font-black text-nejah-sapphire font-serif">
+                            <p className="text-2xl font-black text-nejah-sapphire text-foreground font-serif">
                               {Math.round(learningTime.totalHours * 10) / 10}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -605,7 +605,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                             </p>
                           </div>
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
-                            <p className="text-2xl font-black text-nejah-sapphire font-serif">
+                            <p className="text-2xl font-black text-nejah-sapphire text-foreground font-serif">
                               {learningTime.sessionCount || 0}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -613,7 +613,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                             </p>
                           </div>
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
-                            <p className="text-2xl font-black text-nejah-sapphire font-serif">
+                            <p className="text-2xl font-black text-nejah-sapphire text-foreground font-serif">
                               {Math.round(learningTime.averageMinutesPerSession || 0)}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -621,7 +621,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                             </p>
                           </div>
                           <div className="bg-white/50 p-4 rounded-2xl text-center border border-primary/10">
-                            <p className="text-2xl font-black text-nejah-sapphire font-serif">
+                            <p className="text-2xl font-black text-nejah-sapphire text-foreground font-serif">
                               {learningTime.totalMinutes || 0}
                             </p>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -635,7 +635,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
 
                   {/* Recent Activities */}
                   <section className="glass-panel bg-card rounded-[40px] p-8 border border-border shadow-sm">
-                    <h3 className="text-xl font-black text-nejah-sapphire font-serif mb-6 flex items-center justify-between">
+                    <h3 className="text-xl font-black text-nejah-sapphire text-foreground font-serif mb-6 flex items-center justify-between">
                       {t("recentFeedbacks")}
                     </h3>
 
@@ -665,7 +665,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                               <p className="text-[11px] text-muted-foreground font-medium leading-tight">
                                 {a.content}
                               </p>
-                              <p className="text-[9px] font-bold text-nejah-sapphire uppercase tracking-widest pt-1">
+                              <p className="text-[9px] font-bold text-nejah-sapphire text-foreground uppercase tracking-widest pt-1">
                                 {new Date(a.date).toLocaleDateString()}
                               </p>
                             </div>
@@ -677,7 +677,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                     <Button
                       onClick={() => setActiveTab("quran")}
                       variant="ghost"
-                      className="w-full mt-8 rounded-2xl bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-nejah-sapphire font-black text-xs h-12"
+                      className="w-full mt-8 rounded-2xl bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric font-black text-xs h-12"
                     >
                       {t("viewRemarksHistory")}
                     </Button>
@@ -693,7 +693,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
           {activeTab === "children" && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                   {t("childrenProfiles")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -720,7 +720,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
             <div className="space-y-10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                  <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                     {t("quranProgress")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -753,12 +753,12 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
                   <div className="lg:col-span-8 space-y-8">
                     <div className="glass-panel bg-card rounded-[40px] p-10 border border-border shadow-sm relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-                        <BookOpen className="w-48 h-48 text-nejah-sapphire" />
+                        <BookOpen className="w-48 h-48 text-nejah-sapphire text-foreground" />
                       </div>
 
                       <div className="flex flex-col md:flex-row items-center justify-between gap-10">
                         <div className="space-y-4 flex-1">
-                          <h3 className="text-3xl font-black text-nejah-sapphire font-serif leading-tight">
+                          <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif leading-tight">
                             {selectedChild.name}
                           </h3>
                           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
@@ -799,7 +799,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
 
                         <div className="relative flex items-center justify-center w-48 h-48 shrink-0">
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-4xl font-black text-nejah-sapphire font-serif leading-none">
+                            <span className="text-4xl font-black text-nejah-sapphire text-foreground font-serif leading-none">
                               {selectedChild.memorization}%
                             </span>
                             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">
@@ -922,7 +922,7 @@ text-nejah-electric"
             <div className="space-y-10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                  <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                     {t("homeworkAssignments")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -1081,7 +1081,7 @@ text-nejah-electric"
             <div className="space-y-10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
                 <div>
-                  <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                  <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                     {t("examsAndResults")}
                   </h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -1156,7 +1156,7 @@ text-nejah-electric"
                                   <p className="text-xs font-bold text-muted-foreground leading-none">
                                     {t("score")}
                                   </p>
-                                  <p className="text-xl font-black text-nejah-sapphire font-serif mt-1">
+                                  <p className="text-xl font-black text-nejah-sapphire text-foreground font-serif mt-1">
                                     {evalItem.score}%
                                   </p>
                                 </div>
@@ -1189,7 +1189,7 @@ text-nejah-electric"
           {activeTab === "schedule" && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                   {t("classSchedules")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -1252,7 +1252,7 @@ text-nejah-electric"
                                 <Button
                                   onClick={() => window.open(sc.meetingLink, "_blank")}
                                   size="sm"
-                                  className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
+                                  className="bg-amber-500 hover:bg-amber-600 text-nejah-sapphire text-foreground rounded-xl text-[10px] font-black uppercase tracking-wider h-8"
                                 >
                                   {t("joinRoom")}
                                 </Button>
@@ -1278,7 +1278,7 @@ text-nejah-electric"
           {activeTab === "settings" && (
             <div className="space-y-8 max-w-2xl">
               <div>
-                <h3 className="text-3xl font-black text-nejah-sapphire font-serif tracking-tight">
+                <h3 className="text-3xl font-black text-nejah-sapphire text-foreground font-serif tracking-tight">
                   {t("profileSettings")}
                 </h3>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
