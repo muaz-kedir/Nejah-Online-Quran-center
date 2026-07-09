@@ -20,8 +20,8 @@ import {
 import { toast } from 'sonner';
 import { UserPlus, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Country, City } from 'country-state-city';
-import { getCountryIsoByName } from '@/lib/geo-data';
+import { Country } from 'country-state-city';
+import { getCountryIsoByName, getUniqueCityNames } from '@/lib/geo-data';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
 import { API_BASE, apiAssetUrl, formatApiError, apiUrl } from "@/lib/api";
 
@@ -286,11 +286,15 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
     fileInputRef.current?.click();
   };
 
-  const cityOptions = useMemo(() => {
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+
+  useEffect(() => {
     const iso = getCountryIsoByName(formData.country);
-    if (!iso) return [];
-    const cities = City.getCitiesOfCountry(iso) ?? [];
-    return [...new Set(cities.map((c) => c.name))];
+    if (iso) {
+      getUniqueCityNames(iso).then(setCityOptions);
+    } else {
+      setCityOptions([]);
+    }
   }, [formData.country]);
 
   return (

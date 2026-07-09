@@ -164,6 +164,13 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      fetch(`${WS_URL}/health`, { mode: 'cors' }).catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -196,9 +203,9 @@ function RootComponent() {
       auth: { token },
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 20,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
+      reconnectionDelayMax: 60000,
     });
 
     socket.on("connect", () => console.log("[WS Root] Connected"));

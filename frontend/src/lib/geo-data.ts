@@ -1,4 +1,4 @@
-import { Country, City } from 'country-state-city';
+import { Country } from 'country-state-city';
 
 export function getCountryIsoByName(countryName: string): string {
   if (!countryName) return '';
@@ -6,12 +6,13 @@ export function getCountryIsoByName(countryName: string): string {
 }
 
 /** Deduplicated city names for a country ISO code (Ethiopia has duplicate zone names in the dataset). */
-export function getUniqueCityNames(countryIsoCode: string): string[] {
+export async function getUniqueCityNames(countryIsoCode: string): Promise<string[]> {
   if (!countryIsoCode) return [];
+  const { City } = await import('country-state-city');
   const cities = City.getCitiesOfCountry(countryIsoCode) ?? [];
   return [...new Set(cities.map((c) => c.name))];
 }
 
-export function getUniqueCityNamesByCountryName(countryName: string): string[] {
+export async function getUniqueCityNamesByCountryName(countryName: string): Promise<string[]> {
   return getUniqueCityNames(getCountryIsoByName(countryName));
 }

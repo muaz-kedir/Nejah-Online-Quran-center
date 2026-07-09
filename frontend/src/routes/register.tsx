@@ -7,7 +7,7 @@ import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info, Search, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { Country, City } from "country-state-city";
+import { Country } from "country-state-city";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -145,16 +145,23 @@ function RegisterPage() {
     setAllowDuplicateCreate(false);
   }, [watchParentEmail, watchParentPhone]);
 
-  const studentCities = useMemo(() => {
-    if (!watchStudentCountry) return [];
-    const cities = City.getCitiesOfCountry(watchStudentCountry) || [];
-    return Array.from(new Set(cities.map(c => c.name))).map(name => ({ name }));
+  const [studentCities, setStudentCities] = useState<{ name: string }[]>([]);
+  const [parentCities, setParentCities] = useState<{ name: string }[]>([]);
+
+  useEffect(() => {
+    if (!watchStudentCountry) { setStudentCities([]); return; }
+    import('country-state-city').then(({ City }) => {
+      const cities = City.getCitiesOfCountry(watchStudentCountry) || [];
+      setStudentCities(Array.from(new Set(cities.map(c => c.name))).map(name => ({ name })));
+    });
   }, [watchStudentCountry]);
 
-  const parentCities = useMemo(() => {
-    if (!watchParentCountry) return [];
-    const cities = City.getCitiesOfCountry(watchParentCountry) || [];
-    return Array.from(new Set(cities.map(c => c.name))).map(name => ({ name }));
+  useEffect(() => {
+    if (!watchParentCountry) { setParentCities([]); return; }
+    import('country-state-city').then(({ City }) => {
+      const cities = City.getCitiesOfCountry(watchParentCountry) || [];
+      setParentCities(Array.from(new Set(cities.map(c => c.name))).map(name => ({ name })));
+    });
   }, [watchParentCountry]);
 
   const studentCountryData = useMemo(() => countries.find(c => c.isoCode === watchStudentCountry), [countries, watchStudentCountry]);
