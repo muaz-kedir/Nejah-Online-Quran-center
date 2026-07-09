@@ -348,7 +348,7 @@ function TeacherDashboard() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/teacher_students", search: {} })}
-                className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
+                className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
               >
                 View All Students <ChevronRight className="h-3 w-3" />
               </button>
@@ -644,7 +644,7 @@ function TeacherDashboard() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/live-sessions" })}
-                className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
+                className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
               >
                 View All Sessions <ChevronRight className="h-3 w-3" />
               </button>
