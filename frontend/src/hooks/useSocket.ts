@@ -36,9 +36,9 @@ export function useSocket(callbacks?: SocketCallbacks) {
       auth: { token },
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 20,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
+      reconnectionDelayMax: 60000,
     });
 
     socket.on("connect", () => setConnected(true));
