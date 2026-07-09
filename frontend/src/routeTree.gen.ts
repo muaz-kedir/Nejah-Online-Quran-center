@@ -48,8 +48,10 @@ import { Route as Finance_studentPaymentsRouteImport } from './routes/finance_st
 import { Route as Finance_settingsRouteImport } from './routes/finance_settings'
 import { Route as Finance_revenueRouteImport } from './routes/finance_revenue'
 import { Route as Finance_reportsRouteImport } from './routes/finance_reports'
+import { Route as Finance_profitRouteImport } from './routes/finance_profit'
 import { Route as Finance_notificationsRouteImport } from './routes/finance_notifications'
 import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
+import { Route as Finance_expensesRouteImport } from './routes/finance_expenses'
 import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
 import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
 import { Route as DebugUserRouteImport } from './routes/debug-user'
@@ -282,6 +284,11 @@ const Finance_reportsRoute = Finance_reportsRouteImport.update({
   path: '/finance_reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Finance_profitRoute = Finance_profitRouteImport.update({
+  id: '/finance_profit',
+  path: '/finance_profit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
   id: '/finance_notifications',
   path: '/finance_notifications',
@@ -290,6 +297,11 @@ const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
 const Finance_familyPaymentsRoute = Finance_familyPaymentsRouteImport.update({
   id: '/finance_family-payments',
   path: '/finance_family-payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Finance_expensesRoute = Finance_expensesRouteImport.update({
+  id: '/finance_expenses',
+  path: '/finance_expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
@@ -487,8 +499,10 @@ export interface FileRoutesByFullPath {
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -566,8 +580,10 @@ export interface FileRoutesByTo {
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -645,8 +661,10 @@ export interface FileRoutesById {
   '/debug-user': typeof DebugUserRoute
   '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
+  '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
   '/finance_notifications': typeof Finance_notificationsRoute
+  '/finance_profit': typeof Finance_profitRoute
   '/finance_reports': typeof Finance_reportsRoute
   '/finance_revenue': typeof Finance_revenueRoute
   '/finance_settings': typeof Finance_settingsRoute
@@ -726,8 +744,10 @@ export interface FileRouteTypes {
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -805,8 +825,10 @@ export interface FileRouteTypes {
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -883,8 +905,10 @@ export interface FileRouteTypes {
     | '/debug-user'
     | '/fee_settings'
     | '/finance_dashboard'
+    | '/finance_expenses'
     | '/finance_family-payments'
     | '/finance_notifications'
+    | '/finance_profit'
     | '/finance_reports'
     | '/finance_revenue'
     | '/finance_settings'
@@ -963,8 +987,10 @@ export interface RootRouteChildren {
   DebugUserRoute: typeof DebugUserRoute
   Fee_settingsRoute: typeof Fee_settingsRoute
   Finance_dashboardRoute: typeof Finance_dashboardRoute
+  Finance_expensesRoute: typeof Finance_expensesRoute
   Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
   Finance_notificationsRoute: typeof Finance_notificationsRoute
+  Finance_profitRoute: typeof Finance_profitRoute
   Finance_reportsRoute: typeof Finance_reportsRoute
   Finance_revenueRoute: typeof Finance_revenueRoute
   Finance_settingsRoute: typeof Finance_settingsRoute
@@ -1300,6 +1326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Finance_reportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance_profit': {
+      id: '/finance_profit'
+      path: '/finance_profit'
+      fullPath: '/finance_profit'
+      preLoaderRoute: typeof Finance_profitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance_notifications': {
       id: '/finance_notifications'
       path: '/finance_notifications'
@@ -1312,6 +1345,13 @@ declare module '@tanstack/react-router' {
       path: '/finance_family-payments'
       fullPath: '/finance_family-payments'
       preLoaderRoute: typeof Finance_familyPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance_expenses': {
+      id: '/finance_expenses'
+      path: '/finance_expenses'
+      fullPath: '/finance_expenses'
+      preLoaderRoute: typeof Finance_expensesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance_dashboard': {
@@ -1613,8 +1653,10 @@ const rootRouteChildren: RootRouteChildren = {
   DebugUserRoute: DebugUserRoute,
   Fee_settingsRoute: Fee_settingsRoute,
   Finance_dashboardRoute: Finance_dashboardRoute,
+  Finance_expensesRoute: Finance_expensesRoute,
   Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
   Finance_notificationsRoute: Finance_notificationsRoute,
+  Finance_profitRoute: Finance_profitRoute,
   Finance_reportsRoute: Finance_reportsRoute,
   Finance_revenueRoute: Finance_revenueRoute,
   Finance_settingsRoute: Finance_settingsRoute,

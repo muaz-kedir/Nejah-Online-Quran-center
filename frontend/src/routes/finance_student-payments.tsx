@@ -31,7 +31,7 @@ function StudentPaymentsPage() {
   const [meta, setMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<any>(null);
   const [payAmount, setPayAmount] = useState('');
   const [payType, setPayType] = useState('payment');
   const [submitting, setSubmitting] = useState(false);
@@ -170,22 +170,22 @@ function StudentPaymentsPage() {
 
   useEffect(() => { load(); }, [filters]);
 
-  const openDetail = async (id: string) => {
-    setDetailLoading(true);
+  const openDetail = async (r: any) => {
+    setDetail(null);
+    setSelectedRow(r);
     try {
-      setDetail(await financeFetch(`/student-payments/${id}`));
+      setDetail(await financeFetch(`/student-payments/${r.id}`));
     } catch (e: any) {
       toast.error(e.message);
-    } finally {
-      setDetailLoading(false);
     }
   };
 
   const recordPayment = async () => {
-    if (!detail || !payAmount) return;
+    const cur = detail || selectedRow;
+    if (!cur || !payAmount) return;
     setSubmitting(true);
     try {
-      const res = await fetch(apiUrl(`/finance/student-payments/${detail.id}/transactions`), {
+      const res = await fetch(apiUrl(`/finance/student-payments/${cur.id}/transactions`), {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ amount: parseFloat(payAmount), type: payType }),
@@ -203,9 +203,10 @@ function StudentPaymentsPage() {
   };
 
   const markStatus = async (status: string) => {
-    if (!detail) return;
+    const cur = detail || selectedRow;
+    if (!cur) return;
     try {
-      const res = await fetch(apiUrl(`/finance/student-payments/${detail.id}`), {
+      const res = await fetch(apiUrl(`/finance/student-payments/${cur.id}`), {
         method: 'PATCH',
         headers: authHeaders(),
         body: JSON.stringify({ status }),
@@ -231,6 +232,7 @@ function StudentPaymentsPage() {
     'Due Date': r.dueDate,
   }));
 
+  const cur = detail || selectedRow;
   return (
     <DashboardLayout>
       <PageHeader eyebrow="Student Fees" title="Student Payments" description="Manage individual student fee accounts" />
@@ -482,7 +484,7 @@ function StudentPaymentsPage() {
             ) : rows.length === 0 ? (
               <TableRow><TableCell colSpan={7} className="py-12 text-center text-nejah-slate-blue">No payment records found</TableCell></TableRow>
             ) : rows.map((r) => (
-              <TableRow key={r.id}>
+              <TableRow key={r.id} className="cursor-pointer" onClick={() => openDetail(r)}>
                 <TableCell className="font-medium">{r.studentName}</TableCell>
                 <TableCell>{r.parentName}</TableCell>
                 <TableCell>{r.teacherName}</TableCell>
@@ -490,7 +492,7 @@ function StudentPaymentsPage() {
                 <TableCell>ETB {r.monthlyFee}</TableCell>
                 <TableCell><Badge variant={statusBadgeVariant(r.status)}>{r.status}</Badge></TableCell>
                 <TableCell>
-                  <Button size="sm" variant="ghost" onClick={() => openDetail(r.id)}><Eye className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openDetail(r); }}><Eye className="h-4 w-4" /></Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -506,26 +508,26 @@ function StudentPaymentsPage() {
         </div>
       )}
 
-      <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
+      <Dialog open={!!selectedRow || !!detail} onOpenChange={() => { setDetail(null); setSelectedRow(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Payment Details — {detail?.studentName}</DialogTitle></DialogHeader>
-          {detailLoading ? <Loader2 className="mx-auto h-8 w-8 animate-spin" /> : detail && (
+          <DialogHeader><DialogTitle>Payment Details — {cur?.studentName}</DialogTitle></DialogHeader>
+          {cur && (
             <div className="space-y-4 text-sm">
-              {detail.status === 'paid' && (
+              {detail && cur.status === 'paid' && (
                 <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-green-600 text-center">
                   <p className="font-semibold text-base">✅ Payment is done</p>
                   <p className="text-xs mt-1">This student's fee is fully paid for {detail.billingMonth}.</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-nejah-slate-blue">Program:</span> {detail.program}</div>
-                <div><span className="text-nejah-slate-blue">Teacher:</span> {detail.teacherName}</div>
-                <div><span className="text-nejah-slate-blue">Monthly Fee:</span> ETB {detail.monthlyFee}</div>
-                <div><span className="text-nejah-slate-blue">Paid:</span> ETB {detail.amountPaid}</div>
-                <div><span className="text-nejah-slate-blue">Balance:</span> ETB {detail.remainingBalance}</div>
-                <div><span className="text-nejah-slate-blue">Sessions/mo:</span> {detail.monthlySessions}</div>
+                <div><span className="text-nejah-slate-blue">Program:</span> {cur.program}</div>
+                <div><span className="text-nejah-slate-blue">Teacher:</span> {cur.teacherName}</div>
+                <div><span className="text-nejah-slate-blue">Monthly Fee:</span> ETB {cur.monthlyFee}</div>
+                <div><span className="text-nejah-slate-blue">Paid:</span> ETB {cur.amountPaid}</div>
+                <div><span className="text-nejah-slate-blue">Balance:</span> ETB {cur.remainingBalance}</div>
+                <div><span className="text-nejah-slate-blue">Sessions/mo:</span> {cur.monthlySessions}</div>
               </div>
-              {detail.weeklySchedule?.length > 0 && (
+              {detail && detail.weeklySchedule?.length > 0 && (
                 <div>
                   <p className="mb-2 font-medium">Weekly Schedule</p>
                   {detail.weeklySchedule.map((s: any, i: number) => (
@@ -535,12 +537,13 @@ function StudentPaymentsPage() {
               )}
               <div>
                 <p className="mb-2 font-medium">Payment History</p>
-                {detail.paymentHistory?.length === 0 && <p className="text-nejah-slate-blue">No transactions yet</p>}
-                {detail.paymentHistory?.map((t: any) => (
+                {!detail && <p className="text-nejah-slate-blue">Loading payment history...</p>}
+                {detail && detail.paymentHistory?.length === 0 && <p className="text-nejah-slate-blue">No transactions yet</p>}
+                {detail && detail.paymentHistory?.map((t: any) => (
                   <p key={t.id} className="text-nejah-slate-blue">{t.transactionDate}: ETB {t.amount} ({t.type})</p>
                 ))}
               </div>
-              {detail.status !== 'paid' && (
+              {cur.status !== 'paid' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Amount</Label><Input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} /></div>
                   <div><Label>Type</Label>
@@ -557,7 +560,7 @@ function StudentPaymentsPage() {
               )}
             </div>
           )}
-          {detail && detail.status !== 'paid' && (
+          {cur && cur.status !== 'paid' && (
             <DialogFooter className="flex-wrap gap-2">
               <Button variant="outline" onClick={() => markStatus('paid')}>Mark Paid</Button>
               <Button variant="outline" onClick={() => markStatus('partial')}>Mark Partial</Button>

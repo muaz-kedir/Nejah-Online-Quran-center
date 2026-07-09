@@ -1,4 +1,5 @@
 export enum ExpenseCategory {
+  TEACHER_SALARY = 'teacher_salary',
   RENT = 'rent',
   SALARIES_EXTERNAL = 'salaries_external',
   UTILITIES = 'utilities',

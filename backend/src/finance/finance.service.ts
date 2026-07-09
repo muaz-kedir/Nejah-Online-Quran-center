@@ -17,6 +17,7 @@ import { StudentAttendance } from '../attendance/entities/student-attendance.ent
 import { TeacherReplacement } from '../teacher-replacements/entities/teacher-replacement.entity';
 import { PaymentStatus } from '../common/enums/payment-status.enum';
 import { TransactionType } from '../common/enums/transaction-type.enum';
+import { ExpenseCategory } from '../common/enums/expense-category.enum';
 import { FinanceQueryDto } from './dto/finance-query.dto';
 import { RecordPaymentDto, UpdateStudentFeeDto, BundleFamilyDto, GeneratePayrollDto } from './dto/record-payment.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
@@ -1054,7 +1055,7 @@ export class FinanceService {
           totalAssignedStudents: calc.assignedStudents,
           sessionsConducted: calc.sessionsConducted,
           sessionRate: calc.sessionRate,
-          earnings: calc.earnings,
+          earnings: payroll ? this.toNumber(payroll.totalEarnings) : calc.earnings,
           payrollStatus: payroll?.status || 'pending',
           paymentMethod: payroll?.paymentMethod || null,
           monthlySalary: this.toNumber(t.monthlySalary),
@@ -1192,6 +1193,18 @@ export class FinanceService {
       }
 
       const saved = await this.payrollRepo.save(record);
+      if (record.status === 'paid') {
+        try {
+          await this.createExpense({
+            amount: this.toNumber(record.totalEarnings),
+            description: `Teacher salary for ${teacher.fullName} - ${month}`,
+            category: ExpenseCategory.TEACHER_SALARY,
+            expenseDate: fmtDate(new Date()),
+          }, 'system');
+        } catch (e) {
+          console.warn(`[FinanceService] Failed to auto-create expense for teacher salary: ${e.message}`);
+        }
+      }
       await this.earningRepo.delete({ payrollRecordId: saved.id });
 
       for (const detail of calc.details) {
@@ -1251,14 +1264,26 @@ export class FinanceService {
 
     const teacherName = record.teacher?.fullName || 'Teacher';
     if (status === 'paid') {
+      const paidAmount = this.toNumber(record.totalEarnings);
+      try {
+        await this.createExpense({
+          amount: paidAmount,
+          description: `Teacher salary for ${teacherName} - ${month}`,
+          category: ExpenseCategory.TEACHER_SALARY,
+          expenseDate: fmtDate(new Date()),
+        }, 'system');
+      } catch (e) {
+        console.warn(`[FinanceService] Failed to auto-create expense for teacher salary: ${e.message}`);
+      }
+
       const adminIds = await this.getAdminUserIds();
       const recipients = [...adminIds];
       if (record.teacher?.userId) recipients.push(record.teacher.userId);
       await this.notificationsService.sendCustomNotifications(
         [...new Set(recipients)],
         'Teacher Salary Paid',
-        `Salary payment of ${this.toNumber(record.totalEarnings)} ETB has been successfully recorded for Teacher ${teacherName}.`,
-        { teacherId, teacherName, amount: this.toNumber(record.totalEarnings), billingMonth: month },
+        `Salary payment of ${paidAmount} ETB has been successfully recorded for Teacher ${teacherName}.`,
+        { teacherId, teacherName, amount: paidAmount, billingMonth: month },
         NotificationChannel.PAYMENT_RECEIVED,
         false,
         '/finance_teacher-payments',
@@ -1446,6 +1471,9 @@ export class FinanceService {
       const endStr = fmtDate(end);
       qb.andWhere('e.expenseDate >= :startStr', { startStr });
       qb.andWhere('e.expenseDate <= :endStr', { endStr });
+    } else if (query.startDate && query.endDate) {
+      qb.andWhere('e.expenseDate >= :startStr', { startStr: query.startDate });
+      qb.andWhere('e.expenseDate <= :endStr', { endStr: query.endDate });
     }
 
     const total = await qb.getCount();
@@ -1585,8 +1613,8 @@ export class FinanceService {
     const prevCollected = prevAccounts.reduce((s, a) => s + this.toNumber(a.amountPaid), 0);
     const prevPayroll = prevPayrolls.reduce((s, p) => s + this.toNumber(p.totalEarnings), 0);
     const prevExpenseTotal = prevExpenses.reduce((s, e) => s + this.toNumber(e.amount), 0);
-    const prevNetProfit = prevCollected - prevPayroll - prevExpenseTotal;
-    const currentNetProfit = totalCollected - totalPayroll - totalExpenses;
+    const prevNetProfit = prevCollected - prevExpenseTotal;
+    const currentNetProfit = totalCollected - totalExpenses;
 
     const profitChange =
       prevNetProfit !== 0

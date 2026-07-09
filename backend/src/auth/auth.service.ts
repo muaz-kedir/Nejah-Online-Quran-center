@@ -22,6 +22,7 @@ import { AgeRange, QuranLevel, StudentStatus } from '../students/entities/studen
 import { EmailService } from '../email/email.service';
 import * as crypto from 'crypto';
 import { User } from '../users/entities/user.entity';
+import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +32,7 @@ export class AuthService {
     private studentsService: StudentsService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private telegramService: TelegramService,
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
   ) {}
@@ -414,6 +416,14 @@ export class AuthService {
     logger.log(`═══════════════════════════════════════════════════════`);
 
     await this.emailService.sendNewPasswordEmail(user.email, user.name, tempPassword);
+
+    const tgSent = await this.telegramService.sendToUsers(
+      [user.id],
+      `🔐 *Password Reset*\n\nA new temporary password has been generated for your account.\n\nYour new password: \`${tempPassword}\`\n\nPlease log in and change it immediately.`,
+    );
+    if (tgSent > 0) {
+      new Logger('ForgotPassword').log(`Password also sent via Telegram to user ${user.email}`);
+    }
   }
 
   async resetPassword(rawToken: string, newPassword: string): Promise<void> {

@@ -4,7 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, FinanceFilters, downloadCSV, exportPDF, authHeaders } from '@/lib/finance-api';
+import { financeFetch, FinanceFilters, downloadCSV, exportPDF, authHeaders, formatCurrency } from '@/lib/finance-api';
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -12,10 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Download, Eye, Loader2, Plus, ChevronsUpDown, Check, CalendarDays, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Download, Eye, Loader2, Plus, CalendarDays, FileText, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/finance_teacher-payments')({
@@ -32,10 +29,8 @@ function TeacherPaymentsPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
-  const [teacherSearch, setTeacherSearch] = useState('');
   const [teachers, setTeachers] = useState<any[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
-  const [teacherOpen, setTeacherOpen] = useState(false);
   const [calendarType, setCalendarType] = useState<'gregorian' | 'ethiopian'>('gregorian');
   const [billingMonth, setBillingMonth] = useState(new Date().toISOString().slice(0, 7));
   const [ethiopianYear, setEthiopianYear] = useState('');
@@ -44,44 +39,44 @@ function TeacherPaymentsPage() {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [payrollStatus, setPayrollStatus] = useState('pending');
   const [creating, setCreating] = useState(false);
-
-  const searchTeachers = async (q: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/teachers?search=${encodeURIComponent(q)}&limit=10`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setTeachers(json.data || []);
-      }
-    } catch {}
-  };
+  const [paidWarning, setPaidWarning] = useState<any>(null);
 
   useEffect(() => {
-    if (teacherSearch.length >= 2) searchTeachers(teacherSearch);
-    else setTeachers([]);
-  }, [teacherSearch]);
+    const token = localStorage.getItem('token');
+    fetch(apiUrl('/teachers?limit=200&status=active'), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(json => setTeachers(json.data || []))
+      .catch(() => {});
+  }, []);
 
-  const selectTeacher = (teacher: any) => {
-    setSelectedTeacher(teacher);
-    setTeacherOpen(false);
-    setTeacherSearch(teacher.fullName || teacher.name);
-    setSalary(teacher.monthlySalary != null ? String(teacher.monthlySalary) : '');
-  };
+  const getMonth = () =>
+    calendarType === 'gregorian'
+      ? billingMonth
+      : `${ethiopianYear}-${ethiopianMonth.padStart(2, '0')}`;
 
-  const createPayroll = async () => {
+  const createPayroll = async (force = false) => {
     if (!selectedTeacher || !salary || !paymentMethod) {
       toast.error('Please select a teacher, enter salary, and choose a payment method');
       return;
     }
-    const month = calendarType === 'gregorian'
-      ? billingMonth
-      : `${ethiopianYear}-${ethiopianMonth.padStart(2, '0')}`;
+    const month = getMonth();
     if (!month || month.length < 7) {
       toast.error('Please select a valid billing month');
       return;
     }
+
+    if (!force) {
+      try {
+        const detail = await financeFetch<any>(`/teacher-payments/${selectedTeacher.id}?billingMonth=${month}`);
+        if (detail?.payroll?.status === 'paid') {
+          setPaidWarning({ teacher: selectedTeacher, month, payroll: detail.payroll });
+          return;
+        }
+      } catch {}
+    }
+
     setCreating(true);
     try {
       const token = localStorage.getItem('token');
@@ -103,10 +98,10 @@ function TeacherPaymentsPage() {
       toast.success('Payroll created successfully');
       setShowForm(false);
       setSelectedTeacher(null);
-      setTeacherSearch('');
       setSalary('');
       setPaymentMethod('');
       setPayrollStatus('pending');
+      setPaidWarning(null);
       load();
     } catch (e: any) {
       toast.error(e.message);
@@ -169,8 +164,8 @@ function TeacherPaymentsPage() {
       { Field: 'Teacher', Value: detail.teacherName },
       { Field: 'Billing Month', Value: payroll.billingMonth || '-' },
       { Field: 'Sessions Conducted', Value: detail.sessionsConducted ?? 0 },
-      { Field: 'Total Earnings (ETB)', Value: detail.earnings ?? 0 },
-      { Field: 'Monthly Salary (ETB)', Value: detail.monthlySalary ?? 0 },
+      { Field: 'Total Earnings (ETB)', Value: formatCurrency(detail.earnings) },
+      { Field: 'Monthly Salary (ETB)', Value: formatCurrency(detail.monthlySalary) },
       { Field: 'Status', Value: payroll.status || '-' },
       { Field: 'Payment Method', Value: payroll.paymentMethod || '-' },
       { Field: 'Paid At', Value: payroll.paidAt || '-' },
@@ -238,7 +233,7 @@ function TeacherPaymentsPage() {
         description="Manage teacher salary payroll"
         actions={
           <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-            <Plus className={cn('h-4 w-4 transition-transform', showForm && 'rotate-45')} />
+            <Plus className={`h-4 w-4 transition-transform ${showForm ? 'rotate-45' : ''}`} />
             {showForm ? 'Close Form' : 'Create Payroll'}
           </Button>
         }
@@ -263,58 +258,29 @@ function TeacherPaymentsPage() {
           <h3 className="font-semibold text-foreground">Create Teacher Payroll</h3>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Teacher Search */}
+            {/* Teacher Select */}
             <div className="md:col-span-2">
-              <Label>Search Teacher</Label>
-              <Popover open={teacherOpen} onOpenChange={setTeacherOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={teacherOpen}
-                    className="w-full justify-between h-10"
-                  >
-                    {selectedTeacher
-                      ? (selectedTeacher.fullName || selectedTeacher.name)
-                      : 'Search for a teacher...'}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[500px] p-0">
-                  <Command>
-                    <CommandInput
-                      placeholder="Type teacher name..."
-                      value={teacherSearch}
-                      onValueChange={setTeacherSearch}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No teachers found</CommandEmpty>
-                      <CommandGroup>
-                        {teachers.map((t) => (
-                          <CommandItem
-                            key={t.id}
-                            value={t.fullName || t.name}
-                            onSelect={() => selectTeacher(t)}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                selectedTeacher?.id === t.id ? 'opacity-100' : 'opacity-0',
-                              )}
-                            />
-                            <div>
-                              <p>{t.fullName || t.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {t.email}{t.monthlySalary ? ` · Salary: ETB ${t.monthlySalary}` : ''}
-                              </p>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Label>Teacher</Label>
+              <Select
+                value={selectedTeacher?.id || ''}
+                onValueChange={(id) => {
+                  const t = teachers.find(x => x.id === id);
+                  setSelectedTeacher(t || null);
+                  setSalary(t?.monthlySalary != null ? String(t.monthlySalary) : '');
+                  setPaidWarning(null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a teacher..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-[260px]">
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.fullName || t.name} — {t.email}{t.monthlySalary ? ` (${formatCurrency(t.monthlySalary)} ETB)` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Salary */}
@@ -330,7 +296,7 @@ function TeacherPaymentsPage() {
               />
               {selectedTeacher?.monthlySalary != null && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Default from profile: ETB {selectedTeacher.monthlySalary}
+                  Default from profile: ETB {formatCurrency(selectedTeacher.monthlySalary)}
                 </p>
               )}
             </div>
@@ -420,7 +386,7 @@ function TeacherPaymentsPage() {
           </div>
 
           <Button
-            onClick={createPayroll}
+            onClick={() => createPayroll()}
             disabled={creating || !selectedTeacher || !salary || !paymentMethod}
             className="w-full"
           >
@@ -455,7 +421,7 @@ function TeacherPaymentsPage() {
                 <TableCell className="font-medium">{r.teacherName}</TableCell>
                 <TableCell>{r.totalAssignedStudents}</TableCell>
                 <TableCell>{r.sessionsConducted}</TableCell>
-                <TableCell>ETB {r.earnings}</TableCell>
+                <TableCell>ETB {formatCurrency(r.earnings)}</TableCell>
                 <TableCell className="capitalize">{r.payrollStatus}</TableCell>
                 <TableCell>
                   <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openDetail(r.teacherId); }}>
@@ -477,8 +443,8 @@ function TeacherPaymentsPage() {
             <div className="space-y-4 text-sm">
               <div className="flex gap-4 flex-wrap">
                 <span>Sessions Conducted: <strong>{detail.sessionsConducted}</strong></span>
-                <span>Total Earnings: <strong>ETB {detail.earnings}</strong></span>
-                <span>Monthly Salary: <strong>ETB {detail.monthlySalary || 0}</strong></span>
+                <span>Total Earnings: <strong>ETB {formatCurrency(detail.earnings)}</strong></span>
+                <span>Monthly Salary: <strong>ETB {formatCurrency(detail.monthlySalary)}</strong></span>
               </div>
 
               {detail.assignedStudents?.length > 0 && (
@@ -498,7 +464,7 @@ function TeacherPaymentsPage() {
                   <p className="mb-2 font-medium">Payroll</p>
                   <p>
                     Status: <strong className={detail.payroll.status === 'paid' ? 'text-green-600' : 'text-amber-600'}>{detail.payroll.status}</strong>
-                    {' · '}Total: <strong>ETB {detail.payroll.totalEarnings}</strong>
+                    {' · '}Total: <strong>ETB {formatCurrency(detail.payroll.totalEarnings)}</strong>
                   </p>
                   {detail.payroll.paymentMethod && <p>Payment Method: {detail.payroll.paymentMethod}</p>}
                   {detail.payroll.billingMonth && <p>Billing Month: {detail.payroll.billingMonth}</p>}
@@ -527,6 +493,34 @@ function TeacherPaymentsPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!paidWarning} onOpenChange={() => setPaidWarning(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <TriangleAlert className="h-5 w-5" /> Salary Already Paid
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-sm space-y-3">
+            <p>
+              <strong>{paidWarning?.teacher?.fullName || paidWarning?.teacher?.name}</strong> already has a <strong className="text-green-600">paid</strong> payroll record for <strong>{paidWarning?.month}</strong>.
+            </p>
+            <p>Generating a new payroll will overwrite the existing record. Do you want to continue?</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPaidWarning(null)}>Cancel</Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setPaidWarning(null);
+                createPayroll(true);
+              }}
+            >
+              Continue Anyway
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
