@@ -22,16 +22,6 @@ const periods = [
   { value: 'monthly', label: 'Monthly' },
 ] as const;
 
-function actionLabel(log: any): string {
-  const path = log.path || '';
-  const method = log.method || '';
-  if (method === 'POST' && (path.includes('/create') || path.endsWith('/generate-payroll'))) return 'Create';
-  if (method === 'POST') return 'Create';
-  if (method === 'PATCH' || method === 'PUT') return 'Update';
-  if (method === 'DELETE') return 'Delete';
-  return method;
-}
-
 function AuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [meta, setMeta] = useState<any>({ total: 0, page: 1, limit: 50, totalPages: 0 });
@@ -131,12 +121,20 @@ function AuditLogsPage() {
                         <TableCell>{log.userName || log.userEmail || 'System'}</TableCell>
                         <TableCell>{log.userRole || '-'}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            log.method === 'POST' ? 'bg-green-100 text-green-700' :
-                            log.method === 'PATCH' || log.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
-                            log.method === 'DELETE' ? 'bg-red-100 text-red-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>{actionLabel(log)}</span>
+                          <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium ${
+                            log.method === 'POST' ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400' :
+                            log.method === 'PATCH' || log.method === 'PUT' ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400' :
+                            log.method === 'DELETE' ? 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-400' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              log.method === 'POST' ? 'bg-green-500' :
+                              log.method === 'PATCH' || log.method === 'PUT' ? 'bg-amber-500' :
+                              log.method === 'DELETE' ? 'bg-red-500' :
+                              'bg-gray-500'
+                            }`} />
+                            {log.action || `${log.method} ${log.path}`}
+                          </span>
                         </TableCell>
                       </TableRow>
                     ))

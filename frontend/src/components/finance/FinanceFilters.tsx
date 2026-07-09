@@ -22,7 +22,6 @@ export function FinanceFilterBar({ filters, onChange, showProgram = true, showSt
       <Select value={filters.dateRange || 'month'} onValueChange={(v) => set('dateRange', v)}>
         <SelectTrigger><SelectValue placeholder="Date range" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="today">Today</SelectItem>
           <SelectItem value="week">This Week</SelectItem>
           <SelectItem value="month">This Month</SelectItem>
           <SelectItem value="year">This Year</SelectItem>

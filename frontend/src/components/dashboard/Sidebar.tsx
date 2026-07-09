@@ -202,14 +202,14 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
               </div>
               <button
                 onClick={toggleCollapse}
-                className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all duration-200 hover:border-nejah-electric/40 hover:text-foreground lg:flex"
+                className="hidden h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all duration-200 hover:border-nejah-electric/40 hover:text-foreground lg:flex cursor-pointer"
                 title="Collapse sidebar"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={onToggle}
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue lg:hidden"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue lg:hidden cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -221,7 +221,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
               </div>
               <button
                 onClick={toggleCollapse}
-                className="hidden h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all hover:border-nejah-electric/40 hover:text-foreground lg:flex"
+                className="hidden h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-nejah-sapphire/30 text-nejah-slate-blue transition-all hover:border-nejah-electric/40 hover:text-foreground lg:flex cursor-pointer"
                 title="Expand sidebar"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -260,7 +260,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
           <button
             onClick={handleLogout}
             className={cn(
-              'relative flex w-full items-center gap-3 rounded-xl transition-all duration-200',
+              'relative flex w-full items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer',
               'text-nejah-slate-blue hover:bg-red-500/10 hover:text-red-400',
               sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
             )}

@@ -26,6 +26,7 @@ import {
   Ticket,
   ChevronDown,
   Home,
+  Wallet,
   BookMarked,
   MessageSquareText,
 } from 'lucide-react';
@@ -42,13 +43,13 @@ export const menuByRole: Record<string, MenuItem[]> = {
   super_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Staff Management', icon: Shield, path: '/admins' },
+    { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Applications', icon: FileCheck, path: '/teacher-applications' },
     { label: 'Parents', icon: UsersRound, path: '/parents' },
 
     {
       label: 'Qirat Manager', icon: BookMarked, path: '#',
       children: [
-        { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
         { label: 'Students', icon: Users, path: '/students' },
         { label: 'Quran Progress', icon: BookOpen, path: '/progress' },
         { label: 'Homework', icon: ClipboardList, path: '/homework' },
@@ -69,10 +70,12 @@ export const menuByRole: Record<string, MenuItem[]> = {
         { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
         { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
         { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+        { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
         { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
       ],
     },
 
+    { label: 'Net Profit', icon: TrendingUp, path: '/finance_profit' },
     { label: 'Reports', icon: BarChart3, path: '/reports' },
     { label: 'Analytics', icon: TrendingUp, path: '/analytics' },
     {
@@ -88,7 +91,6 @@ export const menuByRole: Record<string, MenuItem[]> = {
       ],
     },
     { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
-    { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Zoom Settings', icon: VideoOff, path: '/zoom-settings' },
     { label: 'System Settings', icon: Settings, path: '/settings' },
     { label: 'Audit Log', icon: FileText, path: '/audit-logs' },
@@ -127,6 +129,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Teacher Payments', icon: GraduationCap, path: '/finance_teacher-payments' },
     { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
     { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
+    { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
     { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Notifications', icon: Bell, path: '/finance_notifications' },
     { label: 'Profile Settings', icon: UserCircle, path: '/finance_settings' },

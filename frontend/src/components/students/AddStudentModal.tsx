@@ -360,7 +360,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                       placeholder="Min. 6 characters"
                       className="pr-9 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     />
-                    <button type="button" onClick={() => togglePassword('password')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    <button type="button" onClick={() => togglePassword('password')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                       {showPasswords['password'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -376,7 +376,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                       placeholder="Re-enter password"
                       className="pr-9 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
                     />
-                    <button type="button" onClick={() => togglePassword('confirmPassword')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    <button type="button" onClick={() => togglePassword('confirmPassword')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                       {showPasswords['confirmPassword'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -435,179 +435,150 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
             <div className="border-t border-border dark:border-nejah-border-blue pt-4">
               <p className="text-sm font-semibold text-muted-foreground dark:text-muted-foreground mb-3">Family Information (Optional)</p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-3">
                 <div className="grid gap-2">
-                  <Label htmlFor="familyName" className="dark:text-muted-foreground">Parent/Guardian Name</Label>
-                  <Input
-                    id="familyName"
-                    value={formData.familyName}
-                    onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                    placeholder="e.g. Ahmed Al-Fayid"
-                  />
+                  <Label className="dark:text-muted-foreground">Family Type</Label>
+                  <Select
+                    value={useExistingParent ? 'existing' : 'new'}
+                    onValueChange={(v) => {
+                      if (v === 'existing') {
+                        setUseExistingParent(true);
+                        setParentSearchQuery('');
+                        setParentResults([]);
+                        setSelectedParent(null);
+                      } else {
+                        clearParentSelection();
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue"><SelectValue /></SelectTrigger>
+                    <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+                      <SelectItem value="new">Create New Family</SelectItem>
+                      <SelectItem value="existing">Link Existing Parent</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="familyPhone" className="dark:text-muted-foreground">Phone Number</Label>
-                  <Input
-                    id="familyPhone"
-                    value={formData.familyPhone}
-                    onChange={(e) => setFormData({ ...formData, familyPhone: e.target.value })}
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                    placeholder="e.g. +251 912 345 678"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="familyAddress" className="dark:text-muted-foreground">Address</Label>
-                  <Input
-                    id="familyAddress"
-                    value={formData.familyAddress}
-                    onChange={(e) => setFormData({ ...formData, familyAddress: e.target.value })}
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                    placeholder="e.g. 123 Main St"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="familyCountry" className="dark:text-muted-foreground">Country</Label>
-                  <Input
-                    id="familyCountry"
-                    value={formData.familyCountry}
-                    onChange={(e) => setFormData({ ...formData, familyCountry: e.target.value })}
-                    className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                    placeholder="e.g. Ethiopia"
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="border-t border-border dark:border-nejah-border-blue pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input
-                  id="useExistingParent"
-                  type="checkbox"
-                  checked={useExistingParent}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      searchParent();
-                    } else {
-                      clearParentSelection();
-                    }
-                  }}
-                  className="rounded text-primary focus:ring-primary/500 dark:bg-nejah-surface dark:border-nejah-border-blue"
-                />
-                <Label htmlFor="useExistingParent" className="text-sm font-semibold text-foreground dark:text-muted-foreground cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Link to Existing Parent Account
-                  </div>
-                </Label>
-              </div>
-              
-              {useExistingParent && (
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      id="parentSearchName"
-                      placeholder="Search by parent name or phone..."
-                      value={parentSearchQuery}
-                      onChange={(e) => setParentSearchQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          searchParent();
-                        }
-                      }}
-                      className="flex-1 dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
-                      disabled={searchingParent}
-                    />
-                    <Button
-                      type="button"
-                      onClick={searchParent}
-                      disabled={searchingParent}
-                      className="bg-primary hover:bg-nejah-azure text-white"
-                    >
-                      {searchingParent ? 'Searching...' : <Search className="w-4 h-4" />}
-                    </Button>
-                  </div>
-
-                  {parentResults.length > 0 && (
-                    <div className="border border-border dark:border-nejah-border-blue rounded-lg max-h-48 overflow-y-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted dark:bg-nejah-surface sticky top-0">
-                          <tr>
-                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Parent Name</th>
-                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Email</th>
-                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Phone</th>
-                            <th className="px-3 py-2 text-left font-medium text-muted-foreground dark:text-muted-foreground">Children</th>
-                            <th className="px-3 py-2 text-right font-medium text-muted-foreground dark:text-muted-foreground">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
-                          {parentResults.map((parent) => (
-                            <tr key={parent.id} className="hover:bg-muted dark:hover:bg-nejah-surface/50">
-                              <td className="px-3 py-2 font-medium text-foreground text-foreground">{parent.fullName}</td>
-                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">{parent.email}</td>
-                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">{parent.phoneNumber}</td>
-                              <td className="px-3 py-2 text-muted-foreground dark:text-muted-foreground">
-                                {parent.students.length > 0 ? (
-                                  <span className="inline-flex items-center gap-1 bg-primary/10 dark:bg-primary/10 text-primary text-nejah-electric px-2 py-0.5 rounded-full text-xs">
-                                    <Users className="w-3 h-3" />
-                                    {parent.students.length}
-                                  </span>
-                                ) : (
-                                  'No children'
-                                )}
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleSelectParent(parent)}
-                                  className="text-primary hover:text-primary hover:bg-primary/10 text-nejah-electric dark:hover:bg-primary/30"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {useExistingParent ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-2">
+                      <Label className="dark:text-muted-foreground">Search Existing Parent</Label>
+                      <Input
+                        placeholder="Type parent name or phone..."
+                        value={parentSearchQuery}
+                        onChange={(e) => {
+                          setParentSearchQuery(e.target.value);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            searchParent();
+                          }
+                        }}
+                        className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                      />
                     </div>
-                  )}
 
-                  {selectedParent && (
-                    <div className="flex items-center justify-between bg-primary/10 dark:bg-primary/10/20 border border-primary/200 dark:border-primary/800 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-primary text-nejah-electric" />
-                        <div>
-                          <p className="text-sm font-medium text-nejah-sapphire dark:text-nejah-electric">
-                            Selected: {selectedParent.fullName}
-                          </p>
-                          <p className="text-xs text-primary text-nejah-electric">
-                            {selectedParent.email} • {selectedParent.students.length} child(ren)
-                          </p>
+                    {selectedParent ? (
+                      <div className="flex items-center justify-between bg-primary/10 dark:bg-primary/10/20 border border-primary/200 dark:border-primary/800 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-nejah-electric" />
+                          <div>
+                            <p className="text-sm font-medium text-nejah-sapphire dark:text-nejah-electric">
+                              Selected: {selectedParent.fullName}
+                            </p>
+                            <p className="text-xs text-nejah-electric">
+                              {selectedParent.email} &bull; {selectedParent.students.length} child(ren)
+                            </p>
+                          </div>
                         </div>
+                        <button type="button" onClick={clearParentSelection} className="text-red-600 hover:text-red-700 dark:text-red-400 cursor-pointer">
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearParentSelection}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      <>
+                        {parentSearchQuery && (
+                          <Button type="button" onClick={searchParent} disabled={searchingParent} size="sm" className="w-full">
+                            {searchingParent ? 'Searching...' : 'Search Parents'}
+                          </Button>
+                        )}
 
-              {!useExistingParent && (
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2">
-                  Uncheck to create a new parent account for this student.
-                </p>
-              )}
+                        {parentResults.length > 0 && (
+                          <div className="border border-border dark:border-nejah-border-blue rounded-lg max-h-48 overflow-y-auto">
+                            {parentResults.map((parent) => (
+                              <div
+                                key={parent.id}
+                                onClick={() => handleSelectParent(parent)}
+                                className="flex items-center justify-between px-3 py-2.5 hover:bg-muted dark:hover:bg-nejah-surface/50 border-b border-border dark:border-nejah-border-blue last:border-0 cursor-pointer transition-colors"
+                              >
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{parent.fullName}</p>
+                                  <p className="text-xs text-muted-foreground">{parent.email} &bull; {parent.phoneNumber}</p>
+                                </div>
+                                <span className="inline-flex items-center gap-1 bg-primary/10 text-nejah-electric px-2 py-0.5 rounded-full text-xs">
+                                  <Users className="w-3 h-3" />
+                                  {parent.students.length}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {parentSearchQuery && parentResults.length === 0 && !searchingParent && (
+                          <p className="text-xs text-muted-foreground">No parents found matching &ldquo;{parentSearchQuery}&rdquo;</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="familyName" className="dark:text-muted-foreground">Parent/Guardian Name</Label>
+                        <Input
+                          id="familyName"
+                          value={formData.familyName}
+                          onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
+                          className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                          placeholder="e.g. Ahmed Al-Fayid"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="familyPhone" className="dark:text-muted-foreground">Phone Number</Label>
+                        <Input
+                          id="familyPhone"
+                          value={formData.familyPhone}
+                          onChange={(e) => setFormData({ ...formData, familyPhone: e.target.value })}
+                          className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                          placeholder="e.g. +251 912 345 678"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="familyAddress" className="dark:text-muted-foreground">Address</Label>
+                        <Input
+                          id="familyAddress"
+                          value={formData.familyAddress}
+                          onChange={(e) => setFormData({ ...formData, familyAddress: e.target.value })}
+                          className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                          placeholder="e.g. 123 Main St"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="familyCountry" className="dark:text-muted-foreground">Country</Label>
+                        <Input
+                          id="familyCountry"
+                          value={formData.familyCountry}
+                          onChange={(e) => setFormData({ ...formData, familyCountry: e.target.value })}
+                          className="dark:bg-nejah-surface dark:border-nejah-border-blue text-foreground"
+                          placeholder="e.g. Ethiopia"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

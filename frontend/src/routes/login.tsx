@@ -179,11 +179,11 @@ function LoginPage() {
         subtitle="Online Quran & Islamic Center — Sign in to your account"
         footer={
           <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-nejah-slate-blue">
-            <button className="transition-colors hover:text-nejah-electric">Privacy Policy</button>
-            <button className="transition-colors hover:text-nejah-electric">
+            <button className="transition-colors hover:text-nejah-electric cursor-pointer">Privacy Policy</button>
+            <button className="transition-colors hover:text-nejah-electric cursor-pointer">
               Terms of Service
             </button>
-            <button className="transition-colors hover:text-nejah-electric">Contact Support</button>
+            <button className="transition-colors hover:text-nejah-electric cursor-pointer">Contact Support</button>
           </div>
         }
       >
