@@ -127,7 +127,7 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
         <button
           type="button"
           onClick={() => navigate({ to: '/live-sessions' })}
-          className="text-xs font-bold text-nejah-sapphire flex items-center gap-1 hover:underline"
+          className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
         >
           View All Sessions <ChevronRight className="h-3 w-3" />
         </button>
