@@ -143,7 +143,7 @@ function TeacherDailySchedulePage() {
         <div>
           <button
             onClick={() => navigate({ to: '/teachers/$id/profile', params: { id } })}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Teacher Profile
           </button>
@@ -172,7 +172,7 @@ function TeacherDailySchedulePage() {
                 setScheduleToEdit(null);
                 setIsEditScheduleOpen(true);
               }}
-              className="bg-white text-nejah-sapphire hover:bg-primary/10 rounded-xl h-11 px-6 shadow-lg shadow-nejah-glow gap-2 font-bold"
+              className="bg-white text-nejah-sapphire text-foreground hover:bg-primary/10 rounded-xl h-11 px-6 shadow-lg shadow-nejah-glow gap-2 font-bold"
             >
               <Plus className="h-4 w-4" /> Schedule a Class
             </Button>

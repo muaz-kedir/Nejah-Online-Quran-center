@@ -180,7 +180,7 @@ function SchedulesPage() {
 
       <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <Calendar className="h-4 w-4 text-primary" />
-        <span className="font-semibold text-nejah-sapphire">{selectedDay}</span>
+        <span className="font-semibold text-nejah-sapphire text-foreground">{selectedDay}</span>
         <span>
           — {filtered.length} {filtered.length === 1 ? 'class' : 'classes'}
         </span>

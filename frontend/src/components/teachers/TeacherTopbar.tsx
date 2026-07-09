@@ -136,7 +136,7 @@ export function TeacherTopbar({ teacher }: TeacherTopbarProps) {
               Teacher
             </p>
           </div>
-          <div className="w-10 h-10 rounded-full border-2 border-nejah-electric/15 p-0.5 bg-primary/10 flex items-center justify-center text-nejah-sapphire font-bold">
+          <div className="w-10 h-10 rounded-full border-2 border-nejah-electric/15 p-0.5 bg-primary/10 flex items-center justify-center text-nejah-sapphire text-foreground font-bold">
             {teacher?.avatarUrl || teacher?.avatar ? (
               <img
                 src={teacher!.avatarUrl || teacher!.avatar!}

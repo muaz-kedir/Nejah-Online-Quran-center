@@ -24,7 +24,7 @@ function StudentEvaluations() {
       <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-4xl space-y-8">
         <div>
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">My Exam Evaluations</h1>
+          <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">My Exam Evaluations</h1>
           <p className="text-sm text-muted-foreground mt-2">View details of your level evaluations, grades, and teacher recommendations.</p>
         </div>
 
@@ -32,7 +32,7 @@ function StudentEvaluations() {
           <Card className="rounded-[32px] border p-8 text-center bg-card">
             <CardContent className="pt-6">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
-              <h3 className="text-lg font-bold text-nejah-sapphire font-serif">No evaluations recorded yet</h3>
+              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif">No evaluations recorded yet</h3>
               <p className="text-sm text-muted-foreground mt-1">Once your teacher conducts an exam or level evaluation, it will appear here.</p>
             </CardContent>
           </Card>
@@ -55,7 +55,7 @@ function StudentEvaluations() {
                   
                   <div className="text-right">
                     <span className="text-[10px] text-muted-foreground font-bold block uppercase tracking-wider">Overall Grade</span>
-                    <span className="text-3xl font-black text-nejah-sapphire font-serif">{ev.score}</span>
+                    <span className="text-3xl font-black text-nejah-sapphire text-foreground font-serif">{ev.score}</span>
                     <span className="text-sm font-bold text-muted-foreground">/100</span>
                   </div>
                 </CardHeader>
@@ -64,13 +64,13 @@ function StudentEvaluations() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Comments */}
                     <div className="md:col-span-2 space-y-2">
-                      <h4 className="text-sm font-extrabold text-nejah-sapphire uppercase tracking-wider">Teacher Comments</h4>
+                      <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider">Teacher Comments</h4>
                       <p className="text-sm text-foreground italic bg-muted/20 p-4 rounded-2xl border">&quot;{ev.teacherComments}&quot;</p>
                     </div>
 
                     {/* Recommendation */}
                     <div className="space-y-2">
-                      <h4 className="text-sm font-extrabold text-nejah-sapphire uppercase tracking-wider">Promotion Readiness</h4>
+                      <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider">Promotion Readiness</h4>
                       <div className="bg-muted/20 p-4 rounded-2xl border flex flex-col justify-between h-full min-h-24">
                         <div className="text-xs font-bold text-muted-foreground">Recommendation:</div>
                         <Badge className={`w-fit mt-2 font-bold ${ev.promotionRecommendation === 'Ready For Promotion' ? 'bg-emerald-600 border-none text-white' : 'bg-slate-500 border-none text-white'}`}>
@@ -95,7 +95,7 @@ function StudentEvaluations() {
                   {/* Recommendations */}
                   {ev.recommendations && (
                     <div className="space-y-2 pt-2">
-                      <h4 className="text-sm font-extrabold text-nejah-sapphire uppercase tracking-wider">Recommendations</h4>
+                      <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider">Recommendations</h4>
                       <p className="text-sm text-muted-foreground">{ev.recommendations}</p>
                     </div>
                   )}
@@ -103,7 +103,7 @@ function StudentEvaluations() {
                   {/* Criteria breakdown */}
                   {ev.criteriaRatings && Object.keys(ev.criteriaRatings).length > 0 && (
                     <div className="space-y-3 pt-2">
-                      <h4 className="text-sm font-extrabold text-nejah-sapphire uppercase tracking-wider border-b pb-1.5">Criteria Breakdown</h4>
+                      <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider border-b pb-1.5">Criteria Breakdown</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         {Object.entries(ev.criteriaRatings).map(([crit, rating]) => (
                           <div key={crit} className="flex justify-between items-center bg-muted/10 p-3 rounded-xl border text-xs">

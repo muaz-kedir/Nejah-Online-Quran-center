@@ -585,7 +585,7 @@ function ApplyAsTeacherPage() {
                       {documents[doc.key] ? (
                         <div className="flex items-center gap-2 p-2.5 bg-primary/10 rounded-lg">
                           <CheckCircle2 className="h-4 w-4 text-nejah-electric flex-shrink-0" />
-                          <span className="text-sm text-nejah-sapphire truncate">{documents[doc.key].fileName}</span>
+                          <span className="text-sm text-nejah-sapphire text-foreground truncate">{documents[doc.key].fileName}</span>
                         </div>
                       ) : (
                         <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/400 hover:bg-primary/10 transition-all">
@@ -636,7 +636,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Personal */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Personal Details</h3>
+                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Personal Details</h3>
                     <ReviewRow label="Full Name" value={watchAll.fullName} />
                     <ReviewRow label="Gender" value={watchAll.gender} />
                     <ReviewRow label="Date of Birth" value={watchAll.dateOfBirth} />
@@ -649,7 +649,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Qualifications */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Qualifications</h3>
+                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Qualifications</h3>
                     <ReviewRow label="Languages" value={watchAll.languages?.join(', ')} />
                     <ReviewRow label="Internet" value={watchAll.internetConnectionType === 'Other' ? watchAll.internetOther : watchAll.internetConnectionType} />
                     <ReviewRow label="Qirat Level" value={watchAll.qiratEducationLevel === 'Other' ? watchAll.qiratOther : watchAll.qiratEducationLevel} />
@@ -660,7 +660,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Documents */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
+                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
                     {Object.values(documents).length > 0 ? (
                       Object.values(documents).map(d => (
                         <div key={d.key} className="flex items-center gap-2 text-sm">
@@ -676,7 +676,7 @@ function ApplyAsTeacherPage() {
 
                   {watchAll.additionalComments && (
                     <div className="bg-muted rounded-xl p-5">
-                      <h3 className="font-semibold text-nejah-sapphire text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
+                      <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
                       <p className="text-sm text-foreground">{watchAll.additionalComments}</p>
                     </div>
                   )}

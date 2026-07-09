@@ -389,7 +389,7 @@ function AddTeacherPage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
@@ -405,7 +405,7 @@ function AddTeacherPage() {
             {/* Card 1: Personal Details */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <User className="h-5 w-5 text-nejah-sapphire" />
+                <User className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Personal Details
               </h2>
 
@@ -582,7 +582,7 @@ function AddTeacherPage() {
             {/* Card 2: Academic & Specialties */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <GraduationCap className="h-5 w-5 text-nejah-sapphire" />
+                <GraduationCap className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Academic Qualifications
               </h2>
 
@@ -638,7 +638,7 @@ function AddTeacherPage() {
             {/* Card 2B: Teacher Specifics */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <FileText className="h-5 w-5 text-nejah-sapphire" />
+                <FileText className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Additional Details
               </h2>
 

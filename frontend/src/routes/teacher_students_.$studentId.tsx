@@ -131,7 +131,7 @@ function TeacherStudentDetailContent() {
     <div className="space-y-6">
       <Link
         to="/teacher_students"
-        className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest"
+        className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest"
       >
         <ChevronLeft className="h-4 w-4" /> Back to Students Directory
       </Link>
@@ -180,7 +180,7 @@ function TeacherStudentDetailContent() {
                 style={{ width: `${student.attendanceRate || 0}%` }}
               />
             </div>
-            <span className="text-sm font-bold text-nejah-sapphire">{student.attendanceRate ?? 0}%</span>
+            <span className="text-sm font-bold text-nejah-sapphire text-foreground">{student.attendanceRate ?? 0}%</span>
           </div>
         </div>
       </div>
@@ -224,16 +224,16 @@ function TeacherStudentDetailContent() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
-                    <Video className="h-5 w-5 text-nejah-sapphire" />
+                    <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-nejah-sapphire">Start a Zoom Session</p>
+                    <p className="text-sm font-bold text-nejah-sapphire text-foreground">Start a Zoom Session</p>
                     <p className="text-[10px] text-nejah-slate-blue font-medium">
                       Schedule a live session — student will be notified in real-time
                     </p>
                   </div>
                 </div>
-                <Sparkles className="h-5 w-5 text-nejah-sapphire opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
 

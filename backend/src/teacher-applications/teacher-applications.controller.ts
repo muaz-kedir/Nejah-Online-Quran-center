@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Body,
   Param,
@@ -107,6 +108,15 @@ export class TeacherApplicationsController {
   @Roles(UserRole.SUPER_ADMIN)
   toggleSettings(@Body() body: { isApplicationsOpen: boolean }) {
     return this.applicationsService.toggleApplicationsOpen(body.isApplicationsOpen);
+  }
+
+  @Put('settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  updateSettings(
+    @Body() body: { isApplicationsOpen?: boolean; announcementText?: { en: string; ar: string; am: string } },
+  ) {
+    return this.applicationsService.updateSettings(body);
   }
 
   @Get()
