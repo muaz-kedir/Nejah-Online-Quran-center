@@ -86,7 +86,7 @@ async function bootstrap() {
   app.setGlobalPrefix(apiPrefix, {
     exclude: [
       { path: 'health', method: RequestMethod.GET },
-      { path: 'zoom/webhook', method: RequestMethod.POST },
+      { path: 'zoom/webhook', method: RequestMethod.ALL },
     ],
   });
 
