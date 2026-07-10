@@ -1,6 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { ZoomService } from './zoom.service';
 import { LiveSessionService } from './live-session.service';
 import { SessionAttendanceService } from './session-attendance.service';
@@ -59,6 +61,13 @@ import { EncryptionService } from '../common/encryption.service';
       AttendanceSegment,
       SessionParticipantSummary,
     ]),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '7d' },
+      }),
+    }),
     HttpModule.register({
       timeout: 15000,
       maxRedirects: 3,
