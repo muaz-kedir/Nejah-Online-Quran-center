@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Response, Request } from 'express';
+import { JwtService } from '@nestjs/jwt';
 import { ZoomService } from './zoom.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -30,7 +31,7 @@ const ZOOM_OAUTH_STATE_PREFIX = 'zst_';
 
 @Controller('zoom-oauth')
 export class ZoomOAuthController {
-  private readonly stateCache = new Map<string, { teacherId: string; expiresAt: number }>();
+  private readonly stateCache = new Map<string, { teacherId: string; frontendUrl: string; expiresAt: number }>();
 
   constructor(
     private readonly zoomService: ZoomService,
@@ -38,6 +39,7 @@ export class ZoomOAuthController {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly encryptionService: EncryptionService,
+    private readonly jwtService: JwtService,
     @InjectRepository(ZoomIntegration)
     private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
   ) {}
@@ -76,10 +78,23 @@ export class ZoomOAuthController {
    * Step 1: Redirect teacher to Zoom's OAuth consent page.
    */
   @Get('authorize')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.TEACHER)
-  async authorize(@CurrentUser() user: { id: string }, @Res() res: Response) {
-    const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
+  async authorize(@Query('token') token: string, @Res() res: Response, @Req() req: Request) {
+    if (!token) {
+      throw new HttpException('Missing authentication token', HttpStatus.UNAUTHORIZED);
+    }
+
+    let payload: { id: string; role?: string };
+    try {
+      payload = this.jwtService.verify(token);
+    } catch {
+      throw new HttpException('Invalid or expired token', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (payload.role !== UserRole.TEACHER) {
+      throw new HttpException('Only teachers can connect Zoom', HttpStatus.FORBIDDEN);
+    }
+
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(payload.id);
 
     const clientId = this.getOAuthClientId();
     const redirectUri = this.getRedirectUri();
@@ -90,9 +105,17 @@ export class ZoomOAuthController {
       );
     }
 
+    const frontendUrl =
+      req.headers.referer
+        ? new URL(req.headers.referer).origin
+        : this.configService.get<string>('FRONTEND_URL') ||
+          process.env.FRONTEND_URL ||
+          'https://frontend-hmstop2k4-muazk228-7807s-projects.vercel.app';
+
     const state = `${ZOOM_OAUTH_STATE_PREFIX}${crypto.randomUUID()}`;
     this.stateCache.set(state, {
       teacherId: teacher.id,
+      frontendUrl,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
@@ -116,19 +139,12 @@ export class ZoomOAuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const getFrontendUrl = (): string => {
-      return (
-        this.configService.get<string>('FRONTEND_URL') ||
-        process.env.FRONTEND_URL ||
-        (req.headers.referer ? new URL(req.headers.referer).origin : null) ||
-        (req.headers.origin ? req.headers.origin : null) ||
-        '/'
-      );
-    };
-
     if (error) {
+      const cached = state ? this.stateCache.get(state) : null;
+      const feUrl = cached?.frontendUrl || '/';
+      if (cached) this.stateCache.delete(state);
       return res.redirect(
-        `${getFrontendUrl()}/zoom-settings?zoom_oauth=error&reason=${encodeURIComponent(error)}`,
+        `${feUrl}/zoom-settings?zoom_oauth=error&reason=${encodeURIComponent(error)}`,
       );
     }
 
@@ -141,6 +157,7 @@ export class ZoomOAuthController {
       throw new HttpException('Invalid or expired state parameter', HttpStatus.BAD_REQUEST);
     }
     this.stateCache.delete(state);
+    const frontendUrl = cached.frontendUrl;
 
     const clientId = this.getOAuthClientId();
     const clientSecret = this.getOAuthClientSecret();
@@ -169,7 +186,7 @@ export class ZoomOAuthController {
     } catch (err) {
       const message = err?.response?.data?.reason || err?.response?.data?.error || err?.message || 'Zoom OAuth token exchange failed';
       return res.redirect(
-        `${getFrontendUrl()}/zoom-settings?zoom_oauth=error&reason=${encodeURIComponent(message)}`,
+        `${frontendUrl}/zoom-settings?zoom_oauth=error&reason=${encodeURIComponent(message)}`,
       );
     }
 
@@ -218,7 +235,7 @@ export class ZoomOAuthController {
       zoomConnectedAt: saved.connectedAt,
     });
 
-    return res.redirect(`${getFrontendUrl()}/zoom-settings?zoom_oauth=success`);
+    return res.redirect(`${frontendUrl}/zoom-settings?zoom_oauth=success`);
   }
 
   /**

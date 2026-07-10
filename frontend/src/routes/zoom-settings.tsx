@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
-import { api } from '@/lib/api';
+import { api, API_BASE } from '@/lib/api';
 import {
   Video,
   Link2,
@@ -144,7 +144,8 @@ function TeacherZoomPanel() {
   }, []);
 
   const handleConnect = () => {
-    window.location.href = '/api/zoom-oauth/authorize';
+    const token = localStorage.getItem('token');
+    window.location.href = `${API_BASE}/zoom-oauth/authorize?token=${encodeURIComponent(token || '')}`;
   };
 
   const handleDisconnect = async () => {
