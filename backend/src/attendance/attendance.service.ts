@@ -194,6 +194,7 @@ export class AttendanceService {
             session.classTitle || 'Quran Class',
             now,
             durationMinutes,
+            session.teacherId,
           );
 
           meetingLink = meeting.joinUrl;

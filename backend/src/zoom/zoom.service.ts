@@ -528,28 +528,7 @@ export class ZoomService implements OnModuleInit {
     durationMinutes: number,
     teacherId?: string,
   ): Promise<ZoomMeetingResult> {
-    let token: string;
-
-    if (teacherId) {
-      const teacherToken = await this.getTeacherAccessToken(teacherId);
-      if (teacherToken) {
-        token = teacherToken;
-      } else {
-        this.assertPlatformConfigured();
-        token = await this.getAccessToken();
-      }
-    } else {
-      this.assertPlatformConfigured();
-      token = await this.getAccessToken();
-    }
-
-    const meeting = await this.zoomRequestWithToken<{
-      id: number;
-      uuid: string;
-      join_url: string;
-      start_url: string;
-      password?: string;
-    }>('POST', '/users/me/meetings', token, {
+    const payload = {
       topic,
       type: 2,
       start_time: startTime.toISOString(),
@@ -564,7 +543,72 @@ export class ZoomService implements OnModuleInit {
         auto_recording: 'none',
         waiting_room: false,
       },
-    });
+    };
+
+    if (teacherId) {
+      const integration = await this.getTeacherIntegration(teacherId);
+      const teacherToken = await this.getTeacherAccessToken(teacherId);
+
+      if (teacherToken) {
+        const meeting = await this.zoomRequestWithToken<{
+          id: number;
+          uuid: string;
+          join_url: string;
+          start_url: string;
+          password?: string;
+        }>('POST', '/users/me/meetings', teacherToken, payload);
+
+        return {
+          meetingId: String(meeting.id),
+          meetingUUID: meeting.uuid,
+          startUrl: meeting.start_url,
+          joinUrl: meeting.join_url,
+          password: meeting.password || '',
+        };
+      }
+
+      if (!integration?.zoomUserId) {
+        throw new HttpException(
+          'Teacher Zoom account is not connected. Please connect your Zoom account in Settings or provide a meeting link manually.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!this.isPlatformConfigured()) {
+        throw new HttpException(
+          'Zoom platform credentials are not configured. Contact your administrator.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const platformToken = await this.getAccessToken();
+      const userPath = `/users/${this.encodeZoomUserId(integration.zoomUserId)}/meetings`;
+      const meeting = await this.zoomRequestWithToken<{
+        id: number;
+        uuid: string;
+        join_url: string;
+        start_url: string;
+        password?: string;
+      }>('POST', userPath, platformToken, payload);
+
+      return {
+        meetingId: String(meeting.id),
+        meetingUUID: meeting.uuid,
+        startUrl: meeting.start_url,
+        joinUrl: meeting.join_url,
+        password: meeting.password || '',
+      };
+    }
+
+    this.assertPlatformConfigured();
+    const token = await this.getAccessToken();
+    const meeting = await this.zoomRequestWithToken<{
+      id: number;
+      uuid: string;
+      join_url: string;
+      start_url: string;
+      password?: string;
+    }>('POST', '/users/me/meetings', token, payload);
 
     return {
       meetingId: String(meeting.id),
