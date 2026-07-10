@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   Headers,
@@ -30,6 +31,11 @@ export class ZoomWebhookController {
     private readonly zoomWebhookService: ZoomWebhookService,
     private readonly zoomService: ZoomService,
   ) {}
+
+  @Get('webhook')
+  webhookChallenge() {
+    return { status: 'active' };
+  }
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
