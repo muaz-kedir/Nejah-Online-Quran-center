@@ -82,18 +82,18 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-zm-signature', 'x-zm-request-timestamp'],
   });
 
-  // === ZOOM WEBHOOK: RAW EXPRESS HANDLER ===
-  // Runs at the Express level BEFORE NestJS's body-parser and router,
-  // completely bypassing all NestJS processing (pipes, interceptors, guards, serializers).
-  //
-  // NestJS registers its body-parser during app.listen() (AFTER app.use() middleware),
-  // so we must add our own body-parser for this path.
-  //
-  // This ensures req.body is available for URL validation AND the response is
-  // sent directly via Express without any NestJS transformation.
-
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const bodyParser = require('body-parser');
+
+  // Body parser for ALL API routes at Express level.
+  // NestJS registers its body-parser during app.listen() (AFTER app.use()),
+  // but on Render the built-in parser does not seem to populate req.body.
+  // Parsing here ensures the body is always available in controllers.
+  app.use('/api', bodyParser.json());
+
+  // === ZOOM WEBHOOK: RAW EXPRESS HANDLER ===
+  // Runs at the Express level BEFORE NestJS's router,
+  // completely bypassing all NestJS processing (pipes, interceptors, guards, serializers).
 
   // 1) Parse JSON body for /zoom/webhook (stores req.body + req.rawBody)
   app.use(
