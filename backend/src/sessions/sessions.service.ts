@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SessionMeeting, SessionStatus, TeacherAttendanceStatus } from './entities/session-meeting.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
-import { NotificationService } from '../notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class SessionService {
@@ -12,7 +12,7 @@ export class SessionService {
     private sessionRepository: Repository<SessionMeeting>,
     @InjectRepository(Schedule)
     private scheduleRepository: Repository<Schedule>,
-    private notificationService: NotificationService,
+    private notificationService: NotificationsService,
   ) {}
 
   async startMeeting(scheduleId: string, teacherId: string, meetingLink: string) {
@@ -60,8 +60,8 @@ export class SessionService {
     ]);
 
     const recipients = [
-      ...students.map(s => s.userId),
-      ...parents.map(p => p.userId),
+      ...students.map(s => s.id),
+      ...parents.map(p => p.id),
       ...admins.map(a => a.id),
     ];
 
