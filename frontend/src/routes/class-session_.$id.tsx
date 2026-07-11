@@ -295,7 +295,7 @@ function ClassSessionContent() {
             else if (userRole === "student") navigate({ to: "/student_dashboard" });
             else navigate({ to: "/dashboard" });
           }}
-          className="flex items-center gap-1.5 text-xs font-black text-nejah-slate-blue hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
+          className="flex items-center gap-1.5 text-xs font-black text-nejah-slate-blue hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
         >
           <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </button>
@@ -500,9 +500,9 @@ function ClassSessionContent() {
                     ) : (
                       <Button
                         onClick={handleJoinMeeting}
-                        className="w-full h-14 bg-white hover:bg-primary/10 text-nejah-sapphire font-black rounded-2xl text-base shadow-xl gap-3"
+                        className="w-full h-14 bg-white hover:bg-primary/10 text-nejah-sapphire text-foreground font-black rounded-2xl text-base shadow-xl gap-3"
                       >
-                        <PlayIcon className="h-5 w-5 fill-nejah-sapphire text-nejah-sapphire" />
+                        <PlayIcon className="h-5 w-5 fill-nejah-sapphire text-nejah-sapphire text-foreground" />
                         Join Meeting Now
                       </Button>
                     )}
@@ -625,7 +625,7 @@ function ClassSessionContent() {
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-xs shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-foreground text-xs shrink-0">
                           {student.fullName?.charAt(0) || "S"}
                         </div>
                         <div>

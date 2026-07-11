@@ -5,14 +5,18 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { TeacherApplication, ApplicationStatus } from './entities/teacher-application.entity';
-import { TeacherApplicationSettings } from './entities/teacher-application-settings.entity';
+import { TeacherApplicationSettings, AnnouncementText } from './entities/teacher-application-settings.entity';
 import { CreateTeacherApplicationDto } from './dto/create-teacher-application.dto';
 import { ReviewTeacherApplicationDto, ReviewAction } from './dto/review-teacher-application.dto';
 import { QueryTeacherApplicationDto } from './dto/query-teacher-application.dto';
 import { TeachersService } from '../teachers/teachers.service';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationChannel } from '../notifications/entities/notification.entity';
+import { User } from '../users/entities/user.entity';
+import { UserRole } from '../common/enums/user-role.enum';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -22,29 +26,41 @@ export class TeacherApplicationsService {
     private applicationRepository: Repository<TeacherApplication>,
     @InjectRepository(TeacherApplicationSettings)
     private settingsRepository: Repository<TeacherApplicationSettings>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private teachersService: TeachersService,
     private emailService: EmailService,
+    private notificationsService: NotificationsService,
   ) {}
 
   // ── Settings ──────────────────────────────────────────────────────
 
   async getSettings(): Promise<TeacherApplicationSettings> {
-    try {
-      let settings = await this.settingsRepository.findOne({ where: { id: 1 } });
-      if (!settings) {
-        settings = this.settingsRepository.create({ id: 1, isApplicationsOpen: false });
-        await this.settingsRepository.save(settings);
-      }
-      return settings;
-    } catch (error) {
-      console.error('[TeacherApplicationsService] getSettings failed:', error);
-      return { id: 1, isApplicationsOpen: false } as TeacherApplicationSettings;
+    let settings = await this.settingsRepository.findOne({ where: { id: 1 } });
+    if (!settings) {
+      settings = this.settingsRepository.create({ id: 1, isApplicationsOpen: false });
+      await this.settingsRepository.save(settings);
     }
+    return settings;
   }
 
   async toggleApplicationsOpen(isOpen: boolean): Promise<TeacherApplicationSettings> {
     const settings = await this.getSettings();
     settings.isApplicationsOpen = isOpen;
+    return this.settingsRepository.save(settings);
+  }
+
+  async updateSettings(data: {
+    isApplicationsOpen?: boolean;
+    announcementText?: AnnouncementText;
+  }): Promise<TeacherApplicationSettings> {
+    const settings = await this.getSettings();
+    if (data.isApplicationsOpen !== undefined) {
+      settings.isApplicationsOpen = data.isApplicationsOpen;
+    }
+    if (data.announcementText !== undefined) {
+      settings.announcementText = data.announcementText;
+    }
     return this.settingsRepository.save(settings);
   }
 
@@ -80,6 +96,26 @@ export class TeacherApplicationsService {
       saved.fullName,
       saved.applicationNumber,
     );
+
+    // Notify super admins & admins
+    try {
+      const admins = await this.userRepository.find({
+        where: { role: In([UserRole.SUPER_ADMIN, UserRole.ADMIN]) },
+      });
+      if (admins.length > 0) {
+        await this.notificationsService.sendCustomNotifications(
+          admins.map(u => u.id),
+          'New Teacher Application',
+          `${saved.fullName} has submitted a teacher application (${saved.applicationNumber}).`,
+          { applicationId: saved.id, applicationNumber: saved.applicationNumber, applicantName: saved.fullName },
+          NotificationChannel.SYSTEM_ALERT,
+          false,
+          '/teacher-applications',
+        );
+      }
+    } catch (err) {
+      console.error('[TeacherApplicationsService] Failed to send admin notification:', err.message);
+    }
 
     return saved;
   }

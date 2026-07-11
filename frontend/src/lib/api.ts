@@ -60,27 +60,35 @@ function shouldForceLogout(status: number, body: unknown): boolean {
   return true;
 }
 
-export async function api<T = any>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(apiUrl(path), {
-    ...options,
-    headers: { ...apiHeaders(), ...options?.headers },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    if (
-      shouldForceLogout(res.status, body) &&
-      typeof window !== 'undefined' &&
-      !window.location.pathname.includes('/login')
-    ) {
-      clearAuthStorage();
-      import('./push-notifications').then(m =>
-        m.unsubscribeFromPushNotifications().catch(() => {}),
-      );
-      window.location.assign('/login?reason=session_expired');
+export async function api<T = any>(path: string, options?: RequestInit & { timeout?: number }): Promise<T> {
+  const ms = options?.timeout ?? 30000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(apiUrl(path), {
+      ...options,
+      signal: controller.signal,
+      headers: { ...apiHeaders(), ...options?.headers },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (
+        shouldForceLogout(res.status, body) &&
+        typeof window !== 'undefined' &&
+        !window.location.pathname.includes('/login')
+      ) {
+        clearAuthStorage();
+        import('./push-notifications').then(m =>
+          m.unsubscribeFromPushNotifications().catch(() => {}),
+        );
+        window.location.assign('/login?reason=session_expired');
+      }
+      throw new Error(formatApiError(body, 'Request failed: ' + res.status));
     }
-    throw new Error(formatApiError(body, 'Request failed: ' + res.status));
+    return body as T;
+  } finally {
+    clearTimeout(timer);
   }
-  return body as T;
 }
 
 /** NestJS validation errors return message as a string or string[]. */

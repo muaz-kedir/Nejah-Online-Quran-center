@@ -573,7 +573,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             {!sessionActive ? (
               <Button 
                 onClick={startSession} 
-                className="flex-1 bg-white text-nejah-sapphire hover:bg-primary/10 font-bold rounded-xl"
+                className="flex-1 bg-white text-nejah-sapphire text-foreground hover:bg-primary/10 font-bold rounded-xl"
               >
                 <Play className="h-4 w-4 mr-2" /> Start Session
               </Button>
@@ -610,7 +610,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                   className="bg-muted dark:bg-nejah-surface rounded-xl p-4 border border-border dark:border-nejah-border-blue"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-nejah-sapphire">{entry.title}</span>
+                    <span className="text-sm font-medium text-nejah-sapphire text-foreground">{entry.title}</span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(log.createdAt).toLocaleDateString()}
                     </span>
@@ -662,7 +662,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               {(track === 'qaidah' || track === 'tajweed') && (
                 <>
                   {context?.suggestedTopic && !logForm.isReview ? (
-                    <div className="rounded-lg bg-primary/10 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue px-3 py-2 text-sm text-nejah-sapphire">
+                    <div className="rounded-lg bg-primary/10 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue px-3 py-2 text-sm text-nejah-sapphire text-foreground">
                       Suggested next lesson: <strong>{context.suggestedTopic.nameEn}</strong>
                     </div>
                   ) : null}
@@ -861,12 +861,12 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                       className="bg-primary/10 dark:bg-nejah-sapphire/20 rounded-lg p-4 border border-primary/100 dark:border-nejah-border-blue"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-nejah-sapphire uppercase">Daily Log</span>
+                        <span className="text-xs font-bold text-nejah-sapphire text-foreground uppercase">Daily Log</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(log.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm font-medium text-nejah-sapphire">{entry.title}</p>
+                      <p className="text-sm font-medium text-nejah-sapphire text-foreground">{entry.title}</p>
                       <p className="text-sm text-muted-foreground">{entry.detail}</p>
                     </div>
                   );

@@ -165,7 +165,7 @@ function TrackApplicationPage() {
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground">
               Want to apply?{' '}
-              <button onClick={() => navigate({ to: '/apply-as-teacher' })} className="font-bold text-primary hover:text-nejah-sapphire">
+              <button onClick={() => navigate({ to: '/apply-as-teacher' })} className="font-bold text-primary hover:text-nejah-sapphire dark:hover:text-nejah-electric">
                 Submit an Application
               </button>
             </p>

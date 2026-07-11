@@ -1,5 +1,5 @@
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Country } from 'country-state-city';
-import { getCountryIsoByName, getUniqueCityNamesByCountryName } from '@/lib/geo-data';
+import { getCountryIsoByName } from '@/lib/geo-data';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
 
 // List of all world countries (ISO 3166‑1 English short names)
@@ -243,6 +243,17 @@ function AddTeacherPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Form State
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    import('country-state-city').then(({ City: C }) => {
+      const iso = getCountryIsoByName(formData.country);
+      if (!iso) { setCityOptions([]); return; }
+      const cities = C.getCitiesOfCountry(iso) ?? [];
+      setCityOptions([...new Set(cities.map((c) => c.name))]);
+    });
+  }, [formData.country]);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -378,7 +389,7 @@ function AddTeacherPage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
@@ -394,7 +405,7 @@ function AddTeacherPage() {
             {/* Card 1: Personal Details */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <User className="h-5 w-5 text-nejah-sapphire" />
+                <User className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Personal Details
               </h2>
 
@@ -542,7 +553,7 @@ function AddTeacherPage() {
                       <SelectValue placeholder="Select City" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                      {getUniqueCityNamesByCountryName(formData.country).map((cityName) => (
+                      {cityOptions.map((cityName) => (
                           <SelectItem key={cityName} value={cityName}>
                             {cityName}
                           </SelectItem>
@@ -571,7 +582,7 @@ function AddTeacherPage() {
             {/* Card 2: Academic & Specialties */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <GraduationCap className="h-5 w-5 text-nejah-sapphire" />
+                <GraduationCap className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Academic Qualifications
               </h2>
 
@@ -627,7 +638,7 @@ function AddTeacherPage() {
             {/* Card 2B: Teacher Specifics */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
               <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <FileText className="h-5 w-5 text-nejah-sapphire" />
+                <FileText className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                 Additional Details
               </h2>
 

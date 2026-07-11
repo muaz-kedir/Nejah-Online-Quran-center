@@ -303,7 +303,7 @@ function TeacherProfilePage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
@@ -338,7 +338,7 @@ function TeacherProfilePage() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 onClick={() => setIsEditModalOpen(true)}
-                className="h-10 rounded-xl px-4 bg-primary/10 hover:bg-primary/10 text-nejah-sapphire border border-primary/250/20 gap-1.5 text-xs font-bold uppercase tracking-wider"
+                className="h-10 rounded-xl px-4 bg-primary/10 hover:bg-primary/10 text-nejah-sapphire text-foreground border border-primary/250/20 gap-1.5 text-xs font-bold uppercase tracking-wider"
               >
                 <Pencil className="h-4 w-4" /> Edit Profile
               </Button>

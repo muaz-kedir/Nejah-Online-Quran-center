@@ -13,19 +13,27 @@ export class KeepAliveService {
     private readonly httpService: HttpService,
   ) {}
 
-  /** Ping /health every 10 minutes so Render free tier stays awake. */
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  /** Ping /health so Render free tier stays awake.
+   *  Uses RENDER_EXTERNAL_URL (automatically set by Render) so the request
+   *  arrives from outside the instance, preventing Render from spinning it down.
+   *  Falls back to localhost in case the env var isn't available. */
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async pingHealth() {
     if (this.configService.get<string>('NODE_ENV') !== 'production') {
       return;
     }
 
-    const port = process.env.PORT || this.configService.get<string>('PORT') || '3000';
-    const healthUrl = `http://127.0.0.1:${port}/health`;
+    const externalUrl = process.env.RENDER_EXTERNAL_URL;
+    if (!externalUrl) {
+      this.logger.warn('RENDER_EXTERNAL_URL not set — cannot keep alive from outside');
+      return;
+    }
+
+    const healthUrl = `${externalUrl.replace(/\/$/, '')}/health`;
 
     try {
       const response = await firstValueFrom(
-        this.httpService.get(healthUrl, { timeout: 5000 }),
+        this.httpService.get(healthUrl, { timeout: 10000 }),
       );
 
       if (response.data?.status === 'ok') {

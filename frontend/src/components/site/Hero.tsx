@@ -7,12 +7,36 @@ export function Hero() {
   const { t } = useTheme();
   return (
     <section id="home" className="relative overflow-hidden bg-pattern pb-20 pt-28 md:pt-36">
-      <div className="container-x grid lg:grid-cols-2 gap-12 items-center">
+      {/* Futuristic overlay (both themes) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+        <div className="scan-line" />
+        <div className="particle particle-1" />
+        <div className="particle particle-2" />
+        <div className="particle particle-3" />
+        <div className="particle particle-4" />
+        <div className="particle particle-5" />
+        <div className="vignette-glow" />
+        <div className="grid-glow-dot" style={{ top: '20%', left: '15%' }} />
+        <div className="grid-glow-dot" style={{ top: '45%', left: '75%' }} />
+        <div className="grid-glow-dot" style={{ top: '70%', left: '40%' }} />
+        <div className="grid-glow-dot" style={{ top: '85%', left: '85%' }} />
+        <div className="grid-glow-dot" style={{ top: '10%', left: '60%' }} />
+        <div className="data-line-h" style={{ top: '35%', left: '10%', width: '25%' }} />
+        <div className="data-line-v" style={{ top: '15%', left: '50%', height: '30%' }} />
+        <div className="data-line-dot" style={{ top: '35%', left: '50%' }} />
+      </div>
+
+      <div className="container-x grid lg:grid-cols-2 gap-12 items-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
+          className="relative"
         >
+          <div className="hero-glow-blob" />
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-nejah-electric/20 bg-primary/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric">
             <Sparkles className="size-3.5" />
             {t.hero.badge}
