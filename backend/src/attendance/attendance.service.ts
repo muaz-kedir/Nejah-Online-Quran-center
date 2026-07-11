@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+// dkaskd ask
 import { Repository } from 'typeorm';
 import { ClassSession, SessionStatus, TeacherAttendanceStatus } from './entities/class-session.entity';
 import { StudentAttendance, StudentAttendanceStatus } from './entities/student-attendance.entity';
