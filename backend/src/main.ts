@@ -82,40 +82,56 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-zm-signature', 'x-zm-request-timestamp'],
   });
 
-  // RAW Express middleware for Zoom webhook URL validation
-  // Runs BEFORE all NestJS processing (pipes, interceptors, guards, serializers)
-  // to guarantee an exact, unmodified response for Zoom's endpoint.url_validation.
-  app.use((req, res, next) => {
-    if (req.method !== 'POST') return next();
-    const reqPath = req.path || (req as any).originalUrl || req.url;
-    if (reqPath !== '/zoom/webhook') return next();
+  // === ZOOM WEBHOOK: RAW EXPRESS HANDLER ===
+  // Runs at the Express level BEFORE NestJS's body-parser and router,
+  // completely bypassing all NestJS processing (pipes, interceptors, guards, serializers).
+  //
+  // NestJS registers its body-parser during app.listen() (AFTER app.use() middleware),
+  // so we must add our own body-parser for this path.
+  //
+  // This ensures req.body is available for URL validation AND the response is
+  // sent directly via Express without any NestJS transformation.
 
-    const body = (req.body as Record<string, unknown>) || {};
-    const event = body.event as string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const bodyParser = require('body-parser');
+
+  // 1) Parse JSON body for /zoom/webhook (stores req.body + req.rawBody)
+  app.use(
+    '/zoom/webhook',
+    bodyParser.json({
+      verify: (req: any, _res: any, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+
+  // 2) Handle endpoint.url_validation — short-circuits with exact response
+  app.use('/zoom/webhook', (req, res, next) => {
+    if (req.method !== 'POST') return next();
+
+    const body = req.body || {};
+    const event = body.event;
 
     if (event === 'endpoint.url_validation') {
-      const payload = (body.payload as Record<string, unknown>) || {};
-      const plainToken = payload.plainToken as string | undefined;
-
+      const plainToken = body?.payload?.plainToken;
       const secretToken = process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() || '';
-
       const encryptedToken = secretToken
         ? crypto.createHmac('sha256', secretToken).update(plainToken || '').digest('hex')
         : '';
 
-      const responseBody = {
-        plainToken: plainToken || '',
-        encryptedToken,
-      };
+      const responseBody = { plainToken: plainToken || '', encryptedToken };
 
-      console.log('=== ZOOM WEBHOOK (RAW MIDDLEWARE) ===');
-      console.log(`plainToken: ${plainToken}`);
-      console.log(`secretToken length: ${secretToken.length}`);
-      console.log(`secretToken (first 4): ${secretToken.substring(0, 4)}`);
-      console.log(`secretToken (last 4): ${secretToken.substring(Math.max(0, secretToken.length - 4))}`);
-      console.log(`encryptedToken: ${encryptedToken}`);
-      console.log(`responseBody: ${JSON.stringify(responseBody)}`);
-      console.log('=====================================');
+      console.log('### ZOOM WEBHOOK VALIDATION (RAW EXPRESS) ###');
+      console.log('req.body available:', !!req.body);
+      console.log('plainToken:', plainToken);
+      console.log('secretToken length:', secretToken.length);
+      console.log('secretToken (first 4):', secretToken.substring(0, 4));
+      console.log('secretToken (last 4):', secretToken.substring(Math.max(0, secretToken.length - 4)));
+      console.log('encryptedToken:', encryptedToken);
+      console.log('responseBody:', JSON.stringify(responseBody));
+      console.log('Content-Type: application/json');
+      console.log('Status: 200');
+      console.log('############################################');
 
       res.status(200).json(responseBody);
       return;
