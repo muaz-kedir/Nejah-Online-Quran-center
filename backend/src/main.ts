@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import * as crypto from 'crypto';
 import { validateEnvironment } from './config/env-validation';
 import { isAllowedCorsOrigin } from './config/cors-origins';
 
@@ -79,6 +80,48 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-zm-signature', 'x-zm-request-timestamp'],
+  });
+
+  // RAW Express middleware for Zoom webhook URL validation
+  // Runs BEFORE all NestJS processing (pipes, interceptors, guards, serializers)
+  // to guarantee an exact, unmodified response for Zoom's endpoint.url_validation.
+  app.use((req, res, next) => {
+    if (req.method !== 'POST') return next();
+    const reqPath = req.path || (req as any).originalUrl || req.url;
+    if (reqPath !== '/zoom/webhook') return next();
+
+    const body = (req.body as Record<string, unknown>) || {};
+    const event = body.event as string | undefined;
+
+    if (event === 'endpoint.url_validation') {
+      const payload = (body.payload as Record<string, unknown>) || {};
+      const plainToken = payload.plainToken as string | undefined;
+
+      const secretToken = process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() || '';
+
+      const encryptedToken = secretToken
+        ? crypto.createHmac('sha256', secretToken).update(plainToken || '').digest('hex')
+        : '';
+
+      const responseBody = {
+        plainToken: plainToken || '',
+        encryptedToken,
+      };
+
+      console.log('=== ZOOM WEBHOOK (RAW MIDDLEWARE) ===');
+      console.log(`plainToken: ${plainToken}`);
+      console.log(`secretToken length: ${secretToken.length}`);
+      console.log(`secretToken (first 4): ${secretToken.substring(0, 4)}`);
+      console.log(`secretToken (last 4): ${secretToken.substring(Math.max(0, secretToken.length - 4))}`);
+      console.log(`encryptedToken: ${encryptedToken}`);
+      console.log(`responseBody: ${JSON.stringify(responseBody)}`);
+      console.log('=====================================');
+
+      res.status(200).json(responseBody);
+      return;
+    }
+
+    next();
   });
 
   // API prefix — exclude Zoom webhook and public health from /api
