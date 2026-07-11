@@ -10,8 +10,11 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
@@ -33,13 +36,23 @@ export class SchedulesController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
-  async create(@Request() req, @Body() createScheduleDto: CreateScheduleDto) {
-    this.logger.log(`Create schedule body: ${JSON.stringify(createScheduleDto)}`);
+  async create(@Request() req, @Body() body: any) {
+    // Bypass global ValidationPipe to log the raw body before any transformation
+    this.logger.log(`=== RAW BODY: ${JSON.stringify(body)} ===`);
+
+    // Manually validate with class-validator
+    const dto: CreateScheduleDto = plainToInstance(CreateScheduleDto, body);
+    const errors = await validate(dto as object);
+    if (errors.length > 0) {
+      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${JSON.stringify(errors)}`);
+      throw new BadRequestException(errors);
+    }
+
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      createScheduleDto.teacherId = teacher.id;
+      dto.teacherId = teacher.id;
     }
-    return this.schedulesService.createSchedule(createScheduleDto);
+    return this.schedulesService.createSchedule(dto);
   }
 
   @Get()
