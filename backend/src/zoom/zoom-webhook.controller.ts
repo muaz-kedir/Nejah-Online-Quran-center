@@ -36,15 +36,13 @@ export class ZoomWebhookController {
     const event = body?.event || '';
     const payload = body?.payload || {};
 
-    this.logger.log(`Incoming webhook event: ${event}`);
-    this.logger.debug(`Full body: ${JSON.stringify(body)}`);
+    this.logger.log(`Webhook event received: ${event}`);
 
-    // Zoom endpoint URL validation — respond immediately (no signature check)
+    // URL validation (fallback if raw middleware didn't handle it, e.g. in tests)
     if (event === 'endpoint.url_validation') {
       const plainToken = payload?.plainToken as string | undefined;
 
-      this.logger.log(`endpoint.url_validation received`);
-      this.logger.log(`Plain Token: ${plainToken}`);
+      this.logger.log(`endpoint.url_validation - plainToken: ${plainToken}`);
 
       if (!plainToken) {
         this.logger.warn('endpoint.url_validation missing plainToken');
@@ -55,30 +53,30 @@ export class ZoomWebhookController {
         this.zoomService.getWebhookSecretToken()?.trim() || '';
 
       if (!secretToken) {
-        this.logger.warn(
-          'endpoint.url_validation received but ZOOM_WEBHOOK_SECRET_TOKEN is not set',
-        );
+        this.logger.warn('ZOOM_WEBHOOK_SECRET_TOKEN is not set');
         return res.status(200).json({ plainToken, encryptedToken: '' });
       }
-
-      this.logger.log(
-        `Webhook secret token loaded (length: ${secretToken.length})`,
-      );
 
       const encryptedToken = crypto
         .createHmac('sha256', secretToken)
         .update(plainToken)
         .digest('hex');
 
-      this.logger.log(`Encrypted Token: ${encryptedToken}`);
-      this.logger.log('Zoom endpoint.url_validation challenge answered');
+      this.logger.log(`secretToken length: ${secretToken.length}`);
+      this.logger.log(`secretToken (first 4): ${secretToken.substring(0, 4)}`);
+      this.logger.log(`secretToken (last 4): ${secretToken.substring(Math.max(0, secretToken.length - 4))}`);
+      this.logger.log(`encryptedToken: ${encryptedToken}`);
+
+      const responseBody = { plainToken, encryptedToken };
+      this.logger.log(`responseBody: ${JSON.stringify(responseBody)}`);
 
       return res
         .status(200)
         .set('Content-Type', 'application/json')
-        .json({ plainToken, encryptedToken });
+        .json(responseBody);
     }
 
+    // Signature verification for all other events
     const signature =
       headers['x-zm-signature'] ||
       headers['x-zm-signature'.toLowerCase()] ||
@@ -89,11 +87,11 @@ export class ZoomWebhookController {
 
     const rawBody = this.getRawBody(req);
     if (!this.verifyWebhookSignature(rawBody, signature, timestamp)) {
-      this.logger.warn(`Webhook signature verification failed for event: ${event}`);
+      this.logger.warn(`Signature verification failed for event: ${event}`);
       return res.status(200).json({ status: 'rejected' });
     }
 
-    this.logger.log(`Webhook signature verified for event: ${event}`);
+    this.logger.log(`Signature verified for event: ${event}`);
 
     const eventId = (payload?.object as { id?: string | number } | undefined)
       ?.id
@@ -105,7 +103,7 @@ export class ZoomWebhookController {
         .handleWebhook(event, payload, eventId)
         .catch((error: Error) => {
           this.logger.error(
-            `Background webhook processing error: ${error.message}`,
+            `Background webhook error: ${error.message}`,
             error.stack,
           );
         });
@@ -120,7 +118,7 @@ export class ZoomWebhookController {
         ? req.rawBody.toString('utf8')
         : String(req.rawBody);
     }
-    this.logger.warn('rawBody missing — webhook signature verification may fail');
+    this.logger.warn('rawBody missing');
     return '';
   }
 
