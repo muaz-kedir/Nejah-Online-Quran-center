@@ -114,6 +114,7 @@ type TDict = {
     | "termsShort",
     string
   >;
+  announcement: Record<"badge" | "text" | "cta", string>;
 };
 
 export type Lang = "en" | "ar" | "am";
@@ -250,6 +251,11 @@ export const translations: Record<Lang, TDict> = {
       privacyShort: "Privacy",
       termsShort: "Terms",
     },
+    announcement: {
+      badge: "Now Hiring",
+      text: "We're looking for qualified Quran & Islamic teachers",
+      cta: "Apply Now",
+    },
   },
   ar: {
     nav: {
@@ -377,6 +383,11 @@ export const translations: Record<Lang, TDict> = {
       privacyShort: "الخصوصية",
       termsShort: "الشروط",
     },
+    announcement: {
+      badge: "توظيف",
+      text: "نبحث عن معلمي قرآن كريم مؤهلين",
+      cta: "قدم الآن",
+    },
   },
   am: {
     nav: {
@@ -500,6 +511,11 @@ export const translations: Record<Lang, TDict> = {
       rights: "© 2026 ነጃህ እስላማዊ ማዕከል። መብቱ የተጠበቀ።",
       privacyShort: "ግላዊነት",
       termsShort: "ውሎች",
+    },
+    announcement: {
+      badge: "ቅጥር",
+      text: "ብቃት ያላቸው የቁርአን እና እስላማዊ መምህራን እንፈልጋለን",
+      cta: "አሁን ያመልክቱ",
     },
   },
 };

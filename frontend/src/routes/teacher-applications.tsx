@@ -3,16 +3,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   Search, Filter, ChevronLeft, ChevronRight, FileCheck, Clock, CheckCircle2, XCircle, AlertCircle,
-  Users, Eye, RefreshCw, Power, PowerOff,
+  Users, Eye, RefreshCw, Power, PowerOff, Copy, Check, Link as LinkIcon, UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
-import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
+import { apiHeaders, apiUrl } from "@/lib/api";
 import { cn } from '@/lib/utils';
 
 interface Application {
@@ -65,6 +66,11 @@ function TeacherApplicationsContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [announcementText, setAnnouncementText] = useState({ en: '', ar: '', am: '' });
+  const [isSavingText, setIsSavingText] = useState(false);
+
+  // Student registration link
+  const regLink = `${window.location.origin}/register`;
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -72,14 +78,19 @@ function TeacherApplicationsContent() {
       if (res.ok) {
         const data = await res.json();
         setIsApplicationsOpen(data.isApplicationsOpen);
+        setAnnouncementText({
+          en: data.announcementText?.en || '',
+          ar: data.announcementText?.ar || '',
+          am: data.announcementText?.am || '',
+        });
       }
     } catch {}
   }, []);
 
-  const toggleApplicationsOpen = async () => {
+  const toggleApplicationsOpen = async (open?: boolean) => {
     setIsToggling(true);
     try {
-      const newState = !isApplicationsOpen;
+      const newState = open ?? !isApplicationsOpen;
       const res = await fetch(apiUrl(`/teacher-applications/settings/toggle`), {
         method: 'POST',
         headers: apiHeaders(),
@@ -92,6 +103,27 @@ function TeacherApplicationsContent() {
       toast.error(err.message);
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const saveAnnouncementText = async () => {
+    setIsSavingText(true);
+    try {
+      const res = await fetch(apiUrl(`/teacher-applications/settings`), {
+        method: 'PUT',
+        headers: apiHeaders(),
+        body: JSON.stringify({ announcementText }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || 'Failed to save announcement text');
+      }
+      toast.success('Announcement text saved');
+      await fetchSettings();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsSavingText(false);
     }
   };
 
@@ -162,23 +194,115 @@ function TeacherApplicationsContent() {
           </h1>
           <p className="text-muted-foreground text-sm mt-1">Review and manage teacher applications</p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          {/* Toggle Button */}
-          <Button 
-            variant={isApplicationsOpen ? "destructive" : "default"} 
-            className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary"}
-            onClick={toggleApplicationsOpen}
-            disabled={isToggling}
-          >
-            {isToggling ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : 
-             isApplicationsOpen ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
-            {isApplicationsOpen ? "Close Applications (Unpost)" : "Open Applications (Post)"}
-          </Button>
+        <Button variant="outline" size="sm" className="h-10 gap-2" onClick={handleRefresh} disabled={isRefreshing}>
+          <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
+
+      {/* Settings Card */}
+      <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue shadow-sm mb-6">
+        <div className="p-5">
+          <h2 className="text-lg font-semibold mb-4">Announcement Settings</h2>
+
+          {/* Text inputs + Open/Close in one card */}
+          <div className="space-y-4 mb-6">
+            <div>
+              <p className="font-medium text-foreground">Banner Announcement Text</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Customize the text shown on the announcement banner at the top of the public site.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">English</Label>
+                <Input
+                  value={announcementText.en}
+                  onChange={e => setAnnouncementText(p => ({ ...p, en: e.target.value }))}
+                  placeholder="We're looking for qualified Quran & Islamic teachers"
+                  className="bg-muted border-border"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Arabic</Label>
+                <Input
+                  value={announcementText.ar}
+                  onChange={e => setAnnouncementText(p => ({ ...p, ar: e.target.value }))}
+                  placeholder="نبحث عن معلمي قرآن كريم مؤهلين"
+                  className="bg-muted border-border"
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Amharic</Label>
+                <Input
+                  value={announcementText.am}
+                  onChange={e => setAnnouncementText(p => ({ ...p, am: e.target.value }))}
+                  placeholder="ብቃት ያላቸው የቁርአን እና እስላማዊ መምህራን እንፈልጋለን"
+                  className="bg-muted border-border"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pb-6 mb-6 border-b border-border dark:border-nejah-border-blue">
+            <Button onClick={saveAnnouncementText} disabled={isSavingText}>
+              {isSavingText ? 'Saving...' : 'Save Announcement Text'}
+            </Button>
+          </div>
+
+          {/* Open / Close button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-foreground">Post / Unpost</p>
+              <p className="text-sm text-muted-foreground">
+                {isApplicationsOpen
+                  ? 'Applications are OPEN — the public can apply'
+                  : 'Applications are CLOSED — the public cannot apply'}
+              </p>
+            </div>
+            <Button
+              variant={isApplicationsOpen ? "destructive" : "default"}
+              className={isApplicationsOpen ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary"}
+              onClick={() => toggleApplicationsOpen()}
+              disabled={isToggling}
+            >
+              {isToggling ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> :
+               isApplicationsOpen ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+              {isApplicationsOpen ? "Close Applications (Unpost)" : "Open Applications (Post)"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Teacher Application Link Card — only when open */}
+      {isApplicationsOpen && (
+        <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue shadow-sm mb-6">
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <LinkIcon className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Teacher Application Link</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Share this link with prospective teachers to direct them to the application form.
+              This link is only available while applications are open.
+            </p>
+            <TeacherAppLinkSection />
+          </div>
+        </div>
+      )}
+
+      {/* Student Registration Link Card */}
+      <div className="bg-card dark:bg-nejah-surface rounded-xl border border-border dark:border-nejah-border-blue shadow-sm mb-6">
+        <div className="p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <UserPlus className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Student Registration Link</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Share this link with prospective students to direct them to the registration form.
+          </p>
+          <StudentRegLinkSection />
         </div>
       </div>
 
@@ -294,7 +418,7 @@ function TeacherApplicationsContent() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-nejah-sapphire hover:bg-primary/10"
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-nejah-sapphire dark:hover:text-nejah-electric hover:bg-primary/10"
                           onClick={(e) => { e.stopPropagation(); navigate({ to: '/teacher-applications/$id', params: { id: app.id } }); }}
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
@@ -336,6 +460,58 @@ function TeacherApplicationsContent() {
         )}
       </div>
     </>
+  );
+}
+
+function TeacherAppLinkSection() {
+  const link = `${window.location.origin}/apply-as-teacher`;
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      toast.success('Teacher application link copied');
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => toast.error('Failed to copy link'));
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2.5">
+        <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+        <code className="text-sm text-foreground truncate">{link}</code>
+      </div>
+      <Button variant="outline" className="shrink-0 gap-2" onClick={copy}>
+        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+        {copied ? 'Copied' : 'Copy'}
+      </Button>
+    </div>
+  );
+}
+
+function StudentRegLinkSection() {
+  const link = `${window.location.origin}/register`;
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      toast.success('Registration link copied');
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => toast.error('Failed to copy link'));
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2.5">
+        <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+        <code className="text-sm text-foreground truncate">{link}</code>
+      </div>
+      <Button variant="outline" className="shrink-0 gap-2" onClick={copy}>
+        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+        {copied ? 'Copied' : 'Copy'}
+      </Button>
+    </div>
   );
 }
 

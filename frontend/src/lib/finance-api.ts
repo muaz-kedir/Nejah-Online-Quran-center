@@ -34,12 +34,18 @@ export function buildParams(filters: FinanceFilters): URLSearchParams {
 
 export async function financeFetch<T>(path: string, filters?: FinanceFilters): Promise<T> {
   const qs = filters ? `?${buildParams(filters).toString()}` : '';
-  const res = await fetch(`${API}${path}${qs}`, { headers: authHeaders() });
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.message || `Request failed (${res.status})`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(`${API}${path}${qs}`, { headers: authHeaders(), signal: controller.signal });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.message || `Request failed (${res.status})`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json();
 }
 
 export function statusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {

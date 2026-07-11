@@ -12,6 +12,7 @@ import { Testimonials } from "@/components/site/Testimonials";
 import { CTA } from "@/components/site/CTA";
 import { Footer } from "@/components/site/Footer";
 import { FloatingActions } from "@/components/site/FloatingActions";
+import { AnnouncementBanner } from "@/components/site/AnnouncementBanner";
 import { Loader } from "@/components/site/Loader";
 
 export const Route = createFileRoute("/")({
@@ -40,6 +41,7 @@ function Index() {
       <Loader />
       <div className="relative flex min-h-screen flex-col admin-shell-bg">
         <div className="pointer-events-none fixed inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
+        <AnnouncementBanner />
         <Navbar />
         <main className="relative z-10 flex-1">
           <Hero />

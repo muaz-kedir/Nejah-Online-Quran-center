@@ -898,7 +898,7 @@ function TeachersPage() {
                   onClick={() => setMeta({ ...meta, page: i + 1 })}
                   className={cn(
                     'h-9 w-9 rounded-xl font-bold border-none',
-                    meta.page === i + 1 ? 'bg-primary hover:bg-nejah-azure' : 'bg-transparent text-muted-foreground hover:text-nejah-sapphire'
+                    meta.page === i + 1 ? 'bg-primary hover:bg-nejah-azure' : 'bg-transparent text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric'
                   )}
                 >
                   {i + 1}

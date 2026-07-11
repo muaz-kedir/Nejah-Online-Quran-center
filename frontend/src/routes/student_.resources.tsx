@@ -90,14 +90,14 @@ function StudentResources() {
       <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-7xl mx-auto">
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-nejah-sapphire font-serif">Learning Resources</h1>
+          <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">Learning Resources</h1>
           <p className="text-muted-foreground mt-2">Study materials and guides assigned to your level.</p>
         </div>
 
         {/* 1. Featured Resources */}
         {featured.length > 0 && !search && selectedCategory === 'All' && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-nejah-sapphire mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground mb-6 flex items-center gap-2">
               <Star className="w-6 h-6 text-amber-500" /> Featured Materials
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,14 +113,14 @@ function StudentResources() {
                       getFileIcon(r.resourceType)
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-nejah-sapphire line-clamp-1">{r.titleEn}</h3>
+                  <h3 className="text-xl font-bold text-nejah-sapphire text-foreground line-clamp-1">{r.titleEn}</h3>
                   <p className="text-sm text-foreground/80 mt-2 line-clamp-2">{r.descriptionEn || 'No description provided.'}</p>
                   <div className="flex items-center gap-2 mt-4 text-xs font-medium text-muted-foreground">
                     <span>{r.category}</span> • <span>{formatSize(r.fileSize)}</span>
                   </div>
                   <div className="flex gap-3 mt-6">
                     <Button onClick={() => setSelectedResource(r)} className="flex-1 rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90">View</Button>
-                    <Button onClick={() => handleDownload(r)} variant="outline" className="px-4 rounded-xl text-nejah-sapphire border-nejah-sapphire/20"><Download className="w-4 h-4" /></Button>
+                    <Button onClick={() => handleDownload(r)} variant="outline" className="px-4 rounded-xl text-nejah-sapphire text-foreground border-nejah-sapphire/20"><Download className="w-4 h-4" /></Button>
                   </div>
                 </div>
               ))}
@@ -161,7 +161,7 @@ function StudentResources() {
             {/* 3. All Resources */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-nejah-sapphire">All Resources</h2>
+                <h2 className="text-xl font-bold text-nejah-sapphire text-foreground">All Resources</h2>
                 <Badge variant="outline" className="rounded-full px-3">{resources.length} items</Badge>
               </div>
 
@@ -179,12 +179,12 @@ function StudentResources() {
                         </div>
                         <Badge variant="outline" className="text-[10px] font-bold bg-muted/50">{r.resourceType}</Badge>
                       </div>
-                      <h3 className="font-bold text-nejah-sapphire line-clamp-1">{r.titleEn}</h3>
+                      <h3 className="font-bold text-nejah-sapphire text-foreground line-clamp-1">{r.titleEn}</h3>
                       {r.titleAr && <p className="text-sm font-arabic text-right mt-1 text-muted-foreground line-clamp-1">{r.titleAr}</p>}
                       
                       <div className="mt-auto pt-6 flex gap-2">
-                        <Button onClick={() => setSelectedResource(r)} variant="secondary" className="flex-1 rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire">Details</Button>
-                        <Button onClick={() => handleDownload(r)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire"><Download className="w-4 h-4" /></Button>
+                        <Button onClick={() => setSelectedResource(r)} variant="secondary" className="flex-1 rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire text-foreground">Details</Button>
+                        <Button onClick={() => handleDownload(r)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire text-foreground"><Download className="w-4 h-4" /></Button>
                       </div>
                     </div>
                   ))}
@@ -194,7 +194,7 @@ function StudentResources() {
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                     <Filter className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-bold text-nejah-sapphire">No resources found</h3>
+                  <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">No resources found</h3>
                   <p className="text-muted-foreground mt-2">Try adjusting your search or category filters.</p>
                 </div>
               )}
@@ -205,7 +205,7 @@ function StudentResources() {
             {/* 4. Recently Added */}
             {recent.length > 0 && (
               <div className="bg-card rounded-[32px] p-6 border shadow-sm">
-                <h3 className="text-lg font-bold text-nejah-sapphire mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-nejah-electric" /> Recently Added
                 </h3>
                 <div className="space-y-3">
@@ -215,7 +215,7 @@ function StudentResources() {
                         {getFileIcon(r.resourceType)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-nejah-sapphire truncate">{r.titleEn}</p>
+                        <p className="text-sm font-bold text-nejah-sapphire text-foreground truncate">{r.titleEn}</p>
                         <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
@@ -227,7 +227,7 @@ function StudentResources() {
 
             {/* 5. Download History */}
             <div className="bg-card rounded-[32px] p-6 border shadow-sm">
-              <h3 className="text-lg font-bold text-nejah-sapphire mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
                 <Download className="w-4 h-4 text-emerald-500" /> Download History
               </h3>
               {downloadHistory.length > 0 ? (
@@ -235,12 +235,12 @@ function StudentResources() {
                   {downloadHistory.slice(0, 5).map(d => (
                     <div key={d.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border border-muted">
                       <div className="min-w-0 flex-1 pr-3">
-                        <p className="text-sm font-bold text-nejah-sapphire truncate">{d.resource?.titleEn}</p>
+                        <p className="text-sm font-bold text-nejah-sapphire text-foreground truncate">{d.resource?.titleEn}</p>
                         <p className="text-[10px] text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {new Date(d.downloadedAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Button onClick={() => handleDownload(d.resource)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 text-nejah-sapphire hover:bg-nejah-blue/10">
+                      <Button onClick={() => handleDownload(d.resource)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 text-nejah-sapphire text-foreground hover:bg-nejah-blue/10">
                         <Download className="w-4 h-4" />
                       </Button>
                     </div>
@@ -274,7 +274,7 @@ function StudentResources() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <Badge variant="outline" className="mb-2 font-bold uppercase tracking-wider text-[10px]">{selectedResource.category}</Badge>
-                    <DialogTitle className="text-2xl font-bold text-nejah-sapphire">{selectedResource.titleEn}</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold text-nejah-sapphire text-foreground">{selectedResource.titleEn}</DialogTitle>
                     {selectedResource.titleAr && <p className="text-lg font-arabic text-muted-foreground mt-1 text-right" dir="rtl">{selectedResource.titleAr}</p>}
                   </div>
                 </div>

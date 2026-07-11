@@ -477,7 +477,7 @@ function TeacherZoomPage() {
                         "text-[9px] font-bold mt-0.5 px-2 py-0.5 rounded-full",
                         selectedDay === i
                           ? "bg-white/20 text-white"
-                          : "bg-nejah-sapphire/10 text-nejah-sapphire",
+                          : "bg-nejah-sapphire/10 text-nejah-sapphire dark:text-nejah-electric",
                       )}>
                         {sessions.length}
                       </span>
@@ -519,7 +519,7 @@ function TeacherZoomPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/10 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-nejah-sapphire" />
+                      <Calendar className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
                     </div>
                     <div>
                       <p className="text-sm font-bold">
