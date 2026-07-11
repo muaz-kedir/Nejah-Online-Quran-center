@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
 import { StudentSessionAttendance } from '../../sessions/entities/student-session-attendance.entity';
 
@@ -28,14 +20,10 @@ export class Attendance {
   @Column()
   studentId: string;
 
-  @ManyToOne(
-    () => StudentSessionAttendance,
-    (sessionAttendance) => sessionAttendance.attendanceRecords,
-    {
-      onDelete: 'SET NULL',
-      nullable: true,
-    },
-  )
+  @ManyToOne(() => StudentSessionAttendance, (sessionAttendance) => sessionAttendance.attendanceRecords, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
   @JoinColumn({ name: 'sessionAttendanceId' })
   sessionAttendance: StudentSessionAttendance;
 
