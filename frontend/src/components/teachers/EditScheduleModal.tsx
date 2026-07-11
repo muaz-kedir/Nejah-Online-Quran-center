@@ -134,6 +134,13 @@ export function EditScheduleModal({
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
+
+      if (!teacher?.id) {
+        toast.error("Teacher not found — please reload the page");
+        setSaving(false);
+        return;
+      }
+
       const payload =
         sessionMode === "group"
           ? {
@@ -160,6 +167,14 @@ export function EditScheduleModal({
               className: formData.classType,
               notes: formData.notes,
             };
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("[Schedule Create] payload:", JSON.stringify(payload, null, 2));
+      }
+
+      if (!payload.teacherId || !payload.dayOfWeek || !payload.startTimeString || !payload.endTimeString) {
+        console.warn("[Schedule Create] Missing required fields in payload:", payload);
+      }
 
       let url: string;
       let method: string;

@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
@@ -23,6 +24,8 @@ import { TeachersService } from '../teachers/teachers.service';
 @Controller('schedules')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SchedulesController {
+  private readonly logger = new Logger(SchedulesController.name);
+
   constructor(
     private readonly schedulesService: SchedulesService,
     private readonly teachersService: TeachersService,
@@ -31,6 +34,7 @@ export class SchedulesController {
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
   async create(@Request() req, @Body() createScheduleDto: CreateScheduleDto) {
+    this.logger.log(`Create schedule body: ${JSON.stringify(createScheduleDto)}`);
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
       createScheduleDto.teacherId = teacher.id;
