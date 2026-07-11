@@ -23,6 +23,10 @@ export enum NotificationChannel {
   STUDENT_JOINED = 'STUDENT_JOINED',
   STUDENT_LEFT = 'STUDENT_LEFT',
   SYSTEM_ALERT = 'SYSTEM_ALERT',
+  PAYMENT_REMINDER = 'PAYMENT_REMINDER',
+  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
+  PAYMENT_OVERDUE = 'PAYMENT_OVERDUE',
+  SCHEDULE_CHANGED = 'SCHEDULE_CHANGED',
 }
 
 @Entity('notifications')
@@ -54,6 +58,12 @@ export class Notification {
 
   @Column({ default: false })
   isRead: boolean;
+
+  @Column({ nullable: true })
+  actionUrl: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  readAt: Date;
 
   @Column({ type: 'timestamp', nullable: true })
   sentAt: Date;

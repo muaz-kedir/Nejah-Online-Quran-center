@@ -303,4 +303,56 @@ export class AttendanceService {
 
     return query.orderBy('session.scheduledStartTime', 'ASC').getMany();
   }
+
+  async getLiveClassSessionByScheduleToday(
+    scheduleId: string,
+    requestingTeacherId?: string,
+  ): Promise<ClassSession | null> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const query = this.classSessionRepository
+      .createQueryBuilder('session')
+      .where('session.scheduleId = :scheduleId', { scheduleId })
+      .andWhere('session.sessionDate = :date', { date: today })
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendance')
+      .leftJoinAndSelect('attendance.student', 'student');
+
+    if (requestingTeacherId) {
+      query.andWhere('session.teacherId = :teacherId', { teacherId: requestingTeacherId });
+    }
+
+    return query.getOne() || null;
+  }
+
+  async getStudentLiveClass(studentId: string): Promise<ClassSession | null> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return this.classSessionRepository
+      .createQueryBuilder('session')
+      .innerJoin('session.studentAttendances', 'attendance')
+      .where('attendance.studentId = :studentId', { studentId })
+      .andWhere('session.sessionDate = :date', { date: today })
+      .andWhere('session.status = :status', { status: SessionStatus.LIVE })
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendances')
+      .leftJoinAndSelect('attendances.student', 'student')
+      .getOne() || null;
+  }
+
+  async getAllSessions(limitNum: number, status?: string): Promise<ClassSession[]> {
+    const query = this.classSessionRepository
+      .createQueryBuilder('session')
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendance')
+      .leftJoinAndSelect('attendance.student', 'student')
+      .orderBy('session.scheduledStartTime', 'DESC')
+      .take(limitNum);
+
+    if (status) {
+      query.andWhere('session.status = :status', { status });
+    }
+
+    return query.getMany();
+  }
 }
