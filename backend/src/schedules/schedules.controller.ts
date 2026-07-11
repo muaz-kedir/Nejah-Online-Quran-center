@@ -13,7 +13,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { validate } from 'class-validator';
+import { validate, ValidationError } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
@@ -23,6 +23,15 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
+
+function flattenErrors(errors: ValidationError[]): string[] {
+  const msgs: string[] = [];
+  for (const e of errors) {
+    if (e.constraints) msgs.push(...Object.values(e.constraints));
+    if (e.children?.length) msgs.push(...flattenErrors(e.children));
+  }
+  return msgs;
+}
 
 @Controller('schedules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -44,8 +53,9 @@ export class SchedulesController {
     const dto: CreateScheduleDto = plainToInstance(CreateScheduleDto, body);
     const errors = await validate(dto as object);
     if (errors.length > 0) {
-      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${JSON.stringify(errors)}`);
-      throw new BadRequestException(errors);
+      const messages = flattenErrors(errors);
+      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${messages.join('; ')}`);
+      throw new BadRequestException(messages.join('; '));
     }
 
     if (req.user.role === UserRole.TEACHER) {

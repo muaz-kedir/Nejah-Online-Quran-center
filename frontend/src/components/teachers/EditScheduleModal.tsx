@@ -201,7 +201,8 @@ export function EditScheduleModal({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || "Failed to save schedule");
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message;
+        throw new Error(msg || "Failed to save schedule");
       }
 
       toast.success(`Schedule ${isEdit ? "updated" : "created"} successfully`);

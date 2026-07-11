@@ -11,7 +11,10 @@ import {
   BadRequestException,
   Request,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
+import { validate, ValidationError } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { StudentsService } from './students.service';
 import { TeachersService } from '../teachers/teachers.service';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -26,9 +29,20 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 
+function flattenErrors(errors: ValidationError[]): string[] {
+  const msgs: string[] = [];
+  for (const e of errors) {
+    if (e.constraints) msgs.push(...Object.values(e.constraints));
+    if (e.children?.length) msgs.push(...flattenErrors(e.children));
+  }
+  return msgs;
+}
+
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class StudentsController {
+  private readonly logger = new Logger(StudentsController.name);
+
   constructor(
     private readonly studentsService: StudentsService,
     private readonly teachersService: TeachersService,
@@ -90,11 +104,19 @@ export class StudentsController {
 
   @Post(':id/schedule')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  createStudentSchedule(
+  async createStudentSchedule(
     @Param('id') id: string,
-    @Body() dto: CreateScheduleDto,
+    @Body() body: any,
     @Request() req,
   ) {
+    this.logger.log(`=== RAW BODY (student schedule): ${JSON.stringify(body)} ===`);
+    const dto: CreateScheduleDto = plainToInstance(CreateScheduleDto, body);
+    const errors = await validate(dto as object);
+    if (errors.length > 0) {
+      const messages = flattenErrors(errors);
+      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${messages.join('; ')}`);
+      throw new BadRequestException(messages.join('; '));
+    }
     return this.studentManagementService.createPermanentSchedule(id, dto, req.user.id);
   }
 
