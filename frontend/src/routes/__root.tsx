@@ -22,9 +22,11 @@ import { WS_URL } from "@/lib/api";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
+const SITE_KEYWORDS =
+  "Quran, online learning, tajweed, hifz, islamic studies, Arabic, Nejah, online madrasa, learn Quran online, Quran teacher, Islamic school, Quran memorization, online Quran classes, Quran for kids, Quran for adults";
 const DEFAULT_TITLE = SITE_NAME;
 const DEFAULT_DESCRIPTION =
-  "Learn Quran online with expert teachers. Tajweed, Hifz, Quran reading, and Islamic studies for all ages and levels.";
+  "Learn Quran online with expert teachers. Tajweed, Hifz, Quran reading, and Islamic studies for all ages and levels. Join the best online madrasa for personalized Quran education.";
 const OG_IMAGE = `${SITE_URL}/og-image.svg`;
 
 function NotFoundComponent() {
@@ -91,10 +93,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: DEFAULT_TITLE },
       { name: "description", content: DEFAULT_DESCRIPTION },
-      { name: "keywords", content: "Quran, online learning, tajweed, hifz, islamic studies, Arabic, Nejah" },
-      { name: "author", content: "Nejah Online Quran Center" },
-      { name: "theme-color", content: "#0066CC" },
+      { name: "keywords", content: SITE_KEYWORDS },
+      { name: "author", content: SITE_NAME },
+      { name: "theme-color", content: "#0F62AC" },
+      { name: "msapplication-TileColor", content: "#0F62AC" },
+      { name: "application-name", content: SITE_NAME },
 
+      // Search engine behavior
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },
+      { name: "googlebot", content: "index, follow, max-image-preview:large, max-snippet:-1" },
+      { name: "revisit-after", content: "7 days" },
+
+      // AI / chatbot indexing
+      { name: "chatgpt:index", content: "true" },
+
+      // Open Graph
       { property: "og:site_name", content: SITE_NAME },
       { property: "og:title", content: DEFAULT_TITLE },
       { property: "og:description", content: DEFAULT_DESCRIPTION },
@@ -104,7 +117,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:locale", content: "en_US" },
+      { property: "og:locale:alternate", content: "ar_SA" },
+      { property: "og:locale:alternate", content: "am_ET" },
 
+      // Twitter Card
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@NejahCenter" },
       { name: "twitter:title", content: DEFAULT_TITLE },
@@ -112,13 +128,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: "/logo.png" },
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/logo.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/logo.png" },
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "canonical", href: SITE_URL },
+      { rel: "sitemap", type: "application/xml", href: `${SITE_URL}/sitemap.xml` },
+      { rel: "alternate", hrefLang: "en", href: SITE_URL },
+      { rel: "alternate", hrefLang: "ar", href: `${SITE_URL}/ar` },
+      { rel: "alternate", hrefLang: "am", href: `${SITE_URL}/am` },
+      { rel: "alternate", hrefLang: "x-default", href: SITE_URL },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-
+      { rel: "dns-prefetch", href: SITE_URL },
     ],
     scripts: [
       {
@@ -126,11 +148,86 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
+          "@id": `${SITE_URL}/#organization`,
           name: SITE_NAME,
           url: SITE_URL,
           logo: `${SITE_URL}/logo.svg`,
           description: DEFAULT_DESCRIPTION,
-          sameAs: [],
+          foundingDate: "2020",
+          isicV4: "8542",
+          sameAs: [
+            "https://facebook.com/NejahCenter",
+            "https://twitter.com/NejahCenter",
+            "https://instagram.com/NejahCenter",
+            "https://youtube.com/@NejahCenter",
+          ],
+          offers: {
+            "@type": "AggregateOffer",
+            name: "Quran & Islamic Studies Courses",
+            description: "Personalized one-on-one Quran, Tajweed, Hifz and Islamic Studies for all ages.",
+            availability: "https://schema.org/OnlineOnly",
+            offers: [
+              { "@type": "Offer", name: "Quran Reading" },
+              { "@type": "Offer", name: "Tajweed Rules" },
+              { "@type": "Offer", name: "Quran Memorization (Hifz)" },
+              { "@type": "Offer", name: "Islamic Studies" },
+              { "@type": "Offer", name: "Arabic Language" },
+            ],
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "@id": `${SITE_URL}/#website`,
+          name: SITE_NAME,
+          url: SITE_URL,
+          description: DEFAULT_DESCRIPTION,
+          inLanguage: ["en", "ar", "am"],
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+            },
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "@id": `${SITE_URL}/#faq`,
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "What is Nejah Online Quran Center?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Nejah is an online madrasa offering personalized Quran, Tajweed, Hifz, and Islamic studies with qualified teachers for students of all ages worldwide.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How do I start learning Quran online?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Simply register on our website for a free trial, and we'll match you with a qualified Quran teacher based on your level and goals.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Are the teachers qualified?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes, all our teachers hold Ijazah in Quran recitation and have years of experience teaching Quran and Islamic studies online.",
+              },
+            },
+          ],
         }),
       },
     ],

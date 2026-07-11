@@ -1,11 +1,14 @@
 {
   "name": "Nejah Online Quran Center",
   "short_name": "Nejah",
-  "description": "Learn Quran Online with Expert Teachers",
+  "description": "Learn Quran Online with Expert Teachers — Tajweed, Hifz, Islamic Studies for all ages",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1D9E75",
+  "background_color": "#F2F6FB",
+  "theme_color": "#0F62AC",
+  "categories": ["education", "religion", "islamic", "learning"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/logo.png",
@@ -19,5 +22,7 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }

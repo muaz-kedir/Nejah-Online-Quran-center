@@ -1,4 +1,20 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_server/
+
+# Allow AI crawlers and chatbot bots
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
 
 Sitemap: https://nejah-center.com/sitemap.xml
