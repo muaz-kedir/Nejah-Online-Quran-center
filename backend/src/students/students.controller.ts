@@ -13,30 +13,19 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { validate, ValidationError } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
 import { StudentsService } from './students.service';
+import { StudentManagementService } from './student-management.service';
 import { TeachersService } from '../teachers/teachers.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
 import { DelegateStudentDto } from './dto/delegate-student.dto';
-import { StudentManagementService } from './student-management.service';
 import { CreateScheduleDto } from '../schedules/dto/create-schedule.dto';
 import { CreateTeacherReplacementDto } from '../teacher-replacements/dto/create-teacher-replacement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
-
-function flattenErrors(errors: ValidationError[]): string[] {
-  const msgs: string[] = [];
-  for (const e of errors) {
-    if (e.constraints) msgs.push(...Object.values(e.constraints));
-    if (e.children?.length) msgs.push(...flattenErrors(e.children));
-  }
-  return msgs;
-}
 
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -106,18 +95,28 @@ export class StudentsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
   async createStudentSchedule(
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: Record<string, any>,
     @Request() req,
   ) {
-    this.logger.log(`=== RAW BODY (student schedule): ${JSON.stringify(body)} ===`);
-    const dto: CreateScheduleDto = plainToInstance(CreateScheduleDto, body);
-    const errors = await validate(dto as object);
-    if (errors.length > 0) {
-      const messages = flattenErrors(errors);
-      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${messages.join('; ')}`);
-      throw new BadRequestException(messages.join('; '));
+    this.logger.log(`=== RAW BODY TYPE: ${typeof body}, keys: ${body ? Object.keys(body).join(', ') : 'null'} ===`);
+    if (body) {
+      for (const key of Object.keys(body)) {
+        this.logger.log(`  body.${key} = ${JSON.stringify(body[key])} (type: ${typeof body[key]})`);
+      }
     }
-    return this.studentManagementService.createPermanentSchedule(id, dto, req.user.id);
+
+    if (typeof body !== 'object' || body === null || Object.keys(body).length === 0) {
+      this.logger.error(`Body is empty or not an object: ${JSON.stringify(body)}`);
+      throw new BadRequestException('Request body is empty');
+    }
+
+    const required = ['teacherId', 'dayOfWeek', 'startTimeString', 'endTimeString'] as const;
+    const missing = required.filter(f => !body[f]);
+    if (missing.length > 0) {
+      throw new BadRequestException(`Missing required fields: ${missing.join(', ')}`);
+    }
+
+    return this.studentManagementService.createPermanentSchedule(id, body as Omit<CreateScheduleDto, 'studentId'>, req.user.id);
   }
 
   @Post(':id/temporary-schedule')

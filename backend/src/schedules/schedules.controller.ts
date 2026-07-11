@@ -13,8 +13,6 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { validate, ValidationError } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
@@ -23,15 +21,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
 import { TeachersService } from '../teachers/teachers.service';
-
-function flattenErrors(errors: ValidationError[]): string[] {
-  const msgs: string[] = [];
-  for (const e of errors) {
-    if (e.constraints) msgs.push(...Object.values(e.constraints));
-    if (e.children?.length) msgs.push(...flattenErrors(e.children));
-  }
-  return msgs;
-}
 
 @Controller('schedules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,24 +34,31 @@ export class SchedulesController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
-  async create(@Request() req, @Body() body: any) {
-    // Bypass global ValidationPipe to log the raw body before any transformation
-    this.logger.log(`=== RAW BODY: ${JSON.stringify(body)} ===`);
+  async create(@Request() req, @Body() body: Record<string, any>) {
+    this.logger.log(`=== RAW BODY TYPE: ${typeof body}, keys: ${body ? Object.keys(body).join(', ') : 'null'} ===`);
+    if (body) {
+      for (const key of Object.keys(body)) {
+        this.logger.log(`  body.${key} = ${JSON.stringify(body[key])} (type: ${typeof body[key]})`);
+      }
+    }
 
-    // Manually validate with class-validator
-    const dto: CreateScheduleDto = plainToInstance(CreateScheduleDto, body);
-    const errors = await validate(dto as object);
-    if (errors.length > 0) {
-      const messages = flattenErrors(errors);
-      this.logger.warn(`Validation errors for body ${JSON.stringify(body)}: ${messages.join('; ')}`);
-      throw new BadRequestException(messages.join('; '));
+    if (typeof body !== 'object' || body === null || Object.keys(body).length === 0) {
+      this.logger.error(`Body is empty or not an object: ${JSON.stringify(body)}`);
+      throw new BadRequestException('Request body is empty');
+    }
+
+    // Manual field check — avoiding class-transformer/class-validator entirely
+    const required = ['teacherId', 'dayOfWeek', 'startTimeString', 'endTimeString'] as const;
+    const missing = required.filter(f => !body[f]);
+    if (missing.length > 0) {
+      throw new BadRequestException(`Missing required fields: ${missing.join(', ')}`);
     }
 
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      dto.teacherId = teacher.id;
+      body.teacherId = teacher.id;
     }
-    return this.schedulesService.createSchedule(dto);
+    return this.schedulesService.createSchedule(body as CreateScheduleDto);
   }
 
   @Get()
