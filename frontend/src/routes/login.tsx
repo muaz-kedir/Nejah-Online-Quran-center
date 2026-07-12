@@ -110,6 +110,7 @@ function LoginPage() {
       localStorage.setItem("userName", data.user.name);
       localStorage.setItem("userEmail", data.user.email);
       localStorage.setItem("userId", data.user.id);
+      window.dispatchEvent(new Event("auth-changed"));
       if (data.user.studentId) {
         localStorage.setItem("studentId", data.user.studentId);
       } else {
