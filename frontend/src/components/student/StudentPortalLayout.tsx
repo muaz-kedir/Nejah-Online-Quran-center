@@ -131,6 +131,7 @@ export function StudentPortalLayout({
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
     }, 0);
   };
 

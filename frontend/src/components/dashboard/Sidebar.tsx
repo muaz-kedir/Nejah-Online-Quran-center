@@ -146,6 +146,7 @@ export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: {
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
       import('@/lib/push-notifications').then(m =>
         m.unsubscribeFromPushNotifications().catch(() => {}),
       );
