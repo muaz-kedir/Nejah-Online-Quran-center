@@ -145,11 +145,15 @@ export class ZoomOAuthService implements OnModuleInit {
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       state,
-      // Scopes needed: meetings (create/update/delete), user read, zaktoken
-      scope: 'user:read:admin meeting:write:admin meeting:read:admin',
     });
 
-    return `${this.zoomAuthUrl}?${params.toString()}`;
+    const url = `${this.zoomAuthUrl}?${params.toString()}`;
+
+    this.logger.log(
+      `OAuth redirect: redirect_uri=${this.redirectUri} client_id=${this.clientId.slice(0, 6)}... hasScope=${false} hasState=${!!state}`,
+    );
+
+    return url;
   }
 
   /* ------------------------------------------------------------------ */
