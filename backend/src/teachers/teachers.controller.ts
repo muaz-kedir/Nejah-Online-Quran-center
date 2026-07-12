@@ -112,7 +112,7 @@ export class TeachersController {
   // ─── Admin / staff management ───
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN)
   create(@Body() createTeacherDto: CreateTeacherDto) {
     return this.teachersService.create(createTeacherDto);
   }
