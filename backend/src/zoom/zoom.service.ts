@@ -497,7 +497,7 @@ export class ZoomService {
         if (result.ok === false) {
           if (result.status === 403) {
             throw new HttpException(
-              'Zoom denied listing users. Ensure your OAuth app has the user:read:admin scope.',
+              'Zoom denied listing users. Ensure your Zoom app has the user:read:user scope.',
               HttpStatus.BAD_GATEWAY,
             );
           }
@@ -598,7 +598,7 @@ export class ZoomService {
       if (result.ok === false) {
         if (result.status === 403) {
           throw new HttpException(
-            'Zoom API denied user lookup. Ensure your OAuth app has the user:read:admin scope.',
+            'Zoom API denied user lookup. Ensure your Zoom app has the user:read:user scope.',
             HttpStatus.BAD_GATEWAY,
           );
         }
@@ -686,7 +686,7 @@ export class ZoomService {
         if (result.ok === false) {
           if (result.status === 403) {
             throw new HttpException(
-              'Zoom API denied user listing. Ensure your OAuth app has the user:read:admin scope.',
+              'Zoom API denied user listing. Ensure your Zoom app has the user:read:user scope.',
               HttpStatus.BAD_GATEWAY,
             );
           }
