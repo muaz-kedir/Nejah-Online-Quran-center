@@ -56,7 +56,8 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
     const root = document.documentElement;
     const nowDark = root.classList.contains('dark');
     root.classList.toggle('dark', !nowDark);
-    localStorage.setItem('theme', !nowDark ? 'dark' : 'light');
+    const userId = localStorage.getItem('userId') || 'guest';
+    localStorage.setItem(`theme_${userId}`, !nowDark ? 'dark' : 'light');
     setIsDark(!nowDark);
   };
 
@@ -68,6 +69,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
       import('@/lib/push-notifications').then(m =>
         m.unsubscribeFromPushNotifications().catch(() => {}),
       );
