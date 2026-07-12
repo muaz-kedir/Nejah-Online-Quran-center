@@ -1,9 +1,9 @@
 import { Logger } from '@nestjs/common';
 
 const RECOMMENDED_VARS = [
-  'ZOOM_ACCOUNT_ID',
   'ZOOM_CLIENT_ID',
   'ZOOM_CLIENT_SECRET',
+  'ZOOM_REDIRECT_URI',
   'ZOOM_WEBHOOK_SECRET_TOKEN',
   'ENCRYPTION_KEY',
   'EXCHANGE_RATE_API_KEY',
