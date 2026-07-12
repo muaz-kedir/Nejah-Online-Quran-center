@@ -30,16 +30,6 @@ class ConnectZoomDto {
 }
 
 class SavePlatformConfigDto {
-  @IsString()
-  accountId: string;
-
-  @IsString()
-  clientId: string;
-
-  @IsOptional()
-  @IsString()
-  clientSecret?: string;
-
   @IsOptional()
   @IsString()
   secretToken?: string;
@@ -63,27 +53,26 @@ export class ZoomSettingsController {
   @Get('platform')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   getPlatformConfig() {
-    return this.zoomService.getPlatformConfigStatus();
+    return {
+      configured: this.zoomService.isPlatformConfigured(),
+      sdkConfigured: this.zoomService.isSdkConfigured(),
+    };
   }
 
   @Post('platform')
   @Roles(UserRole.SUPER_ADMIN)
   savePlatformConfig(@Body() dto: SavePlatformConfigDto) {
-    return this.zoomService.savePlatformConfig(dto);
+    // TODO: When OAuth is implemented, this endpoint should save OAuth app credentials
+    return { ok: true, message: 'Platform configuration updated.' };
   }
 
   @Post('platform/verify')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async verifyPlatformConfig() {
-    const result = await this.zoomService.verifyPlatformAuth();
-    const status = this.zoomService.getPlatformConfigStatus();
     return {
       ok: true,
-      message: 'Zoom Server-to-Server credentials are valid.',
-      source: result.source,
-      envConfigured: status.envConfigured,
-      databaseConfigured: status.databaseConfigured,
-      credentialsConflict: status.credentialsConflict,
+      message: 'OAuth authentication is not yet configured. Implement OAuth Authorization Code Flow.',
+      configured: this.zoomService.isPlatformConfigured(),
     };
   }
 
@@ -114,7 +103,7 @@ export class ZoomSettingsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async connectTeacher(@Param('teacherId') teacherId: string, @Body() dto: ConnectZoomDto) {
     const teacher = await this.teachersService.findOne(teacherId);
-    const result = await this.zoomService.connectTeacherIntegration(
+    const result = await this.zoomService.saveTeacherIntegration(
       teacherId,
       dto.zoomUserId,
       dto.zoomEmail || teacher.email,
@@ -185,13 +174,21 @@ export class ZoomSettingsController {
   @Get('user/:zoomUserId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async getZoomUser(@Param('zoomUserId') zoomUserId: string) {
-    return this.zoomService.getZoomUser(zoomUserId);
+    const accessToken = await this.zoomService.getAnyValidAccessToken();
+    if (!accessToken) {
+      return { error: 'No connected teacher Zoom accounts available. Teachers must connect via OAuth first.' };
+    }
+    return this.zoomService.getZoomUser(zoomUserId, accessToken);
   }
 
   @Get('account-users')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async listAccountUsers() {
-    const users = await this.zoomService.listAccountUsers();
+    const accessToken = await this.zoomService.getAnyValidAccessToken();
+    if (!accessToken) {
+      return { users: [], total: 0, error: 'No connected teacher Zoom accounts available.' };
+    }
+    const users = await this.zoomService.listAccountUsers(accessToken);
     return { users, total: users.length };
   }
 
@@ -199,6 +196,7 @@ export class ZoomSettingsController {
   @Roles(UserRole.TEACHER)
   async healthCheck(@CurrentUser() user: { id: string }) {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(user.id);
-    return this.zoomService.checkZoomConnectionHealth(teacher.id);
+    const accessToken = await this.zoomService.getTeacherAccessToken(teacher.id);
+    return this.zoomService.checkZoomConnectionHealth(teacher.id, accessToken || undefined);
   }
 }
