@@ -46,6 +46,7 @@ const getInitialLang = (): Lang => {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => readThemeForUser());
   const [lang, setLang] = useState<Lang>(getInitialLang);
+  const lastUserIdRef = { current: getUserId() };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -63,7 +64,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [lang, dir]);
 
   const handleAuthChange = useCallback(() => {
-    setTheme(readThemeForUser());
+    const newUserId = getUserId();
+    const prevUserId = lastUserIdRef.current;
+    lastUserIdRef.current = newUserId;
+
+    if (newUserId === prevUserId) return;
+
+    if (newUserId === "guest" && prevUserId !== "guest") {
+      return;
+    }
+
+    setTheme(readThemeForUser(newUserId));
   }, []);
 
   useEffect(() => {
