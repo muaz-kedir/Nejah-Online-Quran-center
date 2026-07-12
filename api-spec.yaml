@@ -1,0 +1,916 @@
+openapi: 3.1.0
+info:
+  title: Nejah Online Quran Center — Zoom Integration API
+  description: |
+    API specification for the Nejah Online Quran Center Zoom integration.
+
+    This app uses Zoom's **OAuth 2.0 Authorization Code Flow** to allow
+    individual teachers to connect their personal Zoom accounts. Each teacher
+    authorizes the app once; the app then creates and manages Zoom meetings
+    on the teacher's behalf for scheduled Quran class sessions.
+
+    **Zoom event subscriptions** (webhooks) are used to track meeting lifecycle
+    events — start, end, participant join/leave — for automatic attendance
+    recording.
+
+    ## Authentication
+
+    - **Teacher-facing endpoints** require a valid JWT (`Authorization: Bearer <token>`)
+      and the teacher role.
+    - **OAuth callback** is public — security relies on the `state` parameter (CSRF).
+    - **Webhook endpoint** is public — security relies on HMAC-SHA256 signature
+      verification using the configured `ZOOM_WEBHOOK_SECRET_TOKEN`.
+
+    ## Base URLs
+
+    - Production: `https://nejah-online-quran-center.onrender.com`
+    - Local: `http://localhost:3000`
+  version: 1.0.0
+  contact:
+    name: Nejah Online Quran Center
+    email: support@nejahquran.com
+    url: https://nejah-quran.vercel.app
+  license:
+    name: Proprietary
+    url: https://nejah-quran.vercel.app/terms-of-service
+
+servers:
+  - url: https://nejah-online-quran-center.onrender.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: OAuth
+    description: Zoom OAuth 2.0 Authorization Code Flow
+  - name: Webhook
+    description: Zoom Event Subscription webhook receiver
+  - name: Integration
+    description: Teacher Zoom integration management
+
+paths:
+  # ──────────────────────────────────────────────────────────────
+  #  OAUTH
+  # ──────────────────────────────────────────────────────────────
+
+  /api/zoom/oauth/connect:
+    get:
+      operationId: getOAuthConnectUrl
+      summary: Get Zoom OAuth authorization URL
+      description: |
+        Initiates the OAuth Authorization Code Flow for the authenticated
+        teacher. Generates a secure CSRF state parameter and returns the
+        Zoom authorization URL. The frontend should redirect the user to
+        this URL.
+
+        **Required scopes:** `user:read:admin`, `meeting:write:admin`,
+        `meeting:read:admin`
+      tags: [OAuth]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authorization URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: >
+                      Full Zoom OAuth authorization URL. Redirect the user
+                      to this URL to authorize the app.
+                    example: >-
+                      https://zoom.us/oauth/authorize?response_type=code&client_id=uMem0IleRiu2PVBlZHrD5A&redirect_uri=https%3A%2F%2Fnejah-online-quran-center.onrender.com%2Fapi%2Fzoom%2Foauth%2Fcallback&state=a1b2c3...&scope=user%3Aread%3Aadmin+meeting%3Awrite%3Aadmin+meeting%3Aread%3Aadmin
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/zoom/oauth/callback:
+    get:
+      operationId: handleOAuthCallback
+      summary: Zoom OAuth redirect callback
+      description: |
+        Public endpoint that Zoom redirects to after the teacher approves
+        or denies the OAuth authorization request. This endpoint is called
+        by the browser (not a server-to-server call).
+
+        **On success:** The authorization code is exchanged for access and
+        refresh tokens, which are encrypted (AES-256-GCM) and stored. The
+        teacher's Zoom account is now connected. The user is redirected to
+        the frontend with `?zoom=connected`.
+
+        **On denial or error:** The user is redirected to the frontend with
+        `?zoom=error`.
+
+        **Security:**
+        - The `state` parameter is validated against a server-side store
+          (CSRF protection). Each state is single-use and expires after
+          10 minutes.
+        - Invalid or expired states result in a redirect with an error flag.
+      tags: [OAuth]
+      parameters:
+        - name: code
+          in: query
+          required: false
+          description: Authorization code issued by Zoom (present on success)
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          description: CSRF state parameter returned from the authorization request
+          schema:
+            type: string
+        - name: error
+          in: query
+          required: false
+          description: >
+            Error code if the teacher denied authorization
+            (e.g., `access_denied`)
+          schema:
+            type: string
+      responses:
+        "302":
+          description: >
+            Redirect to frontend. Query params indicate outcome:
+            `?zoom=connected` on success, `?zoom=error` on failure.
+          headers:
+            Location:
+              description: Frontend redirect URL
+              schema:
+                type: string
+                format: uri
+                example: https://nejah-quran.vercel.app/teacher_zoom?zoom=connected
+        "200":
+          description: Fallback response if redirect fails
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success, error]
+                  message:
+                    type: string
+
+  # ──────────────────────────────────────────────────────────────
+  #  WEBHOOKS
+  # ──────────────────────────────────────────────────────────────
+
+  /zoom/webhook:
+    post:
+      operationId: handleZoomWebhook
+      summary: Receive Zoom event subscription webhooks
+      description: |
+        Endpoint called by Zoom for all event subscription notifications.
+        This endpoint is **excluded from the `/api` prefix** and is
+        publicly accessible.
+
+        **Zoom Endpoint URL Validation:**
+        When you register this endpoint in the Zoom Marketplace, Zoom
+        sends an `endpoint.url_validation` event. The app responds with
+        an HMAC-SHA256 encrypted token to prove ownership.
+
+        **Event Processing:**
+        All other events are signature-verified, deduplicated, and
+        processed asynchronously in the background. The endpoint always
+        returns `200 OK` immediately.
+
+        **Supported Events:**
+        - `meeting.started` — marks session LIVE, records start time
+        - `meeting.ended` — marks session COMPLETED, calculates duration
+        - `meeting.participant_joined` — records student join time
+        - `meeting.participant_left` — records student leave time and duration
+
+        **Signature Verification:**
+        Every event request (except URL validation) includes:
+        - `x-zm-signature` — HMAC-SHA256 signature
+        - `x-zm-request-timestamp` — request timestamp
+
+        The signature is computed as:
+        ```
+        hmac_sha256(webhook_secret_token, "v0:{timestamp}:{raw_body}")
+        ```
+
+        If `ZOOM_WEBHOOK_SECRET_TOKEN` is not configured, all webhooks
+        are **rejected**.
+      tags: [Webhook]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/ZoomUrlValidationEvent"
+                - $ref: "#/components/schemas/ZoomMeetingEvent"
+                - $ref: "#/components/schemas/ZoomParticipantEvent"
+              discriminator:
+                propertyName: event
+                mapping:
+                  endpoint.url_validation: "#/components/schemas/ZoomUrlValidationEvent"
+                  meeting.started: "#/components/schemas/ZoomMeetingEvent"
+                  meeting.ended: "#/components/schemas/ZoomMeetingEvent"
+                  meeting.participant_joined: "#/components/schemas/ZoomParticipantEvent"
+                  meeting.participant_left: "#/components/schemas/ZoomParticipantEvent"
+      responses:
+        "200":
+          description: Event processed or URL validation challenge answered
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/UrlValidationResponse"
+                  - $ref: "#/components/schemas/WebhookStatusResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookStatusResponse"
+
+  # ──────────────────────────────────────────────────────────────
+  #  INTEGRATION MANAGEMENT
+  # ──────────────────────────────────────────────────────────────
+
+  /api/zoom-settings/status:
+    get:
+      operationId: getTeacherZoomStatus
+      summary: Get current teacher's Zoom connection status
+      description: |
+        Returns the authenticated teacher's Zoom integration status,
+        including connection state, Zoom email, and connected timestamp.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherConnectionStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/health:
+    get:
+      operationId: checkTeacherZoomHealth
+      summary: Check Zoom connection health for current teacher
+      description: |
+        Verifies that the teacher's stored OAuth tokens are still valid
+        by making a test API call to Zoom. Returns the connection health
+        status.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Health check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionHealth"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/connect:
+    post:
+      operationId: connectTeacherQuickConnect
+      summary: One-click connect (legacy — saves Nejah email as Zoom ID)
+      description: |
+        Legacy endpoint that connects a teacher by saving their Nejah
+        email as the Zoom user identifier without Zoom API verification.
+        Prefer the OAuth flow (`/api/zoom/oauth/connect`) for production
+        use.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Teacher connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:
+                    type: boolean
+                    example: true
+                  email:
+                    type: string
+                    format: email
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/disconnect:
+    delete:
+      operationId: disconnectTeacherZoom
+      summary: Disconnect the current teacher's Zoom account
+      description: |
+        Disconnects the authenticated teacher's Zoom account. All stored
+        OAuth tokens (access and refresh) are permanently deleted. The
+        teacher can reconnect at any time via the OAuth flow.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Disconnected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:
+                    type: boolean
+                    example: false
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: disconnectTeacherZoomPost
+      summary: Disconnect (POST — legacy compatibility)
+      description: Legacy POST variant of the disconnect endpoint.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Disconnected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:
+                    type: boolean
+                    example: false
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/overview:
+    get:
+      operationId: getZoomOverview
+      summary: Get Zoom integration overview (admin only)
+      description: |
+        Returns a summary of all teacher Zoom connections, including
+        connected/disconnected counts and per-teacher status. Requires
+        admin or super-admin role.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Overview data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoomOverview"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/all:
+    get:
+      operationId: getAllIntegrations
+      summary: List all Zoom integrations (admin only)
+      description: |
+        Returns all teacher Zoom integration records. Requires admin
+        or super-admin role.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoomIntegrationRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/teacher/{teacherId}/connect:
+    post:
+      operationId: adminConnectTeacher
+      summary: Connect a teacher's Zoom account (admin only)
+      description: |
+        Admin endpoint to directly connect a teacher's Zoom account by
+        providing the Zoom User ID. Does not require the teacher to go
+        through the OAuth flow.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          description: Teacher UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminConnectTeacherRequest"
+      responses:
+        "200":
+          description: Integration created/updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoomIntegrationRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/teacher/{teacherId}/disconnect:
+    post:
+      operationId: adminDisconnectTeacher
+      summary: Disconnect a teacher's Zoom account (admin only)
+      description: Admin endpoint to disconnect any teacher's Zoom integration.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          description: Teacher UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Teacher disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZoomIntegrationRecord"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/user/{zoomUserId}:
+    get:
+      operationId: getZoomUserById
+      summary: Look up a Zoom user by ID (admin only)
+      description: |
+        Uses any connected teacher's OAuth token to look up a Zoom user
+        profile. Used for admin verification.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: zoomUserId
+          in: path
+          required: true
+          description: Zoom User ID (e.g., `abc123@example.com`)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Zoom user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/zoom-settings/account-users:
+    get:
+      operationId: listZoomAccountUsers
+      summary: List all Zoom account users (admin only)
+      description: |
+        Uses any connected teacher's OAuth token to list all users in
+        the Zoom account. Returns active, pending, and inactive users.
+      tags: [Integration]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of Zoom users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ZoomUserInfo"
+                  total:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────────────────────────────────────────
+  #  HEALTH
+  # ──────────────────────────────────────────────────────────────
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: API health check
+      description: Simple health check endpoint (no authentication required).
+      tags: [Integration]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  COMPONENTS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        JWT access token obtained from the Nejah authentication endpoint.
+        Required for all teacher and admin endpoints.
+
+  schemas:
+    # ── OAuth ──────────────────────────────────────────────────
+
+    ZoomUrlValidationEvent:
+      type: object
+      required: [event, payload]
+      properties:
+        event:
+          type: string
+          enum: [endpoint.url_validation]
+        payload:
+          type: object
+          properties:
+            plainToken:
+              type: string
+              description: Token to echo back (encrypted with HMAC-SHA256)
+            encryptedToken:
+              type: string
+              description: HMAC-SHA256 of plainToken using the webhook secret
+
+    UrlValidationResponse:
+      type: object
+      properties:
+        plainToken:
+          type: string
+          description: Echo of the original plainToken
+        encryptedToken:
+          type: string
+          description: HMAC-SHA256 of the plainToken using the webhook secret
+
+    # ── Webhook Events ─────────────────────────────────────────
+
+    ZoomMeetingEvent:
+      type: object
+      required: [event, payload]
+      properties:
+        event:
+          type: string
+          enum: [meeting.started, meeting.ended]
+        payload:
+          type: object
+          properties:
+            object:
+              $ref: "#/components/schemas/ZoomMeetingObject"
+            account_id:
+              type: string
+            event_ts:
+              type: integer
+              format: int64
+
+    ZoomParticipantEvent:
+      type: object
+      required: [event, payload]
+      properties:
+        event:
+          type: string
+          enum: [meeting.participant_joined, meeting.participant_left]
+        payload:
+          type: object
+          properties:
+            object:
+              $ref: "#/components/schemas/ZoomParticipantObject"
+            account_id:
+              type: string
+            event_ts:
+              type: integer
+              format: int64
+
+    ZoomMeetingObject:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Zoom meeting UUID
+        uuid:
+          type: string
+        topic:
+          type: string
+        type:
+          type: integer
+          description: "1=Instant, 2=Scheduled, 3=Recurring, 8=Recurring no fixed time"
+        start_time:
+          type: string
+          format: date-time
+          nullable: true
+        duration:
+          type: integer
+          description: Duration in minutes
+        timezone:
+          type: string
+        host_id:
+          type: string
+        status:
+          type: string
+          enum: [waiting, in_progress, ended]
+        start_url:
+          type: string
+          format: uri
+        join_url:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+        occurrences:
+          type: array
+          items:
+            type: object
+            properties:
+              occurrence_id:
+                type: string
+              start_time:
+                type: string
+                format: date-time
+              duration:
+                type: integer
+              status:
+                type: string
+
+    ZoomParticipantObject:
+      type: object
+      properties:
+        id:
+          type: string
+        meeting_id:
+          type: string
+        participant:
+          type: object
+          properties:
+            user_id:
+              type: string
+            user_name:
+              type: string
+            email:
+              type: string
+              format: email
+            join_time:
+              type: string
+              format: date-time
+            leave_time:
+              type: string
+              format: date-time
+              nullable: true
+            duration:
+              type: integer
+              description: Duration in seconds
+
+    WebhookStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, rejected, error]
+
+    # ── Integration ────────────────────────────────────────────
+
+    TeacherConnectionStatus:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        email:
+          type: string
+          format: email
+          nullable: true
+        zoomUserId:
+          type: string
+          nullable: true
+        connectedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ConnectionHealth:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        platformConfigured:
+          type: boolean
+        apiReachable:
+          type: boolean
+        zoomEmail:
+          type: string
+          format: email
+          nullable: true
+
+    ZoomIntegrationRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teacherId:
+          type: string
+          format: uuid
+        zoomUserId:
+          type: string
+          nullable: true
+        zoomEmail:
+          type: string
+          format: email
+          nullable: true
+        displayName:
+          type: string
+          nullable: true
+        accountType:
+          type: string
+          nullable: true
+        connectionStatus:
+          type: string
+          enum: [connected, disconnected]
+        connectedAt:
+          type: string
+          format: date-time
+          nullable: true
+        disconnectedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminConnectTeacherRequest:
+      type: object
+      required: [zoomUserId]
+      properties:
+        zoomUserId:
+          type: string
+          description: Zoom User ID or email of the teacher's Zoom account
+        zoomEmail:
+          type: string
+          format: email
+          description: Override email (defaults to teacher's Nejah email)
+
+    ZoomUserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, pending, inactive]
+        displayName:
+          type: string
+
+    ZoomOverview:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            totalTeachers:
+              type: integer
+            connected:
+              type: integer
+            disconnected:
+              type: integer
+            platformConfigured:
+              type: boolean
+        teachers:
+          type: array
+          items:
+            type: object
+            properties:
+              teacherId:
+                type: string
+                format: uuid
+              teacherName:
+                type: string
+              teacherEmail:
+                type: string
+                format: email
+              teacherStatus:
+                type: string
+              connectionStatus:
+                type: string
+                enum: [connected, disconnected]
+              zoomUserId:
+                type: string
+                nullable: true
+              zoomEmail:
+                type: string
+                format: email
+                nullable: true
+              connectedAt:
+                type: string
+                format: date-time
+                nullable: true
+
+  responses:
+    Unauthorized:
+      description: Authentication required — missing or invalid JWT
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 401
+              message:
+                type: string
+                example: Unauthorized
+    Forbidden:
+      description: Authenticated but insufficient role/permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 403
+              message:
+                type: string
+                example: Forbidden
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 500
+              message:
+                type: string
+                example: Internal server error
