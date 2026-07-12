@@ -4,6 +4,8 @@ import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ZoomService } from './zoom.service';
+import { ZoomOAuthService } from './zoom-oauth.service';
+import { ZoomOAuthController } from './zoom-oauth.controller';
 import { LiveSessionService } from './live-session.service';
 import { SessionAttendanceService } from './session-attendance.service';
 import { SessionNoteService } from './session-note.service';
@@ -90,6 +92,7 @@ import { EncryptionService } from '../common/encryption.service';
   providers: [
     EncryptionService,
     ZoomService,
+    ZoomOAuthService,
     LiveSessionService,
     SessionAttendanceService,
     SessionNoteService,
@@ -104,6 +107,7 @@ import { EncryptionService } from '../common/encryption.service';
   ],
   exports: [
     ZoomService,
+    ZoomOAuthService,
     LiveSessionService,
     SessionAttendanceService,
     ZoomWebhookService,

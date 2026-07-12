@@ -78,8 +78,46 @@ export class AttendanceService {
       throw new BadRequestException('Cannot start a completed session');
     }
 
-    // Update session status
-    session.meetingLink = dto.meetingLink;
+    let meetingLink = dto.meetingLink;
+
+    // If no meeting link provided, try to auto-create Zoom meeting
+    if (!meetingLink || meetingLink.trim() === '') {
+      const integration = await this.zoomIntegrationRepository.findOne({
+        where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+      });
+
+      if (integration?.zoomUserId && this.zoomService.isPlatformConfigured()) {
+        try {
+          // Auto-create Zoom meeting
+          const now = new Date();
+          const durationMinutes = 90; // 90 minutes default
+
+          const accessToken = await this.zoomService.requireTeacherAccessToken(session.teacherId);
+          const meeting = await this.zoomService.createMeeting(
+            session.classTitle || 'Quran Class',
+            now,
+            durationMinutes,
+            accessToken,
+          );
+
+          meetingLink = meeting.joinUrl;
+          session.meetingLink = meetingLink;
+          session.zoomMeetingId = meeting.meetingId;
+          session.zoomPassword = meeting.password;
+        } catch (error) {
+          throw new BadRequestException(
+            'Failed to auto-create Zoom meeting. Please provide a meeting link manually or check your Zoom connection.',
+          );
+        }
+      } else {
+        throw new BadRequestException(
+          'No meeting link provided and Zoom is not connected. Please provide a meeting link or connect your Zoom account in Settings.',
+        );
+      }
+    } else {
+      session.meetingLink = meetingLink;
+    }
+
     session.status = SessionStatus.LIVE;
     session.actualStartTime = new Date();
 

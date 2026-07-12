@@ -54,6 +54,18 @@ export class ZoomIntegration {
   @Column({ type: 'timestamp', nullable: true })
   disconnectedAt: Date;
 
+  /** AES-256-GCM encrypted OAuth access token (per-teacher). */
+  @Column({ type: 'text', nullable: true })
+  accessTokenEncrypted: string | null;
+
+  /** AES-256-GCM encrypted OAuth refresh token (per-teacher). */
+  @Column({ type: 'text', nullable: true })
+  refreshTokenEncrypted: string | null;
+
+  /** When the OAuth access token expires. */
+  @Column({ type: 'timestamp', nullable: true })
+  tokenExpiresAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

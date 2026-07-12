@@ -108,11 +108,13 @@ export class LiveSessionService {
       (endTime.getTime() - dto.scheduledStart.getTime()) / 60000,
     );
 
+    // TODO: Retrieve OAuth access token when OAuth flow is implemented
+    const accessToken = await this.zoomService.requireTeacherAccessToken(dto.teacherId);
     const meeting = await this.zoomService.createMeeting(
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
-      session.teacherId,
+      accessToken,
     );
 
     session.zoomMeetingId = meeting.meetingId;
@@ -253,7 +255,10 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        await this.zoomService.deleteMeeting(session.zoomMeetingId);
+        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+        if (accessToken) {
+          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
+        }
       } catch (error) {
         this.logger.warn(
           `Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`,
@@ -554,7 +559,7 @@ export class LiveSessionService {
     const meetingNumber = session.zoomMeetingId
       ? String(session.zoomMeetingId).replace(/\D/g, '')
       : null;
-    const sdkConfigured = this.zoomService.isPlatformConfigured();
+    const sdkConfigured = this.zoomService.isSdkConfigured();
 
     let sdkSignature: string | null = null;
     if (meetingNumber && sdkConfigured) {
@@ -568,7 +573,14 @@ export class LiveSessionService {
       });
       const zakTarget = integration?.zoomUserId || integration?.zoomEmail;
       if (zakTarget) {
-        zak = await this.zoomService.getUserZakToken(zakTarget);
+        try {
+          const accessToken = await this.zoomService.getTeacherAccessToken(options.teacherId);
+          if (accessToken) {
+            zak = await this.zoomService.getUserZakToken(zakTarget, accessToken);
+          }
+        } catch {
+          // OAuth not configured — ZAK unavailable
+        }
       }
     }
 
@@ -712,7 +724,10 @@ export class LiveSessionService {
     for (const session of sessions) {
       if (session.zoomMeetingId) {
         try {
-          await this.zoomService.deleteMeeting(session.zoomMeetingId);
+          const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+          if (accessToken) {
+            await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
+          }
         } catch (error) {
           this.logger.warn(`Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`);
         }
@@ -726,9 +741,11 @@ export class LiveSessionService {
     integration: ZoomIntegration,
     session?: LiveSession,
   ): Promise<string> {
+    const accessToken = await this.zoomService.requireTeacherAccessToken(integration.teacherId);
     const resolved = await this.zoomService.resolveZoomUser(
       integration.zoomUserId,
       integration.zoomEmail || session?.teacher?.email || undefined,
+      accessToken,
     );
 
     if (
@@ -744,25 +761,20 @@ export class LiveSessionService {
   }
 
   private async ensureZoomMeeting(session: LiveSession): Promise<void> {
-    const integration = await this.zoomIntegrationRepository.findOne({
-      where: { teacherId: session.teacherId, connectionStatus: 'connected' },
-    });
-
-    if (!this.zoomService.isPlatformConfigured() && !integration) {
-      throw new BadRequestException(
-        'Zoom platform is not configured and teacher has no Zoom connection. Contact your administrator.',
-      );
+    if (!session.teacherId) {
+      throw new BadRequestException('Session has no assigned teacher — cannot create Zoom meeting');
     }
 
     const durationMinutes = Math.round(
       (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
     );
 
+    const accessToken = await this.zoomService.requireTeacherAccessToken(session.teacherId);
     const meeting = await this.zoomService.createMeeting(
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
-      session.teacherId,
+      accessToken,
     );
 
     session.zoomMeetingId = meeting.meetingId;
@@ -782,6 +794,7 @@ export class LiveSessionService {
     sessionId: string,
     studentId: string,
     meetingId: string,
+    teacherId: string,
   ): Promise<void> {
     const student = await this.studentRepository.findOne({ where: { id: studentId } });
     if (!student?.email) return;
@@ -791,11 +804,12 @@ export class LiveSessionService {
     const lastName = nameParts.slice(1).join(' ') || 'Student';
 
     try {
+      const accessToken = await this.zoomService.requireTeacherAccessToken(teacherId);
       const joinUrl = await this.zoomService.registerParticipant(meetingId, {
         email: student.email,
         firstName,
         lastName,
-      });
+      }, accessToken);
 
       let attendance = await this.attendanceRepository.findOne({
         where: { sessionId, studentId },
@@ -919,6 +933,9 @@ export class LiveSessionService {
     if (!session || !session.zoomMeetingId) return;
 
     try {
+      const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+      if (!accessToken) return;
+
       await this.zoomService.updateMeeting(session.zoomMeetingId, {
         topic: className ? `Quran Class - ${className}` : undefined,
         startTime,
@@ -926,7 +943,7 @@ export class LiveSessionService {
           startTime && endTime
             ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
             : undefined,
-      });
+      }, accessToken);
 
       if (startTime) session.scheduledStart = startTime;
       if (endTime) session.scheduledEnd = endTime;
@@ -949,14 +966,15 @@ export class LiveSessionService {
     if (!session || !session.zoomMeetingId) return;
 
     try {
-      await this.zoomService.deleteMeeting(session.zoomMeetingId);
+      const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+      if (accessToken) {
+        await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to delete Zoom meeting for schedule ${scheduleId}: ${error.message}`,
       );
     }
-
-    await this.liveSessionRepository.delete(session.id);
   }
 
   async markNoShow(id: string, reason?: string): Promise<LiveSession> {
@@ -973,7 +991,10 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        await this.zoomService.deleteMeeting(session.zoomMeetingId);
+        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+        if (accessToken) {
+          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
+        }
       } catch (error) {
         this.logger.warn(`Failed to delete Zoom meeting for no-show session ${session.zoomMeetingId}: ${error.message}`);
       }
@@ -1013,7 +1034,10 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        await this.zoomService.deleteMeeting(session.zoomMeetingId);
+        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+        if (accessToken) {
+          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
+        }
       } catch (error) {
         this.logger.warn(`Failed to delete Zoom meeting for expired session ${session.zoomMeetingId}: ${error.message}`);
       }
