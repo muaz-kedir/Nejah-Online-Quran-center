@@ -190,10 +190,12 @@ export class AttendanceService {
           const now = new Date();
           const durationMinutes = 90; // 90 minutes default
 
+          const accessToken = await this.zoomService.requireTeacherAccessToken(session.teacherId);
           const meeting = await this.zoomService.createMeeting(
             session.classTitle || 'Quran Class',
             now,
             durationMinutes,
+            accessToken,
           );
 
           meetingLink = meeting.joinUrl;
