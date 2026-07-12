@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
-import { api } from '@/lib/api';
+import { api, API_BASE } from '@/lib/api';
 import {
   Video,
   Link2,
@@ -112,13 +112,12 @@ function TeacherZoomPanel() {
   const [status, setStatus] = useState<TeacherZoomStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
-  const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const data = await api<TeacherZoomStatus>('/zoom-settings/status');
+      const data = await api<TeacherZoomStatus>('/zoom-oauth/status');
       setStatus(data);
     } catch {
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
@@ -129,38 +128,30 @@ function TeacherZoomPanel() {
 
   useEffect(() => {
     fetchStatus();
+    const params = new URLSearchParams(window.location.search);
+    const oauthResult = params.get('zoom_oauth');
+    if (oauthResult === 'success') {
+      toast.success('Zoom account connected successfully');
+      fetchStatus();
+    } else if (oauthResult === 'error') {
+      const reason = params.get('reason') || 'Authorization failed';
+      setConnectError(reason);
+      toast.error(reason);
+    }
+    if (oauthResult) {
+      window.history.replaceState({}, '', '/zoom-settings');
+    }
   }, []);
 
-  const handleConnect = async () => {
-    setConnecting(true);
-    setConnectError(null);
-    try {
-      const data = await api<{ connected: boolean; email: string }>('/zoom-settings/connect', {
-        method: 'POST',
-      });
-      setStatus({
-        connected: true,
-        email: data.email,
-        zoomUserId: null,
-        connectedAt: new Date().toISOString(),
-      });
-      toast.success('Zoom connected');
-    } catch (err: any) {
-      const message = err?.message || 'Something went wrong. Please try again.';
-      setConnectError(
-        message.includes('fetch') || message.includes('network')
-          ? 'Something went wrong. Please try again.'
-          : message,
-      );
-    } finally {
-      setConnecting(false);
-    }
+  const handleConnect = () => {
+    const token = localStorage.getItem('token');
+    window.location.href = `${API_BASE}/zoom-oauth/authorize?token=${encodeURIComponent(token || '')}`;
   };
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      await api('/zoom-settings/disconnect', { method: 'DELETE' });
+      await api('/zoom-oauth/disconnect', { method: 'DELETE' });
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
       setConnectError(null);
       toast.success('Zoom disconnected');
@@ -222,15 +213,10 @@ function TeacherZoomPanel() {
               </div>
               <Button
                 onClick={handleConnect}
-                disabled={connecting}
                 className="w-full gap-2 bg-nejah-sapphire hover:bg-nejah-azure text-white"
               >
-                {connecting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Link2 className="h-4 w-4" />
-                )}
-                Connect Zoom
+                <Link2 className="h-4 w-4" />
+                Connect Zoom Account
               </Button>
               {connectError && (
                 <p className="text-sm text-red-600 dark:text-red-400 text-center">{connectError}</p>

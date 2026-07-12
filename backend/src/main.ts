@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import * as crypto from 'crypto';
 import { validateEnvironment } from './config/env-validation';
 import { isAllowedCorsOrigin } from './config/cors-origins';
 
@@ -57,7 +58,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
@@ -81,12 +82,70 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-zm-signature', 'x-zm-request-timestamp'],
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const bodyParser = require('body-parser');
+
+  // Body parser for ALL API routes at Express level.
+  // NestJS registers its body-parser during app.listen() (AFTER app.use()),
+  // but on Render the built-in parser does not seem to populate req.body.
+  // Parsing here ensures the body is always available in controllers.
+  app.use('/api', bodyParser.json());
+
+  // === ZOOM WEBHOOK: RAW EXPRESS HANDLER ===
+  // Runs at the Express level BEFORE NestJS's router,
+  // completely bypassing all NestJS processing (pipes, interceptors, guards, serializers).
+
+  // 1) Parse JSON body for /zoom/webhook (stores req.body + req.rawBody)
+  app.use(
+    '/zoom/webhook',
+    bodyParser.json({
+      verify: (req: any, _res: any, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+
+  // 2) Handle endpoint.url_validation — short-circuits with exact response
+  app.use('/zoom/webhook', (req, res, next) => {
+    if (req.method !== 'POST') return next();
+
+    const body = req.body || {};
+    const event = body.event;
+
+    if (event === 'endpoint.url_validation') {
+      const plainToken = body?.payload?.plainToken;
+      const secretToken = process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() || '';
+      const encryptedToken = secretToken
+        ? crypto.createHmac('sha256', secretToken).update(plainToken || '').digest('hex')
+        : '';
+
+      const responseBody = { plainToken: plainToken || '', encryptedToken };
+
+      console.log('### ZOOM WEBHOOK VALIDATION (RAW EXPRESS) ###');
+      console.log('req.body available:', !!req.body);
+      console.log('plainToken:', plainToken);
+      console.log('secretToken length:', secretToken.length);
+      console.log('secretToken (first 4):', secretToken.substring(0, 4));
+      console.log('secretToken (last 4):', secretToken.substring(Math.max(0, secretToken.length - 4)));
+      console.log('encryptedToken:', encryptedToken);
+      console.log('responseBody:', JSON.stringify(responseBody));
+      console.log('Content-Type: application/json');
+      console.log('Status: 200');
+      console.log('############################################');
+
+      res.status(200).json(responseBody);
+      return;
+    }
+
+    next();
+  });
+
   // API prefix — exclude Zoom webhook and public health from /api
   const apiPrefix = configService.get<string>('API_PREFIX') || 'api';
   app.setGlobalPrefix(apiPrefix, {
     exclude: [
       { path: 'health', method: RequestMethod.GET },
-      { path: 'zoom/webhook', method: RequestMethod.POST },
+      { path: 'zoom/webhook', method: RequestMethod.ALL },
     ],
   });
 

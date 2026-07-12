@@ -10,6 +10,8 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
@@ -23,6 +25,8 @@ import { TeachersService } from '../teachers/teachers.service';
 @Controller('schedules')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SchedulesController {
+  private readonly logger = new Logger(SchedulesController.name);
+
   constructor(
     private readonly schedulesService: SchedulesService,
     private readonly teachersService: TeachersService,
@@ -30,12 +34,31 @@ export class SchedulesController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER, UserRole.TEACHER)
-  async create(@Request() req, @Body() createScheduleDto: CreateScheduleDto) {
+  async create(@Request() req, @Body() body: Record<string, any>) {
+    this.logger.log(`=== RAW BODY TYPE: ${typeof body}, keys: ${body ? Object.keys(body).join(', ') : 'null'} ===`);
+    if (body) {
+      for (const key of Object.keys(body)) {
+        this.logger.log(`  body.${key} = ${JSON.stringify(body[key])} (type: ${typeof body[key]})`);
+      }
+    }
+
+    if (typeof body !== 'object' || body === null || Object.keys(body).length === 0) {
+      this.logger.error(`Body is empty or not an object: ${JSON.stringify(body)}`);
+      throw new BadRequestException('Request body is empty');
+    }
+
+    // Manual field check — avoiding class-transformer/class-validator entirely
+    const required = ['teacherId', 'dayOfWeek', 'startTimeString', 'endTimeString'] as const;
+    const missing = required.filter(f => !body[f]);
+    if (missing.length > 0) {
+      throw new BadRequestException(`Missing required fields: ${missing.join(', ')}`);
+    }
+
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      createScheduleDto.teacherId = teacher.id;
+      body.teacherId = teacher.id;
     }
-    return this.schedulesService.createSchedule(createScheduleDto);
+    return this.schedulesService.createSchedule(body as CreateScheduleDto);
   }
 
   @Get()

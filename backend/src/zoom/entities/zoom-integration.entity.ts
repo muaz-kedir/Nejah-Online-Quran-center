@@ -39,6 +39,15 @@ export class ZoomIntegration {
   @Column({ default: 'disconnected' })
   connectionStatus: string;
 
+  @Column({ nullable: true, type: 'text' })
+  accessTokenEncrypted: string;
+
+  @Column({ nullable: true, type: 'text' })
+  refreshTokenEncrypted: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  tokenExpiresAt: Date;
+
   @Column({ type: 'timestamp', nullable: true })
   connectedAt: Date;
 

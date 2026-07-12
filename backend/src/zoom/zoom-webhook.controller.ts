@@ -7,13 +7,12 @@ import {
   HttpStatus,
   Logger,
   Req,
-  UsePipes,
-  ValidationPipe,
+  Res,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ZoomWebhookService } from './zoom-webhook.service';
 import { ZoomService } from './zoom.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 
 @SkipThrottle()
@@ -39,11 +38,14 @@ export class ZoomWebhookController {
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
     @Req() req: Request & { rawBody?: Buffer },
+    @Res() res: Response,
   ) {
     const event = (body?.event as string) || '';
     const payload = (body?.payload as Record<string, unknown>) || {};
 
-    // Zoom endpoint URL validation — respond immediately (no signature check)
+    this.logger.log(`Webhook event received: ${event}`);
+
+    // URL validation (fallback if raw middleware didn't handle it, e.g. in tests)
     if (event === 'endpoint.url_validation') {
       return this.handleUrlValidation(payload);
     }
@@ -53,11 +55,11 @@ export class ZoomWebhookController {
 
     const rawBody = this.getRawBody(req);
     if (!this.verifyWebhookSignature(rawBody, signature, timestamp)) {
-      this.logger.warn(`Webhook signature verification failed for event: ${event}`);
-      return { status: 'rejected' };
+      this.logger.warn(`Signature verification failed for event: ${event}`);
+      return res.status(200).json({ status: 'rejected' });
     }
 
-    this.logger.log(`Webhook signature verified for event: ${event}`);
+    this.logger.log(`Signature verified for event: ${event}`);
 
     const eventId = this.buildEventId(event, body, payload);
 
@@ -66,13 +68,13 @@ export class ZoomWebhookController {
         .handleWebhook(event, payload, eventId)
         .catch((error: Error) => {
           this.logger.error(
-            `Background webhook processing error: ${error.message}`,
+            `Background webhook error: ${error.message}`,
             error.stack,
           );
         });
     });
 
-    return { status: 'success' };
+    return res.status(200).json({ status: 'success' });
   }
 
   /* ------------------------------------------------------------------ */
@@ -130,7 +132,7 @@ export class ZoomWebhookController {
         ? req.rawBody.toString('utf8')
         : String(req.rawBody);
     }
-    this.logger.warn('rawBody missing — webhook signature verification may fail');
+    this.logger.warn('rawBody missing');
     return '';
   }
 

@@ -134,6 +134,13 @@ export function EditScheduleModal({
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
+
+      if (!teacher?.id) {
+        toast.error("Teacher not found — please reload the page");
+        setSaving(false);
+        return;
+      }
+
       const payload =
         sessionMode === "group"
           ? {
@@ -161,6 +168,14 @@ export function EditScheduleModal({
               notes: formData.notes,
             };
 
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("[Schedule Create] payload:", JSON.stringify(payload, null, 2));
+      }
+
+      if (!payload.teacherId || !payload.dayOfWeek || !payload.startTimeString || !payload.endTimeString) {
+        console.warn("[Schedule Create] Missing required fields in payload:", payload);
+      }
+
       let url: string;
       let method: string;
       if (isEdit) {
@@ -186,7 +201,8 @@ export function EditScheduleModal({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || "Failed to save schedule");
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message;
+        throw new Error(msg || "Failed to save schedule");
       }
 
       toast.success(`Schedule ${isEdit ? "updated" : "created"} successfully`);

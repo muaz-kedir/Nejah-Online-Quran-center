@@ -11,14 +11,15 @@ import {
   BadRequestException,
   Request,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { StudentsService } from './students.service';
+import { StudentManagementService } from './student-management.service';
 import { TeachersService } from '../teachers/teachers.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { QueryStudentDto } from './dto/query-student.dto';
 import { DelegateStudentDto } from './dto/delegate-student.dto';
-import { StudentManagementService } from './student-management.service';
 import { CreateScheduleDto } from '../schedules/dto/create-schedule.dto';
 import { CreateTeacherReplacementDto } from '../teacher-replacements/dto/create-teacher-replacement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -29,6 +30,8 @@ import { UserRole } from '../common/enums/user-role.enum';
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class StudentsController {
+  private readonly logger = new Logger(StudentsController.name);
+
   constructor(
     private readonly studentsService: StudentsService,
     private readonly teachersService: TeachersService,
@@ -90,12 +93,30 @@ export class StudentsController {
 
   @Post(':id/schedule')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.QIRAT_MANAGER)
-  createStudentSchedule(
+  async createStudentSchedule(
     @Param('id') id: string,
-    @Body() dto: CreateScheduleDto,
+    @Body() body: Record<string, any>,
     @Request() req,
   ) {
-    return this.studentManagementService.createPermanentSchedule(id, dto, req.user.id);
+    this.logger.log(`=== RAW BODY TYPE: ${typeof body}, keys: ${body ? Object.keys(body).join(', ') : 'null'} ===`);
+    if (body) {
+      for (const key of Object.keys(body)) {
+        this.logger.log(`  body.${key} = ${JSON.stringify(body[key])} (type: ${typeof body[key]})`);
+      }
+    }
+
+    if (typeof body !== 'object' || body === null || Object.keys(body).length === 0) {
+      this.logger.error(`Body is empty or not an object: ${JSON.stringify(body)}`);
+      throw new BadRequestException('Request body is empty');
+    }
+
+    const required = ['teacherId', 'dayOfWeek', 'startTimeString', 'endTimeString'] as const;
+    const missing = required.filter(f => !body[f]);
+    if (missing.length > 0) {
+      throw new BadRequestException(`Missing required fields: ${missing.join(', ')}`);
+    }
+
+    return this.studentManagementService.createPermanentSchedule(id, body as Omit<CreateScheduleDto, 'studentId'>, req.user.id);
   }
 
   @Post(':id/temporary-schedule')

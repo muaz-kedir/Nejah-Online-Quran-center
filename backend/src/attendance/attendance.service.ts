@@ -1,16 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+// dkaskd ask
 import { Repository } from 'typeorm';
-import {
-  ClassSession,
-  SessionStatus,
-  TeacherAttendanceStatus,
-} from './entities/class-session.entity';
+import { ClassSession, SessionStatus, TeacherAttendanceStatus } from './entities/class-session.entity';
 import { StudentAttendance, StudentAttendanceStatus } from './entities/student-attendance.entity';
 import { CreateClassSessionDto } from './dto/create-class-session.dto';
 import { StartMeetingDto } from './dto/start-meeting.dto';
@@ -18,10 +10,6 @@ import { RecordStudentAttendanceDto } from './dto/record-student-attendance.dto'
 import { EndSessionDto } from './dto/end-session.dto';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
-import { Schedule } from '../schedules/entities/schedule.entity';
-import { NotificationsService } from '../notifications/notifications.service';
-import { ZoomService } from '../zoom/zoom.service';
-import { ZoomIntegration } from '../zoom/entities/zoom-integration.entity';
 
 @Injectable()
 export class AttendanceService {
@@ -34,12 +22,6 @@ export class AttendanceService {
     private studentRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private teacherRepository: Repository<Teacher>,
-    @InjectRepository(Schedule)
-    private scheduleRepository: Repository<Schedule>,
-    @InjectRepository(ZoomIntegration)
-    private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
-    private notificationsService: NotificationsService,
-    private readonly zoomService: ZoomService,
   ) {}
 
   async createClassSession(dto: CreateClassSessionDto): Promise<ClassSession> {
@@ -83,89 +65,9 @@ export class AttendanceService {
     return this.getClassSessionWithAttendance(savedSession.id);
   }
 
-  async getLiveClassSessionByScheduleToday(
-    scheduleId: string,
-    requestingTeacherId?: string,
-  ): Promise<ClassSession> {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-
-    let session = await this.classSessionRepository.findOne({
-      where: {
-        scheduleId,
-        sessionDate: todayStr as any,
-      },
-      relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
-    });
-
-    if (!session) {
-      const schedule = await this.scheduleRepository.findOne({
-        where: { id: scheduleId },
-        relations: [
-          'student',
-          'teacher',
-          'teacher.user',
-          'scheduleStudents',
-          'scheduleStudents.student',
-        ],
-      });
-
-      if (!schedule) {
-        throw new NotFoundException('Schedule not found');
-      }
-
-      if (requestingTeacherId && schedule.teacherId !== requestingTeacherId) {
-        throw new ForbiddenException('You do not have access to this schedule');
-      }
-
-      const assignedStudentIds = schedule.isGroupSession
-        ? (schedule.scheduleStudents || []).map((ss) => ss.studentId)
-        : schedule.studentId
-          ? [schedule.studentId]
-          : [];
-
-      const quranLevel = schedule.isGroupSession
-        ? schedule.scheduleStudents?.[0]?.student?.level || 'Beginner'
-        : schedule.student?.level || 'Beginner';
-
-      session = this.classSessionRepository.create({
-        classTitle: schedule.className || 'Quran Class',
-        subject: 'Quran & Islamic Studies',
-        quranLevel,
-        sessionDate: todayStr as any,
-        scheduledStartTime: schedule.startTimeString || '12:00',
-        scheduledEndTime: schedule.endTimeString || '13:00',
-        teacherId: schedule.teacherId,
-        scheduleId: schedule.id,
-        status: SessionStatus.SCHEDULED,
-        totalStudentsAssigned: assignedStudentIds.length,
-      });
-
-      const savedSession = await this.classSessionRepository.save(session);
-
-      for (const sid of assignedStudentIds) {
-        const attendance = this.studentAttendanceRepository.create({
-          studentId: sid,
-          classSessionId: savedSession.id,
-          attendanceStatus: StudentAttendanceStatus.ABSENT,
-        });
-        await this.studentAttendanceRepository.save(attendance);
-      }
-
-      session = await this.getClassSessionWithAttendance(savedSession.id);
-    }
-
-    if (requestingTeacherId && session.teacherId !== requestingTeacherId) {
-      throw new ForbiddenException('You do not have access to this class session');
-    }
-
-    return session;
-  }
-
   async startMeeting(dto: StartMeetingDto): Promise<ClassSession> {
     const session = await this.classSessionRepository.findOne({
       where: { id: dto.classSessionId },
-      relations: ['teacher'],
     });
 
     if (!session) {
@@ -217,37 +119,18 @@ export class AttendanceService {
     }
 
     session.status = SessionStatus.LIVE;
-    const now = new Date();
-    session.actualStartTime = now;
+    session.actualStartTime = new Date();
 
-    // Determine teacher attendance status (LATE or PRESENT)
-    const todayStr = now.toISOString().split('T')[0];
-    const scheduledStart = new Date(`${todayStr}T${session.scheduledStartTime}:00`);
-
-    if (now > scheduledStart) {
-      session.teacherAttendanceStatus = TeacherAttendanceStatus.LATE;
-    } else {
-      session.teacherAttendanceStatus = TeacherAttendanceStatus.PRESENT;
-    }
-    session.teacherJoinTime = now;
+    // Record teacher attendance as PRESENT
+    session.teacherAttendanceStatus = TeacherAttendanceStatus.PRESENT;
+    session.teacherJoinTime = new Date();
 
     const updatedSession = await this.classSessionRepository.save(session);
 
-    // Retrieve assigned student IDs for notification
-    const attendances = await this.studentAttendanceRepository.find({
-      where: { classSessionId: session.id },
-    });
-    const studentIds = attendances.map((a) => a.studentId);
+    // Trigger notifications (will be handled by notification service)
+    // This is where we'd emit events for notifications
 
-    const sessionWithTeacher = await this.getClassSessionWithAttendance(updatedSession.id);
-
-    try {
-      await this.notificationsService.notifyMeetingStarted(sessionWithTeacher, studentIds);
-    } catch (err) {
-      console.error('Failed to trigger meeting started notifications', err);
-    }
-
-    return sessionWithTeacher;
+    return this.getClassSessionWithAttendance(updatedSession.id);
   }
 
   async recordStudentAttendance(dto: RecordStudentAttendanceDto): Promise<StudentAttendance> {
@@ -267,18 +150,20 @@ export class AttendanceService {
     });
 
     if (!attendance) {
+      // Create new attendance record if it doesn't exist
       attendance = this.studentAttendanceRepository.create({
         studentId: dto.studentId,
         classSessionId: dto.classSessionId,
-        attendanceStatus: StudentAttendanceStatus.ABSENT,
       });
     }
 
-    const now = new Date();
     if (dto.action === 'join') {
-      const todayStr = now.toISOString().split('T')[0];
-      const scheduledStart = new Date(`${todayStr}T${session.scheduledStartTime}:00`);
+      const now = new Date();
+      const scheduledStart = new Date(
+        `${session.sessionDate}T${session.scheduledStartTime}`,
+      );
 
+      // Check if student is late
       if (now > scheduledStart) {
         attendance.attendanceStatus = StudentAttendanceStatus.LATE;
       } else {
@@ -288,14 +173,17 @@ export class AttendanceService {
       attendance.joinTime = now;
       attendance.notificationSent = true;
     } else if (dto.action === 'leave') {
-      attendance.leaveTime = now;
+      attendance.leaveTime = new Date();
 
+      // Calculate duration
       if (attendance.joinTime) {
         const durationMs = attendance.leaveTime.getTime() - attendance.joinTime.getTime();
         attendance.durationMinutes = Math.floor(durationMs / 60000);
 
-        const todayStr = now.toISOString().split('T')[0];
-        const scheduledEnd = new Date(`${todayStr}T${session.scheduledEndTime}:00`);
+        // Mark as LEFT_EARLY if left before scheduled end time
+        const scheduledEnd = new Date(
+          `${session.sessionDate}T${session.scheduledEndTime}`,
+        );
         if (attendance.leaveTime < scheduledEnd) {
           attendance.attendanceStatus = StudentAttendanceStatus.LEFT_EARLY;
         }
@@ -303,17 +191,9 @@ export class AttendanceService {
     }
 
     const savedAttendance = await this.studentAttendanceRepository.save(attendance);
-    await this.updateSessionStatistics(dto.classSessionId);
 
-    try {
-      await this.notificationsService.notifyAttendanceRecorded(
-        dto.studentId,
-        dto.classSessionId,
-        savedAttendance.attendanceStatus,
-      );
-    } catch (err) {
-      console.error('Failed to notify parent about attendance', err);
-    }
+    // Update session statistics
+    await this.updateSessionStatistics(dto.classSessionId);
 
     return savedAttendance;
   }
@@ -321,7 +201,7 @@ export class AttendanceService {
   async endSession(dto: EndSessionDto): Promise<ClassSession> {
     const session = await this.classSessionRepository.findOne({
       where: { id: dto.classSessionId },
-      relations: ['teacher', 'studentAttendances'],
+      relations: ['studentAttendances'],
     });
 
     if (!session) {
@@ -329,16 +209,11 @@ export class AttendanceService {
     }
 
     session.status = SessionStatus.COMPLETED;
-    const now = new Date();
-    session.actualEndTime = now;
-    session.teacherLeaveTime = now;
+    session.actualEndTime = new Date();
+    session.teacherLeaveTime = new Date();
     session.notes = dto.notes;
 
-    if (session.teacherJoinTime) {
-      const durationMs = now.getTime() - session.teacherJoinTime.getTime();
-      session.teacherDuration = Math.floor(durationMs / 60000);
-    }
-
+    // Mark students who never joined as ABSENT
     const attendances = await this.studentAttendanceRepository.find({
       where: { classSessionId: dto.classSessionId },
     });
@@ -347,29 +222,11 @@ export class AttendanceService {
       if (!attendance.joinTime) {
         attendance.attendanceStatus = StudentAttendanceStatus.ABSENT;
         await this.studentAttendanceRepository.save(attendance);
-      } else if (!attendance.leaveTime) {
-        attendance.leaveTime = now;
-        const durationMs = now.getTime() - attendance.joinTime.getTime();
-        attendance.durationMinutes = Math.floor(durationMs / 60000);
-
-        const todayStr = now.toISOString().split('T')[0];
-        const scheduledEnd = new Date(`${todayStr}T${session.scheduledEndTime}:00`);
-        if (now < scheduledEnd) {
-          attendance.attendanceStatus = StudentAttendanceStatus.LEFT_EARLY;
-        }
-        await this.studentAttendanceRepository.save(attendance);
       }
     }
 
     const updatedSession = await this.classSessionRepository.save(session);
     await this.updateSessionStatistics(dto.classSessionId);
-
-    try {
-      const sessionWithTeacher = await this.getClassSessionWithAttendance(updatedSession.id);
-      await this.notificationsService.notifyMeetingEnded(sessionWithTeacher);
-    } catch (err) {
-      console.error('Failed to notify meeting ended', err);
-    }
 
     return this.getClassSessionWithAttendance(updatedSession.id);
   }
@@ -423,10 +280,7 @@ export class AttendanceService {
       query.andWhere('session.sessionDate = :date', { date });
     }
 
-    return query
-      .orderBy('session.sessionDate', 'DESC')
-      .addOrderBy('session.scheduledStartTime', 'DESC')
-      .getMany();
+    return query.orderBy('session.sessionDate', 'DESC').addOrderBy('session.scheduledStartTime', 'DESC').getMany();
   }
 
   async getStudentAttendanceHistory(studentId: string): Promise<StudentAttendance[]> {
@@ -488,39 +342,53 @@ export class AttendanceService {
     return query.orderBy('session.scheduledStartTime', 'ASC').getMany();
   }
 
-  async getStudentLiveClass(studentId: string): Promise<ClassSession> {
+  async getLiveClassSessionByScheduleToday(
+    scheduleId: string,
+    requestingTeacherId?: string,
+  ): Promise<ClassSession | null> {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    today.setHours(0, 0, 0, 0);
+    const query = this.classSessionRepository
+      .createQueryBuilder('session')
+      .where('session.scheduleId = :scheduleId', { scheduleId })
+      .andWhere('session.sessionDate = :date', { date: today })
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendance')
+      .leftJoinAndSelect('attendance.student', 'student');
 
-    const liveSessions = await this.classSessionRepository.find({
-      where: {
-        status: SessionStatus.LIVE,
-        sessionDate: todayStr as any,
-      },
-      relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
-    });
-
-    for (const session of liveSessions) {
-      const isAssigned = session.studentAttendances.some((a) => a.studentId === studentId);
-      if (isAssigned) {
-        return session;
-      }
+    if (requestingTeacherId) {
+      query.andWhere('session.teacherId = :teacherId', { teacherId: requestingTeacherId });
     }
-    return null;
+
+    return query.getOne() || null;
   }
 
-  async getAllSessions(limit: number = 100, status?: string): Promise<ClassSession[]> {
+  async getStudentLiveClass(studentId: string): Promise<ClassSession | null> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return this.classSessionRepository
+      .createQueryBuilder('session')
+      .innerJoin('session.studentAttendances', 'attendance')
+      .where('attendance.studentId = :studentId', { studentId })
+      .andWhere('session.sessionDate = :date', { date: today })
+      .andWhere('session.status = :status', { status: SessionStatus.LIVE })
+      .leftJoinAndSelect('session.teacher', 'teacher')
+      .leftJoinAndSelect('session.studentAttendances', 'attendances')
+      .leftJoinAndSelect('attendances.student', 'student')
+      .getOne() || null;
+  }
+
+  async getAllSessions(limitNum: number, status?: string): Promise<ClassSession[]> {
     const query = this.classSessionRepository
       .createQueryBuilder('session')
       .leftJoinAndSelect('session.teacher', 'teacher')
       .leftJoinAndSelect('session.studentAttendances', 'attendance')
       .leftJoinAndSelect('attendance.student', 'student')
-      .orderBy('session.sessionDate', 'DESC')
-      .addOrderBy('session.scheduledStartTime', 'DESC')
-      .take(limit);
+      .orderBy('session.scheduledStartTime', 'DESC')
+      .take(limitNum);
 
-    if (status && status !== 'all') {
-      query.where('session.status = :status', { status });
+    if (status) {
+      query.andWhere('session.status = :status', { status });
     }
 
     return query.getMany();

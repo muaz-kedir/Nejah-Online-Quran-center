@@ -255,7 +255,72 @@ export class ZoomService {
         auto_recording: 'none',
         waiting_room: false,
       },
-    });
+    };
+
+    if (teacherId) {
+      const integration = await this.getTeacherIntegration(teacherId);
+      const teacherToken = await this.getTeacherAccessToken(teacherId);
+
+      if (teacherToken) {
+        const meeting = await this.zoomRequestWithToken<{
+          id: number;
+          uuid: string;
+          join_url: string;
+          start_url: string;
+          password?: string;
+        }>('POST', '/users/me/meetings', teacherToken, payload);
+
+        return {
+          meetingId: String(meeting.id),
+          meetingUUID: meeting.uuid,
+          startUrl: meeting.start_url,
+          joinUrl: meeting.join_url,
+          password: meeting.password || '',
+        };
+      }
+
+      if (!integration?.zoomUserId) {
+        throw new HttpException(
+          'Teacher Zoom account is not connected. Please connect your Zoom account in Settings or provide a meeting link manually.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!this.isPlatformConfigured()) {
+        throw new HttpException(
+          'Zoom platform credentials are not configured. Contact your administrator.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const platformToken = await this.getAccessToken();
+      const userPath = `/users/${this.encodeZoomUserId(integration.zoomUserId)}/meetings`;
+      const meeting = await this.zoomRequestWithToken<{
+        id: number;
+        uuid: string;
+        join_url: string;
+        start_url: string;
+        password?: string;
+      }>('POST', userPath, platformToken, payload);
+
+      return {
+        meetingId: String(meeting.id),
+        meetingUUID: meeting.uuid,
+        startUrl: meeting.start_url,
+        joinUrl: meeting.join_url,
+        password: meeting.password || '',
+      };
+    }
+
+    this.assertPlatformConfigured();
+    const token = await this.getAccessToken();
+    const meeting = await this.zoomRequestWithToken<{
+      id: number;
+      uuid: string;
+      join_url: string;
+      start_url: string;
+      password?: string;
+    }>('POST', '/users/me/meetings', token, payload);
 
     return {
       meetingId: String(meeting.id),
@@ -358,7 +423,7 @@ export class ZoomService {
 
   /** Meeting SDK app key — same as ZOOM_CLIENT_ID. */
   getOAuthClientId(): string | null {
-    return this.clientId || null;
+    return this.resolveOAuthClientId() || null;
   }
 
   generateMeetingSdkSignature(meetingNumber: string, role: 0 | 1): string | null {
