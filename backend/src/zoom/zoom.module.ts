@@ -1,8 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { ZoomService } from './zoom.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 import { ZoomOAuthController } from './zoom-oauth.controller';
@@ -19,7 +17,6 @@ import { LiveSessionController } from './live-session.controller';
 import { SessionNoteController } from './session-note.controller';
 import { ZoomWebhookController } from './zoom-webhook.controller';
 import { ZoomSettingsController } from './zoom-settings.controller';
-import { ZoomOAuthController } from './zoom-oauth.controller';
 import { ZoomAnalyticsController } from './zoom-analytics.controller';
 import { SessionAttendanceController } from './session-attendance.controller';
 import { ParentSessionController } from './parent-session.controller';
@@ -63,13 +60,6 @@ import { EncryptionService } from '../common/encryption.service';
       AttendanceSegment,
       SessionParticipantSummary,
     ]),
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
-      }),
-    }),
     HttpModule.register({
       timeout: 15000,
       maxRedirects: 3,
