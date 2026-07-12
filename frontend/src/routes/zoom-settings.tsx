@@ -117,7 +117,7 @@ function TeacherZoomPanel() {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const data = await api<TeacherZoomStatus>('/zoom-oauth/status');
+      const data = await api<TeacherZoomStatus>('/zoom-settings/status');
       setStatus(data);
     } catch {
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
@@ -143,15 +143,23 @@ function TeacherZoomPanel() {
     }
   }, []);
 
-  const handleConnect = () => {
-    const token = localStorage.getItem('token');
-    window.location.href = `${API_BASE}/zoom-oauth/authorize?token=${encodeURIComponent(token || '')}`;
+  const handleConnect = async () => {
+    try {
+      setConnectError(null);
+      const data = await api<{ url: string }>('/zoom/oauth/connect');
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      setConnectError(err.message || 'Failed to start Zoom connection');
+      toast.error(err.message || 'Failed to start Zoom connection');
+    }
   };
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      await api('/zoom-oauth/disconnect', { method: 'DELETE' });
+      await api('/zoom-settings/disconnect', { method: 'DELETE' });
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
       setConnectError(null);
       toast.success('Zoom disconnected');
