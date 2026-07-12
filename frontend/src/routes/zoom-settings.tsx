@@ -622,8 +622,8 @@ function AdminZoomPanel() {
             )}
             {!accountUsersLoading && accountUsers.length === 0 && (
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 text-xs text-amber-800 dark:text-amber-400">
-                Could not load Zoom users. Ensure <strong>user:read:admin</strong> scope is added
-                to your Server-to-Server OAuth app in Zoom Marketplace, then activate the app.
+                Could not load Zoom users. Ensure <strong>user:read:user</strong> scope is added
+                to your Zoom app in Zoom Marketplace, then activate the app.
               </div>
             )}
             <div className="space-y-2">
