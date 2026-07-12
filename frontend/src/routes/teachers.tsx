@@ -674,7 +674,7 @@ function TeacherDetailModal({ teacher, onClose, userRole, onEdit, onRefresh }: {
 }
 
 function TeachersPage() {
-  const userRole = localStorage.getItem('role') || '';
+  const userRole = localStorage.getItem('userRole') || '';
   const [teachers, setTeachers] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -787,10 +787,12 @@ function TeachersPage() {
                 <RefreshCw className={cn('h-5 w-5', refreshing && 'animate-spin')} />
                 {refreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
-              <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
-                <Plus className="h-5 w-5" />
-                Add Teacher
-              </Button>
+              {userRole === 'super_admin' && (
+                <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
+                  <Plus className="h-5 w-5" />
+                  Add Teacher
+                </Button>
+              )}
             </div>
           }
         />
