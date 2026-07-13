@@ -76,6 +76,7 @@ import { Route as StudentNotificationsRouteImport } from './routes/student_.noti
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
+import { Route as SettingsIntegrationsRouteImport } from './routes/settings.integrations'
 import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
 import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
 import { Route as ClassroomSessionIdRouteImport } from './routes/classroom_.$sessionId'
@@ -425,6 +426,11 @@ const StudentClassesRoute = StudentClassesRouteImport.update({
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIntegrationsRoute = SettingsIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const LiveSessionsIdRoute = LiveSessionsIdRouteImport.update({
   id: '/live-sessions_/$id',
   path: '/live-sessions/$id',
@@ -526,7 +532,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -546,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
+  '/settings/integrations': typeof SettingsIntegrationsRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -607,7 +614,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -627,6 +634,7 @@ export interface FileRoutesByTo {
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
+  '/settings/integrations': typeof SettingsIntegrationsRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -688,7 +696,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -708,6 +716,7 @@ export interface FileRoutesById {
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions_/$id': typeof LiveSessionsIdRoute
+  '/settings/integrations': typeof SettingsIntegrationsRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
   '/student_/homework': typeof StudentHomeworkRoute
@@ -791,6 +800,7 @@ export interface FileRouteTypes {
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
+    | '/settings/integrations'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -872,6 +882,7 @@ export interface FileRouteTypes {
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
+    | '/settings/integrations'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -952,6 +963,7 @@ export interface FileRouteTypes {
     | '/classroom_/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions_/$id'
+    | '/settings/integrations'
     | '/student_/classes'
     | '/student_/evaluations'
     | '/student_/homework'
@@ -1014,7 +1026,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
@@ -1522,6 +1534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/integrations': {
+      id: '/settings/integrations'
+      path: '/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof SettingsIntegrationsRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/live-sessions_/$id': {
       id: '/live-sessions_/$id'
       path: '/live-sessions/$id'
@@ -1621,6 +1640,18 @@ const LiveSessionsRouteWithChildren = LiveSessionsRoute._addFileChildren(
   LiveSessionsRouteChildren,
 )
 
+interface SettingsRouteChildren {
+  SettingsIntegrationsRoute: typeof SettingsIntegrationsRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsIntegrationsRoute: SettingsIntegrationsRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 interface TeachersIdRouteChildren {
   TeachersIdProfileRoute: typeof TeachersIdProfileRoute
   TeachersIdStudentsRoute: typeof TeachersIdStudentsRoute
@@ -1680,7 +1711,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
