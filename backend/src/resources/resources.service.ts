@@ -38,6 +38,7 @@ export class ResourcesService {
     role?: string,
     search?: string,
     category?: string,
+    type?: string,
   ): Promise<Resource[]> {
     const qb = this.resourcesRepository.createQueryBuilder('resource');
 
@@ -63,6 +64,10 @@ export class ResourcesService {
 
     if (category && category !== 'All') {
       qb.andWhere('resource.category = :category', { category });
+    }
+
+    if (type && type !== 'All') {
+      qb.andWhere('LOWER(resource.resourceType) = LOWER(:type)', { type });
     }
 
     return qb.orderBy('resource.displayOrder', 'ASC').addOrderBy('resource.createdAt', 'DESC').getMany();

@@ -31,8 +31,9 @@ export class ResourcesController {
     @Request() req,
     @Query('search') search?: string,
     @Query('category') category?: string,
+    @Query('type') type?: string,
   ) {
-    return this.resourcesService.findAll(req.user.id, req.user.role, search, category);
+    return this.resourcesService.findAll(req.user.id, req.user.role, search, category, type);
   }
 
   @Get('featured')
