@@ -109,12 +109,14 @@ export class ZoomService {
    */
   async requireTeacherAccessToken(teacherId: string): Promise<string> {
     const token = await this.getTeacherAccessToken(teacherId);
-    if (!token) {
-      throw new BadRequestException(
-        'Zoom account is not connected. Please connect your Zoom account in Settings before creating classes.',
-      );
-    }
-    return token;
+    if (token) return token;
+
+    const fallback = await this.getAnyValidAccessToken();
+    if (fallback) return fallback;
+
+    throw new BadRequestException(
+      'Zoom account is not connected. Please connect your Zoom account in Settings before creating classes.',
+    );
   }
 
   /**
