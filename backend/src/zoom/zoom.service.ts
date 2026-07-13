@@ -567,37 +567,39 @@ export class ZoomService implements OnModuleInit {
         };
       }
 
-      if (!integration?.zoomUserId) {
-        throw new HttpException(
-          'Teacher Zoom account is not connected. Please connect your Zoom account in Settings or provide a meeting link manually.',
-          HttpStatus.BAD_REQUEST,
-        );
+      if (integration?.zoomUserId) {
+        if (!this.isPlatformConfigured()) {
+          throw new HttpException(
+            'Zoom platform credentials are not configured. Contact your administrator.',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const platformToken = await this.getAccessToken();
+        const userPath = `/users/${this.encodeZoomUserId(integration.zoomUserId)}/meetings`;
+        const meeting = await this.zoomRequestWithToken<{
+          id: number;
+          uuid: string;
+          join_url: string;
+          start_url: string;
+          password?: string;
+        }>('POST', userPath, platformToken, payload);
+
+        return {
+          meetingId: String(meeting.id),
+          meetingUUID: meeting.uuid,
+          startUrl: meeting.start_url,
+          joinUrl: meeting.join_url,
+          password: meeting.password || '',
+        };
       }
 
-      if (!this.isPlatformConfigured()) {
-        throw new HttpException(
-          'Zoom platform credentials are not configured. Contact your administrator.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const platformToken = await this.getAccessToken();
-      const userPath = `/users/${this.encodeZoomUserId(integration.zoomUserId)}/meetings`;
-      const meeting = await this.zoomRequestWithToken<{
-        id: number;
-        uuid: string;
-        join_url: string;
-        start_url: string;
-        password?: string;
-      }>('POST', userPath, platformToken, payload);
-
-      return {
-        meetingId: String(meeting.id),
-        meetingUUID: meeting.uuid,
-        startUrl: meeting.start_url,
-        joinUrl: meeting.join_url,
-        password: meeting.password || '',
-      };
+      // Teacher has no personal OAuth token and no zoomUserId — fall back to
+      // creating the meeting via the platform Zoom user so the session can
+      // still start with a join link.
+      this.logger.warn(
+        `Teacher ${teacherId} has no Zoom connection — falling back to platform-level meeting.`,
+      );
     }
 
     this.assertPlatformConfigured();
