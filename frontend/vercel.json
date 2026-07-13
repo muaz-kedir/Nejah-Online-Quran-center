@@ -4,6 +4,13 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": ".vercel/output",
+  "redirects": [
+    {
+      "source": "/settings/integrations",
+      "destination": "/zoom-settings?zoom_oauth=success",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/firebase-messaging-sw.js",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
@@ -156,6 +156,7 @@ function SettingsPage() {
           </TabsContent>
         </Tabs>
       </AmbientSection>
+      <Outlet />
     </DashboardLayout>
   );
 }
