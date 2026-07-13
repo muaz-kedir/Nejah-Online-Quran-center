@@ -42,6 +42,11 @@ export class ZoomService {
   private clientId = '';
   private clientSecret = '';
   private secretToken = '';
+  private zoomAccountId = '';
+
+  /** Cached S2S platform access token (used as fallback) */
+  private accessToken: string | null = null;
+  private tokenExpiresAt: Date | null = null;
 
   private oauthService: import('./zoom-oauth.service').ZoomOAuthService | null = null;
 
@@ -56,6 +61,7 @@ export class ZoomService {
     this.clientId = process.env.ZOOM_CLIENT_ID?.trim() || process.env.ZOOM_OAUTH_CLIENT_ID?.trim() || '';
     this.clientSecret = process.env.ZOOM_CLIENT_SECRET?.trim() || process.env.ZOOM_OAUTH_CLIENT_SECRET?.trim() || '';
     this.secretToken = process.env.ZOOM_WEBHOOK_SECRET_TOKEN?.trim() || '';
+    this.zoomAccountId = process.env.ZOOM_ACCOUNT_ID?.trim() || '';
   }
 
   /**
@@ -106,16 +112,26 @@ export class ZoomService {
   /**
    * Retrieve a valid access token or throw a user-friendly error.
    * Use this in service methods that require Zoom API access.
+   *
+   * Falls back to the platform S2S token if the teacher has a zoomUserId
+   * but no personal OAuth token.
    */
   async requireTeacherAccessToken(teacherId: string): Promise<string> {
-    const token = await this.getTeacherAccessToken(teacherId);
-    if (token) return token;
+    // Priority 1: Teacher's personal OAuth token
+    const teacherToken = await this.getTeacherAccessToken(teacherId);
+    if (teacherToken) return teacherToken;
 
-    const fallback = await this.getAnyValidAccessToken();
-    if (fallback) return fallback;
+    // Priority 2: Platform S2S token (if teacher has zoomUserId)
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId, connectionStatus: 'connected' },
+    });
+
+    if (integration?.zoomUserId && this.isS2SConfigured()) {
+      return this.getAccessToken();
+    }
 
     throw new BadRequestException(
-      'Zoom account is not connected. Please connect your Zoom account in Settings before creating classes.',
+      'Your personal Zoom account is not connected. Go to Zoom Settings and click "Connect Zoom Account" to authorize with your Zoom login, then try again.',
     );
   }
 
@@ -227,6 +243,63 @@ export class ZoomService {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Platform (S2S) access token                                         */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Whether the Zoom Server-to-Server credentials are configured.
+   * S2S requires ZOOM_ACCOUNT_ID in addition to client id/secret.
+   */
+  isS2SConfigured(): boolean {
+    return !!(this.clientId && this.clientSecret && this.zoomAccountId);
+  }
+
+  /**
+   * Obtain a Zoom Server-to-Server OAuth token (account-level).
+   * Caches the token and reuses it until expiry.
+   * Requires ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET
+   * to be set in the environment.
+   */
+  async getAccessToken(): Promise<string> {
+    if (this.accessToken && this.tokenExpiresAt && new Date() < this.tokenExpiresAt) {
+      return this.accessToken;
+    }
+
+    if (!this.isS2SConfigured()) {
+      throw new HttpException(
+        'Zoom S2S platform is not configured. Set ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, and ZOOM_CLIENT_SECRET.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://zoom.us/oauth/token',
+          `grant_type=account_credentials&account_id=${this.zoomAccountId}`,
+          {
+            headers: {
+              Authorization: `Basic ${auth}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          },
+        ),
+      );
+
+      this.accessToken = response.data.access_token;
+      this.tokenExpiresAt = new Date(Date.now() + (response.data.expires_in - 60) * 1000);
+      return this.accessToken;
+    } catch (error) {
+      this.logger.error('Failed to obtain Zoom S2S access token', error?.response?.data || (error as Error).message);
+      throw new HttpException(
+        'Failed to authenticate with Zoom platform. Check your Zoom credentials.',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Meetings & registrants                                              */
   /* ------------------------------------------------------------------ */
 
@@ -266,6 +339,77 @@ export class ZoomService {
       joinUrl: meeting.join_url,
       password: meeting.password || '',
     };
+  }
+
+  /**
+   * Create a Zoom meeting for a specific teacher.
+   *
+   * Priority:
+   * 1. Teacher's personal OAuth token (most specific)
+   * 2. Platform S2S token + teacher's zoomUserId (via admin connection)
+   * 3. Throws a clear error if neither is available
+   */
+  async createMeetingForTeacher(
+    topic: string,
+    startTime: Date,
+    durationMinutes: number,
+    teacherId: string,
+  ): Promise<ZoomMeetingResult> {
+    // Priority 1: Teacher's personal OAuth token
+    const teacherToken = await this.getTeacherAccessToken(teacherId);
+    if (teacherToken) {
+      try {
+        return await this.createMeeting(topic, startTime, durationMinutes, teacherToken);
+      } catch (error) {
+        this.logger.warn(
+          `Personal OAuth token failed for teacher ${teacherId}, trying S2S fallback: ${(error as HttpException).message}`,
+        );
+        await this.disconnectTeacher(teacherId).catch(() => {});
+      }
+    }
+
+    // Priority 2: Platform S2S token + teacher's zoomUserId
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId, connectionStatus: 'connected' },
+    });
+
+    if (integration?.zoomUserId && this.isS2SConfigured()) {
+      const platformToken = await this.getAccessToken();
+      const meeting = await this.zoomRequest<{
+        id: number;
+        uuid: string;
+        join_url: string;
+        start_url: string;
+        password?: string;
+      }>('POST', `/users/${integration.zoomUserId}/meetings`, platformToken, {
+        topic,
+        type: 2,
+        start_time: startTime.toISOString(),
+        duration: durationMinutes || 60,
+        timezone: 'UTC',
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: true,
+          approval_type: 2,
+          audio: 'both',
+          auto_recording: 'none',
+          waiting_room: false,
+        },
+      });
+
+      return {
+        meetingId: String(meeting.id),
+        meetingUUID: meeting.uuid,
+        startUrl: meeting.start_url,
+        joinUrl: meeting.join_url,
+        password: meeting.password || '',
+      };
+    }
+
+    throw new BadRequestException(
+      'Your personal Zoom account is not connected. Go to Zoom Settings and click "Connect Zoom Account" to authorize with your Zoom login, then try again.',
+    );
   }
 
   async registerParticipant(

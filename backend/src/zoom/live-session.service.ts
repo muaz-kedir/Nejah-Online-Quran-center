@@ -108,13 +108,11 @@ export class LiveSessionService {
       (endTime.getTime() - dto.scheduledStart.getTime()) / 60000,
     );
 
-    // TODO: Retrieve OAuth access token when OAuth flow is implemented
-    const accessToken = await this.zoomService.requireTeacherAccessToken(dto.teacherId);
-    const meeting = await this.zoomService.createMeeting(
+    const meeting = await this.zoomService.createMeetingForTeacher(
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
-      accessToken,
+      dto.teacherId,
     );
 
     session.zoomMeetingId = meeting.meetingId;
@@ -769,12 +767,11 @@ export class LiveSessionService {
       (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
     );
 
-    const accessToken = await this.zoomService.requireTeacherAccessToken(session.teacherId);
-    const meeting = await this.zoomService.createMeeting(
+    const meeting = await this.zoomService.createMeetingForTeacher(
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
-      accessToken,
+      session.teacherId,
     );
 
     session.zoomMeetingId = meeting.meetingId;
