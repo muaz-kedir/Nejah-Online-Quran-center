@@ -47,6 +47,7 @@ function TeacherStudentDetailContent() {
   const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
 
   const activeTab: TabValue = tab || 'overview';
   const [showSessionModal, setShowSessionModal] = useState(false);
@@ -95,6 +96,11 @@ function TeacherStudentDetailContent() {
       }
     };
     load();
+
+    api<{ connected: boolean }>('/zoom-oauth/status')
+      .then((res) => { if (!cancelled) setZoomConnected(res.connected); })
+      .catch(() => { if (!cancelled) setZoomConnected(false); });
+
     return () => {
       cancelled = true;
     };
@@ -218,23 +224,43 @@ function TeacherStudentDetailContent() {
                   <Video className="h-5 w-5 text-primary" /> Quick Actions
                 </h2>
               </div>
-              <button
-                onClick={() => setShowSessionModal(true)}
-                className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-nejah-sapphire/10 to-nejah-azure/5 dark:from-nejah-sapphire/20 dark:to-nejah-azure/10 border border-nejah-sapphire/20 hover:border-nejah-sapphire/40 transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
-                    <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-nejah-sapphire text-foreground">Start a Zoom Session</p>
-                    <p className="text-[10px] text-nejah-slate-blue font-medium">
-                      Schedule a live session — student will be notified in real-time
-                    </p>
+              {zoomConnected === false ? (
+                <div className="w-full p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <Video className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Zoom Not Connected</p>
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                        Connect your Zoom account in{' '}
+                        <Link to="/zoom-settings" className="underline font-bold hover:text-amber-800 dark:hover:text-amber-200">
+                          Settings
+                        </Link>{' '}
+                        before starting sessions.
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
+              ) : (
+                <button
+                  onClick={() => setShowSessionModal(true)}
+                  className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-nejah-sapphire/10 to-nejah-azure/5 dark:from-nejah-sapphire/20 dark:to-nejah-azure/10 border border-nejah-sapphire/20 hover:border-nejah-sapphire/40 transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
+                      <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-nejah-sapphire text-foreground">Start a Zoom Session</p>
+                      <p className="text-[10px] text-nejah-slate-blue font-medium">
+                        Schedule a live session — student will be notified in real-time
+                      </p>
+                    </div>
+                  </div>
+                  <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              )}
             </div>
 
             <div

@@ -494,15 +494,15 @@ function StudentResources() {
 
                 <div className="bg-muted/50 rounded-2xl p-4 border grid grid-cols-3 gap-4 text-center mb-6 mt-2">
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Type</p>
+                    <p className="text-[10px] font-bold text-foreground uppercase">Type</p>
                     <p className="font-bold text-sm mt-1">{selectedResource.resourceType}</p>
                   </div>
                   <div className="border-x border-border/50">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Size</p>
+                    <p className="text-[10px] font-bold text-foreground uppercase">Size</p>
                     <p className="font-bold text-sm mt-1">{formatSize(selectedResource.fileSize)}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Date</p>
+                    <p className="text-[10px] font-bold text-foreground uppercase">Date</p>
                     <p className="font-bold text-sm mt-1">{new Date(selectedResource.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>

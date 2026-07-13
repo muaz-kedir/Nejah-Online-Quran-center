@@ -98,26 +98,26 @@
 
 .dark {
   --background: #1A2D4A;
-  --foreground: #f0f6fc;
+  --foreground: #ffffff;
 
   --card: #203556;
-  --card-foreground: #f0f6fc;
+  --card-foreground: #ffffff;
 
   --popover: #203556;
-  --popover-foreground: #f0f6fc;
+  --popover-foreground: #ffffff;
 
   --primary: #0091ff;
   --primary-foreground: #1A2D4A;
   --primary-soft: rgba(0, 145, 255, 0.12);
 
   --secondary: #203556;
-  --secondary-foreground: #f0f6fc;
+  --secondary-foreground: #ffffff;
 
   --muted: #203556;
-  --muted-foreground: #C0D4E5;
+  --muted-foreground: #ffffff;
 
   --accent: #0f62ac;
-  --accent-foreground: #f0f6fc;
+  --accent-foreground: #ffffff;
 
   --gold: oklch(0.8 0.14 80);
 
@@ -131,7 +131,7 @@
   --body-bg-image: radial-gradient(ellipse 70% 50% at 15% 20%, rgba(15, 98, 172, 0.03) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(100, 0, 255, 0.02) 0%, transparent 50%);
   --grid-line-color: rgba(0, 145, 255, 0.015);
 
-  --color-nejah-slate-blue: #C0D4E5;
+  --color-nejah-slate-blue: #ffffff;
 }
 
 @layer base {

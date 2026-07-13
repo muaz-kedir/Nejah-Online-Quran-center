@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
 import { PageHeader } from "@/components/dashboard/design-system";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ function TeacherZoomPage() {
   const [detailSessionId, setDetailSessionId] = useState<string | null>(null);
   const [detailSession, setDetailSession] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchAll();
@@ -97,14 +98,16 @@ function TeacherZoomPage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [upcomingData, sessionsData, analyticsData] = await Promise.all([
+      const [upcomingData, sessionsData, analyticsData, zoomStatus] = await Promise.all([
         api<any[]>("/live-sessions/upcoming").catch(() => []),
         api<any>("/live-sessions/teacher?limit=50").catch(() => ({ data: [] })),
         api<any>("/zoom-analytics/teacher").catch(() => null),
+        api<{ connected: boolean }>("/zoom-oauth/status").catch(() => ({ connected: false })),
       ]);
       setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       setTeacherSessions(Array.isArray(sessionsData?.data) ? sessionsData.data : []);
       setAnalytics(analyticsData);
+      setZoomConnected(zoomStatus.connected);
     } catch {
       toast.error("Failed to load workspace data");
     } finally {
@@ -383,6 +386,19 @@ function TeacherZoomPage() {
           title="My Zoom Sessions"
           description="Manage your live Zoom sessions, start classes, and review attendance."
         />
+
+        {zoomConnected === false && (
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              Zoom account is not connected.{' '}
+              <Link to="/zoom-settings" className="underline font-bold hover:text-amber-900 dark:hover:text-amber-200">
+                Connect in Settings
+              </Link>{' '}
+              to start live sessions.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Upcoming" value={upcoming.length} icon={<Clock className="h-4 w-4" />} />
