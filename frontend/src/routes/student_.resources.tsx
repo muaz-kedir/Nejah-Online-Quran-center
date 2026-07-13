@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { 
+import {
   FolderOpen, Search, Download, FileText, Image as ImageIcon,
-  PlaySquare, Headphones, FileArchive, ArrowRight, Clock, Star, Filter
+  PlaySquare, Headphones, FileArchive, ArrowRight, Clock, Star, Filter,
+  BookOpen, Sparkles, ExternalLink, Eye, FileImage, FileQuestion
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,8 @@ function StudentResources() {
   const [categories, setCategories] = useState<string[]>([]);
   const [downloadHistory, setDownloadHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [studentLevel, setStudentLevel] = useState('All Levels');
+
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedResource, setSelectedResource] = useState<any>(null);
@@ -30,18 +32,20 @@ function StudentResources() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [resAll, resFeat, resRec, resCat, resHist] = await Promise.all([
+      const [resAll, resFeat, resRec, resCat, resHist, profile] = await Promise.all([
         api(`/resources?search=${encodeURIComponent(search)}&category=${encodeURIComponent(selectedCategory)}`),
         api('/resources/featured'),
         api('/resources/recent'),
         api('/resources/categories'),
-        api('/resources/downloads')
+        api('/resources/downloads'),
+        api('/student/profile').catch(() => null)
       ]);
       setResources(resAll);
       setFeatured(resFeat);
       setRecent(resRec);
       setCategories(['All', ...resCat]);
       setDownloadHistory(resHist);
+      setStudentLevel(profile?.student?.level || 'All Levels');
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,6 +67,53 @@ function StudentResources() {
     if (!bytes) return 'Unknown size';
     const mb = bytes / (1024 * 1024);
     return mb < 1 ? `${Math.round(bytes / 1024)} KB` : `${mb.toFixed(1)} MB`;
+  };
+
+  const levelHint = useMemo(() => {
+    const normalized = (studentLevel || 'All Levels').toLowerCase();
+    if (normalized.includes('qaida')) return 'Qaida Nooraniya';
+    if (normalized.includes('reading')) return 'Quran Reading';
+    if (normalized.includes('tajweed')) return 'Tajweed';
+    if (normalized.includes('hifz')) return 'Hifz';
+    return 'All Levels';
+  }, [studentLevel]);
+
+  const groupedResources = useMemo(() => {
+    const sections = [
+      {
+        title: 'Quran Class Videos',
+        items: resources.filter((resource) => resource.category?.toLowerCase().includes('video') || resource.resourceType?.toLowerCase().includes('video')),
+      },
+      {
+        title: 'Class Notes',
+        items: resources.filter((resource) => resource.category?.toLowerCase().includes('note') || resource.category?.toLowerCase().includes('study')),
+      },
+      {
+        title: 'Additional Resources',
+        items: resources.filter((resource) => !resource.category?.toLowerCase().includes('video') && !resource.category?.toLowerCase().includes('note') && !resource.category?.toLowerCase().includes('study')),
+      },
+    ];
+
+    return sections.filter((section) => section.items.length > 0);
+  }, [resources]);
+
+  const handleOpenResource = (resource: any) => {
+    const mediaType = (resource.resourceType || '').toLowerCase();
+    if (resource.youtubeUrl) {
+      window.open(resource.youtubeUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (mediaType.includes('video') || mediaType.includes('mp4') || mediaType.includes('youtube')) {
+      if (resource.fileUrl) {
+        window.open(resource.fileUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+
+    if (resource.fileUrl) {
+      window.open(resource.fileUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleDownload = async (resource: any) => {
@@ -91,7 +142,10 @@ function StudentResources() {
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-1">Student Portal</p>
           <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">Learning Resources</h1>
-          <p className="text-muted-foreground mt-2">Study materials and guides assigned to your level.</p>
+          <p className="text-muted-foreground mt-2">Study materials and guides tailored to your current learning level.</p>
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-nejah-blue/20 bg-nejah-blue/5 px-4 py-2 text-sm text-nejah-sapphire">
+            <Sparkles className="h-4 w-4" /> Active level: <span className="font-semibold">{levelHint}</span>
+          </div>
         </div>
 
         {/* 1. Featured Resources */}
@@ -158,35 +212,49 @@ function StudentResources() {
               </div>
             </div>
 
-            {/* 3. All Resources */}
+            {/* 3. Level-based resource sections */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-nejah-sapphire text-foreground">All Resources</h2>
+                <h2 className="text-xl font-bold text-nejah-sapphire text-foreground">Resources for your level</h2>
                 <Badge variant="outline" className="rounded-full px-3">{resources.length} items</Badge>
               </div>
 
-              {resources.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {resources.map(r => (
-                    <div key={r.id} className="bg-card border rounded-3xl p-5 hover:border-nejah-blue/40 transition-colors group flex flex-col">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
-                          {r.thumbnailUrl ? (
-                            <img src={r.thumbnailUrl} alt="" className="w-full h-full object-cover rounded-2xl" />
-                          ) : (
-                            getFileIcon(r.resourceType)
-                          )}
-                        </div>
-                        <Badge variant="outline" className="text-[10px] font-bold bg-muted/50">{r.resourceType}</Badge>
+              {groupedResources.length > 0 ? (
+                <div className="space-y-8">
+                  {groupedResources.map((section) => (
+                    <section key={section.title} className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-nejah-electric" />
+                        <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
                       </div>
-                      <h3 className="font-bold text-nejah-sapphire text-foreground line-clamp-1">{r.titleEn}</h3>
-                      {r.titleAr && <p className="text-sm font-arabic text-right mt-1 text-muted-foreground line-clamp-1">{r.titleAr}</p>}
-                      
-                      <div className="mt-auto pt-6 flex gap-2">
-                        <Button onClick={() => setSelectedResource(r)} variant="secondary" className="flex-1 rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire text-foreground">Details</Button>
-                        <Button onClick={() => handleDownload(r)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire text-foreground"><Download className="w-4 h-4" /></Button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {section.items.map((resource) => (
+                          <div key={resource.id} className="bg-card border rounded-3xl p-5 hover:border-nejah-blue/40 transition-colors group flex flex-col">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
+                                {resource.thumbnailUrl ? (
+                                  <img src={resource.thumbnailUrl} alt="" className="w-full h-full object-cover rounded-2xl" />
+                                ) : (
+                                  getFileIcon(resource.resourceType)
+                                )}
+                              </div>
+                              <Badge variant="outline" className="text-[10px] font-bold bg-muted/50">{resource.resourceType}</Badge>
+                            </div>
+                            <h3 className="font-bold text-nejah-sapphire text-foreground line-clamp-1">{resource.titleEn}</h3>
+                            {resource.titleAr && <p className="text-sm font-arabic text-right mt-1 text-muted-foreground line-clamp-1">{resource.titleAr}</p>}
+                            <p className="text-sm text-muted-foreground mt-3 line-clamp-3">{resource.descriptionEn || 'Helpful material for your current learning path.'}</p>
+
+                            <div className="mt-auto pt-6 flex gap-2">
+                              <Button onClick={() => handleOpenResource(resource)} className="flex-1 rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90 text-white">{resource.youtubeUrl ? 'Watch' : 'Open'}</Button>
+                              <Button onClick={() => setSelectedResource(resource)} variant="secondary" className="rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire text-foreground">Details</Button>
+                              {resource.fileUrl && !resource.youtubeUrl && (
+                                <Button onClick={() => handleDownload(resource)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire text-foreground"><Download className="w-4 h-4" /></Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
+                    </section>
                   ))}
                 </div>
               ) : (
@@ -195,7 +263,7 @@ function StudentResources() {
                     <Filter className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">No resources found</h3>
-                  <p className="text-muted-foreground mt-2">Try adjusting your search or category filters.</p>
+                  <p className="text-muted-foreground mt-2">Your learning level currently has no active resources. Please check back soon.</p>
                 </div>
               )}
             </div>
@@ -301,9 +369,15 @@ function StudentResources() {
 
                 <div className="mt-8 pt-6 border-t flex justify-end gap-3">
                   <Button onClick={() => setSelectedResource(null)} variant="outline" className="rounded-xl px-6">Close</Button>
-                  <Button onClick={() => handleDownload(selectedResource)} className="rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90 px-6 gap-2">
-                    <Download className="w-4 h-4" /> Download File
-                  </Button>
+                  {selectedResource.youtubeUrl ? (
+                    <Button onClick={() => window.open(selectedResource.youtubeUrl, '_blank', 'noopener,noreferrer')} className="rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90 px-6 gap-2">
+                      <ExternalLink className="w-4 h-4" /> Open Video
+                    </Button>
+                  ) : (
+                    <Button onClick={() => handleDownload(selectedResource)} className="rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90 px-6 gap-2">
+                      <Download className="w-4 h-4" /> Download File
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
