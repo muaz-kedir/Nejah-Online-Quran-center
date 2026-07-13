@@ -54,7 +54,7 @@ function StudentEvaluations() {
                   </div>
                   
                   <div className="text-right">
-                    <span className="text-[10px] text-muted-foreground font-bold block uppercase tracking-wider">Overall Grade</span>
+                    <span className="text-[10px] text-foreground font-bold block uppercase tracking-wider">Overall Grade</span>
                     <span className="text-3xl font-black text-nejah-sapphire text-foreground font-serif">{ev.score}</span>
                     <span className="text-sm font-bold text-muted-foreground">/100</span>
                   </div>
@@ -72,7 +72,7 @@ function StudentEvaluations() {
                     <div className="space-y-2">
                       <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider">Promotion Readiness</h4>
                       <div className="bg-muted/20 p-4 rounded-2xl border flex flex-col justify-between h-full min-h-24">
-                        <div className="text-xs font-bold text-muted-foreground">Recommendation:</div>
+                        <div className="text-xs font-bold text-foreground">Recommendation:</div>
                         <Badge className={`w-fit mt-2 font-bold ${ev.promotionRecommendation === 'Ready For Promotion' ? 'bg-emerald-600 border-none text-white' : 'bg-slate-500 border-none text-white'}`}>
                           {ev.promotionRecommendation}
                         </Badge>

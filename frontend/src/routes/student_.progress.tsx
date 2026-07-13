@@ -53,19 +53,19 @@ function StudentProgress() {
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Current Topic</p>
+            <p className="text-xs text-foreground font-bold uppercase">Current Topic</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{overview.currentTopic?.label || 'Not Started'}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Progress</p>
+            <p className="text-xs text-foreground font-bold uppercase">Progress</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{p.completed || 0} / {p.total || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Remaining</p>
+            <p className="text-xs text-foreground font-bold uppercase">Remaining</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{p.remaining || 0} Topics</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Last Lesson</p>
+            <p className="text-xs text-foreground font-bold uppercase">Last Lesson</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{lastLog?.date ? new Date(lastLog.date).toLocaleDateString() : '—'}</p>
           </div>
         </div>
@@ -76,19 +76,19 @@ function StudentProgress() {
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Current Surah</p>
+            <p className="text-xs text-foreground font-bold uppercase">Current Surah</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{overview.lastPosition?.lastStudiedSurah || 'Not Started'}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Current Ayah</p>
+            <p className="text-xs text-foreground font-bold uppercase">Current Ayah</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{overview.lastPosition?.lastStudiedAyah || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Surahs</p>
+            <p className="text-xs text-foreground font-bold uppercase">Completed Surahs</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{overview.progress?.surahsCount || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Ayahs</p>
+            <p className="text-xs text-foreground font-bold uppercase">Completed Ayahs</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{overview.progress?.ayahsCount || 0}</p>
           </div>
         </div>
@@ -99,19 +99,19 @@ function StudentProgress() {
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Current Rule</p>
+            <p className="text-xs text-foreground font-bold uppercase">Current Rule</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{overview.currentTopic?.label || 'Not Started'}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Completed Rules</p>
+            <p className="text-xs text-foreground font-bold uppercase">Completed Rules</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{p.completed || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Remaining Rules</p>
+            <p className="text-xs text-foreground font-bold uppercase">Remaining Rules</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{p.remaining || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Last Lesson</p>
+            <p className="text-xs text-foreground font-bold uppercase">Last Lesson</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{lastLog?.date ? new Date(lastLog.date).toLocaleDateString() : '—'}</p>
           </div>
         </div>
@@ -122,19 +122,19 @@ function StudentProgress() {
       return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mt-6">
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Current Memorization</p>
+            <p className="text-xs text-foreground font-bold uppercase">Current Memorization</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1 text-sm">{overview.lastPosition?.lastStudiedSurah || 'Not Started'}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Memorized Surahs</p>
+            <p className="text-xs text-foreground font-bold uppercase">Memorized Surahs</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{overview.progress?.surahsCount || 0}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Memorized Juz</p>
+            <p className="text-xs text-foreground font-bold uppercase">Memorized Juz</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{Math.floor((overview.progress?.surahsCount || 0) / 4)}</p>
           </div>
           <div className="bg-muted/50 p-4 rounded-2xl border">
-            <p className="text-xs text-muted-foreground font-bold uppercase">Revision Progress</p>
+            <p className="text-xs text-foreground font-bold uppercase">Revision Progress</p>
             <p className="font-bold text-nejah-sapphire text-foreground mt-1">{overview.progress?.progressPercentage || 0}%</p>
           </div>
         </div>
@@ -220,7 +220,7 @@ function StudentProgress() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                       {Object.entries(ev.criteriaRatings).map(([key, value]: any) => (
                         <div key={key} className="bg-white dark:bg-card p-3 rounded-xl border text-center">
-                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                          <p className="text-[10px] font-bold uppercase text-foreground mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
                           <p className="font-bold text-nejah-sapphire text-foreground">{value}</p>
                         </div>
                       ))}
@@ -301,10 +301,10 @@ function StudentProgress() {
 
               {data.attendanceStats && (
                 <div className="grid grid-cols-4 gap-2 text-center mb-6 p-4 bg-muted/30 rounded-2xl border">
-                  <div><p className="text-2xl font-black text-nejah-sapphire text-foreground">{data.attendanceStats.present}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Present</p></div>
-                  <div><p className="text-2xl font-black text-amber-600">{data.attendanceStats.late}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Late</p></div>
-                  <div><p className="text-2xl font-black text-rose-600">{data.attendanceStats.absent}</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Absent</p></div>
-                  <div><p className="text-2xl font-black text-nejah-electric">{Math.round(data.attendanceStats.attendancePercentage || 0)}%</p><p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Rate</p></div>
+                  <div><p className="text-2xl font-black text-nejah-sapphire text-foreground">{data.attendanceStats.present}</p><p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Present</p></div>
+                  <div><p className="text-2xl font-black text-amber-600">{data.attendanceStats.late}</p><p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Late</p></div>
+                  <div><p className="text-2xl font-black text-rose-600">{data.attendanceStats.absent}</p><p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Absent</p></div>
+                  <div><p className="text-2xl font-black text-nejah-electric">{Math.round(data.attendanceStats.attendancePercentage || 0)}%</p><p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Rate</p></div>
                 </div>
               )}
 
@@ -366,17 +366,17 @@ function StudentProgress() {
           <div className="mt-4 space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted/50 p-4 rounded-2xl border">
-                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Course Level</p>
+                <p className="text-xs font-bold text-foreground uppercase mb-1">Course Level</p>
                 <p className="font-bold text-nejah-sapphire text-foreground">{selectedDetails?.courseLevel}</p>
               </div>
               <div className="bg-muted/50 p-4 rounded-2xl border">
-                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Teacher</p>
+                <p className="text-xs font-bold text-foreground uppercase mb-1">Teacher</p>
                 <p className="font-bold text-nejah-sapphire text-foreground">{selectedDetails?.teacherName || 'Assigned Teacher'}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Lesson Details</p>
+              <p className="text-sm font-bold text-foreground uppercase mb-2">Lesson Details</p>
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <p className="font-bold text-lg text-primary">{selectedDetails?.description}</p>
               </div>
@@ -384,7 +384,7 @@ function StudentProgress() {
 
             {selectedDetails?.notes && (
               <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase mb-2">Teacher Notes</p>
+                <p className="text-sm font-bold text-foreground uppercase mb-2">Teacher Notes</p>
                 <div className="bg-card p-4 rounded-2xl border shadow-sm text-sm leading-relaxed">
                   {selectedDetails.notes}
                 </div>

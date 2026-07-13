@@ -25,12 +25,12 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
           <div
             className={cn(
               'group relative flex items-center justify-center rounded-xl p-3 transition-all duration-200 cursor-pointer',
-              isActive ? 'nav-item-active text-foreground' : 'text-foreground/60 nav-item-hover hover:text-foreground',
+              isActive ? 'nav-item-active text-foreground' : 'text-foreground nav-item-hover hover:text-foreground',
             )}
             onClick={() => setExpanded(!expanded)}
             title={item.label}
           >
-            <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground/50')} />
+            <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground')} />
             <div className="pointer-events-none absolute left-full z-50 ml-3 hidden items-center whitespace-nowrap rounded-lg glass-panel px-2.5 py-1.5 text-xs text-foreground shadow-lg group-hover:flex">
               {item.label}
             </div>
@@ -44,11 +44,11 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
         <div
           className={cn(
             'group relative flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer px-3 py-2.5',
-            isActive ? 'nav-item-active text-foreground' : 'text-foreground/60 nav-item-hover hover:text-foreground',
+            isActive ? 'nav-item-active text-foreground' : 'text-foreground nav-item-hover hover:text-foreground',
           )}
           onClick={() => setExpanded(!expanded)}
         >
-          <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground/50')} />
+          <Icon className={cn('h-5 w-5 flex-shrink-0', isActive ? 'text-nejah-electric' : 'text-foreground')} />
           <span className="flex-1 text-sm font-medium">{item.label}</span>
           <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} />
         </div>
@@ -75,7 +75,7 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
           collapsed ? 'justify-center p-3' : 'px-3 py-2.5',
           isActive
             ? 'nav-item-active text-foreground'
-            : 'text-foreground/60 nav-item-hover hover:text-foreground',
+            : 'text-foreground nav-item-hover hover:text-foreground',
         )}
       >
         {isActive && (
@@ -85,7 +85,7 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
         <Icon
           className={cn(
             'h-5 w-5 flex-shrink-0 transition-transform duration-200',
-            isActive ? 'text-nejah-electric' : 'text-foreground/50 group-hover:text-foreground',
+            isActive ? 'text-nejah-electric' : 'text-foreground group-hover:text-foreground',
             !collapsed && 'group-hover:scale-110',
           )}
         />

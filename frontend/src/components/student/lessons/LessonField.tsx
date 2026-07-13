@@ -27,7 +27,7 @@ export function LessonField({
     <div
       className={`bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 p-4 rounded-xl border border-primary/8 ${spanFull ? "sm:col-span-2" : ""}`}
     >
-      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">
+      <p className="text-[10px] text-foreground font-bold uppercase tracking-wider mb-1">
         {label}
       </p>
       <p className="font-semibold text-foreground">{children}</p>

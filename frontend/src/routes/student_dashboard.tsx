@@ -269,19 +269,19 @@ function StudentDashboard() {
                       <p className="font-bold text-xl text-foreground">
                         {progress?.memorizedSurahs ?? 0}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1 font-medium">Surahs</p>
+                      <p className="text-xs text-foreground mt-1 font-medium">Surahs</p>
                     </div>
                     <div className="stat-card">
                       <p className="font-bold text-xl text-foreground">
                         {progress?.memorizedAyahs ?? 0}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1 font-medium">Ayahs</p>
+                      <p className="text-xs text-foreground mt-1 font-medium">Ayahs</p>
                     </div>
                     <div className="stat-card">
                       <p className="font-bold text-xl text-foreground">
                         {progress?.completedJuz ?? 0}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1 font-medium">Juz</p>
+                      <p className="text-xs text-foreground mt-1 font-medium">Juz</p>
                     </div>
                   </div>
                   <Button
@@ -424,7 +424,7 @@ function StudentDashboard() {
               style={{ animationDelay: "0.2s" }}
               onClick={() => navigate({ to: studentPaths.progress })}
             >
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 text-center">
+              <h4 className="text-xs font-bold text-foreground uppercase tracking-widest mb-4 text-center">
                 Weekly Attendance
               </h4>
               <div className="flex justify-between px-2 mb-4">

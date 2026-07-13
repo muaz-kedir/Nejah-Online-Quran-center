@@ -245,7 +245,7 @@ function StudentNotificationsPage() {
               )}
             >
               <p className={cn("text-2xl font-extrabold", card.color)}>{card.value}</p>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
+              <p className="text-[11px] font-bold text-foreground uppercase tracking-wider mt-1">
                 {card.label}
               </p>
             </div>
