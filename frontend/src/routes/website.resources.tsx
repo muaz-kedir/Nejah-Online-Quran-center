@@ -33,7 +33,7 @@ function WebsiteResources() {
     category: 'Class Materials',
     learningLevel: 'All Levels',
     resourceType: 'PDF',
-    fileUrl: '', thumbnailUrl: '',
+    fileUrl: '', youtubeUrl: '', thumbnailUrl: '',
     isFeatured: false, status: 'active', displayOrder: 0, fileSize: 0
   });
 
@@ -62,7 +62,7 @@ function WebsiteResources() {
         category: resource.category || 'Class Materials',
         learningLevel: resource.learningLevel || 'All Levels',
         resourceType: resource.resourceType || 'PDF',
-        fileUrl: resource.fileUrl || '', thumbnailUrl: resource.thumbnailUrl || '',
+        fileUrl: resource.fileUrl || '', youtubeUrl: resource.youtubeUrl || '', thumbnailUrl: resource.thumbnailUrl || '',
         isFeatured: resource.isFeatured || false, status: resource.status || 'active', 
         displayOrder: resource.displayOrder || 0, fileSize: resource.fileSize || 0
       });
@@ -72,7 +72,7 @@ function WebsiteResources() {
         titleEn: '', titleAr: '', titleAm: '',
         descriptionEn: '', descriptionAr: '', descriptionAm: '',
         category: 'Class Materials', learningLevel: 'All Levels', resourceType: 'PDF',
-        fileUrl: '', thumbnailUrl: '', isFeatured: false, status: 'active', displayOrder: 0, fileSize: 0
+        fileUrl: '', youtubeUrl: '', thumbnailUrl: '', isFeatured: false, status: 'active', displayOrder: 0, fileSize: 0
       });
     }
     setIsDialogOpen(true);
@@ -279,6 +279,10 @@ function WebsiteResources() {
                 <div className="space-y-2">
                   <Label>File URL *</Label>
                   <Input value={formData.fileUrl} onChange={e => setFormData({...formData, fileUrl: e.target.value})} placeholder="https://..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>YouTube URL (Optional)</Label>
+                  <Input value={formData.youtubeUrl} onChange={e => setFormData({...formData, youtubeUrl: e.target.value})} placeholder="https://www.youtube.com/watch?v=..." />
                 </div>
                 <div className="space-y-2">
                   <Label>Thumbnail URL (Optional)</Label>

@@ -16,9 +16,21 @@ export class ResourcesService {
     private studentRepository: Repository<Student>,
   ) {}
 
+  private normalizeLearningLevel(level?: string): string {
+    const rawLevel = (level || 'All Levels').trim();
+    const normalized = rawLevel.toLowerCase();
+
+    if (normalized.includes('qaida')) return 'Qaida Nooraniya';
+    if (normalized.includes('reading')) return 'Quran Reading';
+    if (normalized.includes('tajweed')) return 'Tajweed';
+    if (normalized.includes('hifz')) return 'Hifz';
+
+    return rawLevel || 'All Levels';
+  }
+
   private async getStudentLevel(studentId: string): Promise<string> {
     const student = await this.studentRepository.findOne({ where: { userId: studentId } });
-    return student?.level || 'All Levels';
+    return this.normalizeLearningLevel(student?.level);
   }
 
   async findAll(
@@ -26,14 +38,19 @@ export class ResourcesService {
     role?: string,
     search?: string,
     category?: string,
+    type?: string,
   ): Promise<Resource[]> {
     const qb = this.resourcesRepository.createQueryBuilder('resource');
 
     if (role === 'student' && userId) {
       qb.andWhere('resource.status = :status', { status: ResourceStatus.ACTIVE });
       const level = await this.getStudentLevel(userId);
-      qb.andWhere('(resource.learningLevel = :level OR resource.learningLevel = :allLevels)', {
-        level,
+      const levelVariants = [level];
+      if (level === 'Tajweed') levelVariants.push('Tajweed Program');
+      if (level === 'Hifz') levelVariants.push('Hifz Program');
+
+      qb.andWhere('(resource.learningLevel IN (:...levelVariants) OR resource.learningLevel = :allLevels)', {
+        levelVariants,
         allLevels: 'All Levels',
       });
     }
@@ -49,6 +66,10 @@ export class ResourcesService {
       qb.andWhere('resource.category = :category', { category });
     }
 
+    if (type && type !== 'All') {
+      qb.andWhere('LOWER(resource.resourceType) = LOWER(:type)', { type });
+    }
+
     return qb.orderBy('resource.displayOrder', 'ASC').addOrderBy('resource.createdAt', 'DESC').getMany();
   }
 
@@ -59,8 +80,12 @@ export class ResourcesService {
     if (role === 'student' && userId) {
       qb.andWhere('resource.status = :status', { status: ResourceStatus.ACTIVE });
       const level = await this.getStudentLevel(userId);
-      qb.andWhere('(resource.learningLevel = :level OR resource.learningLevel = :allLevels)', {
-        level,
+      const levelVariants = [level];
+      if (level === 'Tajweed') levelVariants.push('Tajweed Program');
+      if (level === 'Hifz') levelVariants.push('Hifz Program');
+
+      qb.andWhere('(resource.learningLevel IN (:...levelVariants) OR resource.learningLevel = :allLevels)', {
+        levelVariants,
         allLevels: 'All Levels',
       });
     }
@@ -74,8 +99,12 @@ export class ResourcesService {
     if (role === 'student' && userId) {
       qb.andWhere('resource.status = :status', { status: ResourceStatus.ACTIVE });
       const level = await this.getStudentLevel(userId);
-      qb.andWhere('(resource.learningLevel = :level OR resource.learningLevel = :allLevels)', {
-        level,
+      const levelVariants = [level];
+      if (level === 'Tajweed') levelVariants.push('Tajweed Program');
+      if (level === 'Hifz') levelVariants.push('Hifz Program');
+
+      qb.andWhere('(resource.learningLevel IN (:...levelVariants) OR resource.learningLevel = :allLevels)', {
+        levelVariants,
         allLevels: 'All Levels',
       });
     }
@@ -150,8 +179,12 @@ export class ResourcesService {
     if (role === 'student' && userId) {
       qb.andWhere('resource.status = :status', { status: ResourceStatus.ACTIVE });
       const level = await this.getStudentLevel(userId);
-      qb.andWhere('(resource.learningLevel = :level OR resource.learningLevel = :allLevels)', {
-        level,
+      const levelVariants = [level];
+      if (level === 'Tajweed') levelVariants.push('Tajweed Program');
+      if (level === 'Hifz') levelVariants.push('Hifz Program');
+
+      qb.andWhere('(resource.learningLevel IN (:...levelVariants) OR resource.learningLevel = :allLevels)', {
+        levelVariants,
         allLevels: 'All Levels',
       });
     }

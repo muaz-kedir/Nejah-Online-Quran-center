@@ -50,6 +50,9 @@ export class Resource {
   fileUrl: string;
 
   @Column({ type: 'varchar', nullable: true })
+  youtubeUrl: string;
+
+  @Column({ type: 'varchar', nullable: true })
   thumbnailUrl: string;
 
   @Column({ type: 'boolean', default: false })
