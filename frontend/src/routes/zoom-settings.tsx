@@ -117,7 +117,7 @@ function TeacherZoomPanel() {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const data = await api<TeacherZoomStatus>('/zoom-oauth/status');
+      const data = await api<TeacherZoomStatus>('/zoom/oauth/status');
       setStatus(data);
     } catch {
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
@@ -145,13 +145,13 @@ function TeacherZoomPanel() {
 
   const handleConnect = () => {
     const token = localStorage.getItem('token');
-    window.location.href = `${API_BASE}/zoom-oauth/authorize?token=${encodeURIComponent(token || '')}`;
+    window.location.href = `${API_BASE}/zoom/oauth/authorize?token=${encodeURIComponent(token || '')}`;
   };
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      await api('/zoom-oauth/disconnect', { method: 'DELETE' });
+      await api('/zoom/oauth/disconnect', { method: 'DELETE' });
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
       setConnectError(null);
       toast.success('Zoom disconnected');

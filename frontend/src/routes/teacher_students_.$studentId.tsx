@@ -97,7 +97,7 @@ function TeacherStudentDetailContent() {
     };
     load();
 
-    api<{ connected: boolean }>('/zoom-oauth/status')
+    api<{ connected: boolean }>('/zoom/oauth/status')
       .then((res) => { if (!cancelled) setZoomConnected(res.connected); })
       .catch(() => { if (!cancelled) setZoomConnected(false); });
 

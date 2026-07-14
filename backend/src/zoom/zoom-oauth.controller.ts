@@ -29,7 +29,7 @@ import { HttpService } from '@nestjs/axios';
 
 const ZOOM_OAUTH_STATE_PREFIX = 'zst_';
 
-@Controller('zoom-oauth')
+@Controller('zoom/oauth')
 export class ZoomOAuthController {
   private readonly stateCache = new Map<string, { teacherId: string; frontendUrl: string; expiresAt: number }>();
 
@@ -100,7 +100,7 @@ export class ZoomOAuthController {
     const redirectUri = this.getRedirectUri();
     if (!redirectUri) {
       throw new HttpException(
-        'ZOOM_OAUTH_REDIRECT_URI is not configured. Set it to your callback URL (e.g. https://yourdomain.com/api/zoom-oauth/callback).',
+        'ZOOM_OAUTH_REDIRECT_URI is not configured. Set it to your callback URL (e.g. https://yourdomain.com/api/zoom/oauth/callback).',
         HttpStatus.BAD_REQUEST,
       );
     }

@@ -102,7 +102,7 @@ function TeacherZoomPage() {
         api<any[]>("/live-sessions/upcoming").catch(() => []),
         api<any>("/live-sessions/teacher?limit=50").catch(() => ({ data: [] })),
         api<any>("/zoom-analytics/teacher").catch(() => null),
-        api<{ connected: boolean }>("/zoom-oauth/status").catch(() => ({ connected: false })),
+        api<{ connected: boolean }>("/zoom/oauth/status").catch(() => ({ connected: false })),
       ]);
       setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       setTeacherSessions(Array.isArray(sessionsData?.data) ? sessionsData.data : []);
