@@ -1,6 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZoomService } from './zoom.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 import { ZoomOAuthController } from './zoom-oauth.controller';
@@ -63,6 +65,16 @@ import { EncryptionService } from '../common/encryption.service';
     HttpModule.register({
       timeout: 15000,
       maxRedirects: 3,
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRATION') || '30d',
+        },
+      }),
+      inject: [ConfigService],
     }),
     NotificationsModule,
     forwardRef(() => TeachersModule),
