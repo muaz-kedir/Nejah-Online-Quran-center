@@ -117,7 +117,7 @@ function TeacherZoomPanel() {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const data = await api<TeacherZoomStatus>('/zoom-settings/status');
+      const data = await api<TeacherZoomStatus>('/zoom/oauth/status');
       setStatus(data);
     } catch {
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
@@ -143,23 +143,15 @@ function TeacherZoomPanel() {
     }
   }, []);
 
-  const handleConnect = async () => {
-    try {
-      setConnectError(null);
-      const data = await api<{ url: string }>('/zoom/oauth/connect');
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      setConnectError(err.message || 'Failed to start Zoom connection');
-      toast.error(err.message || 'Failed to start Zoom connection');
-    }
+  const handleConnect = () => {
+    const token = localStorage.getItem('token');
+    window.location.href = `${API_BASE}/zoom/oauth/authorize?token=${encodeURIComponent(token || '')}`;
   };
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      await api('/zoom-settings/disconnect', { method: 'DELETE' });
+      await api('/zoom/oauth/disconnect', { method: 'DELETE' });
       setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
       setConnectError(null);
       toast.success('Zoom disconnected');
@@ -622,8 +614,8 @@ function AdminZoomPanel() {
             )}
             {!accountUsersLoading && accountUsers.length === 0 && (
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 text-xs text-amber-800 dark:text-amber-400">
-                Could not load Zoom users. Ensure <strong>user:read:user</strong> scope is added
-                to your Zoom app in Zoom Marketplace, then activate the app.
+                Could not load Zoom users. Ensure <strong>user:read:admin</strong> scope is added
+                to your Server-to-Server OAuth app in Zoom Marketplace, then activate the app.
               </div>
             )}
             <div className="space-y-2">
