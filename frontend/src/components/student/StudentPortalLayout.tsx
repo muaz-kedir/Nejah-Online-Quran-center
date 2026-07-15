@@ -23,7 +23,7 @@ import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
-import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
+import { OnboardingGuard } from "@/components/ui/OnboardingGuard";
 
 
 
@@ -448,9 +448,8 @@ export function StudentPortalLayout({
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
-        <OnboardingOverlay>
-          {children}
-        </OnboardingOverlay>
+        <OnboardingGuard />
+        {children}
       </div>
 
       <LogoutConfirmDialog
