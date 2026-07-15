@@ -1,5 +1,4 @@
-import { redirect, isRedirect } from "@tanstack/react-router";
-import { apiUrl, apiHeaders } from "@/lib/api";
+import { redirect } from "@tanstack/react-router";
 
 export const ROLE_DASHBOARDS: Record<string, string> = {
   teacher: "/teacher_dashboard",
@@ -53,27 +52,9 @@ export function requireAuth(allowedRoles?: string[]) {
   }
 }
 
-export async function requireParentAuth(allowedRoles?: string[]) {
+export function requireParentAuth(allowedRoles?: string[]) {
   if (typeof window === "undefined") return;
   requireAuth(allowedRoles);
-  await checkOnboarding();
-}
-
-async function checkOnboarding(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (window.location.pathname === "/setup-required") return;
-
-  try {
-    const res = await fetch(apiUrl("/onboarding/status"), { headers: apiHeaders() });
-    if (res.ok) {
-      const data = await res.json();
-      if (!data.onboardingCompleted) {
-        throw redirect({ to: "/setup-required" });
-      }
-    }
-  } catch (e: any) {
-    if (isRedirect(e)) throw e;
-  }
 }
 
 export function logout() {

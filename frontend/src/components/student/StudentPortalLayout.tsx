@@ -16,8 +16,6 @@ import {
   X,
   Sun,
   Moon,
-  AlertTriangle,
-  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
@@ -25,6 +23,7 @@ import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
+import { OnboardingOverlay } from "@/components/ui/OnboardingOverlay";
 
 
 
@@ -64,21 +63,10 @@ export function StudentPortalLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [liveUnread, setLiveUnread] = useState(unreadNotifications);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [tgDisconnected, setTgDisconnected] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { theme, toggleTheme } = useTheme();
 
   const { t } = useApp();
-
-  useEffect(() => {
-    const checkTelegram = async () => {
-      try {
-        const data = await api<{ telegramConnected: boolean }>('/onboarding/status');
-        setTgDisconnected(!data.telegramConnected);
-      } catch {}
-    };
-    checkTelegram();
-  }, []);
 
   const menuItems = [
     { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
@@ -460,26 +448,9 @@ export function StudentPortalLayout({
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
-        {tgDisconnected && (
-          <div className="mx-4 mt-4 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                Telegram Disconnected
-              </p>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-0.5">
-                Reconnect Telegram to keep receiving real-time notifications about updates.
-              </p>
-            </div>
-            <a
-              href="/setup-required"
-              className="shrink-0 flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-300 hover:underline"
-            >
-              Reconnect <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        )}
-        {children}
+        <OnboardingOverlay>
+          {children}
+        </OnboardingOverlay>
       </div>
 
       <LogoutConfirmDialog

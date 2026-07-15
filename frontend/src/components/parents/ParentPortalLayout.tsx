@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { OnboardingOverlay } from '@/components/ui/OnboardingOverlay';
 
 type TabType =
   | 'dashboard'
@@ -421,7 +422,9 @@ export function ParentPortalLayout({
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex flex-col overflow-y-auto min-w-0 lg:pt-0 pt-16">
-        {children}
+        <OnboardingOverlay>
+          {children}
+        </OnboardingOverlay>
       </div>
     </div>
   );
