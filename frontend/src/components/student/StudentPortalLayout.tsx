@@ -229,8 +229,9 @@ export function StudentPortalLayout({
                   )}
                 </div>
               )}
-            </div>
-          );
+    </div>
+    </OnboardingGuard>
+  );
         })}
       </nav>
 
@@ -317,7 +318,8 @@ export function StudentPortalLayout({
   );
 
   return (
-    <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+    <OnboardingGuard>
+      <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
       {/* ─── Ambient Background ─── */}
       <div className="bg-ambient-layer">
         <div className="bg-mesh-gradient animate-mesh w-full h-full" />
@@ -448,7 +450,6 @@ export function StudentPortalLayout({
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden min-w-0 lg:pt-0 pt-16 content-layer">
-        <OnboardingGuard />
         {children}
       </div>
 

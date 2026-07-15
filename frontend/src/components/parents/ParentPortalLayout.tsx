@@ -313,7 +313,8 @@ export function ParentPortalLayout({
   );
 
   return (
-    <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+    <OnboardingGuard>
+      <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
@@ -422,10 +423,10 @@ export function ParentPortalLayout({
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 flex flex-col overflow-y-auto min-w-0 lg:pt-0 pt-16">
-        <OnboardingGuard />
         {children}
       </div>
     </div>
+    </OnboardingGuard>
   );
 }
 
