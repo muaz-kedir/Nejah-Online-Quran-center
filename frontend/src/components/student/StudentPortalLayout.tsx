@@ -458,6 +458,7 @@ export function StudentPortalLayout({
         onConfirm={confirmLogout}
       />
     </div>
+    </OnboardingGuard>
   );
 }
 
