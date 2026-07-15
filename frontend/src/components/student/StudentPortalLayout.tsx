@@ -229,9 +229,8 @@ export function StudentPortalLayout({
                   )}
                 </div>
               )}
-    </div>
-    </OnboardingGuard>
-  );
+            </div>
+          );
         })}
       </nav>
 

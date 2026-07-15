@@ -72,7 +72,7 @@ export class OnboardingService {
     });
 
     user.telegramConnected = !!subscription;
-    user.telegramChatId = subscription?.chatId || null;
+    user.telegramChatId = subscription?.chatId != null ? String(subscription.chatId) : null;
     user.telegramUsername = subscription?.username || null;
     await this.userRepository.save(user);
 
