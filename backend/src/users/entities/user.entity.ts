@@ -53,6 +53,24 @@ export class User {
   @Column({ nullable: true, type: 'timestamp' })
   passwordResetExpires: Date;
 
+  @Column({ default: false })
+  notificationEnabled: boolean;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  notificationEnabledAt: Date;
+
+  @Column({ default: false })
+  telegramConnected: boolean;
+
+  @Column({ nullable: true })
+  telegramChatId: string;
+
+  @Column({ nullable: true })
+  telegramUsername: string;
+
+  @Column({ default: false })
+  onboardingCompleted: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

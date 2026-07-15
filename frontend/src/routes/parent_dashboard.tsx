@@ -1,6 +1,7 @@
 import { apiUrl } from "@/lib/api";
 import { useState, useEffect, useRef } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireParentAuth } from "@/lib/auth";
 import {
   Search,
   Bell,
@@ -1398,18 +1399,7 @@ export const Route = createFileRoute("/parent_dashboard")({
       tab: (search.tab as string) || 'dashboard',
     };
   },
-  beforeLoad: () => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("userRole");
-      if (!token) {
-        throw redirect({ to: "/login" });
-      }
-      if (role !== "parent") {
-        throw redirect({ to: "/dashboard" });
-      }
-    }
-  },
+  beforeLoad: () => requireParentAuth(['parent']),
 });
 
 // Wrap component with LanguageProvider for translation support

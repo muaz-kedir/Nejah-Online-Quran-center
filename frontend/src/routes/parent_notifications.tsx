@@ -6,7 +6,7 @@ import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { requireAuth } from '@/lib/auth';
+import { requireParentAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useSocket } from '@/hooks/useSocket';
@@ -24,7 +24,7 @@ import {
 
 export const Route = createFileRoute('/parent_notifications')({
   component: ParentNotificationsRoute,
-  beforeLoad: () => requireAuth(['parent']),
+  beforeLoad: () => requireParentAuth(['parent']),
 });
 
 function ParentNotificationsRoute() {

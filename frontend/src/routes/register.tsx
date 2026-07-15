@@ -416,9 +416,23 @@ function RegisterPage() {
 
       toast.success("Account created successfully!");
       setIsSuccess(true);
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("userRole", data.user?.role || "student");
+        localStorage.setItem("userName", data.user?.name || "");
+        localStorage.setItem("userEmail", data.user?.email || "");
+        localStorage.setItem("userId", data.user?.id || "");
+        if (data.user?.studentId) {
+          localStorage.setItem("studentId", data.user.studentId);
+        }
+      }
       setTimeout(() => {
-        navigate({ to: "/login" });
-      }, 3000);
+        if (data.onboardingRequired) {
+          navigate({ to: "/setup-required" });
+        } else {
+          navigate({ to: "/login" });
+        }
+      }, 2000);
     } catch (error: any) {
       console.error("Registration error:", error);
       toast.error(error.message || "Something went wrong. Please try again.");

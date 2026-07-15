@@ -1,9 +1,9 @@
-import { redirect } from '@tanstack/react-router';
+import { redirect, isRedirect } from '@tanstack/react-router';
 import { API_BASE, api, apiHeaders, apiUrl } from '@/lib/api';
 
 export { API_BASE, api, apiHeaders, apiUrl };
 
-export function requireStudentAuth() {
+export async function requireStudentAuth() {
   if (typeof window === 'undefined') return;
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('userRole');
@@ -12,6 +12,24 @@ export function requireStudentAuth() {
   }
   if (role !== 'student') {
     throw redirect({ to: '/dashboard' });
+  }
+  await checkOnboarding();
+}
+
+async function checkOnboarding(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname === '/setup-required') return;
+
+  try {
+    const res = await fetch(apiUrl('/onboarding/status'), { headers: apiHeaders() });
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.onboardingCompleted) {
+        throw redirect({ to: '/setup-required' });
+      }
+    }
+  } catch (e: any) {
+    if (isRedirect(e)) throw e;
   }
 }
 

@@ -36,6 +36,7 @@ import { SessionsModule } from './sessions/sessions.module';
 import { WebsiteCmsModule } from './website-cms/website-cms.module';
 import { SupportPagesModule } from './support-pages/support-pages.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AuditModule } from './audit/audit.module';
 import { createTypeOrmOptions } from './database/typeorm.config';
@@ -96,6 +97,7 @@ import { AppController } from './app.controller';
     UploadsModule,
     AuditModule,
     TelegramModule,
+    OnboardingModule,
     ScheduleModule.forRoot(),
     HealthModule,
     DatabaseModule,

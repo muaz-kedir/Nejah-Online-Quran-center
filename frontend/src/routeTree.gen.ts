@@ -24,6 +24,7 @@ import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replac
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
+import { Route as SetupRequiredRouteImport } from './routes/setup-required'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -163,6 +164,11 @@ const StudentsRoute = StudentsRouteImport.update({
 const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRequiredRoute = SetupRequiredRouteImport.update({
+  id: '/setup-required',
+  path: '/setup-required',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -533,6 +539,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -615,6 +622,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -697,6 +705,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
@@ -781,6 +790,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -863,6 +873,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -944,6 +955,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/teacher-applications'
@@ -1027,6 +1039,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  SetupRequiredRoute: typeof SetupRequiredRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
@@ -1168,6 +1181,13 @@ declare module '@tanstack/react-router' {
       path: '/student_dashboard'
       fullPath: '/student_dashboard'
       preLoaderRoute: typeof Student_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup-required': {
+      id: '/setup-required'
+      path: '/setup-required'
+      fullPath: '/setup-required'
+      preLoaderRoute: typeof SetupRequiredRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -1712,6 +1732,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  SetupRequiredRoute: SetupRequiredRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,

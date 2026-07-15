@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { requireAuth } from '@/lib/auth';
+import { requireParentAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -30,7 +30,7 @@ import {
 
 export const Route = createFileRoute('/parent_sessions')({
   component: ParentSessionsRoute,
-  beforeLoad: () => requireAuth(['parent']),
+  beforeLoad: () => requireParentAuth(['parent']),
 });
 
 function ParentSessionsRoute() {
