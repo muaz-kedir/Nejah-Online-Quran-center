@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { apiUrl, apiHeaders } from "@/lib/api";
 
-export function useOnboardingGuard() {
+export function OnboardingGuard() {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,4 +23,6 @@ export function useOnboardingGuard() {
     })();
     return () => { cancelled = true; };
   }, [navigate]);
+
+  return null;
 }
