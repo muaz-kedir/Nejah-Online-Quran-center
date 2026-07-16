@@ -414,7 +414,7 @@ function StudentsPage() {
                               <img src={student.avatarUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-muted-foreground text-lg font-bold">
-                                {student.fullName.charAt(0)}
+                                {student.fullName?.charAt(0) || 'S'}
                               </div>
                             )}
                           </div>
