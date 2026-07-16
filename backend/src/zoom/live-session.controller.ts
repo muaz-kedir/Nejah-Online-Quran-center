@@ -390,6 +390,82 @@ export class LiveSessionController {
     });
   }
 
+  @Get('teacher-history')
+  @Roles(UserRole.TEACHER)
+  async getTeacherSessionHistory(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+    return this.liveSessionService.getTeacherSessionHistory(teacher.id, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      status,
+      from,
+      to,
+    });
+  }
+
+  @Get('student-class-history')
+  @Roles(UserRole.STUDENT)
+  async getStudentClassHistory(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('status') status?: string,
+  ) {
+    const student = await this.studentRepository.findOne({
+      where: { userId: req.user.id },
+    });
+    if (!student) {
+      throw new ForbiddenException('Student profile not found');
+    }
+    return this.liveSessionService.getStudentClassHistory(student.id, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      from,
+      to,
+      status,
+    });
+  }
+
+  @Get('session-detail/:id')
+  @Roles(UserRole.TEACHER, UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getSessionDetail(@Param('id') id: string, @Request() req) {
+    let teacherId: string | undefined;
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      teacherId = teacher.id;
+    }
+    return this.liveSessionService.getSessionDetail(id, req.user.id, req.user.role);
+  }
+
+  @Get('admin/teacher-stats/:teacherId')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminTeacherStats(
+    @Param('teacherId') teacherId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.liveSessionService.getTeacherTeachingStats(teacherId, { from, to });
+  }
+
+  @Get('admin/student-stats/:studentId')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminStudentStats(
+    @Param('studentId') studentId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.liveSessionService.getStudentLearningStats(studentId, { from, to });
+  }
+
   private async endSession(id: string, req: { user: { id: string; role: UserRole } }, completionReason?: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
