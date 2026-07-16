@@ -318,6 +318,78 @@ export class LiveSessionController {
     return this.liveSessionService.update(id, dto);
   }
 
+  @Get('my-attendance')
+  @Roles(UserRole.STUDENT)
+  async getMyAttendance(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('status') status?: string,
+  ) {
+    const student = await this.studentRepository.findOne({
+      where: { userId: req.user.id },
+    });
+    if (!student) {
+      throw new ForbiddenException('Student profile not found');
+    }
+    return this.liveSessionService.getStudentAttendanceHistory(student.id, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      from,
+      to,
+      status,
+    });
+  }
+
+  @Get('student-attendance/:studentId')
+  @Roles(UserRole.STUDENT, UserRole.PARENT, UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getStudentAttendanceHistory(
+    @Param('studentId') studentId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.liveSessionService.getStudentAttendanceHistory(studentId, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      from,
+      to,
+      status,
+    });
+  }
+
+  @Get(':id/attendance')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getSessionAttendanceDetail(@Param('id') id: string) {
+    return this.liveSessionService.getSessionAttendanceDetail(id);
+  }
+
+  @Get('attendance/overview')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getAdminAttendanceOverview(
+    @Query('teacherId') teacherId?: string,
+    @Query('studentId') studentId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.liveSessionService.getAdminAttendanceOverview({
+      teacherId,
+      studentId,
+      from,
+      to,
+      status,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
   private async endSession(id: string, req: { user: { id: string; role: UserRole } }, completionReason?: string) {
     if (req.user.role === UserRole.TEACHER) {
       const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
