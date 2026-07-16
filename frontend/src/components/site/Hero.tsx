@@ -129,7 +129,7 @@ export function Hero() {
               src="/Nejah-1.png"
               alt="Nejah Online Quran Center"
               className="w-full h-auto object-cover"
-              fetchpriority="high"
+              fetchPriority="high"
             />
             {/* Subtle gradient overlay */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-nejah-sapphire/20 to-transparent" />
