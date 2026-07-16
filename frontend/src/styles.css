@@ -945,4 +945,31 @@
     background-size: 300% 300%;
     animation: gradientShift 6s ease infinite;
   }
+
+  @keyframes pulseSlow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+  }
+
+  .animate-pulse-slow {
+    animation: pulseSlow 6s ease-in-out infinite;
+  }
+
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin-slow {
+    animation: spinSlow 20s linear infinite;
+  }
+
+  @keyframes floatSoft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .animate-float {
+    animation: floatSoft 4s ease-in-out infinite;
+  }
 }
