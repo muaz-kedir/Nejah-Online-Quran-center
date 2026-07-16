@@ -76,7 +76,7 @@
   --secondary-foreground: #0b355b;
 
   --muted: #e6f0fa;
-  --muted-foreground: #5A7A94;
+  --muted-foreground: #2D4A63;
 
   --accent: #0b355b;
   --accent-foreground: #ffffff;
@@ -86,8 +86,8 @@
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --border: rgba(15, 98, 172, 0.15);
-  --input: rgba(15, 98, 172, 0.15);
+  --border: rgba(15, 98, 172, 0.25);
+  --input: rgba(15, 98, 172, 0.25);
   --ring: #0f62ac;
 
   --body-bg-image: radial-gradient(ellipse 60% 50% at 0% 10%, rgba(15, 98, 172, 0.04) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 100% 90%, rgba(0, 145, 255, 0.03) 0%, transparent 50%);
