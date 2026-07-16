@@ -28,6 +28,7 @@ import { TemporaryReplacementClassCard } from "@/components/teachers/TemporaryRe
 import { TeacherPortalLayout, TeacherPageLoader } from "@/components/teachers/TeacherPortalLayout";
 import { TeacherTopbar } from "@/components/teachers/TeacherTopbar";
 import { NoteModal } from "@/components/teachers/NoteModal";
+import { StartSessionModal } from "@/components/teachers/StartSessionModal";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { api, API_BASE } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
@@ -59,11 +60,14 @@ function TeacherDashboard() {
   const [endingSessionId, setEndingSessionId] = useState<string | null>(null);
   const [completedToday, setCompletedToday] = useState(0);
   const [completedSessions, setCompletedSessions] = useState<TodaySession[]>([]);
-  const [teacherAnalytics, setTeacherAnalytics] = useState<Record<string, number> | null>(null);
   const [noteModal, setNoteModal] = useState<{ open: boolean; note: TeacherNote | null }>({
     open: false,
     note: null,
   });
+  const [startSessionModal, setStartSessionModal] = useState<{
+    open: boolean;
+    session: TodaySession | null;
+  }>({ open: false, session: null });
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -81,14 +85,23 @@ function TeacherDashboard() {
       toast.error("Session not ready yet. Please wait a moment and refresh.");
       return;
     }
-    try {
-      if (session.sessionStatus !== "LIVE") {
-        await api(`/live-sessions/${session.liveSessionId}/start`, { method: "POST" });
-      }
+    if (session.sessionStatus === "LIVE") {
       window.location.href = `/classroom/${session.liveSessionId}`;
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to start session");
+      return;
     }
+    setStartSessionModal({ open: true, session });
+  };
+
+  const handleConfirmStartSession = async (meetingLink?: string) => {
+    const session = startSessionModal.session;
+    if (!session?.liveSessionId) return;
+
+    const body = meetingLink ? JSON.stringify({ meetingLink }) : undefined;
+    await api(`/live-sessions/${session.liveSessionId}/start`, {
+      method: "POST",
+      body,
+    });
+    window.location.href = `/classroom/${session.liveSessionId}`;
   };
 
   const handleOpenSession = async (scheduleId: string) => {
@@ -176,14 +189,6 @@ function TeacherDashboard() {
           /* ignore non-critical fetch */
         }
 
-        try {
-          const analyticsRes = await fetch(`${API_BASE}/zoom-analytics/teacher`, {
-            headers: authHeaders(),
-          });
-          if (analyticsRes.ok) setTeacherAnalytics(await analyticsRes.json());
-        } catch {
-          /* ignore non-critical fetch */
-        }
       } catch {
         console.error("Dashboard load failed");
       } finally {
@@ -318,7 +323,7 @@ function TeacherDashboard() {
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-amber-900 mb-1">Temporary Students</h3>
             <p className="text-xs text-amber-700 mb-4">
-              Enter your Zoom link and create the class — the student will be notified to join.
+              Enter a meeting link and create the class — the student will be notified to join.
             </p>
             <ul className="space-y-3">
               {data!.temporaryStudents!.map((r) => (
@@ -635,9 +640,6 @@ function TeacherDashboard() {
                   </h3>
                   <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider">
                     {completedToday} session{completedToday !== 1 ? "s" : ""} completed today
-                    {teacherAnalytics?.averageSessionDuration
-                      ? ` · Avg ${teacherAnalytics.averageSessionDuration} min`
-                      : ""}
                   </p>
                 </div>
               </div>
@@ -717,6 +719,20 @@ function TeacherDashboard() {
 
       {noteModal.open && (
         <NoteModal note={noteModal.note} onClose={closeModal} onSave={handleSaveNote} />
+      )}
+
+      {startSessionModal.open && startSessionModal.session && (
+        <StartSessionModal
+          open={startSessionModal.open}
+          onClose={() => setStartSessionModal({ open: false, session: null })}
+          onStart={handleConfirmStartSession}
+          session={{
+            title: startSessionModal.session.title,
+            studentName: startSessionModal.session.studentName,
+            startTime: startSessionModal.session.startTime,
+            endTime: startSessionModal.session.endTime,
+          }}
+        />
       )}
     </TeacherPortalLayout>
   );
