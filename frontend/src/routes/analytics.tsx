@@ -252,12 +252,12 @@ function AnalyticsPage() {
               </GlassPanel>
 
               <GlassPanel className="p-6">
-                <h3 className="mb-6 text-sm font-bold text-foreground tracking-wide uppercase">Zoom Sessions Distribution</h3>
+                <h3 className="mb-6 text-sm font-bold text-foreground tracking-wide uppercase">Session Distribution</h3>
                 <div className="h-72 w-full flex flex-col md:flex-row items-center justify-center gap-4">
                   {sessionDistribution.every((s) => s.value === 0) ? (
                     <div className="text-center text-nejah-slate-blue py-8">
                       <Clock className="mx-auto mb-2 h-12 w-12 opacity-30" />
-                      <p className="text-sm">No Zoom sessions recorded yet</p>
+                      <p className="text-sm">No sessions recorded yet</p>
                     </div>
                   ) : (
                     <>
