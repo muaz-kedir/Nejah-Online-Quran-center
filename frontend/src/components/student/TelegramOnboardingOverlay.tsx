@@ -61,7 +61,7 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
 
 export function TelegramOnboardingOverlay() {
   const [linked, setLinked] = useState<boolean | null>(null);
-  const [configured, setConfigured] = useState(true);
+  const [configured, setConfigured] = useState<boolean | null>(null);
   const [generating, setGenerating] = useState(false);
   const [linkInfo, setLinkInfo] = useState<{ code: string; botUsername: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,17 +72,43 @@ export function TelegramOnboardingOverlay() {
     const token = localStorage.getItem("token");
     if (!token) {
       setLinked(false);
+      setConfigured(false);
       return;
     }
 
     const ctrl = new AbortController();
     const ctrl2 = new AbortController();
+    let statusResolved = false;
+    let configResolved = false;
+
+    const resolve = () => {
+      if (!statusResolved || !configResolved) return;
+      if (linked === null) setLinked(false);
+      if (configured === null) setConfigured(false);
+    };
+
     fetchApi<{ configured: boolean }>("/telegram/config", { signal: ctrl2.signal })
-      .then((res) => setConfigured(res.configured))
-      .catch(() => {});
+      .then((res) => {
+        setConfigured(res.configured);
+        configResolved = true;
+        resolve();
+      })
+      .catch(() => {
+        setConfigured(false);
+        configResolved = true;
+        resolve();
+      });
     fetchApi<TelegramStatus>("/telegram/status", { signal: ctrl.signal })
-      .then((res) => setLinked(res.linked))
-      .catch(() => setLinked(false));
+      .then((res) => {
+        setLinked(res.linked);
+        statusResolved = true;
+        resolve();
+      })
+      .catch(() => {
+        setLinked(false);
+        statusResolved = true;
+        resolve();
+      });
 
     return () => {
       ctrl.abort();
@@ -164,7 +190,7 @@ export function TelegramOnboardingOverlay() {
     }
   };
 
-  if (linked === null) {
+  if (linked === null || configured === null) {
     return (
       <div
         className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-md"
