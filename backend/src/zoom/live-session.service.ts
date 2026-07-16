@@ -1521,6 +1521,516 @@ export class LiveSessionService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit), summary };
   }
 
+  async getTeacherSessionHistory(
+    teacherId: string,
+    options: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      from?: string;
+      to?: string;
+    } = {},
+  ): Promise<{
+    data: Array<{
+      id: string;
+      classTitle: string;
+      teacherId: string;
+      studentId: string | null;
+      scheduledStart: string;
+      scheduledEnd: string;
+      actualStart: string | null;
+      actualEnd: string | null;
+      durationMinutes: number | null;
+      status: string;
+      studentCount: number;
+      attendanceSummary: {
+        present: number;
+        late: number;
+        absent: number;
+        leftEarly: number;
+        partial: number;
+        excused: number;
+        total: number;
+      };
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    summary: {
+      totalSessions: number;
+      completedSessions: number;
+      totalHours: number;
+      uniqueStudents: number;
+    };
+  }> {
+    const page = options.page || 1;
+    const limit = Math.min(options.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const query = this.liveSessionRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.attendances', 'a')
+      .leftJoinAndSelect('s.schedule', 'schedule')
+      .where('s.teacherId = :teacherId', { teacherId });
+
+    if (options.status) {
+      query.andWhere('s.status = :status', { status: options.status });
+    }
+    if (options.from) {
+      query.andWhere('s.scheduledStart >= :from', { from: options.from });
+    }
+    if (options.to) {
+      query.andWhere('s.scheduledStart <= :to', { to: options.to });
+    }
+
+    const total = await query.getCount();
+
+    const sessions = await query
+      .orderBy('s.scheduledStart', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    const uniqueStudentIds = new Set<string>();
+    const data = sessions.map((s) => {
+      const att = s.attendances || [];
+      att.forEach((a) => uniqueStudentIds.add(a.studentId));
+      const present = att.filter((a) => a.attendanceStatus === 'PRESENT').length;
+      const late = att.filter((a) => a.attendanceStatus === 'LATE').length;
+      const absent = att.filter((a) => a.attendanceStatus === 'ABSENT').length;
+      const leftEarly = att.filter((a) => a.attendanceStatus === 'LEFT_EARLY').length;
+      const partial = att.filter((a) => a.attendanceStatus === 'PARTIAL').length;
+      const excused = att.filter((a) => a.attendanceStatus === 'EXCUSED').length;
+
+      return {
+        id: s.id,
+        classTitle: s.metadata?.className || s.schedule?.className || 'Quran Class',
+        teacherId: s.teacherId,
+        studentId: s.studentId || null,
+        scheduledStart: s.scheduledStart.toISOString(),
+        scheduledEnd: s.scheduledEnd.toISOString(),
+        actualStart: s.actualStart?.toISOString() || null,
+        actualEnd: s.actualEnd?.toISOString() || null,
+        durationMinutes: s.durationMinutes || null,
+        status: s.status,
+        studentCount: att.length,
+        attendanceSummary: {
+          present, late, absent, leftEarly, partial, excused,
+          total: att.length,
+        },
+      };
+    });
+
+    const summarySessions = await this.liveSessionRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.attendances', 'a')
+      .where('s.teacherId = :teacherId', { teacherId })
+      .getMany();
+
+    const completedSessions = summarySessions.filter((s) => s.status === 'COMPLETED').length;
+    const totalHours = summarySessions.reduce(
+      (acc, s) => acc + (s.durationMinutes || 0), 0,
+    ) / 60;
+    const allUniqueStudents = new Set<string>();
+    summarySessions.forEach((s) =>
+      (s.attendances || []).forEach((a) => allUniqueStudents.add(a.studentId)),
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      summary: {
+        totalSessions: summarySessions.length,
+        completedSessions,
+        totalHours: Math.round(totalHours * 10) / 10,
+        uniqueStudents: allUniqueStudents.size,
+      },
+    };
+  }
+
+  async getStudentClassHistory(
+    studentId: string,
+    options: {
+      page?: number;
+      limit?: number;
+      from?: string;
+      to?: string;
+      status?: string;
+    } = {},
+  ): Promise<{
+    data: Array<{
+      id: string;
+      sessionId: string;
+      classTitle: string;
+      teacherName: string;
+      teacherId: string;
+      scheduledStart: string;
+      scheduledEnd: string;
+      actualStart: string | null;
+      actualEnd: string | null;
+      durationMinutes: number | null;
+      status: string;
+      attendanceStatus: string | null;
+      joinTime: string | null;
+      leaveTime: string | null;
+      duration: number | null;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    summary: {
+      total: number;
+      present: number;
+      late: number;
+      absent: number;
+      attendancePercentage: number;
+    };
+  }> {
+    const page = options.page || 1;
+    const limit = Math.min(options.limit || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const query = this.liveSessionRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.attendances', 'a')
+      .leftJoinAndSelect('s.teacher', 'teacher')
+      .leftJoinAndSelect('s.schedule', 'schedule')
+      .where('a.studentId = :studentId', { studentId });
+
+    if (options.status) {
+      query.andWhere('s.status = :status', { status: options.status });
+    }
+    if (options.from) {
+      query.andWhere('s.scheduledStart >= :from', { from: options.from });
+    }
+    if (options.to) {
+      query.andWhere('s.scheduledStart <= :to', { to: options.to });
+    }
+
+    const total = await query.getCount();
+
+    const sessions = await query
+      .orderBy('s.scheduledStart', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    const data = sessions.map((s) => {
+      const myAttendance = (s.attendances || []).find((a) => a.studentId === studentId);
+      return {
+        id: s.id,
+        sessionId: s.id,
+        classTitle: s.metadata?.className || s.schedule?.className || 'Quran Class',
+        teacherName: s.teacher?.fullName || '—',
+        teacherId: s.teacherId,
+        scheduledStart: s.scheduledStart.toISOString(),
+        scheduledEnd: s.scheduledEnd.toISOString(),
+        actualStart: s.actualStart?.toISOString() || null,
+        actualEnd: s.actualEnd?.toISOString() || null,
+        durationMinutes: s.durationMinutes || null,
+        status: s.status,
+        attendanceStatus: myAttendance?.attendanceStatus || null,
+        joinTime: myAttendance?.joinTime?.toISOString() || null,
+        leaveTime: myAttendance?.leaveTime?.toISOString() || null,
+        duration: myAttendance?.duration || null,
+      };
+    });
+
+    const allRecords = await this.attendanceRepository
+      .createQueryBuilder('a')
+      .innerJoin('a.session', 'session')
+      .where('a.studentId = :studentId', { studentId })
+      .select(['a.attendanceStatus'])
+      .getRawMany();
+
+    const present = allRecords.filter((r) => r.a_attendanceStatus === 'PRESENT').length;
+    const late = allRecords.filter((r) => r.a_attendanceStatus === 'LATE').length;
+    const absent = allRecords.filter((r) => r.a_attendanceStatus === 'ABSENT').length;
+    const totalRecords = allRecords.length;
+    const attendancePercentage = totalRecords > 0
+      ? Math.round(((present + late) / totalRecords) * 100)
+      : 0;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      summary: {
+        total: totalRecords,
+        present,
+        late,
+        absent,
+        attendancePercentage,
+      },
+    };
+  }
+
+  async getSessionDetail(
+    sessionId: string,
+    userId?: string,
+    userRole?: string,
+  ): Promise<{
+    session: LiveSession;
+    notes: any[];
+    timeline: Array<{
+      event: string;
+      timestamp: string | null;
+      description: string;
+    }>;
+  }> {
+    const session = await this.findById(sessionId);
+
+    const isTeacher = session.teacherId
+      && await this.teacherRepository.findOne({
+        where: { id: session.teacherId, userId },
+      }).then(Boolean);
+
+    const isAdmin = userRole === UserRole.ADMIN
+      || userRole === UserRole.SUPER_ADMIN
+      || userRole === UserRole.QIRAT_MANAGER;
+
+    let notes;
+    if (isTeacher || isAdmin) {
+      notes = (session.sessionNotes || []).map((n) => ({
+        id: n.id,
+        content: n.content,
+        lessonSummary: n.lessonSummary,
+        topicsCovered: n.topicsCovered,
+        homeworkAssigned: n.homeworkAssigned,
+        completionRemarks: n.completionRemarks,
+        studentPerformance: n.studentPerformance,
+        visibility: n.visibility,
+        teacherName: n.teacher?.fullName || '—',
+        createdAt: n.createdAt,
+      }));
+    } else {
+      notes = (session.sessionNotes || [])
+        .filter((n) => n.visibility === 'all')
+        .map((n) => ({
+          id: n.id,
+          content: n.content,
+          lessonSummary: n.lessonSummary,
+          topicsCovered: n.topicsCovered,
+          homeworkAssigned: n.homeworkAssigned,
+          completionRemarks: n.completionRemarks,
+          studentPerformance: n.studentPerformance,
+          visibility: n.visibility,
+          createdAt: n.createdAt,
+        }));
+    }
+
+    const timeline: Array<{
+      event: string;
+      timestamp: string | null;
+      description: string;
+    }> = [
+      {
+        event: 'SCHEDULED',
+        timestamp: session.scheduledStart?.toISOString() || null,
+        description: 'Session was scheduled',
+      },
+    ];
+
+    if (session.actualStart) {
+      timeline.push({
+        event: 'LIVE',
+        timestamp: session.actualStart.toISOString(),
+        description: 'Session started',
+      });
+    }
+    if (session.actualEnd || session.completedAt) {
+      timeline.push({
+        event: 'COMPLETED',
+        timestamp: (session.completedAt || session.actualEnd)?.toISOString() || null,
+        description: session.completionReason || 'Session completed',
+      });
+    }
+    if (session.status === 'CANCELLED') {
+      timeline.push({
+        event: 'CANCELLED',
+        timestamp: session.updatedAt?.toISOString() || null,
+        description: session.cancellationReason || 'Session was cancelled',
+      });
+    }
+    if (session.status === 'NO_SHOW') {
+      timeline.push({
+        event: 'NO_SHOW',
+        timestamp: null,
+        description: 'No one joined the session',
+      });
+    }
+
+    // Remove sessionNotes from the session object to avoid duplication
+    const { sessionNotes: _, ...sessionData } = session;
+
+    return {
+      session: sessionData as LiveSession,
+      notes,
+      timeline,
+    };
+  }
+
+  async getTeacherTeachingStats(
+    teacherId: string,
+    options: { from?: string; to?: string } = {},
+  ): Promise<{
+    totalSessions: number;
+    completedSessions: number;
+    cancelledSessions: number;
+    totalHours: number;
+    totalMinutes: number;
+    uniqueStudents: number;
+    averageAttendanceRate: number;
+    monthlyBreakdown: Array<{
+      month: string;
+      sessions: number;
+      hours: number;
+    }>;
+  }> {
+    const query = this.liveSessionRepository
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.attendances', 'a')
+      .where('s.teacherId = :teacherId', { teacherId });
+
+    if (options.from) {
+      query.andWhere('s.scheduledStart >= :from', { from: options.from });
+    }
+    if (options.to) {
+      query.andWhere('s.scheduledStart <= :to', { to: options.to });
+    }
+
+    const sessions = await query.getMany();
+
+    const totalSessions = sessions.length;
+    const completedSessions = sessions.filter((s) => s.status === 'COMPLETED').length;
+    const cancelledSessions = sessions.filter((s) => s.status === 'CANCELLED').length;
+    const totalMinutes = sessions.reduce((acc, s) => acc + (s.durationMinutes || 0), 0);
+    const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+    const uniqueStudents = new Set<string>();
+    sessions.forEach((s) =>
+      (s.attendances || []).forEach((a) => uniqueStudents.add(a.studentId)),
+    );
+
+    // Average attendance rate across all completed/live sessions
+    const sessionsWithAttendance = sessions.filter(
+      (s) => (s.attendances || []).length > 0,
+    );
+    const totalAttendanceRate = sessionsWithAttendance.reduce((acc, s) => {
+      const att = s.attendances || [];
+      const present = att.filter(
+        (a) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE',
+      ).length;
+      return acc + (att.length > 0 ? (present / att.length) * 100 : 0);
+    }, 0);
+    const averageAttendanceRate = sessionsWithAttendance.length > 0
+      ? Math.round(totalAttendanceRate / sessionsWithAttendance.length)
+      : 0;
+
+    // Monthly breakdown
+    const monthlyMap = new Map<string, { sessions: number; hours: number }>();
+    sessions.forEach((s) => {
+      const monthKey = s.scheduledStart.toISOString().slice(0, 7);
+      const existing = monthlyMap.get(monthKey) || { sessions: 0, hours: 0 };
+      existing.sessions++;
+      existing.hours += (s.durationMinutes || 0) / 60;
+      monthlyMap.set(monthKey, existing);
+    });
+
+    const monthlyBreakdown = Array.from(monthlyMap.entries())
+      .map(([month, data]) => ({
+        month,
+        sessions: data.sessions,
+        hours: Math.round(data.hours * 10) / 10,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return {
+      totalSessions,
+      completedSessions,
+      cancelledSessions,
+      totalHours,
+      totalMinutes,
+      uniqueStudents: uniqueStudents.size,
+      averageAttendanceRate,
+      monthlyBreakdown,
+    };
+  }
+
+  async getStudentLearningStats(
+    studentId: string,
+    options: { from?: string; to?: string } = {},
+  ): Promise<{
+    totalSessions: number;
+    attended: number;
+    attendancePercentage: number;
+    uniqueTeachers: number;
+    monthlyBreakdown: Array<{
+      month: string;
+      sessions: number;
+      attended: number;
+    }>;
+  }> {
+    const query = this.attendanceRepository
+      .createQueryBuilder('a')
+      .innerJoinAndSelect('a.session', 'session')
+      .innerJoinAndSelect('session.teacher', 'teacher')
+      .where('a.studentId = :studentId', { studentId });
+
+    if (options.from) {
+      query.andWhere('session.scheduledStart >= :from', { from: options.from });
+    }
+    if (options.to) {
+      query.andWhere('session.scheduledStart <= :to', { to: options.to });
+    }
+
+    const records = await query.getMany();
+
+    const totalSessions = records.length;
+    const attended = records.filter(
+      (r) => r.attendanceStatus === 'PRESENT' || r.attendanceStatus === 'LATE',
+    ).length;
+    const attendancePercentage = totalSessions > 0
+      ? Math.round((attended / totalSessions) * 100)
+      : 0;
+
+    const uniqueTeachers = new Set(records.map((r) => r.session.teacherId)).size;
+
+    const monthlyMap = new Map<string, { sessions: number; attended: number }>();
+    records.forEach((r) => {
+      const monthKey = r.session.scheduledStart.toISOString().slice(0, 7);
+      const existing = monthlyMap.get(monthKey) || { sessions: 0, attended: 0 };
+      existing.sessions++;
+      if (r.attendanceStatus === 'PRESENT' || r.attendanceStatus === 'LATE') {
+        existing.attended++;
+      }
+      monthlyMap.set(monthKey, existing);
+    });
+
+    const monthlyBreakdown = Array.from(monthlyMap.entries())
+      .map(([month, data]) => ({
+        month,
+        sessions: data.sessions,
+        attended: data.attended,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return {
+      totalSessions,
+      attended,
+      attendancePercentage,
+      uniqueTeachers,
+      monthlyBreakdown,
+    };
+  }
+
   private async resolveStudentUserIds(session: LiveSession): Promise<string[]> {
     if (!session.studentId) return [];
     const student = await this.studentRepository.findOne({
