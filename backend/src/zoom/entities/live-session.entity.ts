@@ -57,6 +57,9 @@ export class LiveSession {
   @Column({ nullable: true })
   zoomPassword: string;
 
+  @Column({ nullable: true, type: 'text' })
+  meetingLink: string;
+
   @Column({ type: 'timestamp', nullable: true })
   teacherJoinTime: Date;
 
