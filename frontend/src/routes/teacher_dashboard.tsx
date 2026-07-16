@@ -29,6 +29,7 @@ import { TeacherPortalLayout, TeacherPageLoader } from "@/components/teachers/Te
 import { TeacherTopbar } from "@/components/teachers/TeacherTopbar";
 import { NoteModal } from "@/components/teachers/NoteModal";
 import { StartSessionModal } from "@/components/teachers/StartSessionModal";
+import { SessionStartedDialog } from "@/components/teachers/SessionStartedDialog";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { api, API_BASE } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
@@ -68,6 +69,12 @@ function TeacherDashboard() {
     open: boolean;
     session: TodaySession | null;
   }>({ open: false, session: null });
+  const [startedSessionResult, setStartedSessionResult] = useState<{
+    open: boolean;
+    session: TodaySession | null;
+    meetingLink: string | null;
+    notificationSummary: { studentCount: number; parentCount: number; warnings: string[] };
+  }>({ open: false, session: null, meetingLink: null, notificationSummary: { studentCount: 0, parentCount: 0, warnings: [] } });
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -97,11 +104,20 @@ function TeacherDashboard() {
     if (!session?.liveSessionId) return;
 
     const body = meetingLink ? JSON.stringify({ meetingLink }) : undefined;
-    await api(`/live-sessions/${session.liveSessionId}/start`, {
+    const result = await api<{
+      meetingLink: string | null;
+      notificationSummary: { studentCount: number; parentCount: number; warnings: string[] };
+    }>(`/live-sessions/${session.liveSessionId}/start`, {
       method: "POST",
       body,
     });
-    window.location.href = `/classroom/${session.liveSessionId}`;
+    setStartSessionModal({ open: false, session: null });
+    setStartedSessionResult({
+      open: true,
+      session,
+      meetingLink: result.meetingLink || meetingLink || null,
+      notificationSummary: result.notificationSummary,
+    });
   };
 
   const handleOpenSession = async (scheduleId: string) => {
@@ -732,6 +748,22 @@ function TeacherDashboard() {
             startTime: startSessionModal.session.startTime,
             endTime: startSessionModal.session.endTime,
           }}
+        />
+      )}
+
+      {startedSessionResult.open && startedSessionResult.session && (
+        <SessionStartedDialog
+          open={startedSessionResult.open}
+          onClose={() => setStartedSessionResult({ open: false, session: null, meetingLink: null, notificationSummary: { studentCount: 0, parentCount: 0, warnings: [] } })}
+          onGoToClassroom={() => {
+            window.location.href = `/classroom/${startedSessionResult.session!.liveSessionId}`;
+          }}
+          session={{
+            title: startedSessionResult.session.title,
+            studentName: startedSessionResult.session.studentName,
+          }}
+          meetingLink={startedSessionResult.meetingLink}
+          notificationSummary={startedSessionResult.notificationSummary}
         />
       )}
     </TeacherPortalLayout>
