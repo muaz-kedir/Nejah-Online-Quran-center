@@ -52,12 +52,12 @@ export function About() {
   const missionImage = resolveCmsImageUrl(missionSection.missionImageUrl);
 
   return (
-    <section id="about" className="relative overflow-hidden py-20 md:py-28">
+    <section id="about" className="relative overflow-hidden py-20 md:py-28 bg-gradient-to-b from-[#091428] via-nejah-sapphire to-nejah-midnight">
       {/* Background layers */}
-      <div className="pointer-events-none absolute inset-0 bg-grid-overlay opacity-[0.06]" />
-      <div className="pointer-events-none absolute inset-0 scan-line opacity-[0.03]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_30%_20%,rgba(0,145,255,0.08),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,rgba(15,98,172,0.06),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-grid-overlay opacity-[0.12] dark:opacity-[0.06]" />
+      <div className="pointer-events-none absolute inset-0 scan-line opacity-[0.04]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_30%_20%,rgba(0,145,255,0.1),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,rgba(15,98,172,0.08),transparent_50%)]" />
 
       <FloatingOrb className="-left-16 top-1/4 h-48 w-48" />
       <FloatingOrb className="-right-12 bottom-1/4 h-36 w-36" />
