@@ -1,18 +1,40 @@
 import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 
 export function Hero() {
   const { t } = useTheme();
   const courses = t.hero.title1Courses.split("|");
-  const [courseIndex, setCourseIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const idxRef = useRef(0);
+  const charRef = useRef(0);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setCourseIndex((i) => (i + 1) % courses.length);
-    }, 2500);
-    return () => clearInterval(id);
+    let active = true;
+
+    const schedule = () => {
+      if (!active) return;
+      const word = courses[idxRef.current];
+
+      if (charRef.current < word.length) {
+        charRef.current++;
+        setDisplayedText(word.slice(0, charRef.current));
+        setTimeout(schedule, 80);
+      } else {
+        setTimeout(() => {
+          if (!active) return;
+          charRef.current = 0;
+          setDisplayedText("");
+          idxRef.current = (idxRef.current + 1) % courses.length;
+          setTimeout(schedule, 400);
+        }, 2000);
+      }
+    };
+
+    setTimeout(schedule, 400);
+
+    return () => { active = false; };
   }, [courses.length]);
   return (
     <section id="home" className="relative overflow-hidden pb-20 pt-28 md:pt-36">
@@ -54,8 +76,8 @@ export function Hero() {
           {/* Heading */}
           <h1 className="heading-premium text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-6">
             {t.hero.title1Prefix}<span className="text-gradient inline-flex items-baseline">
-              <span key={courseIndex} className="inline-block animate-fadeIn">{courses[courseIndex]}</span>
-              <span className="ml-0.5 inline-block size-[3px] rounded-full bg-nejah-electric animate-pulse" />
+              <span>{displayedText}</span>
+              <span className="ml-0.5 inline-block w-[3px] h-[1em] rounded-full bg-nejah-electric animate-pulse" />
             </span><br />
             {t.hero.title2}{" "}
             <span className="text-gradient">{t.hero.title3}</span>
