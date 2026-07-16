@@ -251,7 +251,7 @@ function LiveSessionsPage() {
         <PageHeader
           eyebrow="Session Center"
           title="Live Sessions"
-          description="Monitor and manage all live Zoom sessions across the platform."
+          description="Monitor and manage all live sessions across the platform."
           actions={
             <Button onClick={fetchAll} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -354,9 +354,9 @@ function LiveSessionsPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          {s.zoomJoinUrl && (
+                          {(s.meetingLink || s.zoomJoinUrl) && (
                             <Button
-                              onClick={() => window.open(s.zoomJoinUrl, '_blank')}
+                              onClick={() => window.open(s.meetingLink || s.zoomJoinUrl, '_blank')}
                               className="flex-1 bg-nejah-sapphire hover:bg-nejah-azure text-white rounded-xl h-10 text-xs font-bold gap-1"
                             >
                               <ExternalLink className="h-3.5 w-3.5" /> Join Meeting
@@ -496,8 +496,8 @@ function LiveSessionsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="rounded-xl min-w-[160px]">
-                              {s.zoomJoinUrl && (
-                                <DropdownMenuItem onClick={() => window.open(s.zoomJoinUrl, '_blank')}>
+                              {(s.meetingLink || s.zoomJoinUrl) && (
+                                <DropdownMenuItem onClick={() => window.open(s.meetingLink || s.zoomJoinUrl, '_blank')}>
                                   <ExternalLink className="h-4 w-4 mr-2" /> Join Session
                                 </DropdownMenuItem>
                               )}
@@ -575,7 +575,7 @@ function LiveSessionsPage() {
               Cancel Session
             </DialogTitle>
             <DialogDescription className="text-xs text-nejah-slate-blue">
-              This will cancel the session, delete the Zoom meeting, and notify the student. This action cannot be undone.
+              This will cancel the session, end the meeting, and notify the student. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 pt-2">

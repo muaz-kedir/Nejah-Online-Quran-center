@@ -369,9 +369,9 @@ function ClassSessionContent() {
                     <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
                       To initialize this class session, you can either:
                       <br />
-                      • <strong>Auto-create a Zoom meeting</strong> (if you have Zoom connected - just click Start Meeting)
+                       • <strong>Auto-create a meeting</strong> (just click Start Meeting)
                       <br />
-                      • <strong>Paste your own meeting link</strong> (Google Meet or Zoom) below
+                       • <strong>Paste your own meeting link</strong> (Google Meet or any other) below
                       <br />
                       <br />
                       Students and parents will be automatically notified when you start.
@@ -381,7 +381,7 @@ function ClassSessionContent() {
                         Meeting Connection URL (Optional if Zoom is connected)
                       </label>
                       <Input
-                        placeholder="https://meet.google.com/abc-defg-hij  OR  https://zoom.us/j/... (or leave empty for auto-Zoom)"
+                        placeholder="https://meet.google.com/abc-defg-hij  OR  any meeting URL (or leave empty for auto-created meeting)"
                         value={meetingLink}
                         onChange={(e) => setMeetingLink(e.target.value)}
                         className="h-12 bg-background/50 border-none rounded-xl text-sm"
