@@ -136,7 +136,7 @@ export const translations: Record<Lang, TDict> = {
     hero: {
       badge: "The Modern Bridge of Learning",
       title1Prefix: "Learn ",
-      title1Courses: "Quran|Tajweed|Hifz|Arabic|Islamic Studies",
+      title1Courses: "Quran|Tajweed|Hifz|Arabic",
       title2: "Online with",
       title3: "Expert Teachers",
       desc: "Personalized Quran and Islamic education for kids and adults, designed to bring the tranquility of ancient wisdom to your home.",
@@ -273,7 +273,7 @@ export const translations: Record<Lang, TDict> = {
     hero: {
       badge: "الجسر الحديث للتعلم",
       title1Prefix: "تعلّم ",
-      title1Courses: "القرآن|التجويد|التحفيظ|العربية|الدراسات الإسلامية",
+      title1Courses: "القرآن|التجويد|التحفيظ|العربية",
       title2: "عبر الإنترنت مع",
       title3: "أفضل المعلمين",
       desc: "تعليم قرآني وإسلامي مخصص للأطفال والكبار، مصمم ليجلب سكينة الحكمة العريقة إلى منزلك.",
@@ -406,7 +406,7 @@ export const translations: Record<Lang, TDict> = {
     hero: {
       badge: "የዘመናዊ ትምህርት ድልድይ",
       title1Prefix: "",
-      title1Courses: "ቁርዓንን ይማሩ|ታጅዊድን ይማሩ|ሂፍዘን ይማሩ|ዓረብኛን ይማሩ|እስላማዊ ጥናቶችን ይማሩ",
+      title1Courses: "ቁርዓንን ይማሩ|ታጅዊድን ይማሩ|ሂፍዘን ይማሩ|ዓረብኛን ይማሩ",
       title2: "በመስመር ላይ ከ",
       title3: "ባለሙያ መምህራን ጋር",
       desc: "ለልጆችና ለአዋቂዎች የተበጀ የቁርዓንና እስላማዊ ትምህርት፣ የጥንታዊ ጥበብ ሰላም ወደ ቤትዎ ለማምጣት የተነደፈ።",
