@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  Play,
   BookOpen,
   ChevronRight,
   Bell as BellIcon,
@@ -30,9 +29,11 @@ import { PushNotificationToggle } from "@/components/ui/push-notification-toggle
 import { TelegramLink } from "@/components/ui/telegram-link";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 import { TodayLesson } from "@/components/student/lessons/TodayLesson";
+import { LiveSessionHero } from "@/components/student/sessions/LiveSessionHero";
+import { TodayScheduleSection } from "@/components/student/sessions/TodayScheduleSection";
 import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
 import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
-import type { StudentDashboardData, StudentProfileData } from "@/lib/student-types";
+import type { StudentDashboardData, StudentProfileData, StudentClassesData } from "@/lib/student-types";
 
 const dayLabels: Record<string, string> = {
   Sunday: "S",
@@ -48,6 +49,7 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState<StudentDashboardData | null>(null);
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
+  const [todayClasses, setTodayClasses] = useState<StudentClassesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -64,7 +66,20 @@ function StudentDashboard() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadDashboard(), api<StudentProfileData>("/student/profile").catch(() => null)])
+    const loadTodayClasses = async () => {
+      try {
+        const classes = await api<StudentClassesData>("/student/dashboard/classes");
+        setTodayClasses(classes);
+      } catch {
+        // silent — polling will retry
+      }
+    };
+
+    Promise.all([
+      loadDashboard(),
+      api<StudentProfileData>("/student/profile").catch(() => null),
+      loadTodayClasses(),
+    ])
       .then(([, prof]) => {
         if (prof?.student) {
           storeStudentId(prof.student.id);
@@ -73,7 +88,10 @@ function StudentDashboard() {
       })
       .finally(() => setLoading(false));
 
-    const interval = setInterval(loadDashboard, 15000);
+    const interval = setInterval(() => {
+      loadDashboard();
+      loadTodayClasses();
+    }, 15000);
     return () => clearInterval(interval);
   }, [loadDashboard]);
 
@@ -156,6 +174,19 @@ function StudentDashboard() {
     }
   };
 
+  const joinSessionById = async (sessionId: string) => {
+    try {
+      const result = await joinLiveSessionWhenActive(sessionId, "LIVE");
+      toast.success(
+        result.alreadyJoined
+          ? "Rejoined session — attendance already recorded"
+          : "Attendance recorded — joining session",
+      );
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Could not join session");
+    }
+  };
+
   const firstName =
     welcome?.firstName ||
     student?.firstName ||
@@ -216,6 +247,23 @@ function StudentDashboard() {
             </p>
           </div>
         )}
+
+        {/* Live Session Hero */}
+        <div className="mb-6 lg:mb-8 animate-fade-in-up" style={{ animationDelay: "0.08s" }}>
+          <LiveSessionHero
+            liveClass={data?.liveClass || null}
+            upcomingClass={data?.upcomingClass || null}
+            onJoin={joinClass}
+          />
+        </div>
+
+        {/* Today's Schedule */}
+        <TodayScheduleSection
+          sessions={todayClasses?.current || []}
+          liveSessionId={data?.liveClass?.id || todayClasses?.liveClass?.id}
+          liveSessionStatus={data?.liveClass?.status || todayClasses?.liveClass?.status}
+          onJoin={joinSessionById}
+        />
 
         {/* Learning Path */}
         {learningPath && (
@@ -353,70 +401,6 @@ function StudentDashboard() {
 
           {/* Right column — 1/3 */}
           <div className="space-y-5 lg:space-y-6">
-            {/* Upcoming / Live Class */}
-            <div
-              className="upcoming-class-gradient rounded-2xl text-white overflow-hidden animate-fade-in-up shadow-lg"
-              style={{ animationDelay: "0.15s" }}
-            >
-              <div className="p-5 sm:p-6">
-                {isSessionLive ? (
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="live-pulse-dot" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-red-200">
-                      Live Now
-                    </span>
-                  </div>
-                ) : (
-                  <Badge className="bg-white/15 text-white/90 border-none mb-3 text-xs font-semibold">
-                    {data?.upcomingClass ? "Upcoming Class" : "No Live Session"}
-                  </Badge>
-                )}
-                {isSessionLive ? (
-                  <>
-                    <h3 className="text-xl font-bold">{data?.liveClass?.classTitle}</h3>
-                    <p className="text-white/60 text-sm mt-1">
-                      Teacher: {data?.liveClass?.teacher?.fullName || displayTeacher}
-                    </p>
-                    <p className="text-sm font-bold text-nejah-electric mt-1">
-                      {data?.liveClass?.scheduledStart
-                        ? new Date(data.liveClass.scheduledStart).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : data?.upcomingClass?.time}
-                    </p>
-                  </>
-                ) : data?.upcomingClass ? (
-                  <>
-                    <h3 className="text-xl font-bold">{data.upcomingClass.name}</h3>
-                    <p className="text-white/60 text-sm mt-1">with {data.upcomingClass.teacher}</p>
-                    <p className="text-sm font-bold text-nejah-electric mt-1">
-                      {data.upcomingClass.time}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-white/50">No class scheduled</p>
-                )}
-                <div className="flex flex-col gap-2 mt-5">
-                  <Button
-                    className="bg-white text-nejah-sapphire text-foreground hover:bg-white/90 font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={joinClass}
-                    disabled={!isSessionLive}
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    {isSessionLive ? "Join Session" : "Waiting for teacher to start"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-white/25 text-white hover:bg-white/10 rounded-xl"
-                    onClick={() => navigate({ to: studentPaths.classes })}
-                  >
-                    View Schedule
-                  </Button>
-                </div>
-              </div>
-            </div>
-
             {/* Weekly Attendance */}
             <button
               type="button"
