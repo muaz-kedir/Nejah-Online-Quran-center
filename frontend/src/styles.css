@@ -97,24 +97,24 @@
 }
 
 .dark {
-  --background: #1A2D4A;
-  --foreground: #ffffff;
+  --background: #080C14;
+  --foreground: #E8EDF5;
 
-  --card: #203556;
-  --card-foreground: #ffffff;
+  --card: #0E1628;
+  --card-foreground: #E8EDF5;
 
-  --popover: #203556;
-  --popover-foreground: #ffffff;
+  --popover: #0E1628;
+  --popover-foreground: #E8EDF5;
 
   --primary: #0091ff;
-  --primary-foreground: #1A2D4A;
+  --primary-foreground: #080C14;
   --primary-soft: rgba(0, 145, 255, 0.12);
 
-  --secondary: #203556;
-  --secondary-foreground: #ffffff;
+  --secondary: #0E1628;
+  --secondary-foreground: #E8EDF5;
 
-  --muted: #203556;
-  --muted-foreground: #ffffff;
+  --muted: #111C30;
+  --muted-foreground: #94A3B8;
 
   --accent: #0f62ac;
   --accent-foreground: #ffffff;
@@ -124,14 +124,14 @@
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.97 0 0);
 
-  --border: #2A4065;
-  --input: #2A4065;
+  --border: #1A2D4A;
+  --input: #1A2D4A;
   --ring: #0091ff;
 
-  --body-bg-image: radial-gradient(ellipse 70% 50% at 15% 20%, rgba(15, 98, 172, 0.03) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(100, 0, 255, 0.02) 0%, transparent 50%);
-  --grid-line-color: rgba(0, 145, 255, 0.015);
+  --body-bg-image: radial-gradient(ellipse 70% 50% at 15% 20%, rgba(15, 98, 172, 0.05) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(0, 145, 255, 0.03) 0%, transparent 50%);
+  --grid-line-color: rgba(0, 145, 255, 0.025);
 
-  --color-nejah-slate-blue: #ffffff;
+  --color-nejah-slate-blue: #94A3B8;
 }
 
 @layer base {
