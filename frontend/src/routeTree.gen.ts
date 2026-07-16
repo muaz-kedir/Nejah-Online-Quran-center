@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
+import { Route as ZoomGuideRouteImport } from './routes/zoom-guide'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
@@ -22,6 +23,7 @@ import { Route as Teacher_notificationsRouteImport } from './routes/teacher_noti
 import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
 import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replacements'
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -95,6 +97,11 @@ const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
   path: '/zoom-settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZoomGuideRoute = ZoomGuideRouteImport.update({
+  id: '/zoom-guide',
+  path: '/zoom-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -153,6 +160,11 @@ const TeacherReplacementsRoute = TeacherReplacementsRouteImport.update({
 const TeacherApplicationsRoute = TeacherApplicationsRouteImport.update({
   id: '/teacher-applications',
   path: '/teacher-applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentsRoute = StudentsRouteImport.update({
@@ -535,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
@@ -547,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
@@ -617,6 +631,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
@@ -629,6 +644,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
@@ -699,6 +715,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteWithChildren
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
@@ -711,6 +728,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
@@ -783,6 +801,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
@@ -795,6 +814,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
@@ -865,6 +885,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
@@ -877,6 +898,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
@@ -946,6 +968,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
@@ -958,6 +981,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session_/$id'
     | '/classroom_/$sessionId'
@@ -1029,6 +1053,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRouteWithChildren
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
+  SupportRoute: typeof SupportRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
   TeacherReplacementsRoute: typeof TeacherReplacementsRoute
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
@@ -1041,6 +1066,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
+  ZoomGuideRoute: typeof ZoomGuideRoute
   ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
@@ -1070,6 +1096,13 @@ declare module '@tanstack/react-router' {
       path: '/zoom-settings'
       fullPath: '/zoom-settings'
       preLoaderRoute: typeof ZoomSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zoom-guide': {
+      id: '/zoom-guide'
+      path: '/zoom-guide'
+      fullPath: '/zoom-guide'
+      preLoaderRoute: typeof ZoomGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/users': {
@@ -1154,6 +1187,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher-applications'
       fullPath: '/teacher-applications'
       preLoaderRoute: typeof TeacherApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/students': {
@@ -1714,6 +1754,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRouteWithChildren,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
+  SupportRoute: SupportRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
   TeacherReplacementsRoute: TeacherReplacementsRoute,
   Teacher_dashboardRoute: Teacher_dashboardRoute,
@@ -1726,6 +1767,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
+  ZoomGuideRoute: ZoomGuideRoute,
   ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
