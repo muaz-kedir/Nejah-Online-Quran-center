@@ -78,6 +78,7 @@ import { Route as StudentNotificationsRouteImport } from './routes/student_.noti
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
+import { Route as StudentAttendanceRouteImport } from './routes/student_.attendance'
 import { Route as SettingsIntegrationsRouteImport } from './routes/settings.integrations'
 import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
 import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
@@ -438,6 +439,11 @@ const StudentClassesRoute = StudentClassesRouteImport.update({
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
+  id: '/student_/attendance',
+  path: '/student/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsIntegrationsRoute = SettingsIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
@@ -567,6 +573,7 @@ export interface FileRoutesByFullPath {
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -651,6 +658,7 @@ export interface FileRoutesByTo {
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
   '/student/homework': typeof StudentHomeworkRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions_/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student_/attendance': typeof StudentAttendanceRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
   '/student_/homework': typeof StudentHomeworkRoute
@@ -821,6 +830,7 @@ export interface FileRouteTypes {
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/settings/integrations'
+    | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -905,6 +915,7 @@ export interface FileRouteTypes {
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/settings/integrations'
+    | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
     | '/student/homework'
@@ -988,6 +999,7 @@ export interface FileRouteTypes {
     | '/live-sessions/analytics'
     | '/live-sessions_/$id'
     | '/settings/integrations'
+    | '/student_/attendance'
     | '/student_/classes'
     | '/student_/evaluations'
     | '/student_/homework'
@@ -1071,6 +1083,7 @@ export interface RootRouteChildren {
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
   LiveSessionsIdRoute: typeof LiveSessionsIdRoute
+  StudentAttendanceRoute: typeof StudentAttendanceRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
@@ -1574,6 +1587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student_/attendance': {
+      id: '/student_/attendance'
+      path: '/student/attendance'
+      fullPath: '/student/attendance'
+      preLoaderRoute: typeof StudentAttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/integrations': {
       id: '/settings/integrations'
       path: '/integrations'
@@ -1772,6 +1792,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
   LiveSessionsIdRoute: LiveSessionsIdRoute,
+  StudentAttendanceRoute: StudentAttendanceRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
