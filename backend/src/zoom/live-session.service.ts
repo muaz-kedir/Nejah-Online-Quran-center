@@ -288,24 +288,27 @@ export class LiveSessionService {
   async startSession(
     sessionId: string,
     teacherId: string,
+    meetingLink?: string,
   ): Promise<{
-    zoomMeetingId: string;
-    startUrl: string;
-    joinUrl: string;
-    zoomStartUrl: string;
-    zoomJoinUrl: string;
+    zoomMeetingId: string | null;
+    startUrl: string | null;
+    joinUrl: string | null;
+    zoomStartUrl: string | null;
+    zoomJoinUrl: string | null;
+    meetingLink: string | null;
   }> {
-    const session = await this.start(teacherId, sessionId);
+    const session = await this.start(teacherId, sessionId, meetingLink);
     return {
-      zoomMeetingId: session.zoomMeetingId!,
-      startUrl: session.zoomStartUrl!,
-      joinUrl: session.zoomJoinUrl!,
-      zoomStartUrl: session.zoomStartUrl!,
-      zoomJoinUrl: session.zoomJoinUrl!,
+      zoomMeetingId: session.zoomMeetingId || null,
+      startUrl: session.meetingLink || session.zoomStartUrl || null,
+      joinUrl: session.meetingLink || session.zoomJoinUrl || null,
+      zoomStartUrl: session.zoomStartUrl || null,
+      zoomJoinUrl: session.zoomJoinUrl || null,
+      meetingLink: session.meetingLink || null,
     };
   }
 
-  async start(teacherId: string, id: string): Promise<LiveSession> {
+  async start(teacherId: string, id: string, meetingLink?: string): Promise<LiveSession> {
     const session = await this.findById(id);
 
     if (session.teacherId !== teacherId) {
@@ -382,7 +385,9 @@ export class LiveSessionService {
       );
     }
 
-    if (!session.zoomMeetingId) {
+    if (meetingLink) {
+      session.meetingLink = meetingLink;
+    } else if (!session.zoomMeetingId) {
       await this.ensureZoomMeeting(session);
     }
 
@@ -395,7 +400,8 @@ export class LiveSessionService {
     this.logger.log(
       `Live session started — liveSessionId=${id}, teacherId=${teacherId}, ` +
         `studentId=${session.studentId || 'n/a'}, scheduleId=${session.scheduleId || 'n/a'}, ` +
-        `zoomMeetingId=${session.zoomMeetingId}, zoomMeetingUUID=${session.zoomMeetingUUID || 'n/a'}, ` +
+        `meetingLink=${session.meetingLink ? 'provided' : 'n/a'}, ` +
+        `zoomMeetingId=${session.zoomMeetingId || 'n/a'}, ` +
         `status=${session.status}, timestamp=${session.actualStart?.toISOString()}`,
     );
 
@@ -525,6 +531,7 @@ export class LiveSessionService {
     session: LiveSession;
     joinUrl: string | null;
     startUrl: string | null;
+    meetingLink: string | null;
     sdkSignature: string | null;
     clientId: string | null;
     meetingNumber: string | null;
@@ -630,8 +637,8 @@ export class LiveSessionService {
 
     return {
       session,
-      joinUrl: session.zoomJoinUrl,
-      startUrl: session.zoomStartUrl,
+      joinUrl: session.meetingLink || session.zoomJoinUrl,
+      startUrl: session.meetingLink || session.zoomStartUrl,
       sdkSignature,
       clientId: sdkConfigured ? this.zoomService.getOAuthClientId() : null,
       meetingNumber,
@@ -644,6 +651,7 @@ export class LiveSessionService {
       classroomStatus: classroomStatus as any,
       countdownSeconds,
       joinWindowOpenAt,
+      meetingLink: session.meetingLink || null,
     };
   }
 
