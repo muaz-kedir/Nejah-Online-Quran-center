@@ -261,7 +261,19 @@ function ClassroomPage() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || "Failed to start session");
       }
-      toast.success("Session started!");
+      const result = await res.json().catch(() => ({}));
+      const summary = result?.notificationSummary;
+      if (summary && summary.studentCount > 0) {
+        toast.success(
+          `Session started — ${summary.studentCount} student${summary.studentCount !== 1 ? "s" : ""} notified` +
+          (summary.parentCount > 0 ? `, ${summary.parentCount} parent${summary.parentCount !== 1 ? "s" : ""}` : "")
+        );
+      } else {
+        toast.success("Session started!");
+      }
+      if (summary?.warnings?.length > 0) {
+        toast.warning("Some notification channels reported temporary issues. Students may still receive notifications through other available channels.");
+      }
       setMeetingLinkInput("");
       loadClassroom();
     } catch (e: any) {
