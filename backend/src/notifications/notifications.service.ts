@@ -465,7 +465,7 @@ export class NotificationsService {
       session.schedule?.className || session.metadata?.className || 'Quran Class';
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
-    const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const joinUrl = session.meetingLink || session.zoomJoinUrl || `/classroom/${sessionId}`;
     const classroomUrl = `/classroom/${sessionId}`;
     const enrolledCount =
       session.schedule?.scheduleStudents?.length ||
