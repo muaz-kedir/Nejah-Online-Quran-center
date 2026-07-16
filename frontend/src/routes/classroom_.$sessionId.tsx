@@ -95,6 +95,7 @@ type ClassroomAccess = {
   session: any;
   joinUrl: string | null;
   startUrl: string | null;
+  meetingLink: string | null;
   classroomStatus: string;
   countdownSeconds: number | null;
   joinWindowOpenAt: string | null;
@@ -112,6 +113,7 @@ function ClassroomPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [submittingNote, setSubmittingNote] = useState(false);
+  const [meetingLinkInput, setMeetingLinkInput] = useState("");
   const [noteForm, setNoteForm] = useState({
     lessonSummary: "",
     topicsCovered: "",
@@ -197,10 +199,10 @@ function ClassroomPage() {
   };
 
   const openExternalZoom = (access: ClassroomAccess) => {
-    const url = role === "teacher" ? access.startUrl || access.joinUrl : access.joinUrl;
+    const url = access.meetingLink || (role === "teacher" ? access.startUrl || access.joinUrl : access.joinUrl);
     if (url) {
-      window.location.href = url;
-      toast.success("Opened Zoom in a new tab");
+      window.open(url, "_blank", "noopener,noreferrer");
+      toast.success("Opened meeting in a new tab");
     } else {
       toast.error("Meeting link not available yet");
     }
@@ -225,7 +227,7 @@ function ClassroomPage() {
       if (role === "student") {
         const result = await joinLiveSessionWhenActive(sessionId, classroom.session?.status);
         toast.success(
-          result.alreadyJoined ? "Rejoined session — attendance already recorded" : "Attendance recorded — opening Zoom",
+          result.alreadyJoined ? "Rejoined session — attendance already recorded" :           "Attendance recorded — joining session",
         );
       } else {
         const res = await fetch(`${API}/live-sessions/${sessionId}/join`, {
@@ -249,15 +251,18 @@ function ClassroomPage() {
   const handleStartSession = async () => {
     setStarting(true);
     try {
+      const body = meetingLinkInput ? JSON.stringify({ meetingLink: meetingLinkInput }) : undefined;
       const res = await fetch(`${API}/live-sessions/${sessionId}/start`, {
         method: "POST",
         headers: authHeaders(),
+        body,
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || "Failed to start session");
       }
       toast.success("Session started!");
+      setMeetingLinkInput("");
       loadClassroom();
     } catch (e: any) {
       toast.error(e.message);
@@ -461,25 +466,35 @@ function ClassroomPage() {
             <>
               <p className="text-sm text-white/60">
                 {isLive
-                  ? "Class is in session. Click below to join or open Zoom directly."
-                  : "Your class runs via Zoom. Click the button below to open Zoom and join when the session starts."}
+          ? "Class is in session. Click below to join the meeting."
+          : "Click the button below to join when the session starts."}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {role === "teacher" && isScheduled && (
-                  <Button
-                    size="lg"
-                    className="rounded-2xl px-8 bg-emerald-500 hover:bg-emerald-600"
-                    onClick={handleStartSession}
-                    disabled={starting}
-                  >
-                    {starting ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    Start Session
-                  </Button>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-full max-w-md">
+                      <Input
+                        placeholder="Paste meeting link (Zoom, Meet, Teams...)"
+                        value={meetingLinkInput}
+                        onChange={(e) => setMeetingLinkInput(e.target.value)}
+                        className="rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/40 text-center"
+                      />
+                    </div>
+                    <Button
+                      size="lg"
+                      className="rounded-2xl px-8 bg-emerald-500 hover:bg-emerald-600"
+                      onClick={handleStartSession}
+                      disabled={starting}
+                    >
+                      {starting ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Play className="h-4 w-4 mr-2" />
+                      )}
+                      Start & Notify Students
+                    </Button>
+                  </div>
                 )}
 
                 {role === "teacher" && isLive && (
