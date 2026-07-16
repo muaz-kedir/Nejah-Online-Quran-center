@@ -28,6 +28,7 @@ import {
   BookMarked,
   MessageSquareText,
   ClipboardCheck,
+  Clock,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -55,7 +56,9 @@ export const menuByRole: Record<string, MenuItem[]> = {
         { label: 'Schedules', icon: Calendar, path: '/schedules' },
         { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
         { label: 'Session Analytics', icon: TrendingUp, path: '/live-sessions/analytics' },
-    { label: 'Attendance', icon: ClipboardCheck, path: '/student/attendance' },
+        { label: 'Attendance', icon: ClipboardCheck, path: '/attendance' },
+        { label: 'Teacher History', icon: Clock, path: '/admin/teacher-history' },
+        { label: 'Student History', icon: BarChart3, path: '/admin/student-history' },
         { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
         { label: 'Exams & Evaluations', icon: CheckCircle, path: '/qirat_exams' },
       ],
@@ -112,6 +115,8 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Live Sessions', icon: Video, path: '/live-sessions' },
     { label: 'Session Analytics', icon: BarChart3, path: '/live-sessions/analytics' },
     { label: 'Attendance', icon: ClipboardCheck, path: '/attendance' },
+    { label: 'Teacher History', icon: Clock, path: '/admin/teacher-history' },
+    { label: 'Student History', icon: BarChart3, path: '/admin/student-history' },
     { label: 'Students', icon: Users, path: '/students' },
     { label: 'Teachers', icon: GraduationCap, path: '/teachers' },
     { label: 'Teacher Replacements', icon: UserCog, path: '/teacher-replacements' },
