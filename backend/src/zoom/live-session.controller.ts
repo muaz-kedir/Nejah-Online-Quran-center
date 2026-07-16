@@ -296,28 +296,6 @@ export class LiveSessionController {
     return this.liveSessionService.markExpired(id);
   }
 
-  @Get(':id')
-  @Roles(
-    UserRole.TEACHER,
-    UserRole.STUDENT,
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.QIRAT_MANAGER,
-  )
-  async findOne(@Param('id') id: string) {
-    return this.liveSessionService.findById(id);
-  }
-
-  @Patch(':id')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
-  async update(@Param('id') id: string, @Body() dto: UpdateLiveSessionDto, @Request() req) {
-    if (req.user.role === UserRole.TEACHER) {
-      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-      dto.teacherId = teacher.id;
-    }
-    return this.liveSessionService.update(id, dto);
-  }
-
   @Get('my-attendance')
   @Roles(UserRole.STUDENT)
   async getMyAttendance(
@@ -341,6 +319,28 @@ export class LiveSessionController {
       to,
       status,
     });
+  }
+
+  @Get(':id')
+  @Roles(
+    UserRole.TEACHER,
+    UserRole.STUDENT,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.QIRAT_MANAGER,
+  )
+  async findOne(@Param('id') id: string) {
+    return this.liveSessionService.findById(id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async update(@Param('id') id: string, @Body() dto: UpdateLiveSessionDto, @Request() req) {
+    if (req.user.role === UserRole.TEACHER) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      dto.teacherId = teacher.id;
+    }
+    return this.liveSessionService.update(id, dto);
   }
 
   @Get('student-attendance/:studentId')
