@@ -50,4 +50,5 @@ export const studentPaths = {
   messages: '/student/messages',
   notifications: '/student/notifications',
   evaluations: '/student/evaluations',
+  attendance: '/student/attendance',
 } as const;
