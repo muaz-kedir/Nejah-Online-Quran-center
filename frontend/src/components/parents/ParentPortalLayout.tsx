@@ -7,7 +7,6 @@ import {
   ClipboardList,
   FileText,
   Clock,
-  Video,
   Bell,
   Settings,
   ChevronLeft,
@@ -120,7 +119,6 @@ export function ParentPortalLayout({
     { label: translations.homework, icon: ClipboardList, tab: 'homework', path: '/parent_dashboard' },
     { label: translations.examsResults, icon: FileText, tab: 'exams', path: '/parent_dashboard' },
     { label: translations.classSchedule, icon: Clock, tab: 'schedule', path: '/parent_dashboard' },
-    { label: 'Sessions', icon: Video, tab: 'sessions', path: '/parent_sessions' },
   ];
 
   const bottomItems: MenuItem[] = [
