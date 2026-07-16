@@ -17,6 +17,7 @@ import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as Teacher_zoomRouteImport } from './routes/teacher_zoom'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
+import { Route as Teacher_sessionsRouteImport } from './routes/teacher_sessions'
 import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
 import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
 import { Route as Teacher_notificationsRouteImport } from './routes/teacher_notifications'
@@ -64,6 +65,8 @@ import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
+import { Route as Admin_teacherHistoryRouteImport } from './routes/admin_teacher-history'
+import { Route as Admin_studentHistoryRouteImport } from './routes/admin_student-history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WebsiteTeachersRouteImport } from './routes/website.teachers'
 import { Route as WebsiteResourcesRouteImport } from './routes/website.resources'
@@ -76,6 +79,7 @@ import { Route as StudentResourcesRouteImport } from './routes/student_.resource
 import { Route as StudentProgressRouteImport } from './routes/student_.progress'
 import { Route as StudentNotificationsRouteImport } from './routes/student_.notifications'
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
+import { Route as StudentHistoryRouteImport } from './routes/student_.history'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
 import { Route as StudentAttendanceRouteImport } from './routes/student_.attendance'
@@ -131,6 +135,11 @@ const Teacher_zoomRoute = Teacher_zoomRouteImport.update({
 const Teacher_studentsRoute = Teacher_studentsRouteImport.update({
   id: '/teacher_students',
   path: '/teacher_students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Teacher_sessionsRoute = Teacher_sessionsRouteImport.update({
+  id: '/teacher_sessions',
+  path: '/teacher_sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Teacher_scheduleRoute = Teacher_scheduleRouteImport.update({
@@ -368,6 +377,16 @@ const AdminsRoute = AdminsRouteImport.update({
   path: '/admins',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Admin_teacherHistoryRoute = Admin_teacherHistoryRouteImport.update({
+  id: '/admin_teacher-history',
+  path: '/admin_teacher-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Admin_studentHistoryRoute = Admin_studentHistoryRouteImport.update({
+  id: '/admin_student-history',
+  path: '/admin_student-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -427,6 +446,11 @@ const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
 const StudentHomeworkRoute = StudentHomeworkRouteImport.update({
   id: '/student_/homework',
   path: '/student/homework',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentHistoryRoute = StudentHistoryRouteImport.update({
+  id: '/student_/history',
+  path: '/student/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentEvaluationsRoute = StudentEvaluationsRouteImport.update({
@@ -513,6 +537,8 @@ const TeachersIdScheduleDayRoute = TeachersIdScheduleDayRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -560,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
@@ -576,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
+  '/student/history': typeof StudentHistoryRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
@@ -598,6 +626,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -645,6 +675,7 @@ export interface FileRoutesByTo {
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
@@ -661,6 +692,7 @@ export interface FileRoutesByTo {
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
+  '/student/history': typeof StudentHistoryRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
@@ -683,6 +715,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -730,6 +764,7 @@ export interface FileRoutesById {
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
@@ -746,6 +781,7 @@ export interface FileRoutesById {
   '/student_/attendance': typeof StudentAttendanceRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
+  '/student_/history': typeof StudentHistoryRoute
   '/student_/homework': typeof StudentHomeworkRoute
   '/student_/notifications': typeof StudentNotificationsRoute
   '/student_/progress': typeof StudentProgressRoute
@@ -770,6 +806,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -817,6 +855,7 @@ export interface FileRouteTypes {
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
@@ -833,6 +872,7 @@ export interface FileRouteTypes {
     | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
+    | '/student/history'
     | '/student/homework'
     | '/student/notifications'
     | '/student/progress'
@@ -855,6 +895,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -902,6 +944,7 @@ export interface FileRouteTypes {
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
@@ -918,6 +961,7 @@ export interface FileRouteTypes {
     | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
+    | '/student/history'
     | '/student/homework'
     | '/student/notifications'
     | '/student/progress'
@@ -939,6 +983,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -986,6 +1032,7 @@ export interface FileRouteTypes {
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
@@ -1002,6 +1049,7 @@ export interface FileRouteTypes {
     | '/student_/attendance'
     | '/student_/classes'
     | '/student_/evaluations'
+    | '/student_/history'
     | '/student_/homework'
     | '/student_/notifications'
     | '/student_/progress'
@@ -1025,6 +1073,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Admin_studentHistoryRoute: typeof Admin_studentHistoryRoute
+  Admin_teacherHistoryRoute: typeof Admin_teacherHistoryRoute
   AdminsRoute: typeof AdminsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
@@ -1072,6 +1122,7 @@ export interface RootRouteChildren {
   Teacher_notificationsRoute: typeof Teacher_notificationsRoute
   Teacher_profileRoute: typeof Teacher_profileRoute
   Teacher_scheduleRoute: typeof Teacher_scheduleRoute
+  Teacher_sessionsRoute: typeof Teacher_sessionsRoute
   Teacher_studentsRoute: typeof Teacher_studentsRoute
   Teacher_zoomRoute: typeof Teacher_zoomRoute
   TeachersRoute: typeof TeachersRoute
@@ -1086,6 +1137,7 @@ export interface RootRouteChildren {
   StudentAttendanceRoute: typeof StudentAttendanceRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
+  StudentHistoryRoute: typeof StudentHistoryRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentProgressRoute: typeof StudentProgressRoute
@@ -1158,6 +1210,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher_students'
       fullPath: '/teacher_students'
       preLoaderRoute: typeof Teacher_studentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher_sessions': {
+      id: '/teacher_sessions'
+      path: '/teacher_sessions'
+      fullPath: '/teacher_sessions'
+      preLoaderRoute: typeof Teacher_sessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher_schedule': {
@@ -1489,6 +1548,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_teacher-history': {
+      id: '/admin_teacher-history'
+      path: '/admin_teacher-history'
+      fullPath: '/admin_teacher-history'
+      preLoaderRoute: typeof Admin_teacherHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_student-history': {
+      id: '/admin_student-history'
+      path: '/admin_student-history'
+      fullPath: '/admin_student-history'
+      preLoaderRoute: typeof Admin_studentHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -1571,6 +1644,13 @@ declare module '@tanstack/react-router' {
       path: '/student/homework'
       fullPath: '/student/homework'
       preLoaderRoute: typeof StudentHomeworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student_/history': {
+      id: '/student_/history'
+      path: '/student/history'
+      fullPath: '/student/history'
+      preLoaderRoute: typeof StudentHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student_/evaluations': {
@@ -1734,6 +1814,8 @@ const TeachersIdRouteWithChildren = TeachersIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Admin_studentHistoryRoute: Admin_studentHistoryRoute,
+  Admin_teacherHistoryRoute: Admin_teacherHistoryRoute,
   AdminsRoute: AdminsRoute,
   AnalyticsRoute: AnalyticsRoute,
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
@@ -1781,6 +1863,7 @@ const rootRouteChildren: RootRouteChildren = {
   Teacher_notificationsRoute: Teacher_notificationsRoute,
   Teacher_profileRoute: Teacher_profileRoute,
   Teacher_scheduleRoute: Teacher_scheduleRoute,
+  Teacher_sessionsRoute: Teacher_sessionsRoute,
   Teacher_studentsRoute: Teacher_studentsRoute,
   Teacher_zoomRoute: Teacher_zoomRoute,
   TeachersRoute: TeachersRoute,
@@ -1795,6 +1878,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentAttendanceRoute: StudentAttendanceRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
+  StudentHistoryRoute: StudentHistoryRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentProgressRoute: StudentProgressRoute,
