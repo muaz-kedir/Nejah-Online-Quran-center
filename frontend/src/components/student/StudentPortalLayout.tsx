@@ -5,6 +5,7 @@ import {
   Users,
   TrendingUp,
   ClipboardList,
+  ClipboardCheck,
   FolderOpen,
   Bell,
   Settings,
@@ -74,6 +75,7 @@ export function StudentPortalLayout({
     { label: t.myProgress, icon: TrendingUp, path: studentPaths.progress },
     { label: t.homework, icon: ClipboardList, path: studentPaths.homework },
     { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
+    { label: t.attendance, icon: ClipboardCheck, path: studentPaths.attendance },
     { label: t.notifications, icon: Bell, path: studentPaths.notifications },
   ];
 
