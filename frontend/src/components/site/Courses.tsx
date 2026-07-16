@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/dialog";
 
 const COURSE_IMAGES: Record<string, string> = {
-  "Quran Reading": "https://images.unsplash.com/photo-1609592424747-41c1e8e1e5b5?w=800&q=80",
-  "Tajweed Course": "https://images.unsplash.com/photo-1589187154270-5bcb50f4b3ef?w=800&q=80",
-  "Hifz Program": "https://images.unsplash.com/photo-1594729095022-e1e6e97c0e8f?w=800&q=80",
-  "Islamic Studies": "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80",
+  "quran reading": "https://images.unsplash.com/photo-1589187154270-5bcb50f4b3ef?w=800&q=80",
+  "tajweed": "https://images.unsplash.com/photo-1621905252507-b35492cc74b2?w=800&q=80",
+  "hifz": "https://images.unsplash.com/photo-1594729095022-e1e6e97c0e8f?w=800&q=80",
+  "islamic studies": "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80",
 };
 
 const COURSE_META: Record<string, { duration: string; lessons: string; students: string }> = {
@@ -39,9 +39,27 @@ const COURSE_BENEFITS: Record<string, string[]> = {
 function resolveCourseImage(program: HomeProgram): string {
   const img = resolveCmsImageUrl(program.imageUrl);
   if (img) return img;
-  const enTitle = program.title?.en?.trim();
-  if (enTitle && COURSE_IMAGES[enTitle]) return COURSE_IMAGES[enTitle];
+  const enTitle = (program.title?.en ?? "").toLowerCase().trim();
+  for (const [key, url] of Object.entries(COURSE_IMAGES)) {
+    if (enTitle.includes(key)) return url;
+  }
   return "";
+}
+
+function lookupMeta(program: HomeProgram) {
+  const enTitle = (program.title?.en ?? "").toLowerCase().trim();
+  for (const [key, meta] of Object.entries(COURSE_META)) {
+    if (enTitle.includes(key.toLowerCase())) return meta;
+  }
+  return undefined;
+}
+
+function lookupBenefits(program: HomeProgram) {
+  const enTitle = (program.title?.en ?? "").toLowerCase().trim();
+  for (const [key, benefits] of Object.entries(COURSE_BENEFITS)) {
+    if (enTitle.includes(key.toLowerCase())) return benefits;
+  }
+  return undefined;
 }
 
 function GlowDot({ className }: { className?: string }) {
@@ -110,8 +128,7 @@ export function Courses() {
             const title = pickLocalized(program.title, lang);
             const desc = pickLocalized(program.description, lang);
             const img = resolveCourseImage(program);
-            const enTitle = program.title?.en?.trim();
-            const benefits = enTitle ? COURSE_BENEFITS[enTitle] : undefined;
+            const benefits = lookupBenefits(program);
 
             return (
               <motion.div
@@ -209,9 +226,9 @@ function CourseDetailDialog({ program, lang, onClose }: { program: HomeProgram; 
   const desc = pickLocalized(program.description, lang);
   const img = resolveCourseImage(program);
   const detailedContent = pickLocalized(program.detailedContent, lang);
-  const enTitle = program.title?.en?.trim();
-  const meta = enTitle ? COURSE_META[enTitle] : undefined;
-  const benefits = enTitle ? COURSE_BENEFITS[enTitle] : undefined;
+  const enTitle = (program.title?.en ?? "").toLowerCase().trim();
+  const meta = lookupMeta(program);
+  const benefits = lookupBenefits(program);
 
   return (
     <motion.div
