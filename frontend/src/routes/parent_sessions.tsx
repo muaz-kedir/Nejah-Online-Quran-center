@@ -170,8 +170,8 @@ function ParentSessionsPage() {
         </td>
         <td className="py-4 px-6 text-right">
           <div className="flex gap-1 justify-end">
-            {session.zoomJoinUrl && session.status === 'LIVE' && (
-              <Button onClick={(e) => { e.stopPropagation(); window.open(session.zoomJoinUrl, '_blank'); }} size="sm" className="rounded-lg h-8 w-8 p-0" variant="outline" title="Join Session">
+            {(session.meetingLink || session.zoomJoinUrl) && session.status === 'LIVE' && (
+              <Button onClick={(e) => { e.stopPropagation(); window.open(session.meetingLink || session.zoomJoinUrl, '_blank'); }} size="sm" className="rounded-lg h-8 w-8 p-0" variant="outline" title="Join Session">
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             )}
@@ -187,7 +187,7 @@ function ParentSessionsPage() {
         <PageHeader
           eyebrow="Parent Portal"
           title={`My Children's Sessions${activeSessions > 0 ? ' 🔴' : ''}`}
-          description={`View all Zoom sessions, attendance records, and class details for your children${activeSessions > 0 ? `. ${activeSessions} session${activeSessions > 1 ? 's are' : ' is'} live now!` : '.'}`}
+          description={`View all sessions, attendance records, and class details for your children${activeSessions > 0 ? `. ${activeSessions} session${activeSessions > 1 ? 's are' : ' is'} live now!` : '.'}`}
           actions={
             <div className="flex items-center gap-3">
               {children.length > 1 && (
@@ -257,7 +257,7 @@ function ParentSessionsPage() {
                     <Video className="h-8 w-8 text-nejah-slate-blue" />
                   </div>
                   <p className="text-sm font-bold text-nejah-slate-blue">No sessions found</p>
-                  <p className="text-xs text-nejah-slate-blue mt-1">Your children's Zoom sessions will appear here</p>
+                   <p className="text-xs text-nejah-slate-blue mt-1">Your children's sessions will appear here</p>
                 </div>
               ) : (
                 <GlassPanel className="overflow-hidden">
