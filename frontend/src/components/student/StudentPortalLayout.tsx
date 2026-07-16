@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
 import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
+import { TelegramOnboardingOverlay } from "@/components/student/TelegramOnboardingOverlay";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
@@ -456,6 +457,8 @@ export function StudentPortalLayout({
         onOpenChange={setShowLogoutConfirm}
         onConfirm={confirmLogout}
       />
+
+      <TelegramOnboardingOverlay />
     </div>
   );
 }
