@@ -6,6 +6,7 @@ import {
   Calendar,
   Bell,
   User,
+  Clock,
   Menu,
   X,
   LogOut,
@@ -22,6 +23,7 @@ const menuItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/teacher_dashboard" },
   { label: "Students", icon: Users, path: "/teacher_students" },
   { label: "Schedule", icon: Calendar, path: "/teacher_schedule" },
+  { label: "Session History", icon: Clock, path: "/teacher_sessions" },
   { label: "Notifications", icon: Bell, path: "/teacher_notifications" },
   { label: "Profile", icon: User, path: "/teacher_profile" },
 ];
