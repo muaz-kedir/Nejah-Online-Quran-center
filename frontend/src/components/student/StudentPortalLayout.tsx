@@ -18,6 +18,7 @@ import {
   X,
   Sun,
   Moon,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
@@ -26,6 +27,17 @@ import { TelegramOnboardingOverlay } from "@/components/student/TelegramOnboardi
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
+import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
+import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { TelegramLink } from "@/components/ui/telegram-link";
+import type { StudentProfileData } from "@/lib/student-types";
 
 
 
@@ -39,8 +51,6 @@ type Props = {
     initials?: string;
   };
   unreadNotifications?: number;
-  onOpenSettings?: () => void;
-  onOpenProfile?: () => void;
   children: ReactNode;
 };
 
@@ -50,8 +60,6 @@ export function StudentPortalLayout({
   activePath,
   student,
   unreadNotifications = 0,
-  onOpenSettings,
-  onOpenProfile,
   children,
 }: Props) {
   const navigate = useNavigate();
@@ -69,6 +77,19 @@ export function StudentPortalLayout({
   const { theme, toggleTheme } = useTheme();
 
   const { t } = useApp();
+
+  // Settings & profile dialogs state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [profileData, setProfileData] = useState<StudentProfileData | null>(null);
+
+  // Fetch profile data when dialog opens
+  useEffect(() => {
+    if (profileOpen && !profileData) {
+      api<StudentProfileData>("/student/profile").then(setProfileData).catch(() => {});
+    }
+  }, [profileOpen, profileData]);
 
   const menuItems = [
     { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
@@ -241,26 +262,24 @@ export function StudentPortalLayout({
 
       {/* Bottom actions */}
       <div className={cn("space-y-1", collapsed && !isMobile ? "px-2 pb-2" : "px-3 pb-2")}>
-        {onOpenSettings && (
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className={cn(
-                "sidebar-nav-item sidebar-nav-item-inactive w-full",
-                collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
-              )}
-            >
-              <Settings className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && <span>{t.settings}</span>}
-            </button>
-            {collapsed && !isMobile && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-                {t.settings}
-              </div>
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className={cn(
+              "sidebar-nav-item sidebar-nav-item-inactive w-full",
+              collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
             )}
-          </div>
-        )}
+          >
+            <Settings className="h-5 w-5 shrink-0" />
+            {(!collapsed || isMobile) && <span>{t.settings}</span>}
+          </button>
+          {collapsed && !isMobile && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
+              {t.settings}
+            </div>
+          )}
+        </div>
         <div className="relative group">
           <button
             type="button"
@@ -285,7 +304,7 @@ export function StudentPortalLayout({
       <div className={cn(collapsed && !isMobile ? "px-2 pb-4" : "px-3 pb-4")}>
         <button
           type="button"
-          onClick={onOpenProfile}
+          onClick={() => setProfileOpen(true)}
           className={cn(
             "w-full rounded-2xl border border-border/60 dark:border-nejah-border-blue/50 shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left",
             "bg-gradient-to-br from-card to-muted/30 dark:from-nejah-surface dark:to-nejah-surface/50",
@@ -398,7 +417,7 @@ export function StudentPortalLayout({
 
           <button
             type="button"
-            onClick={onOpenProfile}
+            onClick={() => setProfileOpen(true)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden"
           >
             {student?.avatarUrl ? (
@@ -463,6 +482,47 @@ export function StudentPortalLayout({
       />
 
       <TelegramOnboardingOverlay />
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
+              onClick={() => {
+                setSettingsOpen(false);
+                setChangePasswordOpen(true);
+              }}
+            >
+              <Lock className="h-5 w-5 text-nejah-electric" />
+              <span className="font-bold text-sm">Change Password</span>
+            </button>
+            <div className="border-t border-border pt-3 space-y-4">
+              <PushNotificationToggle variant="card" />
+              <div className="border-t pt-4">
+                <TelegramLink />
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <ProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        profile={profileData}
+      />
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
     </div>
   );
 }

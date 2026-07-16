@@ -8,15 +8,12 @@ import {
   GraduationCap,
   UserCheck,
   Calendar,
-  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { StudentPortalLayout, StudentPageLoader } from "@/components/student/StudentPortalLayout";
 import { api, requireStudentAuth, storeStudentId, studentPaths } from "@/lib/student-portal";
-import { apiUrl, apiHeaders } from "@/lib/api";
 import { LearningPathCard, useLearningPath } from "@/components/progress/LearningPathCard";
 import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
@@ -25,14 +22,10 @@ import {
   NOTIFICATION_COLORS,
   NOTIFICATION_BG_COLORS,
 } from "@/lib/notification-helpers";
-import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
-import { TelegramLink } from "@/components/ui/telegram-link";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
 import { TodayLesson } from "@/components/student/lessons/TodayLesson";
 import { LiveSessionHero } from "@/components/student/sessions/LiveSessionHero";
 import { TodayScheduleSection } from "@/components/student/sessions/TodayScheduleSection";
-import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
-import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
 import type { StudentDashboardData, StudentProfileData, StudentClassesData } from "@/lib/student-types";
 
 const dayLabels: Record<string, string> = {
@@ -51,9 +44,6 @@ function StudentDashboard() {
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [todayClasses, setTodayClasses] = useState<StudentClassesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const { path: learningPath } = useLearningPath(profile?.student?.id);
 
   const loadDashboard = useCallback(async () => {
@@ -198,8 +188,6 @@ function StudentDashboard() {
       activePath={studentPaths.dashboard}
       student={student ? { ...student, level: displayLevel } : undefined}
       unreadNotifications={data?.unreadNotifications}
-      onOpenSettings={() => setSettingsOpen(true)}
-      onOpenProfile={() => setProfileOpen(true)}
     >
       <main className="flex-1 px-4 sm:px-6 lg:px-10 pb-8 lg:pb-10">
         {/* Hero Header */}
@@ -491,45 +479,6 @@ function StudentDashboard() {
           </div>
         </div>
       </main>
-
-      {/* Settings Dialog */}
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <button
-              type="button"
-              className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
-              onClick={() => {
-                setSettingsOpen(false);
-                setChangePasswordOpen(true);
-              }}
-            >
-              <Lock className="h-5 w-5 text-nejah-electric" />
-              <span className="font-bold text-sm">Change Password</span>
-            </button>
-            <div className="border-t border-border pt-3 space-y-4">
-              <PushNotificationToggle variant="card" />
-              <div className="border-t pt-4">
-                <TelegramLink />
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <ProfileDialog
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        profile={profile}
-        level={displayLevel}
-        teacher={displayTeacher}
-        enrolled={displayEnrolled}
-      />
-
-      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </StudentPortalLayout>
   );
 }
