@@ -17,6 +17,7 @@ import { SessionAttendanceService } from './session-attendance.service';
 import { CreateLiveSessionDto } from './dto/create-live-session.dto';
 import { UpdateLiveSessionDto } from './dto/update-live-session.dto';
 import { QueryLiveSessionDto } from './dto/query-live-session.dto';
+import { StartLiveSessionDto } from './dto/start-live-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -184,9 +185,10 @@ export class LiveSessionController {
       });
       return {
         sessionId: id,
-        joinUrl: session.zoomJoinUrl,
+        joinUrl: session.meetingLink || session.zoomJoinUrl,
         zoomJoinUrl: session.zoomJoinUrl,
-        startUrl: session.zoomStartUrl,
+        startUrl: session.meetingLink || session.zoomStartUrl,
+        meetingLink: session.meetingLink || null,
         status: session.status,
       };
     }
@@ -203,8 +205,9 @@ export class LiveSessionController {
 
     return {
       sessionId: id,
-      joinUrl: session.zoomJoinUrl,
+      joinUrl: session.meetingLink || session.zoomJoinUrl,
       zoomJoinUrl: session.zoomJoinUrl,
+      meetingLink: session.meetingLink || null,
       status: session.status,
       alreadyJoined,
       attendance: attendance
@@ -258,9 +261,9 @@ export class LiveSessionController {
 
   @Post(':id/start')
   @Roles(UserRole.TEACHER)
-  async startSession(@Param('id') id: string, @Request() req) {
+  async startSession(@Param('id') id: string, @Body() dto: StartLiveSessionDto, @Request() req) {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    return this.liveSessionService.startSession(id, teacher.id);
+    return this.liveSessionService.startSession(id, teacher.id, dto.meetingLink);
   }
 
   @Post(':id/complete')
