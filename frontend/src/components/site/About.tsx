@@ -52,12 +52,12 @@ export function About() {
   const missionImage = resolveCmsImageUrl(missionSection.missionImageUrl);
 
   return (
-    <section id="about" className="relative overflow-hidden py-20 md:py-28 bg-gradient-to-b from-[#091428] via-nejah-sapphire to-nejah-midnight">
+    <section id="about" className="relative overflow-hidden py-20 md:py-28">
       {/* Background layers */}
-      <div className="pointer-events-none absolute inset-0 bg-grid-overlay opacity-[0.12] dark:opacity-[0.06]" />
-      <div className="pointer-events-none absolute inset-0 scan-line opacity-[0.04]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_30%_20%,rgba(0,145,255,0.1),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,rgba(15,98,172,0.08),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-grid-overlay opacity-[0.06]" />
+      <div className="pointer-events-none absolute inset-0 scan-line opacity-[0.03]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_30%_20%,rgba(0,145,255,0.08),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,rgba(15,98,172,0.06),transparent_50%)]" />
 
       <FloatingOrb className="-left-16 top-1/4 h-48 w-48" />
       <FloatingOrb className="-right-12 bottom-1/4 h-36 w-36" />
@@ -74,7 +74,7 @@ export function About() {
         />
 
         {/* Mission section — glass card */}
-        <div className="relative mb-16 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-md md:p-12 lg:p-14">
+        <div className="relative mb-16 overflow-hidden rounded-[2rem] border border-border/50 bg-card/50 p-8 backdrop-blur-md md:p-12 lg:p-14">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_30%_40%,rgba(0,145,255,0.06),transparent_60%)]" />
 
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_0.9fr] lg:gap-14">
@@ -84,11 +84,11 @@ export function About() {
                 <BookOpen className="size-3.5" />
                 {missionTitle}
               </div>
-              <h2 className="mb-4 bg-gradient-to-r from-white via-[#C8E4FF] to-nejah-electric bg-clip-text text-2xl font-bold leading-tight tracking-tight text-transparent sm:text-3xl">
+              <h2 className="mb-4 bg-gradient-to-r from-foreground via-nejah-electric/80 to-nejah-electric bg-clip-text text-2xl font-bold leading-tight tracking-tight text-transparent sm:text-3xl">
                 {missionHeading}
               </h2>
               <div className="mb-4 h-px w-16 bg-gradient-to-r from-nejah-electric/50 to-transparent" />
-              <p className="leading-relaxed text-white/70">
+              <p className="leading-relaxed text-muted-foreground">
                 {missionDescription}
               </p>
             </div>
@@ -107,7 +107,7 @@ export function About() {
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-nejah-sapphire/20 to-transparent" />
                 </div>
               ) : (
-                <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-nejah-electric/20 bg-white/[0.03] text-sm text-white/40">
+                <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-nejah-electric/20 bg-muted/30 text-sm text-muted-foreground/60">
                   No mission image
                 </div>
               )}
@@ -154,7 +154,7 @@ export function About() {
             return (
               <div
                 key={card.id}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-md transition-all duration-300 hover:border-nejah-electric/40 hover:bg-white/[0.08] hover:shadow-[0_0_40px_rgba(0,145,255,0.12)]"
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-7 backdrop-blur-md transition-all duration-300 hover:border-nejah-electric/30 hover:shadow-[0_0_40px_rgba(0,145,255,0.12)]"
               >
                 <div className="pointer-events-none absolute -inset-1 rounded-3xl opacity-0 bg-[radial-gradient(circle_at_center,rgba(0,145,255,0.06),transparent_60%)] transition-opacity duration-500 group-hover:opacity-100" />
 
@@ -168,13 +168,13 @@ export function About() {
                   )}
                 </div>
 
-                <h3 className="mb-2 text-lg font-bold text-white transition-colors duration-300 group-hover:text-nejah-electric">
+                <h3 className="mb-2 text-lg font-bold text-foreground transition-colors duration-300 group-hover:text-nejah-electric">
                   {title}
                 </h3>
 
                 <div className="mb-3 h-px w-8 bg-gradient-to-r from-transparent via-nejah-electric/20 to-transparent transition-all duration-300 group-hover:w-12 group-hover:via-nejah-electric/40" />
 
-                <p className="text-sm leading-relaxed text-white/60 transition-colors duration-300 group-hover:text-white/80">
+                <p className="text-sm leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground/80">
                   {desc}
                 </p>
               </div>
