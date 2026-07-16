@@ -7,7 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { SilverDivider } from './design-system';
 import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
 
-function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; collapsed: boolean; depth?: number; notifCount?: number }) {
+const NavItem = memo(function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; collapsed: boolean; depth?: number; notifCount?: number }) {
   const location = useLocation();
   const Icon = item.icon;
   const isActive = item.path !== '#' && location.pathname.startsWith(item.path);
@@ -118,7 +118,7 @@ function NavItem({ item, collapsed, depth = 0, notifCount }: { item: MenuItem; c
       </Link>
     </li>
   );
-}
+});
 
 export const Sidebar = memo(function Sidebar({ isOpen, onToggle, notifCount }: { isOpen: boolean; onToggle: () => void; notifCount?: number }) {
   const { t, sidebarCollapsed, setSidebarCollapsed } = useApp();

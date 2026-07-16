@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { translations, type Lang, type Dict } from "./i18n";
 
 type Theme = "light" | "dark";
@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>(getInitialLang);
   const lastUserIdRef = { current: getUserId() };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
     localStorage.setItem(themeKey(getUserId()), theme);

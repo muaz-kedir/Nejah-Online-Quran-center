@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/components/site/ThemeProvider';
 import { cn } from '@/lib/utils';
 import { getRoleLabel } from '@/components/ui/role-badge';
 import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
@@ -26,16 +27,23 @@ const LANGUAGES = [
   { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
 ];
 
-const getIsDark = () =>
-  typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-
 function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useApp();
-  const [isDark, setIsDark] = useState(getIsDark);
+  const { theme: themeFromProvider, toggleTheme: toggleThemeProvider } = useTheme();
+  const [isDark, setIsDark] = useState(false);
   const [userName, setUserName] = useState('Admin User');
   const [userRole, setUserRole] = useState('super_admin');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  useEffect(() => {
+    setIsDark(themeFromProvider === 'dark');
+  }, [themeFromProvider]);
+
+  const toggleTheme = () => {
+    setIsDark((d) => !d);
+    toggleThemeProvider();
+  };
 
   useEffect(() => {
     const loadUserData = () => {
@@ -51,15 +59,6 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
       };
     }
   }, []);
-
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    const nowDark = root.classList.contains('dark');
-    root.classList.toggle('dark', !nowDark);
-    const userId = localStorage.getItem('userId') || 'guest';
-    localStorage.setItem(`theme_${userId}`, !nowDark ? 'dark' : 'light');
-    setIsDark(!nowDark);
-  };
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);

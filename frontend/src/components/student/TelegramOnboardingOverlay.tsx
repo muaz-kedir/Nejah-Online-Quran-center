@@ -61,6 +61,7 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
 
 export function TelegramOnboardingOverlay() {
   const [linked, setLinked] = useState<boolean | null>(null);
+  const [configured, setConfigured] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [linkInfo, setLinkInfo] = useState<{ code: string; botUsername: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,11 +76,18 @@ export function TelegramOnboardingOverlay() {
     }
 
     const ctrl = new AbortController();
+    const ctrl2 = new AbortController();
+    fetchApi<{ configured: boolean }>("/telegram/config", { signal: ctrl2.signal })
+      .then((res) => setConfigured(res.configured))
+      .catch(() => {});
     fetchApi<TelegramStatus>("/telegram/status", { signal: ctrl.signal })
       .then((res) => setLinked(res.linked))
       .catch(() => setLinked(false));
 
-    return () => ctrl.abort();
+    return () => {
+      ctrl.abort();
+      ctrl2.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -170,6 +178,7 @@ export function TelegramOnboardingOverlay() {
   }
 
   if (linked) return null;
+  if (!configured) return null;
 
   return (
     <div
