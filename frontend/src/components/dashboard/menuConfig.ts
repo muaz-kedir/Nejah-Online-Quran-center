@@ -29,6 +29,7 @@ import {
   MessageSquareText,
   ClipboardCheck,
   Clock,
+  Video,
 } from 'lucide-react';
 
 export interface MenuItem {
