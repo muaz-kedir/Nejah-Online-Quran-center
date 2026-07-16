@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   FolderOpen,
   Bell,
+  Clock,
   Settings,
   LogOut,
   User,
@@ -76,6 +77,7 @@ export function StudentPortalLayout({
     { label: t.homework, icon: ClipboardList, path: studentPaths.homework },
     { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
     { label: t.attendance, icon: ClipboardCheck, path: studentPaths.attendance },
+    { label: 'Class History', icon: Clock, path: '/student/history' },
     { label: t.notifications, icon: Bell, path: studentPaths.notifications },
   ];
 
