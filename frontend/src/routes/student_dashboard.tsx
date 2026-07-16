@@ -93,7 +93,7 @@ function StudentDashboard() {
                 toast.success(
                   result.alreadyJoined
                     ? "Rejoined session — attendance already recorded"
-                    : "Attendance recorded — opening Zoom",
+                    : "Attendance recorded — joining session",
                 );
               } catch (e: unknown) {
                 toast.error(e instanceof Error ? e.message : "Could not join session");
@@ -147,7 +147,7 @@ function StudentDashboard() {
       toast.success(
         result.alreadyJoined
           ? "Rejoined session — attendance already recorded"
-          : "Attendance recorded — opening Zoom",
+          : "Attendance recorded — joining session",
       );
     } catch (e: unknown) {
       toast.error(

@@ -54,7 +54,7 @@ function StudentClasses() {
       toast.success(
         result.alreadyJoined
           ? 'Rejoined session — attendance already recorded'
-          : 'Attendance recorded — opening Zoom',
+          : 'Attendance recorded — joining session',
       );
     } catch (err: any) {
       toast.error(err.message || 'Could not join session. Attendance was not recorded.');
