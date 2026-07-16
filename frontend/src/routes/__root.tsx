@@ -16,8 +16,6 @@ import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
 import { ThemeProvider } from '@/components/site/ThemeProvider';
-import { initializePwaPush, setupForegroundListener, updateNotificationBadge } from "@/lib/push-notifications";
-import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
@@ -254,7 +252,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<any>(null);
 
   useEffect(() => {
     setupChunkLoadRecovery();
@@ -271,71 +269,78 @@ function RootComponent() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    initializePwaPush().catch(() => {});
+    const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1));
 
-    updateNotificationBadge().catch(() => {});
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+    idle(() => {
+      import("@/lib/push-notifications").then(({ initializePwaPush, setupForegroundListener, updateNotificationBadge }) => {
+        initializePwaPush().catch(() => {});
         updateNotificationBadge().catch(() => {});
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
 
-    const unsubForeground = setupForegroundListener((payload) => {
-      const title = payload.title || "Nejah";
-      const body = payload.body || "";
-      if (body) {
-        toast(title, {
-          description: body,
-          duration: 8000,
-          action: payload.clickAction
-            ? { label: "View", onClick: () => { window.location.href = payload.clickAction!; } }
-            : undefined,
+        const onVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            updateNotificationBadge().catch(() => {});
+          }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        setupForegroundListener((payload: any) => {
+          const title = payload.title || "Nejah";
+          const body = payload.body || "";
+          if (body) {
+            toast(title, {
+              description: body,
+              duration: 8000,
+              action: payload.clickAction
+                ? { label: "View", onClick: () => { window.location.href = payload.clickAction!; } }
+                : undefined,
+            });
+          }
         });
-      }
+      });
     });
 
-    const socket = io(`${WS_URL}/ws`, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 20,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 60000,
-    });
-
-    socket.on("connect", () => console.log("[WS Root] Connected"));
-    socket.on("connected", (data) => console.log("[WS Root] Authenticated:", data.userId));
-
-    socket.on("notification:new", (notif: any) => {
-      console.log("[WS Root] Notification:", notif);
-      const isSamePage = window.location.pathname.includes("/notifications");
-      if (!isSamePage) {
-        const handleClick = notif.data?.sessionId
-          ? () => { window.location.href = `/classroom/${notif.data.sessionId}`; }
-          : undefined;
-        toast(notif.title, {
-          description: notif.content,
-          duration: 8000,
-          action: handleClick ? { label: "View", onClick: handleClick } : undefined,
+    idle(() => {
+      import("socket.io-client").then(({ io }) => {
+        const socket = io(`${WS_URL}/ws`, {
+          auth: { token },
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionAttempts: 20,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 60000,
         });
-      }
+
+        socket.on("connect", () => console.log("[WS Root] Connected"));
+        socket.on("connected", (data: any) => console.log("[WS Root] Authenticated:", data.userId));
+
+        socket.on("notification:new", (notif: any) => {
+          console.log("[WS Root] Notification:", notif);
+          const isSamePage = window.location.pathname.includes("/notifications");
+          if (!isSamePage) {
+            const handleClick = notif.data?.sessionId
+              ? () => { window.location.href = `/classroom/${notif.data.sessionId}`; }
+              : undefined;
+            toast(notif.title, {
+              description: notif.content,
+              duration: 8000,
+              action: handleClick ? { label: "View", onClick: handleClick } : undefined,
+            });
+          }
+        });
+
+        socket.on("session:status_changed", (data: any) => {
+          console.log("[WS Root] Session status:", data);
+        });
+
+        socket.on("error", (err: any) => console.error("[WS Root] Error:", err.message));
+
+        socketRef.current = socket;
+      });
     });
-
-    socket.on("session:status_changed", (data) => {
-      console.log("[WS Root] Session status:", data);
-    });
-
-    socket.on("error", (err) => console.error("[WS Root] Error:", err.message));
-
-    socketRef.current = socket;
 
     return () => {
-      unsubForeground?.();
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      socket.disconnect();
-      socketRef.current = null;
+      const s = socketRef.current;
+      if (s?.connected) s.disconnect();
     };
   }, []);
 

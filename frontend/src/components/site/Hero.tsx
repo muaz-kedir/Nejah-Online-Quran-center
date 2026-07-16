@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle, Sparkles, Users, GraduationCap, Video } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useTheme } from "./ThemeProvider";
@@ -30,12 +29,7 @@ export function Hero() {
       </div>
 
       <div className="container-x grid lg:grid-cols-2 gap-12 items-center relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="relative"
-        >
+        <div className="relative">
           <div className="hero-glow-blob" />
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-nejah-electric/20 bg-primary/10 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-nejah-electric">
             <Sparkles className="size-3.5" />
@@ -76,27 +70,19 @@ export function Hero() {
               <div className="text-xs text-muted-foreground">{t.hero.students}</div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
-          className="relative"
-        >
+        <div className="relative">
           <div className="relative rounded-3xl overflow-hidden shadow-elevated">
             <img
               src="/Nejah-1.png"
               alt="Nejah Online Quran Center"
               className="w-full h-auto object-cover"
+              fetchpriority="high"
             />
           </div>
 
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="glass-panel absolute -left-4 top-10 flex max-w-[200px] items-center gap-3 rounded-2xl p-3"
-          >
+          <div className="glass-panel absolute -left-4 top-10 flex max-w-[200px] items-center gap-3 rounded-2xl p-3 animate-float" style={{ animationDuration: "4s" }}>
             <div className="size-10 rounded-xl bg-primary/10 text-primary grid place-items-center">
               <Users className="size-5" />
             </div>
@@ -104,13 +90,9 @@ export function Hero() {
               <div className="text-xs text-muted-foreground">{t.hero.studentsLabel}</div>
               <div className="font-bold">2,400+</div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 0.5 }}
-            className="glass-panel absolute -right-2 top-1/3 flex max-w-[210px] items-center gap-3 rounded-2xl p-3"
-          >
+          <div className="glass-panel absolute -right-2 top-1/3 flex max-w-[210px] items-center gap-3 rounded-2xl p-3 animate-float" style={{ animationDuration: "5s", animationDelay: "0.5s" }}>
             <div className="size-10 rounded-xl bg-[oklch(0.78_0.13_80/0.15)] text-[oklch(0.6_0.13_80)] grid place-items-center">
               <GraduationCap className="size-5" />
             </div>
@@ -118,13 +100,9 @@ export function Hero() {
               <div className="text-xs text-muted-foreground">{t.hero.teachersLabel}</div>
               <div className="font-bold">120+</div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 1 }}
-            className="glass-panel absolute -bottom-4 right-8 flex items-center gap-3 rounded-2xl p-3"
-          >
+          <div className="glass-panel absolute -bottom-4 right-8 flex items-center gap-3 rounded-2xl p-3 animate-float" style={{ animationDuration: "4.5s", animationDelay: "1s" }}>
             <div className="size-10 rounded-xl bg-accent/15 text-accent grid place-items-center">
               <Video className="size-5" />
             </div>
@@ -132,8 +110,8 @@ export function Hero() {
               <div className="text-xs text-muted-foreground">{t.hero.liveLabel}</div>
               <div className="font-bold">24 / 7</div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );
