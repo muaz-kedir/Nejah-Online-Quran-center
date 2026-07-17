@@ -3,7 +3,7 @@ import { CalendarDays, Clock, User, BookOpen, Timer, Users, CheckCircle2, XCircl
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { GlassPanel } from '@/components/dashboard/design-system';
 
