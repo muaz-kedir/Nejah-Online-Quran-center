@@ -1,12 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
+  "nodeVersion": "20.x",
+  "framework": null,
   "installCommand": "npm install",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": ".vercel/output",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
   "redirects": [
     {
       "source": "/settings/integrations",
