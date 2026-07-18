@@ -4,14 +4,14 @@
 
 import { apiUrl } from "@/lib/api";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, User, Users, Mail, MapPin, Lock, ArrowRight, CheckCircle2, ArrowLeft, Phone, BookOpen, Info, Search, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { Country } from "country-state-city";
+import { CountryInput, CityInput } from '@/components/ui/location-input';
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -43,8 +43,6 @@ function RegisterPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState<"student" | "parent-confirm" | "parent-search" | "parent-info">("student");
   const [isParentExisting, setIsParentExisting] = useState<boolean | null>(null);
-
-  const countries = useMemo(() => Country.getAllCountries(), []);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -111,28 +109,6 @@ function RegisterPage() {
     setShowDuplicateDetails(false);
     setAllowDuplicateCreate(false);
   }, [watchParentEmail, watchParentPhone]);
-
-  const [studentCities, setStudentCities] = useState<{ name: string }[]>([]);
-  const [parentCities, setParentCities] = useState<{ name: string }[]>([]);
-
-  useEffect(() => {
-    if (!watchStudentCountry) { setStudentCities([]); return; }
-    import('country-state-city').then(({ City }) => {
-      const cities = City.getCitiesOfCountry(watchStudentCountry) || [];
-      setStudentCities(Array.from(new Set(cities.map(c => c.name))).map(name => ({ name })));
-    });
-  }, [watchStudentCountry]);
-
-  useEffect(() => {
-    if (!watchParentCountry) { setParentCities([]); return; }
-    import('country-state-city').then(({ City }) => {
-      const cities = City.getCitiesOfCountry(watchParentCountry) || [];
-      setParentCities(Array.from(new Set(cities.map(c => c.name))).map(name => ({ name })));
-    });
-  }, [watchParentCountry]);
-
-  const studentCountryData = useMemo(() => countries.find(c => c.isoCode === watchStudentCountry), [countries, watchStudentCountry]);
-  const parentCountryData = useMemo(() => countries.find(c => c.isoCode === watchParentCountry), [countries, watchParentCountry]);
 
   // Search for existing parent (partial name, exact email/phone)
   const searchParent = async () => {
@@ -260,9 +236,8 @@ function RegisterPage() {
   }
 
   const normalizedParentPhone = (phone?: string) => {
-    if (!phone) return phone;
-    if (phone.startsWith("+") || !parentCountryData) return phone;
-    return `+${parentCountryData.phonecode}${phone}`;
+    // Phone is stored as-is, user must include country code
+    return phone;
   };
 
   async function onSubmit(values: RegisterFormValues) {
@@ -337,25 +312,15 @@ function RegisterPage() {
   async function submitRegistration(values: RegisterFormValues, parentId: string | null) {
     setIsLoading(true);
     try {
-      // Append country code to phone before sending if not already added
+      // Country is stored as plain text, no conversion needed
       const submissionValues = JSON.parse(JSON.stringify(values));
-      
-      if (studentCountryData && submissionValues.student.phone && !submissionValues.student.phone.startsWith("+")) {
-         submissionValues.student.phone = `+${studentCountryData.phonecode}${submissionValues.student.phone}`;
-      }
-
-      // Convert full country names back from isoCode for DB
-      if (studentCountryData) submissionValues.student.country = studentCountryData.name;
 
       if (parentId) {
         // Link to existing parent: no parent payload, never create a new account
         submissionValues.parentId = parentId;
         submissionValues.parent = undefined;
       } else if (watchAgeRange === "Under 18" && submissionValues.parent) {
-        if (parentCountryData && submissionValues.parent.phoneNumber && !submissionValues.parent.phoneNumber.startsWith("+")) {
-          submissionValues.parent.phoneNumber = `+${parentCountryData.phonecode}${submissionValues.parent.phoneNumber}`;
-        }
-        if (parentCountryData) submissionValues.parent.country = parentCountryData.name;
+        // Country is stored as plain text, no conversion needed
       } else {
         submissionValues.parent = undefined;
       }
@@ -540,23 +505,16 @@ function RegisterPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Country *</FormLabel>
-                                  <Select onValueChange={(val) => { field.onChange(val); form.setValue("student.city", ""); }} defaultValue={field.value}>
-                                    <FormControl>
-                                      <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                                        <SelectTrigger className="pl-9">
-                                          <SelectValue placeholder="Select Country" />
-                                        </SelectTrigger>
-                                      </div>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {countries.map((c) => (
-                                        <SelectItem key={c.isoCode} value={c.isoCode}>
-                                          {c.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                                      <CountryInput
+                                        value={field.value}
+                                        onChange={(val) => { field.onChange(val); }}
+                                        className="pl-9"
+                                      />
+                                    </div>
+                                  </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -567,23 +525,16 @@ function RegisterPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>City *</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!watchStudentCountry}>
-                                    <FormControl>
-                                      <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                                        <SelectTrigger className="pl-9">
-                                          <SelectValue placeholder={watchStudentCountry ? "Select City" : "Select Country First"} />
-                                        </SelectTrigger>
-                                      </div>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {studentCities.map((city, idx) => (
-                                        <SelectItem key={`${city.name}-${idx}`} value={city.name}>
-                                          {city.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                                      <CityInput
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        className="pl-9"
+                                      />
+                                    </div>
+                                  </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -597,20 +548,19 @@ function RegisterPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Phone Number *</FormLabel>
-                                <FormControl>
-                                  <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
-                                      <Phone className="h-4 w-4" />
-                                      {studentCountryData ? `+${studentCountryData.phonecode}` : ""}
+                                  <FormControl>
+                                    <div className="relative flex items-center">
+                                      <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
+                                        <Phone className="h-4 w-4" />
+                                        +
+                                      </div>
+                                      <Input 
+                                        className="pl-14"
+                                        placeholder="123456789 (include country code)" 
+                                        {...field} 
+                                      />
                                     </div>
-                                    <Input 
-                                      className="pl-20"
-                                      placeholder="123456789" 
-                                      {...field} 
-                                      disabled={!watchStudentCountry}
-                                    />
-                                  </div>
-                                </FormControl>
+                                  </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -1158,23 +1108,16 @@ function RegisterPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Country *</FormLabel>
-                                  <Select onValueChange={(val) => { field.onChange(val); form.setValue("parent.city", ""); }} defaultValue={field.value}>
-                                    <FormControl>
-                                      <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                                        <SelectTrigger className="pl-9">
-                                          <SelectValue placeholder="Select Country" />
-                                        </SelectTrigger>
-                                      </div>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {countries.map((c) => (
-                                        <SelectItem key={c.isoCode} value={c.isoCode}>
-                                          {c.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                                      <CountryInput
+                                        value={field.value}
+                                        onChange={(val) => { field.onChange(val); }}
+                                        className="pl-9"
+                                      />
+                                    </div>
+                                  </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -1185,23 +1128,16 @@ function RegisterPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>City *</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!watchParentCountry}>
-                                    <FormControl>
-                                      <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                                        <SelectTrigger className="pl-9">
-                                          <SelectValue placeholder={watchParentCountry ? "Select City" : "Select Country First"} />
-                                        </SelectTrigger>
-                                      </div>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {parentCities.map((city, idx) => (
-                                        <SelectItem key={`${city.name}-${idx}`} value={city.name}>
-                                          {city.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                                      <CityInput
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        className="pl-9"
+                                      />
+                                    </div>
+                                  </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -1214,20 +1150,19 @@ function RegisterPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Contact Phone Number *</FormLabel>
-                                <FormControl>
-                                  <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
-                                      <Phone className="h-4 w-4" />
-                                      {parentCountryData ? `+${parentCountryData.phonecode}` : ""}
+                                  <FormControl>
+                                    <div className="relative flex items-center">
+                                      <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
+                                        <Phone className="h-4 w-4" />
+                                        +
+                                      </div>
+                                      <Input 
+                                        className="pl-14"
+                                        placeholder="123456789 (include country code)" 
+                                        {...field} 
+                                      />
                                     </div>
-                                    <Input 
-                                      className="pl-20"
-                                      placeholder="123456789" 
-                                      {...field} 
-                                      disabled={!watchParentCountry}
-                                    />
-                                  </div>
-                                </FormControl>
+                                  </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}

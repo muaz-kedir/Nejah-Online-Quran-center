@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Country } from 'country-state-city';
-import { getCountryIsoByName } from '@/lib/geo-data';
+import { CountryInput, CityInput } from '@/components/ui/location-input';
 import { buildCreateTeacherPayload } from '@/lib/teacher-payload';
 import {
   ChevronLeft,
@@ -48,16 +47,6 @@ function AddTeacherPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Form State
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
-
-  useEffect(() => {
-    import('country-state-city').then(({ City: C }) => {
-      const iso = getCountryIsoByName(formData.country);
-      if (!iso) { setCityOptions([]); return; }
-      const cities = C.getCitiesOfCountry(iso) ?? [];
-      setCityOptions([...new Set(cities.map((c) => c.name))]);
-    });
-  }, [formData.country]);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -390,46 +379,24 @@ function AddTeacherPage() {
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
                     Country <span className="text-red-500">*</span>
                   </label>
-                  <Select
-                    value={getCountryIsoByName(formData.country)}
-                    onValueChange={(val) => {
-                      const cName = Country.getCountryByCode(val)?.name || val;
-                      handleSelectChange('country', cName);
-                      handleSelectChange('city', '');
+                  <CountryInput
+                    value={formData.country}
+                    onChange={(val) => {
+                      handleSelectChange('country', val);
                     }}
-                  >
-                    <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl">
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                      {Country.getAllCountries().map((c) => (
-                        <SelectItem key={c.isoCode} value={c.isoCode}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
                     City <span className="text-red-500">*</span>
                   </label>
-                  <Select
+                  <CityInput
                     value={formData.city}
-                    onValueChange={(val) => handleSelectChange('city', val)}
-                  >
-                    <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl">
-                      <SelectValue placeholder="Select City" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                      {cityOptions.map((cityName) => (
-                          <SelectItem key={cityName} value={cityName}>
-                            {cityName}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(val) => handleSelectChange('city', val)}
+                    className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-1 md:col-span-2">
