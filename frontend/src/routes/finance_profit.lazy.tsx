@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { useEffect, useState, useCallback } from 'react';
-import { createLazyFileRoute} from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/dashboard/design-system';
@@ -20,6 +20,32 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 export const Route = createLazyFileRoute('/finance_profit')({
   component: ProfitPage,
 });
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  teacher_salary: 'Teacher Salary',
+  rent: 'Rent',
+  salaries_external: 'External Salaries',
+  utilities: 'Utilities',
+  marketing: 'Marketing',
+  supplies: 'Supplies',
+  software: 'Software',
+  travel: 'Travel',
+  other: 'Other',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  teacher_salary: '#0F62AC',
+  rent: '#FF6B35',
+  salaries_external: '#004E64',
+  utilities: '#FFC857',
+  marketing: '#E63946',
+  supplies: '#2A9D8F',
+  software: '#7B2CBF',
+  travel: '#F4845F',
+  other: '#6C757D',
+};
 
 function ProfitPage() {
   const now = new Date();
@@ -108,4 +134,136 @@ function ProfitPage() {
           title="Net Profit"
           description="Monthly profit analysis — revenue minus expenses"
           actions={
-            <Button variant="outline" onClick={handleExportPDF}
+            <Button variant="outline" onClick={handleExportPDF} disabled={!data} className="h-11 gap-2 rounded-xl px-4">
+              <Download className="h-5 w-5" /> Export PDF
+            </Button>
+          }
+        />
+
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+            <SelectTrigger className="h-9 w-[170px] rounded-xl text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type="number"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="h-9 w-[100px] rounded-xl text-xs text-center"
+          />
+          <Button variant="outline" size="sm" onClick={fetchProfit} className="h-9 rounded-xl">
+            <BarChart3 className="h-4 w-4 mr-1" /> Load
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-nejah-electric" /></div>
+        ) : !data ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <Wallet className="h-12 w-12 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">No data for this period</p>
+            <p className="text-xs mt-1">Select a month and click Load.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-4">
+              <Card className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-2xl">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Collected</p>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600"><DollarSign className="h-4 w-4" /></div>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">ETB {formatCurrency(data.totalCollected)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{data.collectionRate}% collection rate</p>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-2xl">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Payroll</p>
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center text-orange-600"><PiggyBank className="h-4 w-4" /></div>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">ETB {formatCurrency(data.totalPayroll)}</p>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-2xl">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Expenses</p>
+                    <div className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-600"><Wallet className="h-4 w-4" /></div>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">ETB {formatCurrency(data.totalExpenses)}</p>
+                </CardContent>
+              </Card>
+              <Card className={`rounded-2xl ${data.netProfit >= 0 ? 'dark:bg-nejah-surface dark:border-green-500/30 border-green-200' : 'dark:bg-nejah-surface dark:border-red-500/30 border-red-200'}`}>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Net Profit</p>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${data.netProfit >= 0 ? 'bg-green-50 dark:bg-green-950/30 text-green-600' : 'bg-red-50 dark:bg-red-950/30 text-red-600'}`}>
+                      {data.netProfit >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                    </div>
+                  </div>
+                  <p className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ETB {formatCurrency(data.netProfit)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    vs prev month ({data.previousMonth}):
+                    <span className={data.profitChange >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                      {data.profitChange > 0 ? '+' : ''}{data.profitChange}%
+                    </span>
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2 mb-6">
+              <Card className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-2xl">
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-bold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-nejah-electric" /> Revenue vs Expenses</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={barData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(v: any) => `ETB ${formatCurrency(v)}`} />
+                        <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                          {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-2xl">
+                <CardHeader className="pb-2"><CardTitle className="text-sm font-bold flex items-center gap-2"><PieChartIcon className="h-4 w-4 text-nejah-electric" /> Expense Breakdown</CardTitle></CardHeader>
+                <CardContent>
+                  {expensePieData.length > 0 ? (
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={expensePieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}>
+                            {expensePieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                          </Pie>
+                        <Tooltip formatter={(v: any) => `ETB ${formatCurrency(v)}`} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-72 flex items-center justify-center text-muted-foreground text-sm">No expenses this period</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

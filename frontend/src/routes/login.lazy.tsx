@@ -25,6 +25,25 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { SilverDivider } from "@/components/dashboard/design-system";
 
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().default(false),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+interface LoginResponse {
+  access_token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    studentId?: string;
+  };
+}
+
 export const Route = createLazyFileRoute('/login')({
   component: LoginPage,
 });
@@ -34,7 +53,6 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
-
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -175,4 +193,131 @@ function LoginPage() {
             <FormField
               control={form.control}
               name="email"
-              render={({ field }
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Email or Phone</FormLabel>
+                  <FormControl>
+                    <div className="group relative">
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                      <Input
+                        className="h-12 pl-10"
+                        placeholder="email@example.com or phone"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Password</FormLabel>
+                  <FormControl>
+                    <div className="group relative">
+                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                      <Input
+                        className="h-12 pl-10 pr-10"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex items-center justify-between">
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <label
+                      htmlFor="remember"
+                      className="cursor-pointer text-sm font-medium text-nejah-slate-blue"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                )}
+              />
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/forgot-password" })}
+                className="text-sm font-medium text-nejah-electric underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            <Button type="submit" className="h-12 w-full text-base" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Login
+                  <LogIn className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
+
+            <SilverDivider />
+
+            <div className="space-y-2 pt-2 text-center">
+              <p className="text-sm text-nejah-slate-blue">
+                New student?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/register" })}
+                  className="font-semibold text-nejah-electric hover:underline"
+                >
+                  Join our Programs
+                </button>
+              </p>
+              {isApplicationsOpen && (
+                <p className="text-sm text-nejah-slate-blue">
+                  Are you a teacher?{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: "/apply-as-teacher" })}
+                    className="font-semibold text-nejah-electric hover:underline"
+                  >
+                    Apply as Teacher
+                  </button>
+                </p>
+              )}
+            </div>
+
+            <SilverDivider />
+          </form>
+        </Form>
+      </AuthPageLayout>
+    </>
+  );
+}

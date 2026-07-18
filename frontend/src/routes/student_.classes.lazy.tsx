@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { useState, useEffect, useCallback } from 'react';
-import { createLazyFileRoute} from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { CalendarDays, Clock, User, Play, Video, BookOpen, AlertCircle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -205,3 +205,76 @@ function StudentClasses() {
                 <p className="text-muted-foreground text-sm max-w-sm mt-2">You don't have any classes scheduled for today. Enjoy your day or review your previous lessons!</p>
               </div>
             )}
+          </section>
+
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full bg-nejah-blue/10 flex items-center justify-center">
+                <CalendarDays className="w-4 h-4 text-nejah-sapphire dark:text-nejah-electric" />
+              </div>
+              <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Upcoming Schedule</h2>
+            </div>
+            {data.upcoming?.length ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.upcoming.map((c: any) => <ClassCard key={c.id} cls={c} />)}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm bg-muted/50 p-6 rounded-2xl border text-center">No upcoming classes scheduled.</p>
+            )}
+          </section>
+
+          <section>
+             <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full bg-nejah-blue/10 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-nejah-sapphire dark:text-nejah-electric" />
+              </div>
+              <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Class History</h2>
+            </div>
+            
+            {data.previous?.length ? (
+              <div className="space-y-4">
+                {data.previous.map((c: any) => (
+                  <div key={c.id} className="bg-card hover:bg-muted/30 transition-colors rounded-[24px] p-6 border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-bold text-nejah-sapphire text-foreground text-lg">
+                          {c.classDate ? new Date(c.classDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' }) : '—'}
+                        </span>
+                        {getAttendanceBadge(c.attendanceStatus)}
+                      </div>
+                      
+                      <div className="flex items-center gap-6 text-sm mt-3">
+                        <p className="font-medium flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-muted-foreground" />
+                          {c.lessonCovered || 'Quran Class'}
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          {c.teacherName || '—'}
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {c.duration ? `${c.duration} min` : '—'}
+                        </p>
+                      </div>
+                      
+                      {c.teacherNotes && (
+                        <div className="mt-4 bg-amber-50/50 border border-amber-100 rounded-xl p-3 text-sm text-amber-900/80 italic">
+                          "{c.teacherNotes}"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-muted/30 border border-dashed rounded-[24px] p-10 text-center">
+                <p className="text-muted-foreground">No completed class history yet.</p>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    </StudentPortalLayout>
+  );
+}

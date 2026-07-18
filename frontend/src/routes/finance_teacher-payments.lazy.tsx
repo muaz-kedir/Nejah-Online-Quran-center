@@ -4,7 +4,7 @@
 
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useEffect, useState } from 'react';
-import { createLazyFileRoute} from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
@@ -212,4 +212,320 @@ function TeacherPaymentsPage() {
       Earnings: r.earnings ?? 0,
       Status: r.payrollStatus || 'pending',
       Method: r.paymentMethod || '-',
+    }));
+    if (exportData.length === 0) {
+      toast.error('No payroll data to export');
+      return;
     }
+    downloadCSV(`payroll-${filters.dateRange || 'all'}.csv`, exportData, 'Teacher Payroll');
+  };
+
+  const exportRows = rows.map((r) => ({
+    Teacher: r.teacherName,
+    Students: r.totalAssignedStudents,
+    Sessions: r.sessionsConducted,
+    Earnings: r.earnings,
+    'Payroll Status': r.payrollStatus,
+  }));
+
+  return (
+    <DashboardLayout>
+      <PageHeader
+        eyebrow="Teacher Payroll"
+        title="Teacher Payments"
+        description="Manage teacher salary payroll"
+        actions={
+          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+            <Plus className={`h-4 w-4 transition-transform ${showForm ? 'rotate-45' : ''}`} />
+            {showForm ? 'Close Form' : 'Create Payroll'}
+          </Button>
+        }
+      />
+      <div className="mb-4 space-y-4">
+        <FinanceFilterBar filters={filters} onChange={setFilters} showProgram={false} showStatus={false} />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportMonthPayroll}>
+            <Download className="mr-2 h-4 w-4" /> Export Month's Payroll
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => downloadCSV('teacher-payroll.csv', exportRows, 'Teacher Payroll')}>
+            <Download className="mr-2 h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportPDF('Teacher Payroll', exportRows)}>
+            <Download className="mr-2 h-4 w-4" /> PDF
+          </Button>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="glass-panel rounded-2xl p-6 mb-6 space-y-5">
+          <h3 className="font-semibold text-foreground">Create Teacher Payroll</h3>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Teacher Select */}
+            <div className="md:col-span-2">
+              <Label>Teacher</Label>
+              <Select
+                value={selectedTeacher?.id || ''}
+                onValueChange={(id) => {
+                  const t = teachers.find(x => x.id === id);
+                  setSelectedTeacher(t || null);
+                  setSalary(t?.monthlySalary != null ? String(t.monthlySalary) : '');
+                  setPaidWarning(null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a teacher..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-[260px]">
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.fullName || t.name} — {t.email}{t.monthlySalary ? ` (${formatCurrency(t.monthlySalary)} ETB)` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Salary */}
+            <div>
+              <Label>Salary (ETB)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+                placeholder="e.g. 5000"
+              />
+              {selectedTeacher?.monthlySalary != null && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Default from profile: ETB {formatCurrency(selectedTeacher.monthlySalary)}
+                </p>
+              )}
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <Label>Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="credit_card">Credit/Debit Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <Label>Status</Label>
+              <Select value={payrollStatus} onValueChange={setPayrollStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Calendar Type */}
+            <div>
+              <Label>Calendar System</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={calendarType === 'gregorian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('gregorian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Gregorian
+                </Button>
+                <Button
+                  type="button"
+                  variant={calendarType === 'ethiopian' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCalendarType('ethiopian')}
+                  className="flex-1"
+                >
+                  <CalendarDays className="h-4 w-4 mr-1" /> Ethiopian
+                </Button>
+              </div>
+            </div>
+
+            {/* Billing Month */}
+            <div>
+              <Label>Billing Month</Label>
+              {calendarType === 'gregorian' ? (
+                <Input
+                  type="month"
+                  value={billingMonth}
+                  onChange={(e) => setBillingMonth(e.target.value)}
+                />
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Year (e.g. 2018)"
+                    value={ethiopianYear}
+                    onChange={(e) => setEthiopianYear(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Input
+                    placeholder="Month (1-13)"
+                    value={ethiopianMonth}
+                    onChange={(e) => setEthiopianMonth(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Button
+            onClick={() => createPayroll()}
+            disabled={creating || !selectedTeacher || !salary || !paymentMethod}
+            className="w-full"
+          >
+            {creating ? 'Creating...' : 'Create Payroll'}
+          </Button>
+        </div>
+      )}
+
+      <div className="glass-panel overflow-hidden rounded-2xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Teacher</TableHead>
+              <TableHead>Students</TableHead>
+              <TableHead>Sessions</TableHead>
+              <TableHead>Earnings</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow><TableCell colSpan={6} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+            ) : rows.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="py-12 text-center text-nejah-slate-blue">No payroll records found</TableCell></TableRow>
+            ) : rows.map((r) => (
+              <TableRow
+                key={r.teacherId}
+                className="cursor-pointer hover:bg-muted/40 transition-colors"
+                onClick={() => openDetail(r.teacherId)}
+              >
+                <TableCell className="font-medium">{r.teacherName}</TableCell>
+                <TableCell>{r.totalAssignedStudents}</TableCell>
+                <TableCell>{r.sessionsConducted}</TableCell>
+                <TableCell>ETB {formatCurrency(r.earnings)}</TableCell>
+                <TableCell className="capitalize">{r.payrollStatus}</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openDetail(r.teacherId); }}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{detail?.teacherName} — Earnings Detail</DialogTitle>
+          </DialogHeader>
+          {detailLoading ? <Loader2 className="mx-auto h-8 w-8 animate-spin" /> : detail && (
+            <div className="space-y-4 text-sm">
+              <div className="flex gap-4 flex-wrap">
+                <span>Sessions Conducted: <strong>{detail.sessionsConducted}</strong></span>
+                <span>Total Earnings: <strong>ETB {formatCurrency(detail.earnings)}</strong></span>
+                <span>Monthly Salary: <strong>ETB {formatCurrency(detail.monthlySalary)}</strong></span>
+              </div>
+
+              {detail.assignedStudents?.length > 0 && (
+                <div>
+                  <p className="mb-2 font-medium">Students</p>
+                  {detail.assignedStudents.map((s: any, i: number) => (
+                    <div key={i} className="border-b border-white/5 py-2 flex justify-between">
+                      <span>{s.studentName}</span>
+                      <span className="text-nejah-slate-blue">{s.sessionsConducted} sessions</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {detail.payroll && (
+                <div>
+                  <p className="mb-2 font-medium">Payroll</p>
+                  <p>
+                    Status: <strong className={detail.payroll.status === 'paid' ? 'text-green-600' : 'text-amber-600'}>{detail.payroll.status}</strong>
+                    {' · '}Total: <strong>ETB {formatCurrency(detail.payroll.totalEarnings)}</strong>
+                  </p>
+                  {detail.payroll.paymentMethod && <p>Payment Method: {detail.payroll.paymentMethod}</p>}
+                  {detail.payroll.billingMonth && <p>Billing Month: {detail.payroll.billingMonth}</p>}
+                  {detail.payroll.paidAt && <p>Paid At: {detail.payroll.paidAt}</p>}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {detail.payroll.status !== 'paid' && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={togglePayrollStatus}
+                        disabled={updatingStatus}
+                      >
+                        {updatingStatus ? 'Updating...' : 'Mark as Paid'}
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" onClick={downloadSinglePayrollPDF}>
+                      <FileText className="h-4 w-4 mr-1" /> Download PDF
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!detail.payroll && (
+                <p className="text-nejah-slate-blue">No payroll record for this teacher.</p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!paidWarning} onOpenChange={() => setPaidWarning(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <TriangleAlert className="h-5 w-5" /> Salary Already Paid
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-sm space-y-3">
+            <p>
+              <strong>{paidWarning?.teacher?.fullName || paidWarning?.teacher?.name}</strong> already has a <strong className="text-green-600">paid</strong> payroll record for <strong>{paidWarning?.month}</strong>.
+            </p>
+            <p>Generating a new payroll will overwrite the existing record. Do you want to continue?</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPaidWarning(null)}>Cancel</Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setPaidWarning(null);
+                createPayroll(true);
+              }}
+            >
+              Continue Anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+}
