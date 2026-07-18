@@ -342,6 +342,11 @@ function AddTeacherPage() {
       return;
     }
 
+    if (!formData.phoneNumber) {
+      toast.error('Phone Number is required');
+      return;
+    }
+
     if (!formData.password || formData.password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
@@ -349,6 +354,66 @@ function AddTeacherPage() {
 
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
+      return;
+    }
+
+    if (!formData.country) {
+      toast.error('Country is required');
+      return;
+    }
+
+    if (!formData.city) {
+      toast.error('City is required');
+      return;
+    }
+
+    if (!formData.streetAddress) {
+      toast.error('Street Address is required');
+      return;
+    }
+
+    if (!formData.specialization) {
+      toast.error('Specialization is required');
+      return;
+    }
+
+    if (formData.experience === 0) {
+      toast.error('Experience is required');
+      return;
+    }
+
+    if (!formData.qualification) {
+      toast.error('Certifications / Ijazah is required');
+      return;
+    }
+
+    if (!formData.islamicEducationLevel) {
+      toast.error('Islamic Education Level is required');
+      return;
+    }
+
+    if (formData.languages.length === 0) {
+      toast.error('Select at least one language');
+      return;
+    }
+
+    if (!formData.internetConnectionType) {
+      toast.error('Internet Connection Type is required');
+      return;
+    }
+
+    if (!formData.marketingSource) {
+      toast.error('Please specify where you heard about us');
+      return;
+    }
+
+    if (!formData.qiratEducationLevel) {
+      toast.error('Qirat / Quran Education Level is required');
+      return;
+    }
+
+    if (formData.teachingTimeAvailability.length === 0) {
+      toast.error('Select at least one available teaching time');
       return;
     }
 
@@ -465,7 +530,7 @@ function AddTeacherPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
-                    Phone Number
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -564,7 +629,7 @@ function AddTeacherPage() {
 
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
-                    Street Address
+                    Street Address <span className="text-red-500">*</span>
                   </label>
                   <Input
                     name="streetAddress"
@@ -589,7 +654,7 @@ function AddTeacherPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
-                    Specialization / Primary Area
+                    Specialization / Primary Area <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -605,7 +670,7 @@ function AddTeacherPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
-                    Experience (Years)
+                    Experience (Years) <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="number"
@@ -619,7 +684,7 @@ function AddTeacherPage() {
 
                 <div className="space-y-1 md:col-span-3">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">
-                    Certifications, Degrees & Ijazahs
+                    Certifications, Degrees & Ijazahs <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Award className="absolute left-3.5 top-4 h-4 w-4 text-muted-foreground" />
@@ -645,7 +710,7 @@ function AddTeacherPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Languages */}
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Languages Spoken</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Languages Spoken <span className="text-red-500">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French', 'Other'].map(lang => (
                       <button
@@ -665,7 +730,7 @@ function AddTeacherPage() {
 
                 {/* Internet Connection */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Internet Connection Type</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Internet Connection Type <span className="text-red-500">*</span></label>
                   <Select value={formData.internetConnectionType} onValueChange={(val) => handleSelectChange('internetConnectionType', val)}>
                     <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
@@ -681,7 +746,7 @@ function AddTeacherPage() {
 
                 {/* Marketing Source */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Where Did You Hear About Us?</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Where Did You Hear About Us? <span className="text-red-500">*</span></label>
                   <Select value={formData.marketingSource} onValueChange={(val) => handleSelectChange('marketingSource', val)}>
                     <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
@@ -700,7 +765,7 @@ function AddTeacherPage() {
 
                 {/* Qirat Level */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Qirat / Quran Education Level</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Qirat / Quran Education Level <span className="text-red-500">*</span></label>
                   <Select value={formData.qiratEducationLevel} onValueChange={(val) => handleSelectChange('qiratEducationLevel', val)}>
                     <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
@@ -717,7 +782,7 @@ function AddTeacherPage() {
 
                 {/* Extra Islamic Level */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Additional Islamic Education Level</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Additional Islamic Education Level <span className="text-red-500">*</span></label>
                   <Select value={formData.islamicEducationLevel} onValueChange={(val) => handleSelectChange('islamicEducationLevel', val)}>
                     <SelectTrigger className="w-full h-11 bg-muted dark:bg-nejah-surface border-none rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                     <SelectContent>
@@ -737,7 +802,7 @@ function AddTeacherPage() {
 
                 {/* Availability */}
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Available Teaching Times</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-widest ml-1">Available Teaching Times <span className="text-red-500">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {['After Fajr Prayer until Dhuhr Prayer', 'Between Dhuhr and Asr', 'Between Asr and Maghrib', 'Between Maghrib and Isha', 'After Isha Prayer'].map(slot => (
                       <button
