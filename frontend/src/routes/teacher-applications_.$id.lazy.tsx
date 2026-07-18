@@ -19,6 +19,7 @@ import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
 
 export const Route = createLazyFileRoute('/teacher-applications_/$id')({
   component: ApplicationDetailPage,
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 
@@ -63,11 +64,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   REJECTED: { label: 'Rejected', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
   MORE_INFO_REQUIRED: { label: 'More Info Required', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: AlertCircle },
 };
-
-export const Route = createFileRoute('/teacher-applications_/$id')({
-  component: ApplicationDetailPage,
-  beforeLoad: () => requireAuth(['super_admin']),
-});
 
 function ApplicationDetailContent() {
   const { id } = Route.useParams();

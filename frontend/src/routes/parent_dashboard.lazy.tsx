@@ -36,6 +36,23 @@ import { TelegramLink } from "@/components/ui/telegram-link";
 
 export const Route = createLazyFileRoute('/parent_dashboard')({
   component: ParentDashboardRoute,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      tab: (search.tab as string) || 'dashboard',
+    };
+  },
+  beforeLoad: () => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("userRole");
+      if (!token) {
+        throw redirect({ to: "/login" });
+      }
+      if (role !== "parent") {
+        throw redirect({ to: "/dashboard" });
+      }
+    }
+  },
 });
 
 // --- Stat Card Component ---
@@ -1396,27 +1413,6 @@ text-nejah-electric"
     </ParentPortalLayout>
   );
 }
-
-export const Route = createFileRoute("/parent_dashboard")({
-  component: ParentDashboardRoute,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      tab: (search.tab as string) || 'dashboard',
-    };
-  },
-  beforeLoad: () => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("userRole");
-      if (!token) {
-        throw redirect({ to: "/login" });
-      }
-      if (role !== "parent") {
-        throw redirect({ to: "/dashboard" });
-      }
-    }
-  },
-});
 
 // Wrap component with LanguageProvider for translation support
 

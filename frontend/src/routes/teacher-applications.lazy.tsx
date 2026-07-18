@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 
 export const Route = createLazyFileRoute('/teacher-applications')({
   component: TeacherApplicationsPage,
+  beforeLoad: () => requireAuth(['super_admin']),
 });
 
 interface Application {
@@ -57,11 +58,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   REJECTED: { label: 'Rejected', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle, dot: 'bg-red-500' },
   MORE_INFO_REQUIRED: { label: 'More Info', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: AlertCircle, dot: 'bg-blue-500' },
 };
-
-export const Route = createFileRoute('/teacher-applications')({
-  component: TeacherApplicationsPage,
-  beforeLoad: () => requireAuth(['super_admin']),
-});
 
 function TeacherApplicationsContent() {
   const navigate = useNavigate();
