@@ -9,14 +9,15 @@ import {
 } from "@tanstack/react-router";
 
 import "../styles.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
-import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
 import { ThemeProvider } from '@/components/site/ThemeProvider';
 import { WS_URL } from "@/lib/api";
+
+const PWADownloadPrompt = lazy(() => import("@/components/pwa/PWADownloadPrompt"));
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -259,6 +260,9 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const interval = setInterval(() => {
       fetch(`${WS_URL}/health`, { mode: 'cors' }).catch(() => {});
     }, 5 * 60 * 1000);
@@ -350,7 +354,7 @@ function RootComponent() {
         <ThemeProvider>
           <Outlet />
           <Toaster richColors position="top-right" />
-          <PWADownloadPrompt />
+          <Suspense fallback={null}><PWADownloadPrompt /></Suspense>
         </ThemeProvider>
       </AppProvider>
     </QueryClientProvider>
