@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Plus, User, Phone, Mail, Users, X, Check, Eye, EyeOff, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -250,12 +249,11 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-nejah-surface dark:border-nejah-border-blue">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">Add New Student</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <ScrollArea className="max-h-[60vh] px-1">
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -583,7 +581,6 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
               </div>
             </div>
           </div>
-          </ScrollArea>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} className="dark:border-nejah-border-blue dark:text-muted-foreground">
