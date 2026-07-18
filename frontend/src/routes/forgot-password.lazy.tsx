@@ -22,6 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+
 export const Route = createLazyFileRoute('/forgot-password')({
   component: ForgotPasswordPage,
 });

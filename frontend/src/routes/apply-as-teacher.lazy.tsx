@@ -22,6 +22,66 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { API_BASE, apiUrl } from "@/lib/api";
 
+const LANGUAGES = ['Arabic', 'English', 'Afaan Oromo', 'Amharic', 'Somali', 'French'];
+const INTERNET_TYPES = ['Wi-Fi', 'Mobile Data'];
+const QIRAT_LEVELS = ['Fully Hafiz', 'Partial Hafiz', 'Learned Quran with Tajweed'];
+const ISLAMIC_LEVELS = ['Mukhtasar Books', 'Mutawwal Books'];
+const AVAILABILITY = [
+  'After Fajr until Dhuhr',
+  'Between Dhuhr and Asr',
+  'Between Asr and Maghrib',
+  'Between Maghrib and Isha',
+  'After Isha',
+];
+const MARKETING_SOURCES = ['TikTok', 'YouTube', 'Telegram', 'Facebook', 'Instagram'];
+const STEPS = [
+  { label: 'Personal', icon: User },
+  { label: 'Qualifications', icon: BookOpen },
+  { label: 'Documents', icon: FileText },
+  { label: 'Review', icon: CheckCircle2 },
+];
+
+const applicationSchema = z.object({
+  fullName: z.string().min(2, 'Full name is required'),
+  gender: z.string().min(1, 'Gender is required'),
+  dateOfBirth: z.string().optional(),
+  phoneNumber: z.string().min(4, 'Phone number is required'),
+  email: z.string().email('Valid email is required'),
+  password: z.string()
+    .min(6, 'Password must be at least 6 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string().min(6, 'Confirm Password must be at least 6 characters'),
+  country: z.string().min(1, 'Country is required'),
+  city: z.string().optional(),
+  streetAddress: z.string().optional(),
+  languages: z.array(z.string()).min(1, 'Select at least one language'),
+  languageOther: z.string().optional(),
+  internetConnectionType: z.string().optional(),
+  internetOther: z.string().optional(),
+  qiratEducationLevel: z.string().optional(),
+  qiratOther: z.string().optional(),
+  islamicEducationLevel: z.string().optional(),
+  islamicOther: z.string().optional(),
+  teachingTimeAvailability: z.array(z.string()).min(1, 'Select at least one time slot'),
+  marketingSource: z.string().optional(),
+  marketingOther: z.string().optional(),
+  additionalComments: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type ApplicationFormValues = z.infer<typeof applicationSchema>;
+
+interface UploadedDoc {
+  label: string;
+  key: string;
+  url: string;
+  fileName: string;
+}
+
 export const Route = createLazyFileRoute('/apply-as-teacher')({
   component: ApplyAsTeacherPage,
 });
@@ -655,6 +715,16 @@ function ApplyAsTeacherPage() {
       <footer className="border-t border-primary/100 bg-white/60 py-6 mt-10">
         <p className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Nejah Online Quran & Islamic Center. All rights reserved.</p>
       </footer>
+    </div>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <span className="text-muted-foreground min-w-[120px]">{label}:</span>
+      <span className="text-foreground font-medium">{value}</span>
     </div>
   );
 }

@@ -37,6 +37,15 @@ export const Route = createLazyFileRoute('/users')({
   component: UsersPage,
 });
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

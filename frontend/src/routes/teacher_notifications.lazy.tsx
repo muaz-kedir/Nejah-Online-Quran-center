@@ -17,6 +17,115 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
+const CHANNEL_LABELS: Record<string, string> = {
+  MEETING_STARTED: 'Meeting Started',
+  MEETING_ENDED: 'Meeting Ended',
+  ATTENDANCE_MARKED: 'Attendance Recorded',
+  CLASS_ALERT: 'Class Alert',
+  STUDENT_JOINED: 'Student Assigned',
+  STUDENT_LEFT: 'Student Removed',
+  SYSTEM_ALERT: 'System Alert',
+  TEMP_REPLACEMENT: 'Replacement',
+  HOMEWORK_ASSIGNED: 'Homework',
+  HOMEWORK_UPDATED: 'Homework',
+  HOMEWORK_GRADED: 'Homework',
+  CLASS_REMINDER: 'Reminder',
+  SESSION_CANCELLED: 'Cancelled',
+  SCHEDULE_CHANGED: 'Schedule',
+  RESOURCE_ADDED: 'Resource',
+  SYSTEM_ANNOUNCEMENT: 'Announcement',
+};
+
+const CHANNEL_ICONS: Record<string, typeof Bell> = {
+  MEETING_STARTED: VideoIcon,
+  MEETING_ENDED: VideoIcon,
+  STUDENT_JOINED: UserPlus,
+  STUDENT_LEFT: UserMinus,
+  SCHEDULE_CHANGED: Calendar,
+  CLASS_REMINDER: Clock,
+  HOMEWORK_ASSIGNED: FileText,
+  HOMEWORK_UPDATED: FileText,
+  HOMEWORK_GRADED: FileText,
+  RESOURCE_ADDED: FileText,
+};
+
+function VideoIcon(props: any) {
+  return <MessageSquare {...props} />;
+}
+
+const CHANNEL_COLORS: Record<string, string> = {
+  MEETING_STARTED: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
+  MEETING_ENDED: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
+  ATTENDANCE_MARKED: 'text-green-600 bg-green-100 dark:bg-green-900/30',
+  CLASS_ALERT: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30',
+  STUDENT_JOINED: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
+  STUDENT_LEFT: 'text-red-600 bg-red-100 dark:bg-red-900/30',
+  SYSTEM_ALERT: 'text-gray-600 bg-gray-100 dark:bg-gray-900/30',
+  TEMP_REPLACEMENT: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30',
+  SCHEDULE_CHANGED: 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30',
+  HOMEWORK_ASSIGNED: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30',
+  HOMEWORK_GRADED: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30',
+  RESOURCE_ADDED: 'text-teal-600 bg-teal-100 dark:bg-teal-900/30',
+  CLASS_REMINDER: 'text-sky-600 bg-sky-100 dark:bg-sky-900/30',
+};
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'unread', label: 'Unread' },
+  { value: 'STUDENT_JOINED', label: 'Students' },
+  { value: 'SCHEDULE_CHANGED', label: 'Schedule' },
+  { value: 'TEMP_REPLACEMENT', label: 'Replacement' },
+  { value: 'MEETING_STARTED', label: 'Sessions' },
+];
+
+function NotificationIcon({ channel }: { channel: string }) {
+  const Icon = CHANNEL_ICONS[channel] || Info;
+  return <Icon className="h-5 w-5" />;
+}
+
+function ChannelBadge({ channel }: { channel: string }) {
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
+      CHANNEL_COLORS[channel] || 'text-muted-foreground bg-muted'
+    )}>
+      {CHANNEL_LABELS[channel] || channel}
+    </span>
+  );
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+function SummaryCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+  return (
+    <Card className="border-border dark:border-nejah-border-blue">
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", color)}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export const Route = createLazyFileRoute('/teacher_notifications')({
   component: TeacherNotificationsPage,
 });

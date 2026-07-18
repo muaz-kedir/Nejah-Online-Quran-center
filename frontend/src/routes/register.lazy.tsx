@@ -33,6 +33,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { Textarea } from "@/components/ui/textarea";
 
+const registerSchema = z.object({
+  student: z.object({
+    fullName: z.string().min(2, "Full name is required"),
+    gender: z.string().min(1, "Gender is required"),
+    ageRange: z.enum(["Under 18", "18 - 25", "Above 25"], { required_error: "Age range is required" }),
+    country: z.string().min(1, "Country is required"),
+    city: z.string().min(1, "City is required"),
+    phone: z.string().min(1, "Phone is required"),
+    levelOfQuran: z.string().min(1, "Quran level is required"),
+    kitabRequested: z.boolean().default(false),
+    kitabName: z.string().optional(),
+    previousTraining: z.boolean().default(false),
+    trainingDetails: z.string().optional(),
+    referralSource: z.string().min(1, "Source is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "Must contain uppercase, lowercase, number, and special character"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  }),
+  parent: z.object({
+    fullName: z.string().optional(),
+    email: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    relationshipWithStudent: z.string().optional(),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+  }).optional(),
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 export const Route = createLazyFileRoute('/register')({
   component: RegisterPage,
 });

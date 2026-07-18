@@ -21,6 +21,54 @@ export const Route = createLazyFileRoute('/dashboard')({
   component: DashboardPage,
 });
 
+function DashboardContent() {
+  const { t } = useApp();
+  const [userName, setUserName] = useState('Administrator');
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserName(localStorage.getItem('userName') || 'Administrator');
+    }
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setRefreshKey(k => k + 1);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  return (
+    <AmbientSection>
+      <PageHeader
+        eyebrow={t.managementOverview}
+        title={`Assalamu Alaikum, ${userName}`}
+        description="Welcome back to the Nejah command center."
+        actions={
+          <Button onClick={handleRefresh} variant="outline" className="h-11 gap-2 rounded-xl px-4" disabled={refreshing}>
+            <RefreshCw className={cn('h-5 w-5', refreshing && 'animate-spin')} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        }
+      />
+
+      <DashboardCards key={`cards-${refreshKey}`} />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <RecentStudentsTable key={`recent-${refreshKey}`} />
+          <TodaysClasses key={`today-${refreshKey}`} />
+        </div>
+        <div className="space-y-6">
+          <StaffOverview key={`staff-${refreshKey}`} />
+          <SystemAlerts key={`alerts-${refreshKey}`} />
+        </div>
+      </div>
+    </AmbientSection>
+  );
+}
+
 function DashboardPage() {
   return (
     <DashboardLayout>

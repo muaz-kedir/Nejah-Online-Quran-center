@@ -17,6 +17,41 @@ import { GlassPanel } from '@/components/dashboard/design-system';
 import { TeacherPortalLayout } from '@/components/teachers/TeacherPortalLayout';
 import { toast } from 'sonner';
 
+interface TeacherSessionHistory {
+  data: Array<{
+    id: string;
+    classTitle: string;
+    teacherId: string;
+    studentId: string | null;
+    scheduledStart: string;
+    scheduledEnd: string;
+    actualStart: string | null;
+    actualEnd: string | null;
+    durationMinutes: number | null;
+    status: string;
+    studentCount: number;
+    attendanceSummary: {
+      present: number;
+      late: number;
+      absent: number;
+      leftEarly: number;
+      partial: number;
+      excused: number;
+      total: number;
+    };
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  summary: {
+    totalSessions: number;
+    completedSessions: number;
+    totalHours: number;
+    uniqueStudents: number;
+  };
+}
+
 export const Route = createLazyFileRoute('/teacher_sessions')({
   component: TeacherSessionsPage,
 });

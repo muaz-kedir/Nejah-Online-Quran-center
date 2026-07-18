@@ -20,6 +20,79 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const CHANNEL_LABELS: Record<string, string> = {
+  PAYMENT_REMINDER: 'Payment Reminder',
+  PAYMENT_RECEIVED: 'Payment Received',
+  PAYMENT_OVERDUE: 'Overdue',
+  SYSTEM_ALERT: 'System',
+};
+
+const CHANNEL_ICONS: Record<string, typeof Bell> = {
+  PAYMENT_REMINDER: DollarSign,
+  PAYMENT_RECEIVED: CheckCircle,
+  PAYMENT_OVERDUE: AlertTriangle,
+  SYSTEM_ALERT: TrendingUp,
+};
+
+const CHANNEL_COLORS: Record<string, string> = {
+  PAYMENT_REMINDER: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
+  PAYMENT_RECEIVED: 'text-green-600 bg-green-100 dark:bg-green-900/30',
+  PAYMENT_OVERDUE: 'text-red-600 bg-red-100 dark:bg-red-900/30',
+  SYSTEM_ALERT: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
+};
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+}
+
+function SummaryCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+  return (
+    <Card className="border-border dark:border-nejah-border-blue">
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', color)}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NotificationIcon({ channel }: { channel: string }) {
+  const Icon = CHANNEL_ICONS[channel] || Info;
+  return <Icon className="h-5 w-5" />;
+}
+
+function ChannelBadge({ channel }: { channel: string }) {
+  return (
+    <span className={cn(
+      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold',
+      CHANNEL_COLORS[channel] || 'text-muted-foreground bg-muted',
+    )}>
+      {CHANNEL_LABELS[channel] || channel}
+    </span>
+  );
+}
+
 export const Route = createLazyFileRoute('/finance_notifications')({
   component: FinanceNotificationsPage,
 });

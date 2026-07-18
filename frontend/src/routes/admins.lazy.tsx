@@ -21,6 +21,33 @@ export const Route = createLazyFileRoute('/admins')({
   component: AdminsPage,
 });
 
+function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loading: boolean; icon: any; color: string }) {
+  if (loading) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">Loading...</div>;
+  if (users.length === 0) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">No users found</div>;
+  return users.map((user) => (
+    <div key={user.id} className="glass-panel rounded-2xl p-6">
+      <div className="mb-4 flex items-center gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${color}`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground">{user.name}</h3>
+          <RoleBadge role={user.role} variant="pill" />
+        </div>
+      </div>
+      <div className="space-y-2 text-sm text-nejah-slate-blue">
+        <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> {user.email}</div>
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4" /> Joined {new Date(user.createdAt).toLocaleDateString()}
+        </div>
+      </div>
+      <div className="mt-4 border-t border-white/10 pt-4">
+        <Badge variant={user.isActive ? 'default' : 'secondary'}>{user.isActive ? 'Active' : 'Inactive'}</Badge>
+      </div>
+    </div>
+  ));
+}
+
 function AdminsPage() {
   const [tab, setTab] = useState<'finance_manager' | 'qirat_manager'>('finance_manager');
   const [users, setUsers] = useState<any[]>([]);

@@ -10,6 +10,29 @@ import { requireAuth } from "@/lib/auth";
 import { getAnalytics, type SupportAnalytics } from "@/lib/support-pages";
 import { Loader2, FileText, Eye, ThumbsUp, Ticket, CheckCircle } from "lucide-react";
 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: any;
+  label: string;
+  value: number | string;
+  sub?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background/50 p-4 space-y-1">
+      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+        <Icon className="h-4 w-4" />
+        <span>{label}</span>
+      </div>
+      <p className="text-2xl font-bold">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
 export const Route = createLazyFileRoute('/website/support/analytics')({
   component: AnalyticsCmsPage,
 });

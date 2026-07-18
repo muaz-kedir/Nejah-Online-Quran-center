@@ -16,6 +16,153 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
 
+function getYoutubeId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m?.[1]) return m[1];
+  }
+  return null;
+}
+
+function formatSize(bytes: number) {
+  if (!bytes) return 'Unknown size';
+  const mb = bytes / (1024 * 1024);
+  return mb < 1 ? `${Math.round(bytes / 1024)} KB` : `${mb.toFixed(1)} MB`;
+}
+
+const TYPE_FILTERS = ['All', 'Video', 'PDF', 'Image', 'Audio'] as const;
+
+const TYPE_ICONS: Record<string, React.ReactNode> = {
+  video: <PlaySquare className="w-5 h-5 text-rose-500" />,
+  mp4: <PlaySquare className="w-5 h-5 text-rose-500" />,
+  pdf: <FileText className="w-5 h-5 text-blue-500" />,
+  image: <ImageIcon className="w-5 h-5 text-emerald-500" />,
+  mp3: <Headphones className="w-5 h-5 text-amber-500" />,
+  audio: <Headphones className="w-5 h-5 text-amber-500" />,
+  zip: <FileArchive className="w-5 h-5 text-slate-500" />,
+};
+
+function getFileIcon(type: string) {
+  const t = type.toLowerCase();
+  for (const [key, icon] of Object.entries(TYPE_ICONS)) {
+    if (t.includes(key)) return icon;
+  }
+  return <FileText className="w-5 h-5 text-slate-500" />;
+}
+
+function ResourceCard({
+  resource,
+  onOpen,
+  onDownload,
+  onDetail,
+}: {
+  resource: any;
+  onOpen: (r: any) => void;
+  onDownload: (r: any) => void;
+  onDetail: (r: any) => void;
+}) {
+  const type = (resource.resourceType || '').toLowerCase();
+  const isVideo = type.includes('video') || type.includes('mp4') || !!resource.youtubeUrl;
+  const isImage = type.includes('img') || type.includes('png') || type.includes('jpg');
+  const youtubeId = getYoutubeId(resource.youtubeUrl);
+
+  return (
+    <div className="bg-card border rounded-3xl overflow-hidden hover:border-nejah-blue/40 transition-colors group flex flex-col">
+      {isVideo && youtubeId ? (
+        <a
+          href={resource.youtubeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative block aspect-video bg-muted overflow-hidden"
+        >
+          <img
+            src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+            alt={resource.titleEn}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center group-hover:bg-black/80 transition-colors">
+              <PlaySquare className="w-7 h-7 text-white fill-white" />
+            </div>
+          </div>
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-rose-600 text-white border-none text-[10px] font-bold">Video</Badge>
+          </div>
+        </a>
+      ) : isImage && resource.fileUrl ? (
+        <a
+          href={resource.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative block aspect-video bg-muted overflow-hidden"
+        >
+          <img
+            src={resource.fileUrl}
+            alt={resource.titleEn}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-emerald-600 text-white border-none text-[10px] font-bold">Image</Badge>
+          </div>
+        </a>
+      ) : (
+        <div className="h-32 bg-gradient-to-br from-nejah-sapphire/10 to-nejah-electric/5 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/80 shadow-sm flex items-center justify-center">
+            {resource.thumbnailUrl ? (
+              <img src={resource.thumbnailUrl} alt="" className="w-full h-full object-cover rounded-2xl" />
+            ) : (
+              getFileIcon(resource.resourceType)
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="font-bold text-nejah-sapphire text-foreground line-clamp-1">{resource.titleEn}</h3>
+          <Badge variant="outline" className="text-[10px] font-bold bg-muted/50 shrink-0">{resource.resourceType}</Badge>
+        </div>
+
+        <p className="text-sm text-muted-foreground line-clamp-2">{resource.descriptionEn || 'Helpful material for your current learning path.'}</p>
+
+        {!isVideo && (
+          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>{resource.category}</span>
+            {resource.fileSize > 0 && <><span>•</span><span>{formatSize(resource.fileSize)}</span></>}
+          </div>
+        )}
+
+        <div className="mt-auto pt-5 flex gap-2">
+          {isVideo && resource.youtubeUrl ? (
+            <Button onClick={() => onOpen(resource)} className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white gap-2">
+              <PlaySquare className="w-4 h-4" /> Watch
+            </Button>
+          ) : (
+            <Button onClick={() => onOpen(resource)} className="flex-1 rounded-xl bg-nejah-sapphire hover:bg-nejah-sapphire/90 text-white">
+              Open
+            </Button>
+          )}
+          <Button onClick={() => onDetail(resource)} variant="secondary" className="rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire text-foreground">
+            Details
+          </Button>
+          {resource.fileUrl && !resource.youtubeUrl && (
+            <Button onClick={() => onDownload(resource)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire text-foreground">
+              <Download className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const Route = createLazyFileRoute('/student_/resources')({
   component: StudentResources,
 });

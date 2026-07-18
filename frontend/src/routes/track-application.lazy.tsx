@@ -16,6 +16,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_BASE, apiUrl } from "@/lib/api";
 
+const trackSchema = z.object({
+  email: z.string().email('Valid email is required'),
+  applicationNumber: z.string().min(3, 'Application number is required'),
+});
+
+type TrackFormValues = z.infer<typeof trackSchema>;
+
+interface TrackResult {
+  status: string;
+  applicationNumber: string;
+  appliedAt: string;
+}
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+  PENDING_REVIEW: { label: 'Pending Review', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
+  APPROVED: { label: 'Approved', color: 'text-nejah-electric', bg: 'bg-primary/10 border-nejah-electric/20', icon: CheckCircle2 },
+  REJECTED: { label: 'Rejected', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
+  MORE_INFO_REQUIRED: { label: 'More Information Required', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: AlertCircle },
+};
+
 export const Route = createLazyFileRoute('/track-application')({
   component: TrackApplicationPage,
 });

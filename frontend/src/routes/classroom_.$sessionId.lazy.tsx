@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createLazyFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
@@ -29,6 +29,81 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
+
+const API = API_BASE;
+const getToken = () => localStorage.getItem("token");
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
+
+const CLASSROOM_STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
+  waiting_for_teacher: {
+    label: "Waiting for Teacher",
+    color: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    icon: Clock,
+  },
+  teacher_online: {
+    label: "Teacher Online",
+    color: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    icon: Users,
+  },
+  waiting_for_students: {
+    label: "Waiting for Students",
+    color: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    icon: Users,
+  },
+  students_joining: {
+    label: "Students Joining",
+    color: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+    icon: Users,
+  },
+  class_live: {
+    label: "Class Live",
+    color: "bg-red-500/20 text-red-300 border-red-500/30",
+    icon: Video,
+  },
+  class_ending: {
+    label: "Class Ending",
+    color: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+    icon: StopCircle,
+  },
+  completed: {
+    label: "Completed",
+    color: "bg-green-500/20 text-green-300 border-green-500/30",
+    icon: CheckCircle2,
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "bg-red-500/20 text-red-300 border-red-500/30",
+    icon: XCircle,
+  },
+  expired: {
+    label: "Expired",
+    color: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+    icon: AlertTriangle,
+  },
+  no_show: {
+    label: "No Show",
+    color: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+    icon: XCircle,
+  },
+  not_available: {
+    label: "Not Available",
+    color: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+    icon: Clock,
+  },
+};
+
+type ClassroomAccess = {
+  session: any;
+  joinUrl: string | null;
+  startUrl: string | null;
+  meetingLink: string | null;
+  classroomStatus: string;
+  countdownSeconds: number | null;
+  joinWindowOpenAt: string | null;
+};
 
 export const Route = createLazyFileRoute('/classroom_/$sessionId')({
   component: ClassroomPage,

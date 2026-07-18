@@ -42,6 +42,170 @@ export const Route = createLazyFileRoute('/parents')({
   component: ParentsPage,
 });
 
+const getInitials = (name: string) => {
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+};
+
+const getAvatarBg = (name: string) => {
+  const palettes = [
+    'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric',
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+  ];
+  return palettes[name.charCodeAt(0) % palettes.length];
+};
+
+const getStudentBadgeColor = (level?: string) => {
+  switch (level?.toLowerCase()) {
+    case 'beginner':
+      return 'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric';
+    case 'intermediate':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300';
+    case 'advanced':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300';
+    case 'hifz':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300';
+    default:
+      return 'bg-muted text-foreground dark:bg-nejah-surface dark:text-muted-foreground';
+  }
+};
+
+const parentIdCode = (id: string) => {
+  const hash = id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase();
+  return `NEJ-${hash || '0000'}`;
+};
+
+const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: {
+  parent: any;
+  onView: (p: any) => void;
+  onEdit: (p: any) => void;
+  onDelete: (p: any) => void;
+}) {
+  return (
+    <tr
+      className="hover:bg-primary/5 transition-colors group"
+    >
+      {/* Parent Name */}
+      <td className="py-5 px-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              'w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0',
+              getAvatarBg(parent.fullName)
+            )}
+          >
+            {getInitials(parent.fullName)}
+          </div>
+          <div>
+            <p className="font-bold text-foreground dark:text-foreground group-hover:text-nejah-sapphire dark:group-hover:text-nejah-electric transition-colors">
+              {parent.fullName}
+            </p>
+            <p className="text-xs text-nejah-slate-blue mt-0.5">
+              ID: {parentIdCode(parent.id)}
+            </p>
+          </div>
+        </div>
+      </td>
+
+      {/* Students */}
+      <td className="py-5 px-6">
+        {parent.students && parent.students.length > 0 ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-nejah-sapphire dark:text-nejah-electric">
+              {parent.students.length > 2
+                ? `${parent.students[0].fullName} +${parent.students.length - 1}`
+                : parent.students.map((s: any) => s.fullName).join(' & ')}
+            </span>
+            <span
+              className={cn(
+                'text-[10px] font-bold px-2 py-0.5 rounded-full w-fit',
+                parent.students.length > 1
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                  : getStudentBadgeColor(parent.students[0]?.level)
+              )}
+            >
+              {parent.students.length > 1
+                ? 'Mixed Grades'
+                : parent.students[0]?.level || 'Unassigned'}
+            </span>
+          </div>
+        ) : (
+          <span className="text-sm text-nejah-slate-blue italic">
+            No students linked
+          </span>
+        )}
+      </td>
+
+      {/* Contact Information */}
+      <td className="py-5 px-6">
+        <div className="space-y-1.5 text-sm">
+          <div className="flex items-center gap-2 text-nejah-slate-blue">
+            <Phone className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
+            <span>{parent.phoneNumber || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-nejah-slate-blue">
+            <Mail className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
+            <span className="truncate max-w-[200px]">{parent.email}</span>
+          </div>
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="py-5 px-6">
+        <div className="flex justify-center">
+          <Badge
+            className={cn(
+              'text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none flex items-center gap-1.5 w-max',
+              parent.status?.toLowerCase() === 'active'
+                ? 'bg-primary/10 text-nejah-electric dark:bg-primary/20 dark:text-nejah-electric'
+                : 'bg-muted text-muted-foreground dark:bg-nejah-surface dark:text-muted-foreground'
+            )}
+          >
+            <span
+              className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                parent.status?.toLowerCase() === 'active'
+                  ? 'bg-primary'
+                  : 'bg-nejah-slate-blue'
+              )}
+            />
+            {parent.status || 'Active'}
+          </Badge>
+        </div>
+      </td>
+
+      {/* Actions */}
+      <td className="py-5 px-6">
+        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={() => onView(parent)}
+            className="p-2 hover:bg-primary/10 dark:hover:bg-nejah-surface text-muted-foreground hover:text-nejah-electric dark:hover:text-nejah-electric rounded-lg transition-colors cursor-pointer"
+            title="View Profile"
+          >
+            <Eye className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            onClick={() => onEdit(parent)}
+            className="p-2 hover:bg-blue-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors cursor-pointer"
+            title="Edit"
+          >
+            <Pencil className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            onClick={() => onDelete(parent)}
+            className="p-2 hover:bg-red-50 dark:hover:bg-nejah-surface text-muted-foreground hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+            title="Delete"
+          >
+            <Trash2 className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
+
 function ParentsPage() {
   const [parents, setParents] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 5, totalPages: 1 });

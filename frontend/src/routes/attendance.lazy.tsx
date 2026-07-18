@@ -14,6 +14,44 @@ import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 
+interface AttendanceRecord {
+  id: string;
+  sessionId: string;
+  studentName: string;
+  teacherName: string;
+  classTitle: string;
+  sessionDate: string;
+  joinTime: string | null;
+  leaveTime: string | null;
+  duration: number | null;
+  attendanceStatus: string;
+}
+
+interface OverviewData {
+  data: AttendanceRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  summary: {
+    totalSessions: number;
+    totalAttendances: number;
+    present: number;
+    late: number;
+    absent: number;
+    overallPercentage: number;
+  };
+}
+
+const statusBadge: Record<string, string> = {
+  PRESENT: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400',
+  LATE: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400',
+  ABSENT: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400',
+  LEFT_EARLY: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400',
+  PARTIAL: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400',
+  EXCUSED: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400',
+};
+
 export const Route = createLazyFileRoute('/attendance')({
   component: AttendancePage,
 });

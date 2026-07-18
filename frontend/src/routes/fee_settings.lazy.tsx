@@ -18,6 +18,18 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Plus, Pencil, Trash2, DollarSign, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
 
+const API = API_BASE;
+
+interface LearningGoal { id: string; name: string; }
+interface FeeConfig {
+  id: string;
+  learningGoalId: string;
+  learningGoal: LearningGoal;
+  country: string;
+  amount: number;
+  currency: string;
+}
+
 export const Route = createLazyFileRoute('/fee_settings')({
   component: FeeSettingsPage,
 });
