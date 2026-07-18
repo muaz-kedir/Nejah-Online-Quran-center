@@ -25,16 +25,12 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks(id) {
-            // Split large vendor libraries into separate chunks
-            if (id.includes('node_modules/recharts')) return 'vendor-recharts';
-            if (id.includes('node_modules/framer-motion')) return 'vendor-framer';
-            if (id.includes('node_modules/@tiptap')) return 'vendor-tiptap';
+            // Only split truly independent, large vendor libraries.
+            // Do NOT split react/react-dom — other chunks depend on them at
+            // load time and a separate chunk causes ordering bugs (e.g.
+            // "Cannot set properties of undefined (setting 'Activity')").
             if (id.includes('node_modules/firebase')) return 'vendor-firebase';
-            if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
-            if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform')) return 'vendor-forms';
-            if (id.includes('node_modules/@tanstack')) return 'vendor-tanstack';
-            if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'vendor-react';
-            if (id.includes('node_modules')) return 'vendor-other';
+            if (id.includes('node_modules/recharts')) return 'vendor-recharts';
           },
         },
       },
