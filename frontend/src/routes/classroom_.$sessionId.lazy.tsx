@@ -2,8 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createLazyFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
   Video,
@@ -29,13 +28,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { isLiveSessionActive, joinLiveSessionWhenActive } from "@/lib/student-live-session";
-
-const API = API_BASE;
-const getToken = () => localStorage.getItem("token");
-const authHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${getToken()}`,
-});
+import { api } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CLASSROOM_STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
   waiting_for_teacher: {
@@ -112,11 +107,10 @@ export const Route = createLazyFileRoute('/classroom_/$sessionId')({
 function ClassroomPage() {
   const { sessionId } = Route.useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [joining, setJoining] = useState(false);
   const [starting, setStarting] = useState(false);
   const [ending, setEnding] = useState(false);
-  const [classroom, setClassroom] = useState<ClassroomAccess | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showNoteForm, setShowNoteForm] = useState(false);
@@ -129,38 +123,22 @@ function ClassroomPage() {
     completionRemarks: "",
     studentPerformance: "",
   });
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const role = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
 
-  const loadClassroom = useCallback(async () => {
-    try {
-      const res = await fetch(`${API}/live-sessions/${sessionId}/classroom`, {
-        headers: authHeaders(),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        if (res.status === 403) {
-          toast.error("You don't have access to this classroom");
-          navigate({ to: "/dashboard" });
-          return;
-        }
-        throw new Error(err.message || "Cannot access classroom");
-      }
-      setClassroom(await res.json());
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [sessionId, navigate]);
+  const { data: classroom, isLoading: loading } = useApiQuery<ClassroomAccess>({
+    queryKey: ["classroom", sessionId],
+    path: `/live-sessions/${sessionId}/classroom`,
+    refetchInterval: 10_000,
+    retry: false,
+  });
 
   useEffect(() => {
-    loadClassroom();
-    pollRef.current = setInterval(loadClassroom, 10000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [loadClassroom]);
+    if (classroom === undefined) return;
+    if (classroom === null) {
+      toast.error("You don't have access to this classroom");
+      navigate({ to: "/dashboard" });
+    }
+  }, [classroom, navigate]);
 
   useEffect(() => {
     if (classroom?.countdownSeconds != null && classroom.countdownSeconds > 0) {
@@ -190,9 +168,8 @@ function ClassroomPage() {
 
   const recordLeave = async () => {
     try {
-      await fetch(apiUrl(`/live-sessions/${sessionId}/leave`), {
-        method: 'POST',
-        headers: authHeaders(),
+      await api(`/live-sessions/${sessionId}/leave`, {
+        method: "POST",
       });
     } catch {
       // Non-blocking — session end will still finalize attendance
@@ -238,17 +215,12 @@ function ClassroomPage() {
           result.alreadyJoined ? "Rejoined session — attendance already recorded" :           "Attendance recorded — joining session",
         );
       } else {
-        const res = await fetch(`${API}/live-sessions/${sessionId}/join`, {
+        await api(`/live-sessions/${sessionId}/join`, {
           method: "POST",
-          headers: authHeaders(),
         });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || "Failed to join session");
-        }
         openExternalZoom(classroom);
       }
-      loadClassroom();
+      queryClient.invalidateQueries({ queryKey: ["classroom", sessionId] });
     } catch (e: any) {
       toast.error(e.message || "Failed to join session");
     } finally {
@@ -259,17 +231,13 @@ function ClassroomPage() {
   const handleStartSession = async () => {
     setStarting(true);
     try {
-      const body = meetingLinkInput ? JSON.stringify({ meetingLink: meetingLinkInput }) : undefined;
-      const res = await fetch(`${API}/live-sessions/${sessionId}/start`, {
-        method: "POST",
-        headers: authHeaders(),
-        body,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to start session");
-      }
-      const result = await res.json().catch(() => ({}));
+      const result = await api<{ notificationSummary?: { studentCount: number; parentCount: number; warnings?: any[] } }>(
+        `/live-sessions/${sessionId}/start`,
+        {
+          method: "POST",
+          body: meetingLinkInput ? JSON.stringify({ meetingLink: meetingLinkInput }) : undefined,
+        },
+      );
       const summary = result?.notificationSummary;
       if (summary && summary.studentCount > 0) {
         toast.success(
@@ -283,7 +251,7 @@ function ClassroomPage() {
         toast.warning("Some notification channels reported temporary issues. Students may still receive notifications through other available channels.");
       }
       setMeetingLinkInput("");
-      loadClassroom();
+      queryClient.invalidateQueries({ queryKey: ["classroom", sessionId] });
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -294,18 +262,13 @@ function ClassroomPage() {
   const handleEndSession = async () => {
     setEnding(true);
     try {
-      const res = await fetch(`${API}/live-sessions/${sessionId}/end`, {
+      await api(`/live-sessions/${sessionId}/end`, {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify({ completionReason: "Teacher ended session" }),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to end session");
-      }
       setSessionEnded(true);
       toast.success("Session ended successfully");
-      loadClassroom();
+      queryClient.invalidateQueries({ queryKey: ["classroom", sessionId] });
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -316,15 +279,10 @@ function ClassroomPage() {
   const handleSubmitNote = async () => {
     setSubmittingNote(true);
     try {
-      const res = await fetch(`${API}/session-notes/session/${sessionId}`, {
+      await api(`/session-notes/session/${sessionId}`, {
         method: "POST",
-        headers: authHeaders(),
         body: JSON.stringify(noteForm),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to save lesson notes");
-      }
       toast.success("Lesson notes saved successfully");
       setShowNoteForm(false);
       setNoteForm({

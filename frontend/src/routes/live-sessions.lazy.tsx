@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, BentoStatCard, GlassPanel } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ import {
   ArrowUpDown,
   Loader2,
 } from 'lucide-react';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/live-sessions')({
   component: LiveSessionsPage,
@@ -59,13 +61,7 @@ export const Route = createLazyFileRoute('/live-sessions')({
 
 function LiveSessionsPage() {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [liveSessions, setLiveSessions] = useState<any[]>([]);
-  const [todaySessions, setTodaySessions] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [tableLoading, setTableLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortField, setSortField] = useState('scheduledStart');
@@ -79,59 +75,55 @@ function LiveSessionsPage() {
   const [completingId, setCompletingId] = useState<string | null>(null);
   const userRole = useRef('');
 
+  const { data: liveSessionsData, isLoading: loadingLive } = useApiQuery<any[]>({
+    queryKey: ['live-sessions-live'],
+    path: '/live-sessions/live',
+    refetchInterval: 15_000,
+  });
+  const liveSessions = useMemo(() => Array.isArray(liveSessionsData) ? liveSessionsData : [], [liveSessionsData]);
+
+  const { data: todaySessionsData, isLoading: loadingToday } = useApiQuery<any[]>({
+    queryKey: ['live-sessions-today'],
+    path: '/live-sessions/today',
+    refetchInterval: 15_000,
+  });
+  const todaySessions = useMemo(() => Array.isArray(todaySessionsData) ? todaySessionsData : [], [todaySessionsData]);
+
+  const { data: analytics } = useApiQuery<any>({
+    queryKey: ['zoom-analytics-dashboard'],
+    path: '/zoom-analytics/dashboard',
+    refetchInterval: 30_000,
+  });
+
+  const { data: stats } = useApiQuery<any>({
+    queryKey: ['live-sessions-stats'],
+    path: '/live-sessions/stats',
+    refetchInterval: 30_000,
+  });
+
+  const sessionsParams = useMemo(() => {
+    const params = new URLSearchParams({ page: String(page), limit: '20', sortBy: sortField, sortOrder: sortDir });
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    return params.toString();
+  }, [page, sortField, sortDir, statusFilter]);
+
+  const { data: sessionsResponse, isLoading: loadingSessions } = useApiQuery<any>({
+    queryKey: ['live-sessions-list', sessionsParams],
+    path: `/live-sessions?${sessionsParams}`,
+  });
+
+  const loading = loadingLive || loadingToday || loadingSessions;
+
+  const sessions = useMemo(() => sessionsResponse?.data || [], [sessionsResponse]);
+  const computedTotalPages = sessionsResponse?.meta?.totalPages || 1;
+
+  useEffect(() => {
+    setTotalPages(computedTotalPages);
+  }, [computedTotalPages]);
+
   useEffect(() => {
     userRole.current = localStorage.getItem('userRole') || '';
-    fetchAll();
-    const interval = setInterval(() => fetchLiveOnly(), 15000);
-    return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [page, sortField, sortDir]);
-
-  const fetchAll = async () => {
-    setLoading(true);
-    await Promise.all([fetchLiveOnly(), fetchKPIs(), fetchSessions()]);
-    setLoading(false);
-  };
-
-  const fetchLiveOnly = async () => {
-    try {
-      const [live, today] = await Promise.all([
-        api<any[]>('/live-sessions/live').catch(() => []),
-        api<any[]>('/live-sessions/today').catch(() => []),
-      ]);
-      setLiveSessions(Array.isArray(live) ? live : []);
-      setTodaySessions(Array.isArray(today) ? today : []);
-    } catch {}
-  };
-
-  const fetchKPIs = async () => {
-    try {
-      const [analyticsData, statsData] = await Promise.all([
-        api<any>('/zoom-analytics/dashboard').catch(() => null),
-        api<any>('/live-sessions/stats').catch(() => null),
-      ]);
-      setAnalytics(analyticsData);
-      setStats(statsData);
-    } catch {}
-  };
-
-  const fetchSessions = async () => {
-    setTableLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: '20', sortBy: sortField, sortOrder: sortDir });
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      const data = await api<any>(`/live-sessions?${params}`);
-      setSessions(data.data || []);
-      setTotalPages(data.meta?.totalPages || 1);
-    } catch {
-      setSessions([]);
-    } finally {
-      setTableLoading(false);
-    }
-  };
 
   const filteredSessions = useMemo(() => {
     if (!search) return sessions;
@@ -144,6 +136,16 @@ function LiveSessionsPage() {
     );
   }, [sessions, search]);
 
+  const refreshAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['live-sessions-live'] }),
+      queryClient.invalidateQueries({ queryKey: ['live-sessions-today'] }),
+      queryClient.invalidateQueries({ queryKey: ['zoom-analytics-dashboard'] }),
+      queryClient.invalidateQueries({ queryKey: ['live-sessions-stats'] }),
+      queryClient.invalidateQueries({ queryKey: ['live-sessions-list'] }),
+    ]);
+  };
+
   const handleStartSession = async (id: string) => {
     setStartingId(id);
     try {
@@ -152,7 +154,7 @@ function LiveSessionsPage() {
       if (res?.zoomStartUrl || res?.startUrl) {
         window.open(res.zoomStartUrl || res.startUrl, '_blank');
       }
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || 'Failed to start session');
     } finally {
@@ -165,7 +167,7 @@ function LiveSessionsPage() {
     try {
       await api(`/live-sessions/${id}/end`, { method: 'POST' });
       toast.success('Session completed');
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || 'Failed to end session');
     } finally {
@@ -179,7 +181,7 @@ function LiveSessionsPage() {
       await api(`/live-sessions/${id}/cancel`, { method: 'POST' });
       toast.success('Session cancelled');
       setCancelDialog(null);
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || 'Failed to cancel session');
     } finally {
@@ -256,7 +258,7 @@ function LiveSessionsPage() {
           title="Live Sessions"
           description="Monitor and manage all live sessions across the platform."
           actions={
-            <Button onClick={fetchAll} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
+            <Button onClick={refreshAll} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
               Refresh
             </Button>
@@ -423,7 +425,7 @@ function LiveSessionsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border dark:divide-nejah-border-blue">
-                  {tableLoading ? (
+                  {loadingSessions ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}>
                         <td colSpan={8} className="p-6"><Skeleton className="h-8 w-full rounded-xl" /></td>

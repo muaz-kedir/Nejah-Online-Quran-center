@@ -16,6 +16,7 @@ import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
 import { ThemeProvider } from '@/components/site/ThemeProvider';
 import { WS_URL } from "@/lib/api";
+import { useRealtimeSocket } from "@/hooks/useRealtimeSocket";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -265,6 +266,8 @@ function ClientOnlyPWAPrompt() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const socketRef = useRef<any>(null);
+
+  useRealtimeSocket();
 
   useEffect(() => {
     setupChunkLoadRecovery();

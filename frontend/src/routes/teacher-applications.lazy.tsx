@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   Search, Filter, ChevronLeft, ChevronRight, FileCheck, Clock, CheckCircle2, XCircle, AlertCircle,
@@ -19,6 +19,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
 import { apiHeaders, apiUrl } from "@/lib/api";
 import { cn } from '@/lib/utils';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/teacher-applications')({
   component: TeacherApplicationsPage,
@@ -61,35 +63,33 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 
 function TeacherApplicationsContent() {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const queryClient = useQueryClient();
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [stats, setStats] = useState<Stats>({ total: 0, pending: 0, approved: 0, rejected: 0, moreInfo: 0 });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [announcementText, setAnnouncementText] = useState({ en: '', ar: '', am: '' });
   const [isSavingText, setIsSavingText] = useState(false);
 
-  // Student registration link
   const regLink = `${window.location.origin}/register`;
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      const res = await fetch(apiUrl(`/teacher-applications/settings`));
-      if (res.ok) {
-        const data = await res.json();
-        setIsApplicationsOpen(data.isApplicationsOpen);
-        setAnnouncementText({
-          en: data.announcementText?.en || '',
-          ar: data.announcementText?.ar || '',
-          am: data.announcementText?.am || '',
-        });
-      }
-    } catch {}
-  }, []);
+  const { data: settingsData } = useApiQuery<any>({
+    queryKey: ["teacher-applications-settings"],
+    path: `/teacher-applications/settings`,
+  });
+
+  // Apply settings when loaded
+  if (settingsData && !isApplicationsOpen && settingsData.isApplicationsOpen !== undefined) {
+    setIsApplicationsOpen(settingsData.isApplicationsOpen);
+    setAnnouncementText({
+      en: settingsData.announcementText?.en || '',
+      ar: settingsData.announcementText?.ar || '',
+      am: settingsData.announcementText?.am || '',
+    });
+  }
 
   const toggleApplicationsOpen = async (open?: boolean) => {
     setIsToggling(true);
@@ -102,6 +102,7 @@ function TeacherApplicationsContent() {
       });
       if (!res.ok) throw new Error('Failed to toggle application status');
       setIsApplicationsOpen(newState);
+      queryClient.invalidateQueries({ queryKey: ["teacher-applications-settings"] });
       toast.success(newState ? 'Teacher applications are now OPEN to the public' : 'Teacher applications are now CLOSED');
     } catch (err: any) {
       toast.error(err.message);
@@ -123,7 +124,7 @@ function TeacherApplicationsContent() {
         throw new Error(errBody.message || 'Failed to save announcement text');
       }
       toast.success('Announcement text saved');
-      await fetchSettings();
+      queryClient.invalidateQueries({ queryKey: ["teacher-applications-settings"] });
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -131,60 +132,42 @@ function TeacherApplicationsContent() {
     }
   };
 
-  const fetchApplications = useCallback(async (opts?: { page?: number; searchTerm?: string; statusVal?: string }) => {
-    setIsLoading(true);
-    try {
-      const page = opts?.page ?? 1;
-      const term = opts?.searchTerm ?? search;
-      const sFilter = opts?.statusVal ?? statusFilter;
-      const params = new URLSearchParams({ page: String(page), limit: '10' });
-      if (term) params.set('search', term);
-      if (sFilter !== 'all') params.set('status', sFilter);
+  const applicationsParams = new URLSearchParams({ page: '1', limit: '10' });
+  if (search) applicationsParams.set('search', search);
+  if (statusFilter !== 'all') applicationsParams.set('status', statusFilter);
 
-      const res = await fetch(apiUrl(`/teacher-applications?${params}`), { headers: apiHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch applications');
-      const data = await res.json();
-      setApplications(data.data);
-      setMeta(data.meta);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [search, statusFilter]);
+  const { data: applicationsResult, isLoading } = useApiQuery<any>({
+    queryKey: ["teacher-applications", search, statusFilter],
+    path: `/teacher-applications?${applicationsParams}`,
+  });
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await fetch(apiUrl(`/teacher-applications/stats`), { headers: apiHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch {}
-  }, []);
+  const applications = applicationsResult?.data || [];
+  const appMeta = applicationsResult?.meta || meta;
+
+  const { data: statsResult } = useApiQuery<any>({
+    queryKey: ["teacher-applications-stats"],
+    path: `/teacher-applications/stats`,
+    refetchInterval: 30_000,
+  });
+
+  if (statsResult) setStats(statsResult);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    fetchApplications({ page: meta.page, searchTerm: search, statusVal: statusFilter });
-    fetchStats();
-    fetchSettings();
-  }, [fetchApplications, fetchStats, fetchSettings, meta.page, search, statusFilter]);
-
-  useEffect(() => {
-    fetchApplications({ page: 1 });
-    fetchStats();
-    fetchSettings();
-  }, []);
+    queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher-applications-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher-applications-settings"] });
+    setTimeout(() => setIsRefreshing(false), 1000);
+  }, [queryClient]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchApplications({ page: 1, searchTerm: search, statusVal: statusFilter });
+    queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
   };
 
   const handleStatusChange = (val: string) => {
     setStatusFilter(val);
-    fetchApplications({ page: 1, searchTerm: search, statusVal: val });
+    queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
   };
 
   return (
@@ -437,26 +420,33 @@ function TeacherApplicationsContent() {
         </div>
 
         {/* Pagination */}
-        {meta.totalPages > 1 && (
+        {appMeta.totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border dark:border-nejah-border-blue">
             <p className="text-xs text-muted-foreground">
-              Showing {((meta.page - 1) * meta.limit) + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
+              Showing {((appMeta.page - 1) * appMeta.limit) + 1}–{Math.min(appMeta.page * appMeta.limit, appMeta.total)} of {appMeta.total}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" disabled={meta.page <= 1} onClick={() => fetchApplications({ page: meta.page - 1 })}
-                className="h-8 px-2 border-border">
+              <Button variant="outline" size="sm" disabled={appMeta.page <= 1} onClick={() => {
+                applicationsParams.set('page', String(appMeta.page - 1));
+                queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
+              }} className="h-8 px-2 border-border">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => i + 1).map(p => (
-                <Button key={p} variant={p === meta.page ? 'default' : 'outline'} size="sm"
-                  onClick={() => fetchApplications({ page: p })}
-                  className={`h-8 w-8 px-0 ${p === meta.page ? 'bg-primary hover:bg-nejah-azure' : 'border-border'}`}
+              {Array.from({ length: Math.min(appMeta.totalPages, 5) }, (_, i) => i + 1).map(p => (
+                <Button key={p} variant={p === appMeta.page ? 'default' : 'outline'} size="sm"
+                  onClick={() => {
+                    applicationsParams.set('page', String(p));
+                    queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
+                  }}
+                  className={`h-8 w-8 px-0 ${p === appMeta.page ? 'bg-primary hover:bg-nejah-azure' : 'border-border'}`}
                 >
                   {p}
                 </Button>
               ))}
-              <Button variant="outline" size="sm" disabled={meta.page >= meta.totalPages} onClick={() => fetchApplications({ page: meta.page + 1 })}
-                className="h-8 px-2 border-border">
+              <Button variant="outline" size="sm" disabled={appMeta.page >= appMeta.totalPages} onClick={() => {
+                applicationsParams.set('page', String(appMeta.page + 1));
+                queryClient.invalidateQueries({ queryKey: ["teacher-applications"] });
+              }} className="h-8 px-2 border-border">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

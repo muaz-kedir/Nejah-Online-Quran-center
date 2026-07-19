@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Clock,
@@ -32,6 +32,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { requireAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { getLinkedStudentId } from "@/lib/student-portal";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/class-session_/$id')({
   component: ClassSessionPage,
@@ -47,32 +48,23 @@ function ClassSessionPage() {
 function ClassSessionContent() {
   const navigate = useNavigate();
   const { id } = Route.useParams();
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [meetingLink, setMeetingLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userRole, setUserRole] = useState("student");
   const [studentId, setStudentId] = useState("");
 
-  const fetchSessionDetails = useCallback(
-    async (showLoading = true) => {
-      if (showLoading) setLoading(true);
-      try {
-        const data = await api<any>(`/attendance/sessions/${id}`);
-        setSession(data);
-        if (data.meetingLink) {
-          setMeetingLink(data.meetingLink);
-        }
-      } catch {
-        toast.error("Failed to load session details");
-      } finally {
-        if (showLoading) setLoading(false);
-      }
-    },
-    [id],
-  );
+  const { data: session, isLoading: loading, refetch: refetchSession } = useApiQuery<any>({
+    queryKey: ["class-session", id],
+    path: `/attendance/sessions/${id}`,
+    refetchInterval: 10_000,
+  });
+
+  useEffect(() => {
+    if (session?.meetingLink) {
+      setMeetingLink(session.meetingLink);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -86,19 +78,7 @@ function ClassSessionContent() {
         })
         .catch((err) => console.error("Failed to get student profile", err));
     }
-
-    fetchSessionDetails();
-
-    pollIntervalRef.current = setInterval(() => {
-      fetchSessionDetails(false);
-    }, 10000);
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, [id, fetchSessionDetails]);
+  }, []);
 
   const handleStartMeeting = async () => {
     // If meeting link is empty, try auto-creating with Zoom
@@ -134,7 +114,7 @@ function ClassSessionContent() {
         setMeetingLink(response.meetingLink);
       }
       
-      fetchSessionDetails();
+      refetchSession();
     } catch (err: any) {
       toast.error(err.message || "Failed to start meeting");
     } finally {
@@ -153,7 +133,7 @@ function ClassSessionContent() {
         }),
       });
       toast.success("Class session ended and final attendance saved.");
-      fetchSessionDetails();
+      refetchSession();
       setTimeout(() => {
         navigate({ to: userRole === "teacher" ? "/teacher_dashboard" : "/dashboard" });
       }, 1500);
@@ -183,7 +163,7 @@ function ClassSessionContent() {
       });
       toast.success("Your attendance has been automatically recorded as PRESENT/LATE!");
       window.open(meetingLink, "_blank");
-      fetchSessionDetails(false);
+      refetchSession(false);
     } catch (err: any) {
       toast.error(err.message || "Failed to record joining log. Connecting to class anyway...");
       window.open(meetingLink, "_blank");

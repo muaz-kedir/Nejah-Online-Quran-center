@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Bell,
@@ -35,16 +36,12 @@ import { NoteModal } from "@/components/teachers/NoteModal";
 import { StartSessionModal } from "@/components/teachers/StartSessionModal";
 import { SessionStartedDialog } from "@/components/teachers/SessionStartedDialog";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { api, API_BASE } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import type { TeacherDashboardData, TodaySession, TeacherNote } from "@/lib/teacher-types";
 
 export const Route = createLazyFileRoute('/teacher_dashboard')({
   component: TeacherDashboard,
-});
-
-const authHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
 });
 
 const noteTypeColor: Record<string, string> = {
@@ -61,13 +58,8 @@ const noteTypeLabelColor: Record<string, string> = {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 function TeacherDashboard() {
   const navigate = useNavigate();
-  const [data, setData] = useState<TeacherDashboardData | null>(null);
-  const [notes, setNotes] = useState<TeacherNote[]>([]);
-  const [todaySessions, setTodaySessions] = useState<TodaySession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [endingSessionId, setEndingSessionId] = useState<string | null>(null);
-  const [completedToday, setCompletedToday] = useState(0);
-  const [completedSessions, setCompletedSessions] = useState<TodaySession[]>([]);
   const [noteModal, setNoteModal] = useState<{ open: boolean; note: TeacherNote | null }>({
     open: false,
     note: null,
@@ -82,6 +74,37 @@ function TeacherDashboard() {
     meetingLink: string | null;
     notificationSummary: { studentCount: number; parentCount: number; warnings: string[] };
   }>({ open: false, session: null, meetingLink: null, notificationSummary: { studentCount: 0, parentCount: 0, warnings: [] } });
+
+  const { data: data, isLoading: loading } = useApiQuery<TeacherDashboardData>({
+    queryKey: ['teacher-dashboard'],
+    path: '/teacher/dashboard',
+    refetchInterval: 30_000,
+  });
+
+  const { data: todaySessions, refetch: refetchSessions } = useApiQuery<TodaySession[]>({
+    queryKey: ['teacher-today-sessions'],
+    path: '/teacher/dashboard/today-sessions',
+    refetchInterval: 60_000,
+  });
+
+  const { data: notes } = useApiQuery<TeacherNote[]>({
+    queryKey: ['teacher-notes'],
+    path: '/teacher/dashboard/notes',
+    refetchInterval: 30_000,
+  });
+
+  const { data: completedTodaySessions } = useApiQuery<TodaySession[]>({
+    queryKey: ['teacher-completed-today'],
+    path: '/live-sessions/today',
+    refetchInterval: 30_000,
+  });
+
+  const completedToday = completedTodaySessions?.filter(
+    (s) => s.sessionStatus === "COMPLETED" || s.sessionStatus === "completed",
+  ).length || 0;
+  const completedSessions = completedTodaySessions?.filter(
+    (s) => s.sessionStatus === "COMPLETED" || s.sessionStatus === "completed",
+  ) || [];
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -142,17 +165,6 @@ function TeacherDashboard() {
     }
   };
 
-  const loadTodaySessions = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/teacher/dashboard/today-sessions`, {
-        headers: authHeaders(),
-      });
-      if (res.ok) setTodaySessions(await res.json());
-    } catch {
-      console.error("Failed to refresh today sessions");
-    }
-  };
-
   const handleEndSession = async (session: TodaySession, e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!session.liveSessionId) {
@@ -165,63 +177,13 @@ function TeacherDashboard() {
     try {
       await api(`/live-sessions/${session.liveSessionId}/end`, { method: "POST" });
       toast.success("Session ended successfully");
-      await loadTodaySessions();
+      refetchSessions();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to end session");
     } finally {
       setEndingSessionId(null);
     }
   };
-
-  // ── Fetch all dashboard data
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [dashRes, sessRes, notesRes] = await Promise.all([
-          fetch(`${API_BASE}/teacher/dashboard`, { headers: authHeaders() }),
-          fetch(`${API_BASE}/teacher/dashboard/today-sessions`, { headers: authHeaders() }),
-          fetch(`${API_BASE}/teacher/dashboard/notes`, { headers: authHeaders() }),
-        ]);
-        if (dashRes.ok) {
-          const dash = await dashRes.json();
-          if (dash.message) {
-            toast.error(dash.message);
-          } else {
-            setData(dash);
-          }
-        } else if (dashRes.status === 403 || dashRes.status === 404) {
-          const err = await dashRes.json().catch(() => ({}));
-          toast.error(err.message || "Teacher profile not found for your account");
-        }
-        if (sessRes.ok) setTodaySessions(await sessRes.json());
-        if (notesRes.ok) setNotes(await notesRes.json());
-
-        try {
-          const completedRes = await fetch(`${API_BASE}/live-sessions/today`, {
-            headers: authHeaders(),
-          });
-          if (completedRes.ok) {
-            const allToday = (await completedRes.json()) as TodaySession[];
-            const completed = allToday.filter(
-              (s) => s.sessionStatus === "COMPLETED" || s.sessionStatus === "completed",
-            );
-            setCompletedToday(completed.length);
-            setCompletedSessions(completed);
-          }
-        } catch {
-          /* ignore non-critical fetch */
-        }
-
-      } catch {
-        console.error("Dashboard load failed");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-    const iv = setInterval(loadTodaySessions, 60000);
-    return () => clearInterval(iv);
-  }, []);
 
   // ── Notes actions
   const openCreate = () => setNoteModal({ open: true, note: null });
@@ -232,19 +194,19 @@ function TeacherDashboard() {
     const { note } = noteModal;
     try {
       if (note) {
-        const updated = await api<TeacherNote>(`/teacher/dashboard/notes/${note.id}`, {
+        await api<TeacherNote>(`/teacher/dashboard/notes/${note.id}`, {
           method: "PATCH",
           body: JSON.stringify(body),
         });
-        setNotes((prev) => prev.map((n) => (n.id === note.id ? updated : n)));
+        queryClient.invalidateQueries({ queryKey: ['teacher-notes'] });
         toast.success("Note updated!");
         closeModal();
       } else {
-        const created = await api<TeacherNote>("/teacher/dashboard/notes", {
+        await api<TeacherNote>("/teacher/dashboard/notes", {
           method: "POST",
           body: JSON.stringify(body),
         });
-        setNotes((prev) => [created, ...prev]);
+        queryClient.invalidateQueries({ queryKey: ['teacher-notes'] });
         toast.success("Note added!");
         closeModal();
       }
@@ -257,7 +219,7 @@ function TeacherDashboard() {
     if (!confirm("Delete this note?")) return;
     try {
       await api(`/teacher/dashboard/notes/${id}`, { method: "DELETE" });
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['teacher-notes'] });
       toast.success("Note deleted");
     } catch {
       toast.error("Network error");
@@ -354,10 +316,7 @@ function TeacherDashboard() {
                   key={r.id}
                   assignment={r}
                   onStarted={() => {
-                    fetch(`${API_BASE}/teacher/dashboard`, { headers: authHeaders() })
-                      .then((res) => res.json())
-                      .then(setData)
-                      .catch(() => {});
+                    queryClient.invalidateQueries({ queryKey: ['teacher-dashboard'] });
                   }}
                 />
               ))}

@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { CalendarDays, Clock, User, BookOpen, CheckCircle2, XCircle, AlertTriangle, ArrowRight, Timer, Filter, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 interface AttendanceRecord {
   id: string;
@@ -68,38 +69,16 @@ export const Route = createLazyFileRoute('/student_/attendance')({
 });
 
 function StudentAttendance() {
-  const [data, setData] = useState<AttendanceData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [isPolling, setIsPolling] = useState(false);
 
-  const fetchAttendance = useCallback(async (isInitial = false) => {
-    try {
-      if (isInitial) setLoading(true);
-      else setIsPolling(true);
-
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (statusFilter) params.set('status', statusFilter);
-      if (fromDate) params.set('from', fromDate);
-      if (toDate) params.set('to', toDate);
-
-      const res = await api<AttendanceData>(`/live-sessions/my-attendance?${params}`);
-      setData(res);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Failed to load attendance');
-    } finally {
-      if (isInitial) setLoading(false);
-      setIsPolling(false);
-    }
-  }, [page, statusFilter, fromDate, toDate]);
-
-  useEffect(() => {
-    fetchAttendance(true);
-  }, [fetchAttendance]);
+  const { data, isLoading: loading } = useApiQuery<AttendanceData>({
+    queryKey: ['student-attendance', page, statusFilter, fromDate, toDate],
+    path: `/live-sessions/my-attendance?page=${page}&limit=20${statusFilter ? `&status=${statusFilter}` : ''}${fromDate ? `&from=${fromDate}` : ''}${toDate ? `&to=${toDate}` : ''}`,
+    refetchInterval: 30_000,
+  });
 
   if (loading) return <StudentPageLoader />;
 
@@ -122,13 +101,9 @@ function StudentAttendance() {
             <p className="text-muted-foreground mt-2">Track your attendance history across all sessions.</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {isPolling ? (
-              <RefreshCw className="h-4 w-4 animate-spin text-nejah-electric" />
-            ) : (
-              <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-              </div>
-            )}
+            <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+            </div>
             Live data
           </div>
         </div>

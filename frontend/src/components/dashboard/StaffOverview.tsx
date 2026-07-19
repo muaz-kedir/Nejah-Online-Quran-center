@@ -1,10 +1,10 @@
-import { API_BASE, apiUrl } from "@/lib/api";
 import { MoreVertical, ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { memo, useState, useEffect } from 'react';
+import { memo, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { GlassPanel, PanelHeader } from './design-system';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 interface StaffMember {
   id: string;
@@ -34,39 +34,25 @@ const statusConfig = {
 export const StaffOverview = memo(function StaffOverview() {
   const { t } = useApp();
   const navigate = useNavigate();
-  const [teachers, setTeachers] = useState<StaffMember[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(apiUrl(`/teachers?limit=5`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
+  const { data, isLoading } = useApiQuery<{ data: any[] }>({
+    queryKey: ['dashboard', 'teachers'],
+    path: '/teachers?limit=5',
+    refetchInterval: 30_000,
+  });
 
-        if (data && Array.isArray(data.data)) {
-          const formattedTeachers = data.data.map((teacher: any, index: number) => ({
-            id: teacher.id,
-            fullName: teacher.fullName,
-            role: (teacher.specialization || 'Islamic Studies').toUpperCase(),
-            initials: teacher.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
-            avatarColor: avatarColors[index % avatarColors.length],
-            specialization: teacher.specialization || 'Islamic Studies',
-            status: (teacher.status === 'active' ? 'active' : teacher.status === 'on leave' ? 'on-leave' : 'offline') as 'active' | 'on-leave' | 'offline',
-          }));
-          setTeachers(formattedTeachers);
-        }
-      } catch (error) {
-        console.error('Failed to fetch teachers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTeachers();
-  }, []);
+  const teachers = useMemo(() => {
+    if (!data || !Array.isArray(data.data)) return [];
+    return data.data.map((teacher: any, index: number) => ({
+      id: teacher.id,
+      fullName: teacher.fullName,
+      role: (teacher.specialization || 'Islamic Studies').toUpperCase(),
+      initials: teacher.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+      avatarColor: avatarColors[index % avatarColors.length],
+      specialization: teacher.specialization || 'Islamic Studies',
+      status: (teacher.status === 'active' ? 'active' : teacher.status === 'on leave' ? 'on-leave' : 'offline') as 'active' | 'on-leave' | 'offline',
+    }));
+  }, [data]);
 
   return (
     <GlassPanel className="overflow-hidden">
@@ -80,7 +66,7 @@ export const StaffOverview = memo(function StaffOverview() {
       />
 
       <div className="space-y-1 p-4">
-        {loading ? (
+        {isLoading ? (
           <div className="py-8 text-center text-nejah-slate-blue">Loading teachers...</div>
         ) : teachers.length === 0 ? (
           <div className="py-8 text-center text-nejah-slate-blue">No teachers registered yet</div>

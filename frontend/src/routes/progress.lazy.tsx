@@ -5,6 +5,7 @@
 import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Input } from '@/components/ui/input';
@@ -27,16 +28,17 @@ import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { SurahSelect } from '@/components/progress/SurahSelect';
 import { getSurahByNumber, TOTAL_MUSHAF_PAGES } from '@/lib/quran-surahs';
+import { useApiQuery } from '@/hooks/useApiQuery';
+import { api } from '@/lib/api';
 
 export const Route = createLazyFileRoute('/progress')({
   component: ProgressPage,
 });
 
 function ProgressPage() {
-  const [students, setStudents] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [progressMap, setProgressMap] = useState<Record<string, any>>({});
   const [feedbackMap, setFeedbackMap] = useState<Record<string, any[]>>({});
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [logTarget, setLogTarget] = useState<any>(null);
   const [logLoading, setLogLoading] = useState(false);
@@ -53,8 +55,14 @@ function ProgressPage() {
     lastStudiedAyah: '',
   });
 
+  const { data: studentsResponse, isLoading: loading } = useApiQuery<any>({
+    queryKey: ['students'],
+    path: '/students?limit=200',
+    refetchInterval: 30_000,
+  });
+  const students = useMemo(() => studentsResponse?.data || [], [studentsResponse]);
+
   // Helper functions
-  const token = () => localStorage.getItem('token');
   const userRole = () => localStorage.getItem('userRole');
   const isTeacherOrAdmin = () => {
     const role = userRole();
@@ -68,13 +76,8 @@ function ProgressPage() {
   const fetchProgressLogs = async (studentId: string) => {
     setViewProgressLoading(true);
     try {
-      const res = await fetch(`${API}/progress/student/${studentId}/logs`, {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProgressLogs(Array.isArray(data) ? data : []);
-      }
+      const data = await api<any[]>(`/progress/student/${studentId}/logs`);
+      setProgressLogs(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch progress logs', error);
     } finally {
@@ -90,55 +93,36 @@ function ProgressPage() {
   }, [viewProgressTarget]);
 
   useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/students?limit=200`, {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
-      if (!res.ok) throw new Error('Failed to load students');
-      const data = await res.json();
-      const studentsList = data.data || [];
-      setStudents(studentsList);
-
+    if (students.length === 0) return;
+    const fetchProgressAndFeedback = async () => {
       const progressResults = await Promise.allSettled(
-        studentsList.map((s: any) =>
-          fetch(`${API}/progress/student/${s.id}`, {
-            headers: { Authorization: `Bearer ${token()}` },
-          }).then((r) => r.ok ? r.json() : null)
+        students.map((s: any) =>
+          api<any>(`/progress/student/${s.id}`).catch(() => null)
         )
       );
       const pMap: Record<string, any> = {};
       progressResults.forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value) {
-          pMap[studentsList[i].id] = result.value;
+          pMap[students[i].id] = result.value;
         }
       });
       setProgressMap(pMap);
 
       const feedbackResults = await Promise.allSettled(
-        studentsList.map((s: any) =>
-          fetch(`${API}/progress/student/${s.id}/feedback`, {
-            headers: { Authorization: `Bearer ${token()}` },
-          }).then((r) => r.ok ? r.json() : [])
+        students.map((s: any) =>
+          api<any[]>(`/progress/student/${s.id}/feedback`).catch(() => [])
         )
       );
       const fMap: Record<string, any[]> = {};
       feedbackResults.forEach((result, i) => {
         if (result.status === 'fulfilled' && Array.isArray(result.value)) {
-          fMap[studentsList[i].id] = result.value;
+          fMap[students[i].id] = result.value;
         }
       });
       setFeedbackMap(fMap);
-    } catch (error) {
-      toast.error('Failed to load progress data');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchProgressAndFeedback();
+  }, [students]);
 
   const handleLogProgress = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,22 +140,14 @@ function ProgressPage() {
         lastStudiedAyah: parseInt(logForm.lastStudiedAyah, 10),
       };
 
-      const res = await fetch(`${API}/progress/student/${logTarget.id}/log`, {
+      await api(`/progress/student/${logTarget.id}/log`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token()}`,
-        },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to log progress');
-      }
       toast.success(`Progress logged for ${surah?.englishName || 'surah'}`);
       setLogTarget(null);
       setLogForm({ surahNumber: undefined, lastStudiedPage: '', lastStudiedAyah: '' });
-      fetchAll();
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -184,22 +160,14 @@ function ProgressPage() {
     if (!feedbackTarget || !feedbackContent.trim()) return;
     setFeedbackLoading(true);
     try {
-      const res = await fetch(`${API}/progress/student/${feedbackTarget.id}/feedback`, {
+      await api(`/progress/student/${feedbackTarget.id}/feedback`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token()}`,
-        },
         body: JSON.stringify({ content: feedbackContent }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to add feedback');
-      }
       toast.success('Feedback added');
       setFeedbackTarget(null);
       setFeedbackContent('');
-      fetchAll();
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -211,7 +179,7 @@ function ProgressPage() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await fetchAll();
+    await queryClient.invalidateQueries({ queryKey: ['students'] });
     setIsRefreshing(false);
   }, []);
 

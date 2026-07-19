@@ -2,8 +2,8 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE } from "@/lib/api";
-import { useState, useEffect, useMemo } from 'react';
+import { api } from '@/lib/api';
+import { useState, useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
@@ -40,21 +40,20 @@ import { Plus, Search, ClipboardList, Clock, User, Trash2, RefreshCw } from 'luc
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { useApiQuery } from '@/hooks/useApiQuery';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const Route = createLazyFileRoute('/homework')({
   component: HomeworkPage,
 });
 
 function HomeworkPage() {
-  const [homeworks, setHomeworks] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -63,59 +62,23 @@ function HomeworkPage() {
     studentId: '',
   });
 
-  const token = () => localStorage.getItem('token');
+  const { data: students = [] } = useApiQuery<any>({
+    queryKey: ['students'],
+    path: '/students?limit=200',
+    refetchInterval: 30_000,
+    select: (d: any) => d?.data ?? [],
+  });
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchStudents();
-    if (selectedStudentId) await fetchHomework(selectedStudentId);
-    setIsRefreshing(false);
-  };
+  const { data: homeworks = [], isLoading } = useApiQuery({
+    queryKey: ['homework', selectedStudentId],
+    path: `/homework/student/${selectedStudentId}`,
+    enabled: !!selectedStudentId,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  useEffect(() => {
-    if (selectedStudentId) {
-      fetchHomework(selectedStudentId);
-    } else {
-      setHomeworks([]);
-    }
-  }, [selectedStudentId]);
-
-  const fetchStudents = async () => {
-    try {
-      const res = await fetch(`${API}/students?limit=200`, {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStudents(data.data || []);
-      }
-    } catch (e) {
-      console.error('Failed to load students', e);
-    }
-  };
-
-  const fetchHomework = async (studentId: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/homework/student/${studentId}`, {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setHomeworks(data || []);
-      } else {
-        setHomeworks([]);
-      }
-    } catch (error) {
-      toast.error('Failed to load homework');
-      setHomeworks([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['students'] });
+    if (selectedStudentId) queryClient.invalidateQueries({ queryKey: ['homework', selectedStudentId] });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -126,22 +89,14 @@ function HomeworkPage() {
     }
     setCreateLoading(true);
     try {
-      const res = await fetch(`${API}/homework`, {
+      await api('/homework', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token()}`,
-        },
         body: JSON.stringify({ ...formData, dueDate: new Date(formData.dueDate).toISOString() }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to create homework');
-      }
       toast.success('Homework assigned successfully');
       setShowCreate(false);
       setFormData({ title: '', description: '', difficulty: 'Medium', dueDate: '', studentId: selectedStudentId });
-      fetchHomework(selectedStudentId);
+      queryClient.invalidateQueries({ queryKey: ['homework', selectedStudentId] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -151,20 +106,12 @@ function HomeworkPage() {
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
-      const res = await fetch(`${API}/homework/${id}/status`, {
+      await api(`/homework/${id}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token()}`,
-        },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to update status');
-      }
       toast.success('Status updated');
-      fetchHomework(selectedStudentId);
+      queryClient.invalidateQueries({ queryKey: ['homework', selectedStudentId] });
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -173,17 +120,12 @@ function HomeworkPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`${API}/homework/${deleteTarget.id}`, {
+      await api(`/homework/${deleteTarget.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token()}` },
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to delete');
-      }
       toast.success('Homework deleted');
       setDeleteTarget(null);
-      fetchHomework(selectedStudentId);
+      queryClient.invalidateQueries({ queryKey: ['homework', selectedStudentId] });
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -222,9 +164,9 @@ function HomeworkPage() {
           <p className="text-muted-foreground mt-1">Assign and track student homework</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh}>
+            <RefreshCw className={cn('h-4 w-4')} />
+            Refresh
           </Button>
           <Button
             className="bg-primary hover:bg-primary"
@@ -280,7 +222,7 @@ function HomeworkPage() {
           <tbody>
             {!selectedStudentId ? (
               <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Select a student to view homework</td></tr>
-            ) : loading ? (
+            ) : isLoading ? (
               <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Loading...</td></tr>
             ) : filtered.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No homework found for this student</td></tr>

@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
 import { requireAuth } from "@/lib/auth";
@@ -37,6 +37,7 @@ import { Progress } from "@/components/ui/progress";
 import { PageHeader, BentoStatCard, GlassPanel } from "@/components/dashboard/design-system";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/teacher_students')({
   component: TeacherStudentsPage,
@@ -44,36 +45,20 @@ export const Route = createLazyFileRoute('/teacher_students')({
 
 function TeacherStudentsPage() {
   const navigate = useNavigate();
-  const [students, setStudents] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 12, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [stats, setStats] = useState<any>(null);
 
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        page: String(meta.page),
-        limit: String(meta.limit),
-      });
-      if (search) query.set("search", search);
-      const data = await api<any>(`/teachers/students?${query.toString()}`);
-      setStudents(data.data || []);
-      setMeta(data.meta || { total: 0, page: 1, limit: 12, totalPages: 1 });
-    } catch {
-      toast.error("Failed to load students");
-      setStudents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: res, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
+    queryKey: ["teacher-students", meta.page, search],
+    path: `/teachers/students?page=${meta.page}&limit=${meta.limit}${search ? `&search=${search}` : ''}`,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    fetchStudents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta.page, search]);
+  const students = res?.data || [];
+  if (res?.meta) {
+    setMeta(prev => ({ ...prev, ...res.meta }));
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

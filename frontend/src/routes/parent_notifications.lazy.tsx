@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
 import { LanguageProvider } from '@/context/LanguageContext';
@@ -25,6 +25,8 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/parent_notifications')({
   component: ParentNotificationsRoute,
@@ -39,32 +41,26 @@ function ParentNotificationsRoute() {
 }
 
 function ParentNotificationsPage() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const data = await api<any[]>('/notifications');
-      setNotifications(Array.isArray(data) ? data : []);
-    } catch {
-      toast.error('Failed to load notifications');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["parent-notifications"],
+    path: `/notifications`,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  const notifications = Array.isArray(data) ? data : [];
+
+  const fetchNotifications = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["parent-notifications"] });
+  }, [queryClient]);
 
   useSocket({ onNotification: fetchNotifications });
 
   const markAsRead = async (id: string) => {
     try {
       await api(`/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      queryClient.invalidateQueries({ queryKey: ["parent-notifications"] });
     } catch {}
   };
 

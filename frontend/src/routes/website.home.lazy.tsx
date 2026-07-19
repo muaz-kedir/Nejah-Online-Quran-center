@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { requireAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   uploadCmsImage,
   resolveCmsImageUrl,
@@ -54,9 +56,9 @@ export const Route = createLazyFileRoute('/website/home')({
 });
 
 function MissionSectionEditor() {
+  const queryClient = useQueryClient();
   const [section, setSection] = useState<HomeMissionSection | null>(null);
   const [cards, setCards] = useState<HomeMissionCard[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingCard, setEditingCard] = useState<HomeMissionCard | null>(null);
   const [showCardForm, setShowCardForm] = useState(false);
@@ -67,29 +69,19 @@ function MissionSectionEditor() {
     isActive: true,
   });
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await api<{ section: HomeMissionSection; cards: HomeMissionCard[] }>(
-        "/website/admin/home/mission",
-      );
-      setSection(data.section);
-      setCards(data.cards);
-    } catch (e) {
-      const err = e as Error;
-      const msg =
-        err.message?.includes("404") || err.message?.includes("Request failed: 404")
-          ? "Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh."
-          : err.message || "Failed to load mission content";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading: loading } = useApiQuery<{ section: HomeMissionSection; cards: HomeMissionCard[] }>({
+    queryKey: ["website", "home", "mission"],
+    path: "/website/admin/home/mission",
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["website", "home", "mission"] });
 
   useEffect(() => {
-    load();
-  }, []);
+    if (data) {
+      setSection(data.section);
+      setCards(data.cards);
+    }
+  }, [data]);
 
   const saveSection = async () => {
     if (!section) return;
@@ -155,7 +147,7 @@ function MissionSectionEditor() {
       }
       setEditingCard(null);
       setShowCardForm(false);
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to save card");
@@ -167,7 +159,7 @@ function MissionSectionEditor() {
     try {
       await api(`/website/admin/home/mission/cards/${id}`, { method: "DELETE" });
       toast.success("Card deleted");
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to delete");
@@ -353,9 +345,9 @@ function MissionSectionEditor() {
 }
 
 function ProgramsSectionEditor() {
+  const queryClient = useQueryClient();
   const [section, setSection] = useState<HomeProgramsSection | null>(null);
   const [programs, setPrograms] = useState<HomeProgram[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingProgram, setEditingProgram] = useState<HomeProgram | null>(null);
   const [showProgramForm, setShowProgramForm] = useState(false);
@@ -368,29 +360,19 @@ function ProgramsSectionEditor() {
     isActive: true,
   });
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await api<{ section: HomeProgramsSection; programs: HomeProgram[] }>(
-        "/website/admin/home/programs",
-      );
-      setSection(data.section);
-      setPrograms(data.programs);
-    } catch (e) {
-      const err = e as Error;
-      const msg =
-        err.message?.includes("404") || err.message?.includes("Request failed: 404")
-          ? "Website CMS API not found on the server. Redeploy the backend (Render) with the latest code, then refresh."
-          : err.message || "Failed to load programs";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading: loading } = useApiQuery<{ section: HomeProgramsSection; programs: HomeProgram[] }>({
+    queryKey: ["website", "home", "programs"],
+    path: "/website/admin/home/programs",
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["website", "home", "programs"] });
 
   useEffect(() => {
-    load();
-  }, []);
+    if (data) {
+      setSection(data.section);
+      setPrograms(data.programs);
+    }
+  }, [data]);
 
   const saveSection = async () => {
     if (!section) return;
@@ -457,7 +439,7 @@ function ProgramsSectionEditor() {
       }
       setEditingProgram(null);
       setShowProgramForm(false);
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to save program");
@@ -469,7 +451,7 @@ function ProgramsSectionEditor() {
     try {
       await api(`/website/admin/home/programs/items/${id}`, { method: "DELETE" });
       toast.success("Program deleted");
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to delete");
@@ -653,8 +635,8 @@ function ProgramsSectionEditor() {
 }
 
 function TestimonialsSectionEditor() {
+  const queryClient = useQueryClient();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -678,22 +660,18 @@ function TestimonialsSectionEditor() {
     isPublished: true,
   });
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await api<Testimonial[]>("/website/admin/home/testimonials");
-      setTestimonials(data || []);
-    } catch (e) {
-      const err = e as Error;
-      toast.error(err.message || "Failed to load testimonials");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading: loading } = useApiQuery<Testimonial[]>({
+    queryKey: ["website", "home", "testimonials"],
+    path: "/website/admin/home/testimonials",
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["website", "home", "testimonials"] });
 
   useEffect(() => {
-    load();
-  }, []);
+    if (data) {
+      setTestimonials(data || []);
+    }
+  }, [data]);
 
   const openNew = () => {
     setEditingTestimonial(null);
@@ -763,7 +741,7 @@ function TestimonialsSectionEditor() {
         toast.success("Testimonial created");
       }
       setShowForm(false);
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to save testimonial");
@@ -777,7 +755,7 @@ function TestimonialsSectionEditor() {
     try {
       await api(`/website/admin/home/testimonials/${id}`, { method: "DELETE" });
       toast.success("Testimonial deleted");
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to delete testimonial");
@@ -791,7 +769,7 @@ function TestimonialsSectionEditor() {
         body: JSON.stringify({ isPublished: !t.isPublished }),
       });
       toast.success(`Testimonial ${t.isPublished ? "unpublished" : "published"}`);
-      await load();
+      await invalidate();
     } catch (e) {
       const err = e as Error;
       toast.error(err.message || "Failed to toggle publish status");

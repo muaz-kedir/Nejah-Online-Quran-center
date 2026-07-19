@@ -2,8 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +31,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { AmbientSection, PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { createLazyFileRoute} from '@tanstack/react-router'
 import { requireAuth } from '@/lib/auth';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/users')({
   component: UsersPage,
@@ -47,56 +48,37 @@ interface User {
 }
 
 function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: '10',
+  });
+  if (search) params.append('search', search);
+  if (roleFilter !== 'all') params.append('role', roleFilter);
+  if (statusFilter !== 'all') params.append('isActive', statusFilter);
 
+  const { data: result, isLoading: loading } = useApiQuery<{ data: User[]; meta: { totalPages: number } }>({
+    queryKey: ["users", { page, search, roleFilter, statusFilter }],
+    path: `/users?${params}`,
+    refetchInterval: 30_000,
+  });
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '10',
-      });
+  const users = result?.data || [];
+  const totalPages = result?.meta?.totalPages || 1;
 
-      if (search) params.append('search', search);
-      if (roleFilter !== 'all') params.append('role', roleFilter);
-      if (statusFilter !== 'all') params.append('isActive', statusFilter);
-
-      const response = await fetch(apiUrl(`/users?${params}`), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch users');
-
-      const result = await response.json();
-      setUsers(result.data);
-      setTotalPages(result.meta.totalPages);
-    } catch (error) {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
+  const fetchUsers = () => {
+    queryClient.invalidateQueries({ queryKey: ["users"] });
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [page, search, roleFilter, statusFilter]);
 
   const handleToggleStatus = async (userId: string) => {
     try {

@@ -2,39 +2,32 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute, Link } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { AmbientSection, BentoStatCard, PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch } from '@/lib/finance-api';
 import {
   DollarSign, TrendingUp, AlertTriangle, Users, Home, Wallet, CalendarClock, RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/finance_dashboard')({
   component: FinanceDashboardPage,
 });
 
 function FinanceDashboardPage() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      setData(await financeFetch('/dashboard'));
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["finance-dashboard"],
+    path: `/finance/dashboard`,
+    refetchInterval: 30_000,
+  });
 
   const cards = data ? [
     { label: 'Monthly Revenue', value: `ETB ${data.totalMonthlyRevenue?.toLocaleString()}`, icon: DollarSign },
@@ -55,7 +48,7 @@ function FinanceDashboardPage() {
           title="Finance Dashboard"
           description={`Real-time financial overview — billing period ${data?.billingMonth || '...'}`}
           actions={
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["finance-dashboard"] })} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </Button>
           }

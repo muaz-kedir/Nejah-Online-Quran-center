@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useApiQuery } from '@/hooks/useApiQuery';
 import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTemporaryTeacherModal';
 import {
   Select,
@@ -28,49 +30,33 @@ export const Route = createLazyFileRoute('/teacher-replacements')({
 });
 
 function TeacherReplacementsPage() {
-  const [replacements, setReplacements] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchReplacements = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(meta.page),
-        limit: String(meta.limit),
-      });
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (search) params.append('search', search);
+  const { data: res, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
+    queryKey: ['teacher-replacements', meta.page, statusFilter, searchQuery],
+    path: `/teacher-replacements?page=${meta.page}&limit=${meta.limit}${statusFilter !== 'all' ? `&status=${statusFilter}` : ''}${searchQuery ? `&search=${searchQuery}` : ''}`,
+    refetchInterval: 30_000,
+  });
 
-      const res = await api<any>(`/teacher-replacements?${params}`);
-      setReplacements(res.data || []);
-      setMeta(res.meta || meta);
-    } catch {
-      toast.error('Failed to load teacher replacements');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const replacements = res?.data || [];
+  if (res?.meta) {
+    setMeta(prev => ({ ...prev, ...res.meta }));
+  }
 
-  useEffect(() => {
-    fetchReplacements();
-  }, [meta.page, statusFilter]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchReplacements();
-    setIsRefreshing(false);
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['teacher-replacements'] });
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setSearchQuery(search);
     setMeta(prev => ({ ...prev, page: 1 }));
-    fetchReplacements();
   };
 
   const handleCancel = async (id: string) => {
@@ -79,7 +65,7 @@ function TeacherReplacementsPage() {
     try {
       await api(`/teacher-replacements/${id}/cancel`, { method: 'POST' });
       toast.success('Assignment cancelled');
-      fetchReplacements();
+      queryClient.invalidateQueries({ queryKey: ['teacher-replacements'] });
     } catch (err: any) {
       toast.error(err.message || 'Failed to cancel');
     } finally {
@@ -98,9 +84,9 @@ function TeacherReplacementsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
           <Button
             onClick={() => setIsModalOpen(true)}
@@ -208,7 +194,7 @@ function TeacherReplacementsPage() {
       <AssignTemporaryTeacherModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchReplacements}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['teacher-replacements'] })}
       />
     </DashboardLayout>
   );

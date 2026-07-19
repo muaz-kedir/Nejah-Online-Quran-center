@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 type TeacherZoomRow = {
   teacherId: string;
@@ -79,30 +81,20 @@ type PlatformConfigStatus = {
 const ADMIN_ROLES = ['super_admin'];
 
 function TeacherZoomPanel() {
-  const [status, setStatus] = useState<TeacherZoomStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: status, isLoading: loading } = useApiQuery<TeacherZoomStatus>({
+    queryKey: ['zoom-oauth-status'],
+    path: '/zoom/oauth/status',
+  });
   const [disconnecting, setDisconnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
-  const fetchStatus = async () => {
-    setLoading(true);
-    try {
-      const data = await api<TeacherZoomStatus>('/zoom/oauth/status');
-      setStatus(data);
-    } catch {
-      setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchStatus();
     const params = new URLSearchParams(window.location.search);
     const oauthResult = params.get('zoom_oauth');
     if (oauthResult === 'success') {
       toast.success('Zoom account connected successfully');
-      fetchStatus();
+      queryClient.invalidateQueries({ queryKey: ['zoom-oauth-status'] });
     } else if (oauthResult === 'error') {
       const reason = params.get('reason') || 'Authorization failed';
       setConnectError(reason);
@@ -122,7 +114,7 @@ function TeacherZoomPanel() {
     setDisconnecting(true);
     try {
       await api('/zoom/oauth/disconnect', { method: 'DELETE' });
-      setStatus({ connected: false, email: null, zoomUserId: null, connectedAt: null });
+      queryClient.invalidateQueries({ queryKey: ['zoom-oauth-status'] });
       setConnectError(null);
       toast.success('Zoom disconnected');
     } catch (err: any) {

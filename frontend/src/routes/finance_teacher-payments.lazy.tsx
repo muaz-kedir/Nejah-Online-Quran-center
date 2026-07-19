@@ -3,12 +3,12 @@
 // Lazy component (code-split). Do not edit.
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, FinanceFilters, downloadCSV, exportPDF, authHeaders, formatCurrency } from '@/lib/finance-api';
+import { FinanceFilters, downloadCSV, exportPDF, authHeaders, formatCurrency } from '@/lib/finance-api';
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -18,21 +18,21 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Eye, Loader2, Plus, CalendarDays, FileText, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/finance_teacher-payments')({
   component: TeacherPaymentsPage,
 });
 
 function TeacherPaymentsPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<FinanceFilters>({ page: 1, limit: 20, dateRange: 'month' });
-  const [rows, setRows] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
-  const [teachers, setTeachers] = useState<any[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [calendarType, setCalendarType] = useState<'gregorian' | 'ethiopian'>('gregorian');
   const [billingMonth, setBillingMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -44,15 +44,24 @@ function TeacherPaymentsPage() {
   const [creating, setCreating] = useState(false);
   const [paidWarning, setPaidWarning] = useState<any>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch(apiUrl('/teachers?limit=200&status=active'), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(json => setTeachers(json.data || []))
-      .catch(() => {});
-  }, []);
+  const { data: result, isLoading: loading } = useApiQuery<{ data: any[] }>({
+    queryKey: ["teacher-payments", filters],
+    path: `/finance/teacher-payments?page=${filters.page || 1}&limit=${filters.limit || 20}${filters.dateRange ? `&dateRange=${filters.dateRange}` : ''}`,
+    refetchInterval: 30_000,
+  });
+
+  const rows = result?.data || [];
+
+  const { data: teachersResult } = useApiQuery<{ data: any[] }>({
+    queryKey: ["teachers-list"],
+    path: `/teachers?limit=200&status=active`,
+  });
+
+  const teachers = teachersResult?.data || [];
+
+  const load = () => {
+    queryClient.invalidateQueries({ queryKey: ["teacher-payments"] });
+  };
 
   const getMonth = () =>
     calendarType === 'gregorian'
@@ -112,20 +121,6 @@ function TeacherPaymentsPage() {
       setCreating(false);
     }
   };
-
-  const load = async () => {
-    try {
-      setLoading(true);
-      const res = await financeFetch<any>('/teacher-payments', filters);
-      setRows(res.data || []);
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, [filters]);
 
   const openDetail = async (teacherId: string) => {
     setDetailLoading(true);

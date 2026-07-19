@@ -3,12 +3,12 @@
 // Lazy component (code-split).
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, FinanceFilters, statusBadgeVariant, downloadCSV, exportPDF, authHeaders } from '@/lib/finance-api';
+import { FinanceFilters, statusBadgeVariant, downloadCSV, exportPDF, authHeaders } from '@/lib/finance-api';
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -23,16 +23,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Eye, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/finance_student-payments')({
   component: StudentPaymentsPage,
 });
 
 function StudentPaymentsPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<FinanceFilters>({ page: 1, limit: 20, dateRange: 'month' });
-  const [rows, setRows] = useState<any[]>([]);
-  const [meta, setMeta] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [payAmount, setPayAmount] = useState('');
@@ -52,8 +52,25 @@ function StudentPaymentsPage() {
   const [currency, setCurrency] = useState('ETB');
   const [payNotes, setPayNotes] = useState('');
   const [studentFeeAccount, setStudentFeeAccount] = useState<any>(null);
-  const [feeConfigs, setFeeConfigs] = useState<any[]>([]);
   const [submittingForm, setSubmittingForm] = useState(false);
+
+  const { data: result, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
+    queryKey: ["student-payments", filters],
+    path: `/finance/student-payments?page=${filters.page || 1}&limit=${filters.limit || 20}${filters.dateRange ? `&dateRange=${filters.dateRange}` : ''}`,
+    refetchInterval: 30_000,
+  });
+
+  const rows = result?.data || [];
+  const meta = result?.meta;
+
+  const { data: feeConfigs = [] } = useApiQuery<any[]>({
+    queryKey: ["fee-configs"],
+    path: `/fee-config`,
+  });
+
+  const load = () => {
+    queryClient.invalidateQueries({ queryKey: ["student-payments"] });
+  };
 
   const searchStudents = async (q: string) => {
     try {
@@ -68,18 +85,12 @@ function StudentPaymentsPage() {
     } catch {}
   };
 
-  useEffect(() => {
-    if (studentSearch.length >= 2) searchStudents(studentSearch);
+  // Student search is triggered by input, keep as manual
+  const handleStudentSearch = (value: string) => {
+    setStudentSearch(value);
+    if (value.length >= 2) searchStudents(value);
     else setStudents([]);
-  }, [studentSearch]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch(apiUrl('/fee-config'), { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.ok && r.json())
-      .then((data) => setFeeConfigs(data || []))
-      .catch(() => {});
-  }, []);
+  };
 
   const selectStudent = async (student: any) => {
     setSelectedStudent(student);
@@ -157,21 +168,6 @@ function StudentPaymentsPage() {
       if (res.ok) setConvertResult(await res.json());
     } catch {}
   };
-
-  const load = async () => {
-    try {
-      setLoading(true);
-      const res = await financeFetch<any>('/student-payments', filters);
-      setRows(res.data || []);
-      setMeta(res.meta);
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, [filters]);
 
   const openDetail = async (r: any) => {
     setDetail(null);
@@ -312,7 +308,7 @@ function StudentPaymentsPage() {
                     <CommandInput
                       placeholder="Type student name..."
                       value={studentSearch}
-                      onValueChange={setStudentSearch}
+                      onValueChange={handleStudentSearch}
                     />
                     <CommandList>
                       <CommandEmpty>No students found</CommandEmpty>

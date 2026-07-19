@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Download, User,
@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { requireAuth } from '@/lib/auth';
 import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/teacher-applications_/$id')({
   component: ApplicationDetailPage,
@@ -68,8 +70,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 function ApplicationDetailContent() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const [app, setApp] = useState<ApplicationDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState(false);
 
   // Modal state
@@ -79,22 +80,14 @@ function ApplicationDetailContent() {
   const [infoMessage, setInfoMessage] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
 
-  const fetchApplication = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(apiUrl(`/teacher-applications/${id}`), { headers: apiHeaders() });
-      if (!res.ok) throw new Error('Failed to fetch application');
-      const data = await res.json();
-      setApp(data);
-      setAdminNotes(data.adminNotes || '');
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
+  const { data: app, isLoading } = useApiQuery<ApplicationDetail>({
+    queryKey: ["teacher-application-detail", id],
+    path: `/teacher-applications/${id}`,
+  });
 
-  useEffect(() => { fetchApplication(); }, [fetchApplication]);
+  if (app && !adminNotes && app.adminNotes) {
+    setAdminNotes(app.adminNotes || '');
+  }
 
   const handleReview = async (action: string, extra: Record<string, string> = {}) => {
     setActionLoading(true);
@@ -114,7 +107,7 @@ function ApplicationDetailContent() {
       );
       setShowRejectModal(false);
       setShowInfoModal(false);
-      fetchApplication();
+      queryClient.invalidateQueries({ queryKey: ["teacher-application-detail", id] });
     } catch (err: any) {
       toast.error(err.message);
     } finally {

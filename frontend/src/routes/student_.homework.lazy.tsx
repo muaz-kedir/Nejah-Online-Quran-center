@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,27 +13,22 @@ import { cn } from '@/lib/utils';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/student_/homework')({
   component: StudentHomework,
 });
 
 function StudentHomework() {
-  const [homeworks, setHomeworks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: homeworks = [], isLoading: loading } = useApiQuery<any[]>({
+    queryKey: ['student-homework'],
+    path: '/student/dashboard/homework',
+    refetchInterval: 30_000,
+  });
   const [expanded, setExpanded] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
-
-  const load = () =>
-    api<any[]>('/student/dashboard/homework')
-      .then((d) => setHomeworks(Array.isArray(d) ? d : []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-
-  useEffect(() => {
-    load();
-  }, []);
 
   const submit = async (id: string) => {
     setSubmitting(id);
@@ -42,7 +38,7 @@ function StudentHomework() {
         body: JSON.stringify({ submissionNotes: notes[id] || '' }),
       });
       toast.success('Homework submitted');
-      await load();
+      queryClient.invalidateQueries({ queryKey: ['student-homework'] });
     } catch (e: any) {
       toast.error(e.message || 'Submit failed');
     } finally {

@@ -2,9 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE } from "@/lib/api";
 import { useState, useEffect, useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/context/AppContext';
 import { requireAuth } from '@/lib/auth';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -41,6 +41,8 @@ import {
 } from 'lucide-react';
 import { format, startOfWeek, startOfMonth, startOfQuarter, startOfYear } from 'date-fns';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { useApiQuery } from '@/hooks/useApiQuery';
 import {
   ResponsiveContainer,
   BarChart,
@@ -61,7 +63,6 @@ export const Route = createLazyFileRoute('/reports')({
   component: ReportsPage,
 });
 
-const API = API_BASE;
 const CHART_COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#65a30d'];
 
 const TRACK_LABELS: Record<string, string> = {
@@ -126,11 +127,6 @@ interface FilterState {
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem('token');
-  return { Authorization: `Bearer ${token}` };
-}
 
 function buildDateRange(filters: FilterState): { startDate?: string; endDate?: string } {
   const now = new Date();
@@ -456,9 +452,7 @@ function getExportSections(reportId: ReportId, data: any): { title: string; rows
 
 function ReportsContent() {
   const { t } = useApp();
-  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [teachers, setTeachers] = useState<{ id: string; fullName: string }[]>([]);
   const [exportingAll, setExportingAll] = useState(false);
 
@@ -484,44 +478,28 @@ function ReportsContent() {
 
   const selectedDef = REPORT_DEFS.find((d) => d.id === selectedReport) || null;
 
-  // Fetch summary (re-runs when the date range changes)
-  useEffect(() => {
-    const fetchSummary = async () => {
-      setSummaryLoading(true);
-      setSummaryError(null);
-      try {
-        const { startDate, endDate } = buildDateRange(filterState);
-        const params = new URLSearchParams();
-        if (startDate) params.set('startDate', startDate);
-        if (endDate) params.set('endDate', endDate);
-        const res = await fetch(`${API}/reports/summary?${params.toString()}`, { headers: authHeaders() });
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.message || `Failed to load summary (${res.status})`);
-        }
-        setSummaryData(await res.json());
-      } catch (error: any) {
-        console.error('Failed to load summary', error);
-        setSummaryError(error.message || 'Failed to load summary statistics.');
-        setSummaryData(null);
-      } finally {
-        setSummaryLoading(false);
-      }
-    };
-    fetchSummary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const summaryQueryParams = useMemo(() => {
+    const { startDate, endDate } = buildDateRange(filterState);
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    return params.toString();
   }, [filterState.dateRange, filterState.customStartDate, filterState.customEndDate]);
+
+  const { data: summaryData, isLoading: summaryLoading, error: summaryQueryError } = useApiQuery<SummaryData>({
+    queryKey: ['reports-summary', summaryQueryParams],
+    path: `/reports/summary?${summaryQueryParams}`,
+  });
+
+  const summaryError = summaryQueryError ? 'Failed to load summary statistics.' : null;
 
   // Fetch teachers for the filter dropdown
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const res = await fetch(`${API}/teachers`, { headers: authHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : data.data || [];
-          setTeachers(list.map((te: any) => ({ id: te.id, fullName: te.fullName || te.name })));
-        }
+        const data = await api<any>('/teachers');
+        const list = Array.isArray(data) ? data : data.data || [];
+        setTeachers(list.map((te: any) => ({ id: te.id, fullName: te.fullName || te.name })));
       } catch (error) {
         console.error('Failed to load teachers', error);
       }
@@ -546,12 +524,8 @@ function ReportsContent() {
       setReportError(null);
       try {
         const params = buildReportParams(selectedReport, filterState, { page, search });
-        const res = await fetch(`${API}${selectedDef.endpoint}?${params.toString()}`, { headers: authHeaders() });
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.message || `Failed to load report (${res.status})`);
-        }
-        setReportData(await res.json());
+        const data = await api<any>(`${selectedDef.endpoint}?${params.toString()}`);
+        setReportData(data);
       } catch (error: any) {
         console.error('Failed to load report', error);
         setReportError(error.message || 'Failed to load report data.');
@@ -612,9 +586,7 @@ function ReportsContent() {
       for (const def of REPORT_DEFS) {
         const params = buildReportParams(def.id, filterState, { page: 1 });
         params.set('limit', '100');
-        const res = await fetch(`${API}${def.endpoint}?${params.toString()}`, { headers: authHeaders() });
-        if (!res.ok) continue;
-        const data = await res.json();
+        const data = await api<any>(`${def.endpoint}?${params.toString()}`);
         allSections.push(...getExportSections(def.id, data));
       }
       if (type === 'excel') {

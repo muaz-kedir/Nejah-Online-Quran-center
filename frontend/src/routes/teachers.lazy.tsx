@@ -5,6 +5,7 @@
 import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -67,6 +68,7 @@ import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
 import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/teachers')({
   component: TeachersPage,
@@ -678,91 +680,40 @@ function TeacherDetailModal({ teacher, onClose, userRole, onEdit, onRefresh }: {
 
 function TeachersPage() {
   const userRole = localStorage.getItem('userRole') || '';
-  const [teachers, setTeachers] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
-  const [refreshing, setRefreshing] = useState(false);
   
-  // Dashboard stats
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    onLeave: 0,
-    pending: 0,
+  const { data: teachersData, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
+    queryKey: ['teachers', meta.page, search, status],
+    path: `/teachers?page=${meta.page}&limit=${meta.limit}${search ? `&search=${encodeURIComponent(search)}` : ''}${status !== 'all' ? `&status=${encodeURIComponent(status)}` : ''}`,
+    refetchInterval: 30_000,
   });
+
+  const { data: stats } = useApiQuery<{ total: number; active: number; onLeave: number; pending: number }>({
+    queryKey: ['teachers-stats'],
+    path: '/teachers/stats',
+    refetchInterval: 30_000,
+  });
+
+  const teachers = teachersData?.data || [];
+  if (teachersData?.meta) {
+    setMeta(prev => ({ ...prev, ...teachersData.meta }));
+  }
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);
   const [deletingTeacher, setDeletingTeacher] = useState<any | null>(null);
 
-  const fetchTeachers = useCallback(async (pageOverride?: number) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const page = pageOverride ?? meta.page;
-      let url = apiUrl(`/teachers?page=${page}&limit=${meta.limit}`);
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (status !== 'all') url += `&status=${encodeURIComponent(status)}`;
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const res = await response.json();
-      if (res && Array.isArray(res.data)) {
-        setTeachers(res.data);
-        setMeta(res.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
-      } else {
-        setTeachers([]);
-        setMeta({ total: 0, page: 1, limit: 10, totalPages: 1 });
-      }
-    } catch (error) {
-      toast.error('Failed to fetch faculty directory');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [meta.page, meta.limit, search, status]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/teachers/stats`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setStats({
-          total: data.total || 0,
-          active: data.active || 0,
-          onLeave: data.onLeave || 0,
-          pending: data.pending || 0,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats', error);
-    }
-  }, []);
-
   const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchTeachers();
-    fetchStats();
-  }, [fetchTeachers, fetchStats]);
-
-  useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    queryClient.invalidateQueries({ queryKey: ['teachers-stats'] });
+  }, [queryClient]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMeta(prev => ({ ...prev, page: 1 }));
-    fetchTeachers(1);
   };
 
   const resetFilters = () => {
@@ -786,9 +737,9 @@ function TeachersPage() {
           title="Teachers"
           actions={
             <div className="flex gap-2">
-              <Button onClick={handleRefresh} variant="outline" className="h-11 gap-2 rounded-xl px-4" disabled={refreshing}>
-                <RefreshCw className={cn('h-5 w-5', refreshing && 'animate-spin')} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
+              <Button onClick={handleRefresh} variant="outline" className="h-11 gap-2 rounded-xl px-4">
+                <RefreshCw className="h-5 w-5" />
+                Refresh
               </Button>
               {userRole === 'super_admin' && (
                 <Button onClick={() => setIsAddModalOpen(true)} className="h-11 gap-2 rounded-xl px-6">
@@ -837,7 +788,7 @@ function TeachersPage() {
               </Select>
             </div>
 
-            <Button onClick={() => fetchTeachers(1)} className="mt-5 h-11 rounded-xl px-6 font-bold">
+            <Button onClick={() => setMeta(prev => ({ ...prev, page: 1 }))} className="mt-5 h-11 rounded-xl px-6 font-bold">
               Apply Filter
             </Button>
 
@@ -963,20 +914,20 @@ function TeachersPage() {
       <AddTeacherModal
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSuccess={fetchTeachers}
+        onSuccess={handleRefresh}
       />
 
       <EditTeacherModal
         open={!!editingTeacher}
         onClose={() => setEditingTeacher(null)}
-        onSuccess={fetchTeachers}
+        onSuccess={handleRefresh}
         teacher={editingTeacher}
       />
 
       <DeleteTeacherModal
         open={!!deletingTeacher}
         onClose={() => setDeletingTeacher(null)}
-        onSuccess={fetchTeachers}
+        onSuccess={handleRefresh}
         teacherId={deletingTeacher?.id}
         teacherName={deletingTeacher?.fullName}
       />
@@ -986,7 +937,7 @@ function TeachersPage() {
         onClose={() => {}}
         userRole={userRole}
         onEdit={handleEditTeacher}
-        onRefresh={fetchTeachers}
+        onRefresh={handleRefresh}
       />
     </DashboardLayout>
   );

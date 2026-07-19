@@ -2,9 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
@@ -13,50 +13,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { RefreshCw, Trash2, Globe, Database } from 'lucide-react';
+import { useApiQuery } from '@/hooks/useApiQuery';
+import { api } from '@/lib/api';
 
 export const Route = createLazyFileRoute('/currency_settings')({
   component: CurrencySettingsPage,
 });
 
 function CurrencySettingsPage() {
-  const [rates, setRates] = useState<CurrencyRate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: rates = [], isLoading: loading } = useApiQuery<CurrencyRate[]>({
+    queryKey: ['currency-rates'],
+    path: '/currency/rates',
+  });
   const [refreshing, setRefreshing] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [fromCurrency, setFromCurrency] = useState('ETB');
   const [toCurrency, setToCurrency] = useState('USD');
   const [rate, setRate] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const token = () => localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` };
-
-  const fetchRates = async () => {
-    try {
-      const res = await fetch(`${API}/currency/rates`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        setRates(data);
-        const latest = data.reduce((latest: string | null, r: CurrencyRate) => {
-          return r.lastFetchedAt && (!latest || r.lastFetchedAt > latest) ? r.lastFetchedAt : latest;
-        }, null);
-        setLastRefresh(latest);
-      }
-    } catch {} finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchRates(); }, []);
+  const lastRefresh = useMemo(() => {
+    return rates.reduce((latest: string | null, r: CurrencyRate) => {
+      return r.lastFetchedAt && (!latest || r.lastFetchedAt > latest) ? r.lastFetchedAt : latest;
+    }, null);
+  }, [rates]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const res = await fetch(`${API}/currency/refresh`, { method: 'POST', headers });
-      if (!res.ok) throw new Error('Refresh failed');
-      const data = await res.json();
+      const data = await api<any>('/currency/refresh', { method: 'POST' });
       toast.success(`Rates refreshed from ${data.source}`);
-      fetchRates();
+      queryClient.invalidateQueries({ queryKey: ['currency-rates'] });
     } catch (e: any) {
       toast.error(e.message || 'Failed to refresh. Using fallback rates.');
     } finally {
@@ -71,15 +58,13 @@ function CurrencySettingsPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch(`${API}/currency/rates`, {
+      await api('/currency/rates', {
         method: 'POST',
-        headers,
         body: JSON.stringify({ fromCurrency, toCurrency, rate: parseFloat(rate) }),
       });
-      if (!res.ok) throw new Error('Failed to save rate');
       toast.success('Rate saved');
       setRate('');
-      fetchRates();
+      queryClient.invalidateQueries({ queryKey: ['currency-rates'] });
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -90,19 +75,16 @@ function CurrencySettingsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this rate?')) return;
     try {
-      await fetch(`${API}/currency/rates/${id}`, { method: 'DELETE', headers });
+      await api(`/currency/rates/${id}`, { method: 'DELETE' });
       toast.success('Rate deleted');
-      fetchRates();
+      queryClient.invalidateQueries({ queryKey: ['currency-rates'] });
     } catch {}
   };
 
   const convertTest = async () => {
     try {
-      const res = await fetch(`${API}/currency/convert?from=${fromCurrency}&to=${toCurrency}&amount=1000`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`1,000 ${data.from} = ${data.result.toLocaleString()} ${data.to} (rate: ${data.rate})`);
-      }
+      const data = await api<any>(`/currency/convert?from=${fromCurrency}&to=${toCurrency}&amount=1000`);
+      toast.success(`1,000 ${data.from} = ${data.result.toLocaleString()} ${data.to} (rate: ${data.rate})`);
     } catch {}
   };
 

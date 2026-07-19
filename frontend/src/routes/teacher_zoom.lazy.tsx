@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
 import { PageHeader } from "@/components/dashboard/design-system";
 import { Button } from "@/components/ui/button";
@@ -31,30 +32,51 @@ import {
   X,
   ChevronLeft,
 } from "lucide-react";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/teacher_zoom')({
   component: TeacherZoomPage,
 });
 
 function TeacherZoomPage() {
-  const [upcoming, setUpcoming] = useState<any[]>([]);
-  const [teacherSessions, setTeacherSessions] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
+  const queryClient = useQueryClient();
   const [viewTab, setViewTab] = useState<"week" | "history">("week");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [detailSessionId, setDetailSessionId] = useState<string | null>(null);
   const [detailSession, setDetailSession] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  const { data: upcomingData, isLoading: loadingUpcoming } = useApiQuery<any[]>({
+    queryKey: ["live-sessions-upcoming"],
+    path: "/live-sessions/upcoming",
+    refetchInterval: 15_000,
+  });
+  const upcoming = useMemo(() => Array.isArray(upcomingData) ? upcomingData : [], [upcomingData]);
+
+  const { data: sessionsData, isLoading: loadingSessions } = useApiQuery<any>({
+    queryKey: ["live-sessions-teacher"],
+    path: "/live-sessions/teacher?limit=50",
+    refetchInterval: 30_000,
+  });
+  const teacherSessions = useMemo(() => Array.isArray(sessionsData?.data) ? sessionsData.data : [], [sessionsData]);
+
+  const { data: analytics } = useApiQuery<any>({
+    queryKey: ["zoom-analytics-teacher"],
+    path: "/zoom-analytics/teacher",
+    refetchInterval: 30_000,
+  });
+
+  const { data: zoomStatus } = useApiQuery<{ connected: boolean }>({
+    queryKey: ["zoom-oauth-status"],
+    path: "/zoom/oauth/status",
+  });
+  const zoomConnected = zoomStatus?.connected ?? null;
+
+  const loading = loadingUpcoming || loadingSessions;
 
   const weekDays = useMemo(() => getWeekDays(weekOffset), [weekOffset]);
 
@@ -74,24 +96,13 @@ function TeacherZoomPage() {
     return map;
   }, [upcoming, weekDays]);
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [upcomingData, sessionsData, analyticsData, zoomStatus] = await Promise.all([
-        api<any[]>("/live-sessions/upcoming").catch(() => []),
-        api<any>("/live-sessions/teacher?limit=50").catch(() => ({ data: [] })),
-        api<any>("/zoom-analytics/teacher").catch(() => null),
-        api<{ connected: boolean }>("/zoom/oauth/status").catch(() => ({ connected: false })),
-      ]);
-      setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
-      setTeacherSessions(Array.isArray(sessionsData?.data) ? sessionsData.data : []);
-      setAnalytics(analyticsData);
-      setZoomConnected(zoomStatus.connected);
-    } catch {
-      toast.error("Failed to load workspace data");
-    } finally {
-      setLoading(false);
-    }
+  const refreshAll = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["live-sessions-upcoming"] }),
+      queryClient.invalidateQueries({ queryKey: ["live-sessions-teacher"] }),
+      queryClient.invalidateQueries({ queryKey: ["zoom-analytics-teacher"] }),
+      queryClient.invalidateQueries({ queryKey: ["zoom-oauth-status"] }),
+    ]);
   };
 
   const handleStartSession = async (sessionId: string) => {
@@ -103,7 +114,7 @@ function TeacherZoomPage() {
         upcoming.find((s: any) => s.id === sessionId) ||
         teacherSessions.find((s: any) => s.id === sessionId);
       if (session?.zoomJoinUrl) window.location.href = session.zoomJoinUrl;
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to start session");
     } finally {
@@ -116,7 +127,7 @@ function TeacherZoomPage() {
     try {
       await api(`/live-sessions/${sessionId}/end`, { method: "POST" });
       toast.success("Session completed");
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to end session");
     } finally {
@@ -129,7 +140,7 @@ function TeacherZoomPage() {
     try {
       await api(`/live-sessions/${sessionId}/cancel`, { method: "POST" });
       toast.success("Session cancelled");
-      fetchAll();
+      refreshAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to cancel session");
     } finally {

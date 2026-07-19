@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { apiUrl } from "@/lib/api";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createLazyFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
   Search,
@@ -33,6 +33,7 @@ import { LanguageProvider, useLanguage } from "@/context/LanguageContext";
 import { ParentPortalLayout } from "@/components/parents/ParentPortalLayout";
 import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
 import { TelegramLink } from "@/components/ui/telegram-link";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/parent_dashboard')({
   component: ParentDashboardRoute,
@@ -299,43 +300,24 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     if (score >= 50) return 'C';
     return 'D';
   };
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(initialTab || "dashboard");
   const [searchQuery, setSearchQuery] = useState("");
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
+  const { data: unreadData } = useApiQuery<any>({
+    queryKey: ["parent-unread-count"],
+    path: `/notifications/unread-count`,
+    refetchInterval: 30_000,
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
   const [selectedChildId, setSelectedChildId] = useState<string>("");
 
-  // Poll for unread notifications
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(apiUrl("/notifications/unread-count"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count ?? 0);
-        }
-      } catch { /* silent */ }
-    };
-    poll();
-    const interval = setInterval(poll, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["parent-dashboard"],
+    path: `/parent/dashboard`,
+    refetchInterval: 30_000,
+  });
 
-  // Learning time states
-  const [learningTime, setLearningTime] = useState<any>(null);
-  const [loadingLearningTime, setLoadingLearningTime] = useState<boolean>(false);
-
-  // Profile Form state
   const [profileForm, setProfileForm] = useState({
     name: "",
     email: "",
@@ -344,91 +326,33 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     language: "English",
   });
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(apiUrl(`/parent/dashboard`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const result = await response.json();
-          setData(result);
-          if (result.children && result.children.length > 0) {
-            setSelectedChildId(result.children[0].id);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch parent dashboard", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboard();
-  }, []);
+  if (data?.parent && profileForm.name === "" && data.parent.name) {
+    setProfileForm({
+      name: data.parent.name || "",
+      email: data.parent.email || "",
+      phone: "+251 912 345678",
+      address: "Addis Ababa, Ethiopia",
+      language: "English",
+    });
+  }
 
-  // Fetch learning time for selected child
-  useEffect(() => {
-    if (!selectedChildId) return;
+  if (!selectedChildId && data?.children?.length > 0) {
+    setSelectedChildId(data.children[0].id);
+  }
 
-    const fetchLearningTime = async () => {
-      setLoadingLearningTime(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(apiUrl(`/analytics/student/${selectedChildId}/learning-time`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          setLearningTime(await res.json());
-        }
-      } catch (err) {
-        console.error("Failed to fetch learning time", err);
-      } finally {
-        setLoadingLearningTime(false);
-      }
-    };
+  const { data: learningTime } = useApiQuery<any>({
+    queryKey: ["learning-time", selectedChildId],
+    path: `/analytics/student/${selectedChildId}/learning-time`,
+    enabled: !!selectedChildId,
+    refetchInterval: 30_000,
+  });
+  const loadingLearningTime = false;
 
-    fetchLearningTime();
-  }, [selectedChildId]);
-
-  // Evaluations state
-  const [evaluations, setEvaluations] = useState<any[]>([]);
-  const [loadingEvaluations, setLoadingEvaluations] = useState(false);
-
-  // Fetch evaluations for selected child
-  useEffect(() => {
-    if (!selectedChildId) return;
-    const fetchEvaluations = async () => {
-      setLoadingEvaluations(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(apiUrl(`/evaluations?studentId=${selectedChildId}`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          setEvaluations(await res.json());
-        }
-      } catch (err) {
-        console.error("Failed to fetch evaluations", err);
-      } finally {
-        setLoadingEvaluations(false);
-      }
-    };
-    fetchEvaluations();
-  }, [selectedChildId]);
-
-  // Load parent profiles into settings state
-  useEffect(() => {
-    if (data?.parent) {
-      setProfileForm({
-        name: data.parent.name || "",
-        email: data.parent.email || "",
-        phone: "+251 912 345678",
-        address: "Addis Ababa, Ethiopia",
-        language: "English",
-      });
-    }
-  }, [data]);
+  const { data: evaluations } = useApiQuery<any>({
+    queryKey: ["evaluations", selectedChildId],
+    path: `/evaluations?studentId=${selectedChildId}`,
+    enabled: !!selectedChildId,
+  });
 
   const handleInspectProgress = (childId: string) => {
     setSelectedChildId(childId);

@@ -2,8 +2,8 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
   ChevronRight,
@@ -17,7 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { StudentPortalLayout, StudentPageLoader } from "@/components/student/StudentPortalLayout";
-import { api, requireStudentAuth, storeStudentId, studentPaths } from "@/lib/student-portal";
+import { storeStudentId, studentPaths } from "@/lib/student-portal";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { LearningPathCard, useLearningPath } from "@/components/progress/LearningPathCard";
 import { LevelProgressCard } from "@/components/progress/LevelProgressCard";
 import { useSocket } from "@/hooks/useSocket";
@@ -38,54 +39,36 @@ export const Route = createLazyFileRoute('/student_dashboard')({
 
 function StudentDashboard() {
   const navigate = useNavigate();
-  const [data, setData] = useState<StudentDashboardData | null>(null);
-  const [profile, setProfile] = useState<StudentProfileData | null>(null);
-  const [todayClasses, setTodayClasses] = useState<StudentClassesData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { path: learningPath } = useLearningPath(profile?.student?.id);
+  const queryClient = useQueryClient();
+  const { path: learningPath } = useLearningPath(undefined);
 
-  const loadDashboard = useCallback(async () => {
-    try {
-      const dash = await api<StudentDashboardData>("/student/dashboard");
-      setData(dash);
-    } catch {
-      // silent — polling will retry
-    }
-  }, []);
+  const { data: data, isLoading: loading } = useApiQuery<StudentDashboardData>({
+    queryKey: ['student-dashboard'],
+    path: '/student/dashboard',
+    refetchInterval: 15_000,
+  });
 
-  useEffect(() => {
-    const loadTodayClasses = async () => {
-      try {
-        const classes = await api<StudentClassesData>("/student/dashboard/classes");
-        setTodayClasses(classes);
-      } catch {
-        // silent — polling will retry
+  const { data: profile } = useApiQuery<StudentProfileData>({
+    queryKey: ['student-profile-dashboard'],
+    path: '/student/profile',
+    refetchInterval: 30_000,
+    select: (prof) => {
+      if (prof?.student) {
+        storeStudentId(prof.student.id);
       }
-    };
+      return prof;
+    },
+  });
 
-    Promise.all([
-      loadDashboard(),
-      api<StudentProfileData>("/student/profile").catch(() => null),
-      loadTodayClasses(),
-    ])
-      .then(([, prof]) => {
-        if (prof?.student) {
-          storeStudentId(prof.student.id);
-        }
-        setProfile(prof);
-      })
-      .finally(() => setLoading(false));
-
-    const interval = setInterval(() => {
-      loadDashboard();
-      loadTodayClasses();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [loadDashboard]);
+  const { data: todayClasses } = useApiQuery<StudentClassesData>({
+    queryKey: ['student-today-classes'],
+    path: '/student/dashboard/classes',
+    refetchInterval: 15_000,
+  });
 
   useSocket({
     onNotification: (notif) => {
-      loadDashboard();
+      queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
       if (notif.channel === "MEETING_STARTED" && notif.data?.sessionId) {
         const sessionId = notif.data.sessionId;
         toast(notif.title, {

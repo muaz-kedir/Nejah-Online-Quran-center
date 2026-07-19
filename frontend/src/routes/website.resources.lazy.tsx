@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split).
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   FolderOpen, Plus, Search, Trash2, Edit, Loader2,
   UploadCloud, Settings, ListFilter, Layout
@@ -22,15 +23,20 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/website/resources')({
   component: WebsiteResources,
 });
 
 function WebsiteResources() {
-  const [resources, setResources] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  
+  const { data: resources = [], isLoading: loading } = useApiQuery<any[]>({
+    queryKey: ['resources', search],
+    path: `/resources?search=${encodeURIComponent(search)}`,
+  });
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<any>(null);
@@ -44,22 +50,6 @@ function WebsiteResources() {
     fileUrl: '', youtubeUrl: '', thumbnailUrl: '',
     isFeatured: false, status: 'active', displayOrder: 0, fileSize: 0
   });
-
-  useEffect(() => {
-    fetchResources();
-  }, [search]);
-
-  const fetchResources = async () => {
-    setLoading(true);
-    try {
-      const data = await api(`/resources?search=${encodeURIComponent(search)}`);
-      setResources(data);
-    } catch (err) {
-      toast.error('Failed to load resources');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenDialog = (resource?: any) => {
     if (resource) {
@@ -100,7 +90,7 @@ function WebsiteResources() {
         toast.success('Resource created successfully');
       }
       setIsDialogOpen(false);
-      fetchResources();
+      queryClient.invalidateQueries({ queryKey: ['resources'] });
     } catch (err) {
       toast.error('Failed to save resource');
     }
@@ -111,7 +101,7 @@ function WebsiteResources() {
     try {
       await api(`/resources/${id}`, { method: 'DELETE' });
       toast.success('Resource deleted');
-      fetchResources();
+      queryClient.invalidateQueries({ queryKey: ['resources'] });
     } catch (err) {
       toast.error('Failed to delete resource');
     }

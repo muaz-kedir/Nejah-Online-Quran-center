@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
@@ -10,6 +10,7 @@ import { TrendingUp, Users, BookOpen, Clock, Loader2 } from 'lucide-react';
 import { requireAuth } from '@/lib/auth';
 import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/components/dashboard/design-system';
 import { api } from '@/lib/api';
+import { useApiQuery } from '@/hooks/useApiQuery';
 import {
   AreaChart,
   Area,
@@ -28,147 +29,126 @@ export const Route = createLazyFileRoute('/analytics')({
 });
 
 function AnalyticsPage() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    activeStudents: 0,
-    newStudentsThisMonth: 0,
-    studentChange: '+0% vs last month',
-    totalTeachers: 0,
-    activeTeachers: 0,
-    teachersChange: 'Full Capacity',
-    classesToday: 0,
-    classesChange: 'No classes today',
-    avgAttendance: 0,
-    attendanceChange: 'N/A',
+  const { data: studentsStats, isLoading: loadingStudents } = useApiQuery<any>({
+    queryKey: ['students-stats'],
+    path: '/students/stats',
+    refetchInterval: 30_000,
   });
 
-  const [enrollmentTrends, setEnrollmentTrends] = useState<any[]>([]);
-  const [sessionDistribution, setSessionDistribution] = useState<any[]>([]);
+  const { data: teachersStats, isLoading: loadingTeachers } = useApiQuery<any>({
+    queryKey: ['teachers-stats'],
+    path: '/teachers/stats',
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setLoading(true);
+  const { data: schedulesData, isLoading: loadingSchedules } = useApiQuery<any>({
+    queryKey: ['schedules'],
+    path: '/schedules',
+    refetchInterval: 30_000,
+  });
 
-        const [
-          studentsStats,
-          teachersStats,
-          schedulesData,
-          zoomDashboard,
-          studentsList,
-        ] = await Promise.all([
-          api('/students/stats').catch(() => ({ total: 0, active: 0, newStudentsThisMonth: 0, averageAttendance: 0 })),
-          api('/teachers/stats').catch(() => ({ total: 0, active: 0, pending: 0 })),
-          api('/schedules').catch(() => []),
-          api('/zoom-analytics/dashboard').catch(() => ({
-            attendanceRate: 0,
-            completedSessions: 0,
-            cancelledSessions: 0,
-            liveSessions: 0,
-            noShowSessions: 0,
-          })),
-          api('/students?limit=1000').catch(() => ({ data: [] })),
-        ]);
+  const { data: zoomDashboard, isLoading: loadingZoom } = useApiQuery<any>({
+    queryKey: ['zoom-analytics-dashboard'],
+    path: '/zoom-analytics/dashboard',
+    refetchInterval: 30_000,
+  });
 
-        // 1. Calculate classes today
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const todayName = days[new Date().getDay()];
-        const todayClassesCount = Array.isArray(schedulesData)
-          ? schedulesData.filter(
-              (schedule: any) => schedule.dayOfWeek?.toLowerCase() === todayName.toLowerCase()
-            ).length
-          : 0;
+  const { data: studentsList, isLoading: loadingStudentsList } = useApiQuery<any>({
+    queryKey: ['students-list'],
+    path: '/students?limit=1000',
+    refetchInterval: 30_000,
+  });
 
-        // 2. Format students enrollment monthly trend
-        const students = studentsList.data || [];
-        const monthlyCounts: Record<string, number> = {};
-        
-        students.forEach((student: any) => {
-          if (!student.createdAt) return;
-          const date = new Date(student.createdAt);
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const key = `${year}-${month}`;
-          monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
-        });
+  const loading = loadingStudents || loadingTeachers || loadingSchedules || loadingZoom || loadingStudentsList;
 
-        const sortedKeys = Object.keys(monthlyCounts).sort();
-        let trends = sortedKeys.map((key) => {
-          const [year, month] = key.split('-');
-          const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-          const monthLabel = date.toLocaleString('default', { month: 'short' });
-          return {
-            month: `${monthLabel} ${year}`,
-            Students: monthlyCounts[key],
-          };
-        });
+  const stats = useMemo(() => {
+    const totalStuds = studentsStats?.total || 0;
+    const newStuds = studentsStats?.newStudentsThisMonth || 0;
+    const previousTotal = totalStuds - newStuds;
+    const studentChangePercent = previousTotal > 0 
+      ? Math.round((newStuds / previousTotal) * 100) 
+      : 0;
 
-        // Fallback for trends if empty
-        if (trends.length === 0) {
-          const currentYear = new Date().getFullYear();
-          const fallbackMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-          trends = fallbackMonths.map((m) => ({
-            month: `${m} ${currentYear}`,
-            Students: 0,
-          }));
-        }
+    const teacherActive = teachersStats?.active || 0;
+    const teacherPending = teachersStats?.pending || 0;
 
-        // 3. Format session distribution
-        const dist = [
-          { name: 'Completed', value: zoomDashboard.completedSessions || 0 },
-          { name: 'Cancelled', value: zoomDashboard.cancelledSessions || 0 },
-          { name: 'Live Now', value: zoomDashboard.liveSessions || 0 },
-          { name: 'No Show', value: zoomDashboard.noShowSessions || 0 },
-        ];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[new Date().getDay()];
+    const todayClassesCount = Array.isArray(schedulesData)
+      ? schedulesData.filter(
+          (schedule: any) => schedule.dayOfWeek?.toLowerCase() === todayName.toLowerCase()
+        ).length
+      : 0;
 
-        // 4. Calculate enrollment and metrics changes/trends
-        const totalStuds = studentsStats.total || 0;
-        const newStuds = studentsStats.newStudentsThisMonth || 0;
-        const previousTotal = totalStuds - newStuds;
-        const studentChangePercent = previousTotal > 0 
-          ? Math.round((newStuds / previousTotal) * 100) 
-          : 0;
-
-        const teacherActive = teachersStats.active || 0;
-        const teacherPending = teachersStats.pending || 0;
-
-        setStats({
-          totalStudents: totalStuds,
-          activeStudents: studentsStats.active || 0,
-          newStudentsThisMonth: newStuds,
-          studentChange: `+${studentChangePercent}% vs last month`,
-          totalTeachers: teachersStats.total || 0,
-          activeTeachers: teacherActive,
-          teachersChange: teacherPending > 0 ? `${teacherPending} pending` : 'Full Capacity',
-          classesToday: todayClassesCount,
-          classesChange: `${todayClassesCount > 0 ? 'Live rooms ready' : 'No classes today'}`,
-          avgAttendance: zoomDashboard.attendanceRate || studentsStats.averageAttendance || 0,
-          attendanceChange: zoomDashboard.attendanceRate ? '+1.5% vs average' : 'N/A',
-        });
-
-        setEnrollmentTrends(trends);
-        setSessionDistribution(dist);
-      } catch (error) {
-        console.error('Error loading dashboard analytics:', error);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      totalStudents: totalStuds,
+      activeStudents: studentsStats?.active || 0,
+      newStudentsThisMonth: newStuds,
+      studentChange: `+${studentChangePercent}% vs last month`,
+      totalTeachers: teachersStats?.total || 0,
+      activeTeachers: teacherActive,
+      teachersChange: teacherPending > 0 ? `${teacherPending} pending` : 'Full Capacity',
+      classesToday: todayClassesCount,
+      classesChange: `${todayClassesCount > 0 ? 'Live rooms ready' : 'No classes today'}`,
+      avgAttendance: zoomDashboard?.attendanceRate || studentsStats?.averageAttendance || 0,
+      attendanceChange: zoomDashboard?.attendanceRate ? '+1.5% vs average' : 'N/A',
     };
+  }, [studentsStats, teachersStats, schedulesData, zoomDashboard]);
 
-    fetchAnalytics();
-  }, []);
+  const enrollmentTrends = useMemo(() => {
+    const students = studentsList?.data || [];
+    const monthlyCounts: Record<string, number> = {};
+    
+    students.forEach((student: any) => {
+      if (!student.createdAt) return;
+      const date = new Date(student.createdAt);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const key = `${year}-${month}`;
+      monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
+    });
+
+    const sortedKeys = Object.keys(monthlyCounts).sort();
+    let trends = sortedKeys.map((key) => {
+      const [year, month] = key.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const monthLabel = date.toLocaleString('default', { month: 'short' });
+      return {
+        month: `${monthLabel} ${year}`,
+        Students: monthlyCounts[key],
+      };
+    });
+
+    if (trends.length === 0) {
+      const currentYear = new Date().getFullYear();
+      const fallbackMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      trends = fallbackMonths.map((m) => ({
+        month: `${m} ${currentYear}`,
+        Students: 0,
+      }));
+    }
+
+    return trends;
+  }, [studentsList]);
+
+  const sessionDistribution = useMemo(() => {
+    return [
+      { name: 'Completed', value: zoomDashboard?.completedSessions || 0 },
+      { name: 'Cancelled', value: zoomDashboard?.cancelledSessions || 0 },
+      { name: 'Live Now', value: zoomDashboard?.liveSessions || 0 },
+      { name: 'No Show', value: zoomDashboard?.noShowSessions || 0 },
+    ];
+  }, [zoomDashboard]);
 
   return (
     <DashboardLayout>
-      <AmbientSection>
-        <Breadcrumbs />
+      <AmbientSection />
+      <div className="space-y-8 pb-16">
         <PageHeader
-          eyebrow="Insights"
-          title="Analytics"
-          description="Platform-wide performance metrics and insights"
+          eyebrow="Analytics"
+          title="Real-Time Analytics"
+          description="Monitor student enrollment, teacher activity, and class performance"
         />
-
         {loading ? (
           <div className="flex h-96 items-center justify-center">
             <div className="text-center text-nejah-slate-blue flex flex-col items-center gap-3">
@@ -308,7 +288,7 @@ function AnalyticsPage() {
             </div>
           </>
         )}
-      </AmbientSection>
+      </div>
     </DashboardLayout>
   );
 }

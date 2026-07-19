@@ -5,6 +5,7 @@
 import { apiUrl, clearAuthStorage } from "@/lib/api";
 import { useState, useEffect } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
 import { User, Mail, Phone, MapPin, GraduationCap, Clock, Calendar, ChevronRight, Pencil, Globe, BookOpen, Star, Languages, DollarSign, Users, CheckCircle, Bell } from 'lucide-react';
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 import { TelegramLink } from '@/components/ui/telegram-link';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/teacher_profile')({
   component: TeacherProfilePage,
@@ -23,9 +25,9 @@ export const Route = createLazyFileRoute('/teacher_profile')({
 
 function TeacherProfilePage() {
   const navigate = useNavigate();
-  const [teacher, setTeacher] = useState<any>({ fullName: '', email: '' });
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [localTeacher, setLocalTeacher] = useState<any>({ fullName: '', email: '' });
 
   const redirectToLogin = () => {
     clearAuthStorage();
@@ -33,44 +35,17 @@ function TeacherProfilePage() {
     navigate({ to: '/login' });
   };
 
-  const fetchTeacherProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        redirectToLogin();
-        return;
-      }
-      // First populate from localStorage (always safe)
-      setTeacher(getLocalUser());
-      // Then try API
-      const response = await fetch(apiUrl(`/teachers/dashboard`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTeacher((prev: any) => ({ ...data.teacher, stats: data.stats }));
-      } else if (response.status === 401) {
-        redirectToLogin();
-        return;
-      } else {
-        const err = await response.json().catch(() => ({}));
-        console.error(err.message || `Failed to load profile (${response.status})`);
-      }
-    } catch (error) {
-      console.error('Failed to fetch teacher profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: apiData, isLoading } = useApiQuery<{ teacher: any; stats: any }>({
+    queryKey: ['teacher-profile'],
+    path: '/teachers/dashboard',
+    refetchInterval: 30_000,
+  });
 
   useEffect(() => {
-    // Always populate from localStorage first (SSR-safe)
-    setTeacher(getLocalUser());
-    fetchTeacherProfile();
-    // Quick timeout to hide loader if API takes too long
-    const t = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(t);
+    setLocalTeacher(getLocalUser());
   }, []);
+
+  const teacher = apiData ? { ...apiData.teacher, stats: apiData.stats } : localTeacher;
 
   const formatArray = (arr: string[] | undefined | null): string => {
     if (!arr || arr.length === 0) return 'Not specified';
@@ -82,7 +57,7 @@ function TeacherProfilePage() {
     return availabilities.map(t => t.replace(/["\[\]]/g, '')).join(', ');
   };
 
-  if (loading && !teacher.fullName) {
+  if (isLoading && !teacher.fullName) {
     return (
       <TeacherLayout>
         <div className="flex items-center justify-center h-96">
@@ -410,9 +385,8 @@ function TeacherProfilePage() {
       <EditTeacherModal
         open={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={async () => {
-          // Refresh teacher data
-          await fetchTeacherProfile();
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['teacher-profile'] });
           setIsEditModalOpen(false);
           toast.success('Profile updated successfully');
         }}

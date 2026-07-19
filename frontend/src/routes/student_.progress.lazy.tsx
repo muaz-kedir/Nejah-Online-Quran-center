@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { 
   BookOpen, Award, TrendingUp, CalendarCheck, GraduationCap, 
@@ -16,23 +16,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/student_/progress')({
   component: StudentProgress,
 });
 
 function StudentProgress() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ['student-progress'],
+    path: '/student/dashboard/progress',
+    refetchInterval: 30_000,
+  });
   const [selectedDetails, setSelectedDetails] = useState<any>(null);
   const [attendanceFilter, setAttendanceFilter] = useState<string>('all');
-  
-  useEffect(() => {
-    api('/student/dashboard/progress')
-      .then(setData)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
 
   if (loading) return <StudentPageLoader />;
   if (!data) return <div className="p-8 text-center text-muted-foreground">No progress data found.</div>;

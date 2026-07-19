@@ -3,8 +3,9 @@
 // Lazy component (code-split). Do not edit.
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   Search,
@@ -52,15 +53,15 @@ import { AssignTemporaryTeacherModal } from '@/components/teachers/AssignTempora
 import { ProgressDetailsModal } from '@/components/progress/ProgressDetailsModal';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/students')({
   component: StudentsPage,
 });
 
 function StudentsPage() {
-  const [students, setStudents] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 2, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('all');
   const [teacherId, setTeacherId] = useState('all');
@@ -68,12 +69,40 @@ function StudentsPage() {
   const [country, setCountry] = useState('all');
   const [city, setCity] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
-  
-  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, newStudentsThisMonth: 0, averageAttendance: 0 });
-  
-  const [teachers, setTeachers] = useState<any[]>([]);
-  const [parents, setParents] = useState<any[]>([]);
-  
+
+  const studentsUrl = `/students?page=${meta.page}&limit=${meta.limit}${search ? `&search=${search}` : ''}${level !== 'all' ? `&level=${level}` : ''}${teacherId !== 'all' ? `&teacherId=${teacherId}` : ''}${status !== 'all' ? `&status=${status}` : ''}${country !== 'all' ? `&country=${country}` : ''}${city ? `&city=${city}` : ''}${dateFilter !== 'all' && dateFilter !== 'custom' ? (() => { const { startDate, endDate } = getDateRange(dateFilter); return `&startDate=${startDate}&endDate=${endDate}`; })() : ''}`;
+
+  const { data: studentsData, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
+    queryKey: ['students', meta.page, level, teacherId, status, country, dateFilter, search, city],
+    path: studentsUrl,
+    refetchInterval: 30_000,
+  });
+
+  const { data: stats } = useApiQuery<{ total: number; active: number; inactive: number; newStudentsThisMonth: number; averageAttendance: number }>({
+    queryKey: ['students-stats'],
+    path: '/students/stats',
+    refetchInterval: 30_000,
+  });
+
+  const { data: teachersData } = useApiQuery<{ data: any[] }>({
+    queryKey: ['teachers-dropdown'],
+    path: '/teachers',
+    refetchInterval: 30_000,
+  });
+
+  const { data: parentsData } = useApiQuery<any[]>({
+    queryKey: ['parents-dropdown'],
+    path: '/parents',
+    refetchInterval: 30_000,
+  });
+
+  const students = studentsData?.data || [];
+  const teachers = Array.isArray(teachersData) ? teachersData : teachersData?.data || [];
+  const parents = Array.isArray(parentsData) ? parentsData : parentsData?.data || [];
+  if (studentsData?.meta) {
+    setMeta(prev => ({ ...prev, ...studentsData.meta }));
+  }
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isTempReplacementOpen, setIsTempReplacementOpen] = useState(false);
@@ -84,105 +113,14 @@ function StudentsPage() {
   const [changingStatusStudent, setChangingStatusStudent] = useState<any | null>(null);
   const [managingLevelStudent, setManagingLevelStudent] = useState<any | null>(null);
 
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/students/stats`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setStats(await res.json());
-      }
-    } catch {}
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['students'] });
+    queryClient.invalidateQueries({ queryKey: ['students-stats'] });
   };
-
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      let url = apiUrl(`/students?page=${meta.page}&limit=${meta.limit}`);
-      if (search) url += `&search=${search}`;
-      if (level !== 'all') url += `&level=${level}`;
-      if (teacherId !== 'all') url += `&teacherId=${teacherId}`;
-      if (status !== 'all') url += `&status=${status}`;
-      if (country !== 'all') url += `&country=${country}`;
-      if (city) url += `&city=${city}`;
-      
-      if (dateFilter !== 'all' && dateFilter !== 'custom') {
-        const { startDate, endDate } = getDateRange(dateFilter);
-        url += `&startDate=${startDate}&endDate=${endDate}`;
-      }
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const res = await response.json();
-      if (res && Array.isArray(res.data)) {
-        setStudents(res.data);
-        setMeta(res.meta || { total: 0, page: 1, limit: 2, totalPages: 1 });
-      } else {
-        setStudents([]);
-        setMeta({ total: 0, page: 1, limit: 2, totalPages: 1 });
-      }
-    } catch (error) {
-      toast.error('Failed to fetch students');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTeachers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/teachers`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (data && Array.isArray(data.data)) {
-        setTeachers(data.data);
-      } else if (Array.isArray(data)) {
-        setTeachers(data);
-      } else {
-        setTeachers([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch teachers', error);
-    }
-  };
-
-  const fetchParents = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/parents`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setParents(data);
-      } else if (data && Array.isArray(data.data)) {
-        setParents(data.data);
-      } else {
-        setParents([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch parents', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchStudents();
-  }, [meta.page, level, teacherId, status, country, dateFilter]);
-
-  useEffect(() => {
-    fetchTeachers();
-    fetchParents();
-    fetchStats();
-  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setMeta({ ...meta, page: 1 });
-    fetchStudents();
   };
 
   const resetFilters = () => {
@@ -344,9 +282,9 @@ function StudentsPage() {
                 </Select>
              </div>
 
-             <Button onClick={fetchStudents} className="mt-5 h-11 rounded-xl px-6 font-bold">
+             <Button onClick={() => setMeta(prev => ({ ...prev, page: 1 }))} className="mt-5 h-11 rounded-xl px-6 font-bold">
                 Apply Filters
-             </Button>
+              </Button>
              
              <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
                 <RotateCcw className="h-5 w-5 text-nejah-slate-blue" />
@@ -575,21 +513,21 @@ function StudentsPage() {
       <AddStudentModal
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
         teachers={teachers}
       />
 
       <ManageLevelModal
         open={!!managingLevelStudent}
         onClose={() => setManagingLevelStudent(null)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
         student={managingLevelStudent}
       />
 
       <EditStudentModal
         open={!!editingStudent}
         onClose={() => setEditingStudent(null)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
         student={editingStudent}
         teachers={teachers}
       />
@@ -597,13 +535,13 @@ function StudentsPage() {
       <AssignStudentModal
         open={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
       />
 
       <AssignTemporaryTeacherModal
         open={isTempReplacementOpen}
         onClose={() => setIsTempReplacementOpen(false)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
       />
 
       <StudentDetailsModal
@@ -615,7 +553,7 @@ function StudentsPage() {
       <DeleteStudentModal
         open={!!deletingStudent}
         onClose={() => setDeletingStudent(null)}
-        onSuccess={fetchStudents}
+        onSuccess={invalidateAll}
         studentId={deletingStudent?.id}
         studentName={deletingStudent?.fullName}
       />
@@ -627,10 +565,7 @@ function StudentsPage() {
           studentId={changingStatusStudent.id}
           currentStatus={changingStatusStudent.status}
           studentName={changingStatusStudent.fullName}
-          onSuccess={() => {
-            fetchStudents();
-            fetchStats();
-          }}
+          onSuccess={invalidateAll}
         />
       )}
 

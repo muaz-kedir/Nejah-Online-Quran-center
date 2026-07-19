@@ -2,12 +2,12 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/dashboard/design-system';
-import { financeFetch, formatCurrency } from '@/lib/finance-api';
+import { formatCurrency } from '@/lib/finance-api';
 import { apiUrl, apiHeaders } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,8 @@ import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, 
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/finance_expenses')({
   component: ExpensesPage,
@@ -175,14 +177,12 @@ function ExpenseFormModal({ open, onClose, onSuccess }: { open: boolean; onClose
 }
 
 function ExpensesPage() {
+  const queryClient = useQueryClient();
   const [calendar, setCalendar] = useState('gregorian');
   const calCtx = CALENDARS.find(c => c.value === calendar)!;
   const current = getCurrentYearMonth(calendar);
   const [year, setYear] = useState(current.year);
   const [month, setMonth] = useState(current.month);
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [meta, setMeta] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
   const toGregorianRange = useCallback(() => {
@@ -200,18 +200,20 @@ function ExpensesPage() {
     return { startDate: format(startOfMonth(d), 'yyyy-MM-dd'), endDate: format(endOfMonth(d), 'yyyy-MM-dd') };
   }, [calendar, year, month]);
 
-  const fetchExpenses = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { startDate, endDate } = toGregorianRange();
-      const data = await financeFetch<any>('/expenses', { page: 1, limit: 200, startDate, endDate } as any);
-      setExpenses(data.data || []);
-      setMeta(data.meta || null);
-    } catch { toast.error('Failed to load expenses'); }
-    finally { setLoading(false); }
-  }, [toGregorianRange]);
+  const { startDate, endDate } = toGregorianRange;
 
-  useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["expenses", { startDate, endDate }],
+    path: `/finance/expenses?page=1&limit=200&startDate=${startDate}&endDate=${endDate}`,
+    refetchInterval: 30_000,
+  });
+
+  const expenses = data?.data || [];
+  const meta = data?.meta || null;
+
+  const fetchExpenses = () => {
+    queryClient.invalidateQueries({ queryKey: ["expenses"] });
+  };
 
   const handleDelete = async (id: string) => {
     try {

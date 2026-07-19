@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { apiUrl, api } from "@/lib/api";
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
@@ -19,6 +19,8 @@ import {
   Search, X, Trash2, CheckCheck, Info, TrendingUp, Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CHANNEL_LABELS: Record<string, string> = {
   PAYMENT_REMINDER: 'Payment Reminder',
@@ -98,62 +100,50 @@ export const Route = createLazyFileRoute('/finance_notifications')({
 });
 
 function FinanceNotificationsPage() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [summary, setSummary] = useState<any>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (filter !== 'all') params.set('filter', filter);
-      if (search.trim()) params.set('search', search.trim());
-      const data = await api<any>(`/notifications?${params}`);
-      setNotifications(Array.isArray(data) ? data : data?.data || []);
-      if (data?.meta) setTotalPages(data.meta.totalPages || 1);
-    } catch {
-      toast.error('Failed to load notifications');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, filter, search]);
+  const notificationsParams = new URLSearchParams({ page: String(page), limit: '20' });
+  if (filter !== 'all') notificationsParams.set('filter', filter);
+  if (search.trim()) notificationsParams.set('search', search.trim());
 
-  const fetchSummary = useCallback(async () => {
-    try {
-      const data = await api<any>('/notifications/summary');
-      setSummary(data);
-    } catch {}
-  }, []);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["notifications", page, filter, search],
+    path: `/notifications?${notificationsParams}`,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    fetchNotifications();
-    fetchSummary();
-  }, [fetchNotifications, fetchSummary]);
+  const notifications = Array.isArray(data) ? data : data?.data || [];
+  const totalPages = data?.meta?.totalPages || 1;
 
-  useEffect(() => {
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  const { data: summary } = useApiQuery<any>({
+    queryKey: ["notifications-summary"],
+    path: `/notifications/summary`,
+    refetchInterval: 30_000,
+  });
+
+  const fetchNotifications = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }, [queryClient]);
 
   useSocket({ onNotification: fetchNotifications });
 
   const markAsRead = async (id: string) => {
     try {
       await api(`/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-      fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-summary"] });
     } catch {}
   };
 
   const markAllAsRead = async () => {
     try {
       await api('/notifications/read-all', { method: 'PATCH' });
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-summary"] });
       toast.success('All notifications marked as read');
     } catch {
       toast.error('Failed to mark all as read');
@@ -163,8 +153,8 @@ function FinanceNotificationsPage() {
   const deleteNotification = async (id: string) => {
     try {
       await api(`/notifications/${id}`, { method: 'DELETE' });
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-summary"] });
     } catch {
       toast.error('Failed to delete');
     }
@@ -173,8 +163,8 @@ function FinanceNotificationsPage() {
   const clearRead = async () => {
     try {
       await api('/notifications/clear-read', { method: 'POST' });
-      setNotifications((prev) => prev.filter((n) => !n.isRead));
-      fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-summary"] });
       toast.success('Read notifications cleared');
     } catch {
       toast.error('Failed to clear');
@@ -197,9 +187,9 @@ function FinanceNotificationsPage() {
         method: 'POST',
         body: JSON.stringify({ ids: Array.from(selected) }),
       });
-      setNotifications((prev) => prev.filter((n) => !selected.has(n.id)));
       setSelected(new Set());
-      fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-summary"] });
       toast.success('Deleted');
     } catch {
       toast.error('Failed to delete');

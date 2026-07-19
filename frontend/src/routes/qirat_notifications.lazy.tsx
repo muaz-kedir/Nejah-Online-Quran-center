@@ -5,6 +5,7 @@
 import { apiUrl, api } from "@/lib/api";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
@@ -38,6 +39,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime, formatFullDate } from '@/lib/notification-helpers';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 const CHANNEL_LABELS: Record<string, string> = {
   MEETING_STARTED: 'Meeting Started',
@@ -147,10 +149,7 @@ export const Route = createLazyFileRoute('/qirat_notifications')({
 
 function QiratNotificationsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [summary, setSummary] = useState<{ total: number; unread: number; byChannel: any[] } | null>(null);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -161,56 +160,30 @@ function QiratNotificationsPage() {
   const [deleting, setDeleting] = useState<string[]>([]);
   const [marking, setMarking] = useState<string[]>([]);
   const limit = 10;
-  const pollingRef = useRef<ReturnType<typeof setInterval>>(null);
 
-  const fetchNotifications = useCallback(async (p = page, s = search, f = filter) => {
-    setLoading(true);
-    setError('');
-    try {
-      const token = localStorage.getItem('token');
-      const url = `${apiUrl('/notifications')}?page=${p}&limit=${limit}${s ? `&search=${encodeURIComponent(s)}` : ''}${f !== 'all' ? `&filter=${f}` : ''}`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody?.message || `Request failed (${response.status})`);
-      }
-      const data = await response.json();
-      const list = data.notifications || [];
-      setNotifications(list);
-      if (data.meta) {
-        setTotalPages(data.meta.totalPages || 1);
-        setTotal(data.meta.total || list.length);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load notifications');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, filter]);
+  const notificationsUrl = `/notifications?page=${page}&limit=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}${filter !== 'all' ? `&filter=${filter}` : ''}`;
 
-  const fetchSummary = useCallback(async () => {
-    try {
-      const data = await api('/notifications/summary');
-      setSummary(data);
-    } catch (e) {
-      // silent
-    }
-  }, []);
+  const { data: notificationsResponse, isLoading: loading, error: queryError } = useApiQuery<any>({
+    queryKey: ['notifications', page, search, filter],
+    path: notificationsUrl,
+    refetchInterval: 30_000,
+  });
+
+  const notifications = notificationsResponse?.notifications || [];
+  const error = queryError ? 'Failed to load notifications' : '';
 
   useEffect(() => {
-    fetchNotifications();
-    fetchSummary();
-  }, [page, search, filter, fetchNotifications, fetchSummary]);
+    if (notificationsResponse?.meta) {
+      setTotalPages(notificationsResponse.meta.totalPages || 1);
+      setTotal(notificationsResponse.meta.total || notifications.length);
+    }
+  }, [notificationsResponse]);
 
-  useEffect(() => {
-    pollingRef.current = setInterval(() => {
-      fetchNotifications();
-      fetchSummary();
-    }, 30000);
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
-  }, [fetchNotifications, fetchSummary]);
+  const { data: summary } = useApiQuery<{ total: number; unread: number; byChannel: any[] }>({
+    queryKey: ['notifications-summary'],
+    path: '/notifications/summary',
+    refetchInterval: 30_000,
+  });
 
   const handleSearch = (val: string) => {
     setSearch(val);
@@ -229,8 +202,8 @@ function QiratNotificationsPage() {
     setMarking(prev => [...prev, id]);
     try {
       await api(`/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-      await fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-summary'] });
     } catch (e) {
       console.error('Failed to mark as read', e);
     } finally {
@@ -241,8 +214,8 @@ function QiratNotificationsPage() {
   const handleMarkAllRead = async () => {
     try {
       await api('/notifications/read-all', { method: 'PATCH' });
-      await fetchNotifications();
-      await fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-summary'] });
     } catch (e) {
       console.error('Failed to mark all as read', e);
     }
@@ -252,8 +225,8 @@ function QiratNotificationsPage() {
     setDeleting(prev => [...prev, id]);
     try {
       await api(`/notifications/${id}`, { method: 'DELETE' });
-      await fetchNotifications();
-      await fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-summary'] });
     } catch (e) {
       console.error('Failed to delete', e);
     } finally {
@@ -264,8 +237,8 @@ function QiratNotificationsPage() {
   const handleClearRead = async () => {
     try {
       await api('/notifications/clear-read', { method: 'POST' });
-      await fetchNotifications();
-      await fetchSummary();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-summary'] });
     } catch (e) {
       console.error('Failed to clear read', e);
     }
@@ -364,7 +337,7 @@ function QiratNotificationsPage() {
               <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-foreground mb-2">Error Loading Notifications</h3>
               <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => fetchNotifications()} variant="outline" className="rounded-xl">
+              <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['notifications'] })} variant="outline" className="rounded-xl">
                 <RefreshCw className="h-4 w-4 mr-2" /> Try Again
               </Button>
             </div>

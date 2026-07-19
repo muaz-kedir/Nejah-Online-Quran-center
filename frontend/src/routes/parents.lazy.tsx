@@ -2,8 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
@@ -37,6 +36,8 @@ import { DeleteParentModal } from '@/components/parents/DeleteParentModal';
 import { ViewParentModal } from '@/components/parents/ViewParentModal';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/parents')({
   component: ParentsPage,
@@ -207,9 +208,8 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
 });
 
 function ParentsPage() {
-  const [parents, setParents] = useState<any[]>([]);
-  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 5, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
@@ -220,66 +220,53 @@ function ParentsPage() {
   const [deletingParent, setDeletingParent] = useState<any | null>(null);
   const [viewingParent, setViewingParent] = useState<any | null>(null);
 
-  const fetchParents = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        page: meta.page.toString(),
-        limit: meta.limit.toString(),
-      });
-      if (search) params.append('search', search);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
+  const PAGE_SIZE = 5;
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: PAGE_SIZE.toString(),
+  });
+  if (search) params.append('search', search);
+  if (statusFilter !== 'all') params.append('status', statusFilter);
 
-      const response = await fetch(apiUrl(`/parents?${params}`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const res = await response.json();
+  const { data: res, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["parents", { page, statusFilter }],
+    path: `/parents?${params}`,
+    refetchInterval: 30_000,
+  });
 
-      const PAGE_SIZE = 5;
+  let parents: any[] = [];
+  let meta = { total: 0, page, limit: PAGE_SIZE, totalPages: 1 };
 
-      if (res && Array.isArray(res.data)) {
-        setParents(res.data);
-        const resMeta = res.meta || {};
-        setMeta({
-          total: resMeta.total || res.data.length,
-          page: resMeta.page || meta.page,
-          limit: PAGE_SIZE,
-          totalPages: resMeta.totalPages || Math.ceil((resMeta.total || res.data.length) / PAGE_SIZE),
-        });
-      } else if (Array.isArray(res)) {
-        // Backend returned a flat array — do client-side pagination
-        const total = res.length;
-        const startIdx = (meta.page - 1) * PAGE_SIZE;
-        const paged = res.slice(startIdx, startIdx + PAGE_SIZE);
-        setParents(paged);
-        setMeta({ total, page: meta.page, limit: PAGE_SIZE, totalPages: Math.ceil(total / PAGE_SIZE) });
-      } else {
-        setParents([]);
-        setMeta({ total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 });
-      }
-    } catch (error) {
-      toast.error('Failed to fetch parents directory');
-    } finally {
-      setLoading(false);
-    }
+  if (res && Array.isArray(res.data)) {
+    parents = res.data;
+    const resMeta = res.meta || {};
+    meta = {
+      total: resMeta.total || res.data.length,
+      page: resMeta.page || page,
+      limit: PAGE_SIZE,
+      totalPages: resMeta.totalPages || Math.ceil((resMeta.total || res.data.length) / PAGE_SIZE),
+    };
+  } else if (Array.isArray(res)) {
+    const total = res.length;
+    const startIdx = (page - 1) * PAGE_SIZE;
+    parents = res.slice(startIdx, startIdx + PAGE_SIZE);
+    meta = { total, page, limit: PAGE_SIZE, totalPages: Math.ceil(total / PAGE_SIZE) };
+  }
+
+  const fetchParents = () => {
+    queryClient.invalidateQueries({ queryKey: ["parents"] });
   };
-
-  useEffect(() => {
-    fetchParents();
-  }, [meta.page, statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setMeta({ ...meta, page: 1 });
-    fetchParents();
+    setPage(1);
   };
 
   const resetFilters = () => {
     setSearch('');
     setStatusFilter('all');
     setClassFilter('all');
-    setMeta({ ...meta, page: 1 });
+    setPage(1);
   };
 
   const handleViewParent = useCallback((parent: any) => setViewingParent(parent), []);
@@ -466,7 +453,7 @@ function ParentsPage() {
                 variant="outline"
                 size="icon"
                 disabled={meta.page === 1}
-                onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
+                onClick={() => setPage(meta.page - 1)}
                 className="h-8 w-8 rounded-lg dark:border-white/10 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -475,7 +462,7 @@ function ParentsPage() {
                 <Button
                   key={i}
                   variant={meta.page === i + 1 ? 'default' : 'outline'}
-                  onClick={() => setMeta({ ...meta, page: i + 1 })}
+                    onClick={() => setPage(i + 1)}
                   className={cn(
                     'h-8 w-8 rounded-lg font-bold text-xs border-none',
                     meta.page === i + 1
@@ -490,7 +477,7 @@ function ParentsPage() {
                 variant="outline"
                 size="icon"
                 disabled={meta.page >= meta.totalPages}
-                onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
+                onClick={() => setPage(meta.page + 1)}
                 className="h-8 w-8 rounded-lg dark:border-white/10 disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />

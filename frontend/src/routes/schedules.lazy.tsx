@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Calendar, Clock, User, BookOpen, Pencil, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { api, apiUrl } from "@/lib/api";
+import { api } from "@/lib/api";
 import { cn } from '@/lib/utils';
 import {
   DAYS_OF_WEEK,
@@ -22,6 +23,7 @@ import {
   sortSchedulesByStartTime,
 } from '@/lib/schedule-day';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/schedules')({
   component: SchedulesPage,
@@ -29,65 +31,23 @@ export const Route = createLazyFileRoute('/schedules')({
 
 function SchedulesPage() {
   const navigate = useNavigate();
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
-  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Edit Modal State
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
   const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
-  const [schedulesWithDetails, setSchedulesWithDetails] = useState<any[]>([]);
 
-  const fetchSchedules = async () => {
-    try {
-      setLoading(true);
-      const data = await api<any[]>('/schedules');
-      const schedulesArray = Array.isArray(data) ? data : [];
-      setSchedules(schedulesArray);
-      
-      // Load teacher details for each schedule
-      const detailedSchedules = await Promise.all(
-        schedulesArray.map(async (schedule: any) => {
-          if (schedule.teacherId) {
-            try {
-              const token = localStorage.getItem('token');
-              const response = await fetch(apiUrl(`/teachers/${schedule.teacherId}`), {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              if (response.ok) {
-                const teacherData = await response.json();
-                return { ...schedule, teacher: teacherData };
-              }
-            } catch {
-              // Continue with original data if fetch fails
-            }
-          }
-          return schedule;
-        })
-      );
-      setSchedulesWithDetails(detailedSchedules);
-    } catch {
-      toast.error('Failed to load schedules');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchSchedules();
-    setIsRefreshing(false);
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
+  const { data: schedules = [], isLoading: loading } = useApiQuery<any[]>({
+    queryKey: ['schedules'],
+    path: '/schedules',
+    refetchInterval: 30_000,
+  });
 
   const daySchedules = useMemo(
-    () => sortSchedulesByStartTime(getSchedulesForDay(schedulesWithDetails, selectedDay)),
-    [schedulesWithDetails, selectedDay],
+    () => sortSchedulesByStartTime(getSchedulesForDay(schedules, selectedDay)),
+    [schedules, selectedDay],
   );
 
   const filtered = useMemo(
@@ -135,9 +95,9 @@ function SchedulesPage() {
           <p className="text-muted-foreground mt-1">View and manage teaching schedules by day</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <Button variant="outline" className="h-11 gap-2 rounded-xl px-4" onClick={() => queryClient.invalidateQueries({ queryKey: ['schedules'] })}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
           <Button 
             className="bg-primary hover:bg-primary"
@@ -273,37 +233,9 @@ function SchedulesPage() {
           setIsEditScheduleOpen(false);
           setScheduleToEdit(null);
         }}
-        onSuccess={async () => {
-          // Refresh schedules
-          try {
-            const data = await api<any[]>('/schedules');
-            const schedulesArray = Array.isArray(data) ? data : [];
-            setSchedules(schedulesArray);
-            
-            const detailedSchedules = await Promise.all(
-              schedulesArray.map(async (schedule: any) => {
-                if (schedule.teacherId) {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(apiUrl(`/teachers/${schedule.teacherId}`), {
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (response.ok) {
-                      const teacherData = await response.json();
-                      return { ...schedule, teacher: teacherData };
-                    }
-                  } catch {
-                    // Continue with original data if fetch fails
-                  }
-                }
-                return schedule;
-              })
-            );
-            setSchedulesWithDetails(detailedSchedules);
-            toast.success('Schedule updated successfully');
-          } catch {
-            toast.error('Failed to refresh schedules');
-          }
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['schedules'] });
+          toast.success('Schedule updated successfully');
         }}
         teacher={scheduleToEdit?.teacher || null}
         schedule={scheduleToEdit}

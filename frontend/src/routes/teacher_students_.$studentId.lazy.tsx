@@ -17,6 +17,7 @@ import { motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 type TabValue = 'overview' | 'homework' | 'progress';
 
@@ -48,9 +49,6 @@ function TeacherStudentDetailContent() {
   const { studentId } = Route.useParams();
   const { tab } = Route.useSearch();
   const navigate = useNavigate();
-  const [student, setStudent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
 
   const activeTab: TabValue = tab || 'overview';
@@ -58,6 +56,20 @@ function TeacherStudentDetailContent() {
   const [sessionStart, setSessionStart] = useState(new Date().toISOString().slice(0, 16));
   const [sessionNotes, setSessionNotes] = useState('');
   const [schedulingSession, setSchedulingSession] = useState(false);
+
+  const { data: student, isLoading: loading, error: queryError } = useApiQuery<any>({
+    queryKey: ['teacher-student-detail', studentId],
+    path: `/teachers/students/${studentId}`,
+    refetchInterval: 30_000,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    api<{ connected: boolean }>('/zoom/oauth/status')
+      .then((res) => { if (!cancelled) setZoomConnected(res.connected); })
+      .catch(() => { if (!cancelled) setZoomConnected(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleScheduleSession = async () => {
     setSchedulingSession(true);
@@ -82,34 +94,6 @@ function TeacherStudentDetailContent() {
     }
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await api<any>(`/teachers/students/${studentId}`);
-        if (!cancelled) setStudent(data);
-      } catch (err: any) {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load student');
-          toast.error(err.message || 'You do not have access to this student');
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-
-    api<{ connected: boolean }>('/zoom/oauth/status')
-      .then((res) => { if (!cancelled) setZoomConnected(res.connected); })
-      .catch(() => { if (!cancelled) setZoomConnected(false); });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [studentId]);
-
   const setTab = (next: TabValue) => {
     navigate({
       to: '/teacher_students/$studentId',
@@ -126,10 +110,10 @@ function TeacherStudentDetailContent() {
     );
   }
 
-  if (error || !student) {
+  if (queryError || !student) {
     return (
       <div className="max-w-lg mx-auto bg-card dark:bg-nejah-surface rounded-2xl p-8 text-center border border-border dark:border-nejah-border-blue">
-        <p className="text-red-600 mb-4">{error || 'Student not found'}</p>
+        <p className="text-red-600 mb-4">{queryError?.message || 'Student not found'}</p>
         <Link to="/teacher_students" className="text-sm font-bold text-primary hover:underline">
           Back to Students Directory
         </Link>

@@ -2,15 +2,15 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel, BentoStatCard } from '@/components/dashboard/design-system';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { requireAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -41,34 +41,34 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/live-sessions/analytics')({
   component: SessionAnalyticsPage,
 });
 
 function SessionAnalyticsPage() {
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [overview, setOverview] = useState<any>(null);
-  const [monthly, setMonthly] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [dash, ov, mon] = await Promise.all([
-        api<any>('/zoom-analytics/dashboard').catch(() => null),
-        api<any>('/zoom-analytics/overview').catch(() => null),
-        api<any>('/zoom-analytics/monthly').catch(() => null),
-      ]);
-      setDashboard(dash);
-      setOverview(ov);
-      setMonthly(mon);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: dashboard, isLoading: loadingDashboard } = useApiQuery<any>({
+    queryKey: ['zoom-analytics-dashboard'],
+    path: '/zoom-analytics/dashboard',
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => { fetchAll(); }, []);
+  const { data: overview, isLoading: loadingOverview } = useApiQuery<any>({
+    queryKey: ['zoom-analytics-overview'],
+    path: '/zoom-analytics/overview',
+    refetchInterval: 30_000,
+  });
+
+  const { data: monthly, isLoading: loadingMonthly } = useApiQuery<any>({
+    queryKey: ['zoom-analytics-monthly'],
+    path: '/zoom-analytics/monthly',
+    refetchInterval: 30_000,
+  });
+
+  const loading = loadingDashboard || loadingOverview || loadingMonthly;
 
   const sessionsByDay: Array<{
     day: string;
@@ -172,7 +172,11 @@ function SessionAnalyticsPage() {
           description="Performance metrics and trends for all class sessions across the platform."
           actions={
             <button
-              onClick={fetchAll}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['zoom-analytics-dashboard'] });
+                queryClient.invalidateQueries({ queryKey: ['zoom-analytics-overview'] });
+                queryClient.invalidateQueries({ queryKey: ['zoom-analytics-monthly'] });
+              }}
               disabled={loading}
               className="inline-flex items-center gap-2 h-11 px-4 rounded-xl border border-border dark:border-white/5 text-xs font-bold hover:bg-muted transition-colors"
             >

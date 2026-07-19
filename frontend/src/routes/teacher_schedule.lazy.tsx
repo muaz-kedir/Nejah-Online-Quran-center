@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { TeacherLayout } from '@/components/dashboard/TeacherLayout';
 import { requireAuth } from '@/lib/auth';
@@ -10,7 +10,7 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { API_BASE, apiUrl } from "@/lib/api";
+import { useApiQuery } from '@/hooks/useApiQuery';
 import {
   DAYS_OF_WEEK,
   getSchedulesForDay,
@@ -23,33 +23,13 @@ export const Route = createLazyFileRoute('/teacher_schedule')({
 });
 
 function TeacherSchedulePage() {
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: schedules = [], isLoading: loading } = useApiQuery<any[]>({
+    queryKey: ['teacher-schedule'],
+    path: '/teachers/schedule',
+    refetchInterval: 30_000,
+  });
   const [currentView, setCurrentView] = useState<'day' | 'week'>('week');
   const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
-
-  const fetchSchedule = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/teachers/schedule`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSchedules(data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch schedule:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedule();
-  }, []);
 
   const schedulesForSelectedDay = sortSchedulesByStartTime(
     getSchedulesForDay(schedules, selectedDay),

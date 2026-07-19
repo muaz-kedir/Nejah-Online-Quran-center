@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { CalendarDays, Clock, User, Play, Video, BookOpen, AlertCircle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -12,45 +12,22 @@ import { StudentPortalLayout, StudentPageLoader } from '@/components/student/Stu
 import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
 import { isLiveSessionActive, joinLiveSessionWhenActive } from '@/lib/student-live-session';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/student_/classes')({
   component: StudentClasses,
 });
 
 function StudentClasses() {
-  const [data, setData] = useState<any>({ current: [], upcoming: [], previous: [], liveClass: null });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
-
-  const fetchClasses = useCallback(async (isInitial = false) => {
-    try {
-      if (isInitial) setLoading(true);
-      else setIsPolling(true);
-      
-      const res = await api('/student/dashboard/classes');
-      setData(res);
-      setError(null);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Failed to load classes.');
-    } finally {
-      if (isInitial) setLoading(false);
-      setIsPolling(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchClasses(true);
-
-    const intervalId = setInterval(() => {
-      fetchClasses(false);
-    }, 15000); // Poll every 15 seconds
-
-    return () => clearInterval(intervalId);
-  }, [fetchClasses]);
+  const { data, isLoading: loading, error } = useApiQuery<any>({
+    queryKey: ['student-classes'],
+    path: '/student/dashboard/classes',
+    refetchInterval: 15_000,
+  });
 
   if (loading) return <StudentPageLoader />;
+
+  const classData = data || { current: [], upcoming: [], previous: [], liveClass: null };
 
   const joinClass = async (sessionId?: string, status?: string) => {
     if (!sessionId || !isLiveSessionActive(status)) {
@@ -82,7 +59,7 @@ function StudentClasses() {
     }
   };
 
-  const liveSessionActive = isLiveSessionActive(data.liveClass?.status);
+  const liveSessionActive = isLiveSessionActive(classData.liveClass?.status);
 
   const ClassCard = ({ cls, showJoin }: { cls: any; showJoin?: boolean }) => {
     const isLive = cls.status === 'live' && liveSessionActive;
@@ -119,7 +96,7 @@ function StudentClasses() {
           </div>
           <div className="flex items-center gap-2">
             {showJoin && isLive && (
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white rounded-full font-bold shadow-lg shadow-red-600/20" onClick={() => joinClass(data.liveClass?.id, data.liveClass?.status)}>
+              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white rounded-full font-bold shadow-lg shadow-red-600/20" onClick={() => joinClass(classData.liveClass?.id, classData.liveClass?.status)}>
                 <Play className="h-4 w-4 mr-2" /> Enter Class
               </Button>
             )}
@@ -144,7 +121,9 @@ function StudentClasses() {
             <p className="text-muted-foreground mt-2">Manage your schedule and access live sessions.</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {isPolling ? <RefreshCw className="h-4 w-4 animate-spin text-nejah-electric" /> : <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-green-500" /></div>}
+            <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+            </div>
             Real-time tracking active
           </div>
         </div>
@@ -154,12 +133,12 @@ function StudentClasses() {
             <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
             <div>
               <p className="font-bold">Error loading classes</p>
-              <p className="text-sm">{error}</p>
+              <p className="text-sm">{error.message}</p>
             </div>
           </div>
         )}
 
-        {liveSessionActive && data.liveClass && (
+        {liveSessionActive && classData.liveClass && (
           <section className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-sm font-extrabold text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
               <Video className="h-5 w-5" /> Live Now
@@ -169,15 +148,15 @@ function StudentClasses() {
               
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
-                  <h3 className="text-3xl font-bold font-serif mb-2">{data.liveClass.classTitle}</h3>
+                  <h3 className="text-3xl font-bold font-serif mb-2">{classData.liveClass.classTitle}</h3>
                   <p className="text-red-100 font-medium">
-                    {data.liveClass.teacher?.fullName ? `with ${data.liveClass.teacher.fullName}` : 'Your teacher is waiting for you.'}
+                    {classData.liveClass.teacher?.fullName ? `with ${classData.liveClass.teacher.fullName}` : 'Your teacher is waiting for you.'}
                   </p>
                 </div>
                 <Button 
                   size="lg" 
                   className="bg-white text-red-600 hover:bg-red-50 text-lg rounded-full px-8 h-14 font-bold shadow-lg" 
-                  onClick={() => joinClass(data.liveClass?.id, data.liveClass?.status)}
+                  onClick={() => joinClass(classData.liveClass?.id, classData.liveClass?.status)}
                 >
                   <Play className="h-5 w-5 mr-2" /> Enter Live Class
                 </Button>
@@ -194,9 +173,9 @@ function StudentClasses() {
               </div>
               <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Today's Schedule</h2>
             </div>
-            {data.current?.length ? (
+            {classData.current?.length ? (
               <div className="space-y-4">
-                {data.current.map((c: any) => <ClassCard key={c.id} cls={c} showJoin />)}
+                {classData.current.map((c: any) => <ClassCard key={c.id} cls={c} showJoin />)}
               </div>
             ) : (
               <div className="bg-muted/30 border border-dashed rounded-[24px] p-10 text-center flex flex-col items-center justify-center">
@@ -214,9 +193,9 @@ function StudentClasses() {
               </div>
               <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Upcoming Schedule</h2>
             </div>
-            {data.upcoming?.length ? (
+            {classData.upcoming?.length ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.upcoming.map((c: any) => <ClassCard key={c.id} cls={c} />)}
+                {classData.upcoming.map((c: any) => <ClassCard key={c.id} cls={c} />)}
               </div>
             ) : (
               <p className="text-muted-foreground text-sm bg-muted/50 p-6 rounded-2xl border text-center">No upcoming classes scheduled.</p>
@@ -231,9 +210,9 @@ function StudentClasses() {
               <h2 className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif">Class History</h2>
             </div>
             
-            {data.previous?.length ? (
+            {classData.previous?.length ? (
               <div className="space-y-4">
-                {data.previous.map((c: any) => (
+                {classData.previous.map((c: any) => (
                   <div key={c.id} className="bg-card hover:bg-muted/30 transition-colors rounded-[24px] p-6 border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">

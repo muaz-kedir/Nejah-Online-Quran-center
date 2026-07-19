@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { API_BASE } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader, GlassPanel } from '@/components/dashboard/design-system';
@@ -17,8 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Plus, Pencil, Trash2, DollarSign, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
-
-const API = API_BASE;
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface LearningGoal { id: string; name: string; }
 interface FeeConfig {
@@ -35,41 +35,60 @@ export const Route = createLazyFileRoute('/fee_settings')({
 });
 
 function FeeSettingsPage() {
-  const [fees, setFees] = useState<FeeConfig[]>([]);
-  const [goals, setGoals] = useState<LearningGoal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<FeeConfig | null>(null);
   const [form, setForm] = useState({ learningGoalId: '', country: '', amount: '', currency: 'ETB' });
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : '';
   const isReadonly = userRole === 'finance_manager';
 
-  const token = () => localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` };
+  const { data: fees, isLoading: loading } = useApiQuery<FeeConfig[]>({
+    queryKey: ["fee-config"],
+    path: `/fee-config`,
+    refetchInterval: 30_000,
+  });
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchData();
-    setIsRefreshing(false);
+  const { data: goals } = useApiQuery<LearningGoal[]>({
+    queryKey: ["learning-goals-admin"],
+    path: `/learning-goals/admin`,
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["fee-config"] });
   };
 
-  const fetchData = async () => {
+  const handleSave = async () => {
+    if (!form.learningGoalId || !form.country || !form.amount) {
+      toast.error('Please fill all required fields');
+      return;
+    }
     try {
-      const [feesRes, goalsRes] = await Promise.all([
-        fetch(`${API}/fee-config`, { headers }),
-        fetch(`${API}/learning-goals/admin`, { headers }),
-      ]);
-      if (feesRes.ok) setFees(await feesRes.json());
-      if (goalsRes.ok) setGoals(await goalsRes.json());
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+      const body = { learningGoalId: form.learningGoalId, country: form.country, amount: parseFloat(form.amount), currency: form.currency };
+      const url = editing ? `${API_BASE}/fee-config/${editing.id}` : `${API_BASE}/fee-config`;
+      const method = editing ? 'PATCH' : 'POST';
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+      if (!res.ok) throw new Error((await res.json()).message || 'Failed to save');
+      toast.success(editing ? 'Fee updated' : 'Fee created');
+      setShowModal(false);
+      queryClient.invalidateQueries({ queryKey: ["fee-config"] });
+    } catch (e: any) {
+      toast.error(e.message);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this fee configuration?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/fee-config/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Failed to delete');
+      toast.success('Fee deleted');
+      queryClient.invalidateQueries({ queryKey: ["fee-config"] });
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -83,44 +102,13 @@ function FeeSettingsPage() {
     setShowModal(true);
   };
 
-  const handleSave = async () => {
-    if (!form.learningGoalId || !form.country || !form.amount) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-    try {
-      const body = { learningGoalId: form.learningGoalId, country: form.country, amount: parseFloat(form.amount), currency: form.currency };
-      const url = editing ? `${API}/fee-config/${editing.id}` : `${API}/fee-config`;
-      const method = editing ? 'PATCH' : 'POST';
-      const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error((await res.json()).message || 'Failed to save');
-      toast.success(editing ? 'Fee updated' : 'Fee created');
-      setShowModal(false);
-      fetchData();
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this fee configuration?')) return;
-    try {
-      const res = await fetch(`${API}/fee-config/${id}`, { method: 'DELETE', headers });
-      if (!res.ok) throw new Error('Failed to delete');
-      toast.success('Fee deleted');
-      fetchData();
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
   return (
     <DashboardLayout>
       <PageHeader title="Fee Settings" description="Configure monthly fees per learning goal and country"
         actions={
-          <Button onClick={handleRefresh} variant="outline" className="h-10 gap-2 rounded-xl px-4" disabled={isRefreshing}>
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <Button onClick={handleRefresh} variant="outline" className="h-10 gap-2 rounded-xl px-4">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
         }
       />
@@ -128,7 +116,7 @@ function FeeSettingsPage() {
       <GlassPanel>
         <div className="flex justify-between items-center mb-6">
           <p className="text-sm text-muted-foreground">
-            {fees.length} fee configuration(s)
+            {(fees || []).length} fee configuration(s)
             {isReadonly && (
               <Badge variant="outline" className="ml-2 text-xs">
                 <Lock className="h-3 w-3 mr-1" /> Read-only
@@ -162,7 +150,7 @@ function FeeSettingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {fees.map((fee) => (
+                {(fees || []).map((fee) => (
                   <tr key={fee.id} className="hover:bg-muted/50">
                     <td className="py-3 px-4">{fee.learningGoal?.name || fee.learningGoalId}</td>
                     <td className="py-3 px-4">{fee.country}</td>
@@ -204,7 +192,7 @@ function FeeSettingsPage() {
                     <SelectValue placeholder="Select goal..." />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue">
-                    {goals.map((g) => (
+                    {(goals || []).map((g) => (
                       <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                     ))}
                   </SelectContent>

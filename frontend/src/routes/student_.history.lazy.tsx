@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, Clock, BookOpen, Users, BarChart3, TrendingUp, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { SessionCard } from '@/components/sessions/SessionCard';
 import { SessionDetailView } from '@/components/sessions/SessionDetailView';
 import { GlassPanel } from '@/components/dashboard/design-system';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 interface ClassHistoryData {
   data: Array<{
@@ -51,30 +53,21 @@ export const Route = createLazyFileRoute('/student_/history')({
 });
 
 function StudentHistoryPage() {
-  const [data, setData] = useState<ClassHistoryData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [tab, setTab] = useState<'history' | 'stats'>('history');
 
-  const fetchHistory = useCallback(async (isInitial = false) => {
-    try {
-      if (!isInitial) setLoading(true);
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (statusFilter) params.set('status', statusFilter);
-      const res = await api<ClassHistoryData>(`/live-sessions/student-class-history?${params}`);
-      setData(res);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load class history');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, statusFilter]);
+  const { data, isLoading: loading } = useApiQuery<ClassHistoryData>({
+    queryKey: ['student-history', page, statusFilter],
+    path: `/live-sessions/student-class-history?page=${page}&limit=20${statusFilter ? `&status=${statusFilter}` : ''}`,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    fetchHistory(true);
-  }, [fetchHistory]);
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['student-history'] });
+  };
 
   if (selectedSessionId) {
     return (
@@ -109,7 +102,7 @@ function StudentHistoryPage() {
                 className={cn("px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors", tab === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
               >Statistics</button>
             </div>
-            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => fetchHistory(false)}>
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRefresh}>
               <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} /> Refresh
             </Button>
           </div>

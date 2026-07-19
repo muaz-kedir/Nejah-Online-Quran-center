@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
 import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
 import { LanguageProvider } from '@/context/LanguageContext';
@@ -14,7 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -31,6 +30,8 @@ import {
   RefreshCw,
   Filter,
 } from 'lucide-react';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/parent_sessions')({
   component: ParentSessionsRoute,
@@ -46,35 +47,27 @@ function ParentSessionsRoute() {
 
 function ParentSessionsPage() {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedChild, setSelectedChild] = useState<string>('all');
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => { fetchSessions(); }, []);
+  const { data: sessionsData, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["parent-sessions"],
+    path: `/parent/sessions`,
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const data = await api<{ count: number }>('/notifications/unread-count');
-        setUnreadCount(data.count ?? 0);
-      } catch { /* silent */ }
-    };
-    poll();
-    const interval = setInterval(poll, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const sessions = sessionsData?.data || [];
 
-  const fetchSessions = async () => {
-    setLoading(true);
-    try {
-      const data = await api<any>('/parent/sessions');
-      setSessions(data?.data || []);
-    } catch {
-      toast.error('Failed to load sessions');
-    } finally {
-      setLoading(false);
-    }
+  const { data: unreadData } = useApiQuery<any>({
+    queryKey: ["parent-notifications-unread-count"],
+    path: `/notifications/unread-count`,
+    refetchInterval: 30_000,
+  });
+
+  const unreadCount = unreadData?.count ?? 0;
+
+  const fetchSessions = () => {
+    queryClient.invalidateQueries({ queryKey: ["parent-sessions"] });
   };
 
   const children = useMemo(() => {

@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { CalendarDays, User, BookOpen, RefreshCw, Timer, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { GlassPanel } from '@/components/dashboard/design-system';
-import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { useApiQuery } from '@/hooks/useApiQuery';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AttendanceRecord {
   id: string;
@@ -57,34 +58,22 @@ export const Route = createLazyFileRoute('/attendance')({
 });
 
 function AttendancePage() {
-  const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
-  const fetchOverview = useCallback(async (isInitial = false) => {
-    try {
-      if (!isInitial) setLoading(true);
+  const params = new URLSearchParams({ page: String(page), limit: '20' });
+  if (statusFilter) params.set('status', statusFilter);
+  if (fromDate) params.set('from', fromDate);
+  if (toDate) params.set('to', toDate);
 
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (statusFilter) params.set('status', statusFilter);
-      if (fromDate) params.set('from', fromDate);
-      if (toDate) params.set('to', toDate);
-
-      const res = await api<OverviewData>(`/live-sessions/attendance/overview?${params}`);
-      setData(res);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load attendance data');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, statusFilter, fromDate, toDate]);
-
-  useEffect(() => {
-    fetchOverview(true);
-  }, [fetchOverview]);
+  const { data, isLoading } = useApiQuery<OverviewData>({
+    queryKey: ['attendance', page, statusFilter, fromDate, toDate],
+    path: `/live-sessions/attendance/overview?${params}`,
+    refetchInterval: 30_000,
+  });
 
   const summary = data?.summary;
 
@@ -97,8 +86,8 @@ function AttendancePage() {
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Attendance Overview</h1>
             <p className="text-muted-foreground mt-1 text-sm">Comprehensive attendance tracking across all sessions.</p>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => fetchOverview(false)}>
-            <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => queryClient.invalidateQueries({ queryKey: ['attendance'] })}>
+            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
             Refresh
           </Button>
         </div>
@@ -170,7 +159,7 @@ function AttendancePage() {
         </GlassPanel>
 
         {/* Table */}
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="bg-card rounded-2xl p-5 border animate-pulse">

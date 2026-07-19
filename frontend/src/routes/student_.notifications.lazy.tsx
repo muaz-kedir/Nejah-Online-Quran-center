@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   CheckCheck,
@@ -31,6 +32,7 @@ import {
   formatRelativeTime,
   formatFullDate,
 } from "@/lib/notification-helpers";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/student_/notifications')({
   component: StudentNotificationsPage,
@@ -38,81 +40,50 @@ export const Route = createLazyFileRoute('/student_/notifications')({
 
 function StudentNotificationsPage() {
   const navigate = useNavigate();
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState({ total: 0, unread: 0, read: 0, today: 0 });
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [typeFilter, setTypeFilter] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detailNotif, setDetailNotif] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const loadSummary = useCallback(async () => {
-    try {
-      const s = await api<any>("/student/dashboard/notifications/summary");
-      if (s) setSummary(s);
-    } catch { /* ignore */ }
-  }, []);
+  const { data: notificationsData, isLoading: loading } = useApiQuery<{ items: any[]; totalPages: number }>({
+    queryKey: ['student-notifications', filter, search, page],
+    path: `/student/dashboard/notifications?${new URLSearchParams({ ...(filter !== "all" ? { filter } : {}), ...(search ? { search } : {}), page: String(page), limit: "20" }).toString()}`,
+    refetchInterval: 30_000,
+  });
 
-  const load = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filter !== "all") params.set("filter", filter);
-      if (search) params.set("search", search);
-      params.set("page", String(page));
-      params.set("limit", "20");
-      const data = await api<any>(`/student/dashboard/notifications?${params}`);
-      if (data) {
-        setItems(Array.isArray(data.items) ? data.items : []);
-        setTotalPages(data.totalPages || 1);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to load notifications");
-    } finally {
-      setLoading(false);
-    }
-  }, [filter, search, page]);
+  const { data: summary } = useApiQuery<{ total: number; unread: number; read: number; today: number }>({
+    queryKey: ['student-notifications-summary'],
+    path: '/student/dashboard/notifications/summary',
+    refetchInterval: 30_000,
+  });
 
-  useEffect(() => {
-    load();
-    loadSummary();
-  }, [load, loadSummary]);
+  const items = notificationsData?.items || [];
+  const totalPages = notificationsData?.totalPages || 1;
 
-  // Polling every 30s as fallback
-  useEffect(() => {
-    pollingRef.current = setInterval(() => {
-      loadSummary();
-    }, 30000);
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [loadSummary]);
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['student-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['student-notifications-summary'] });
+  };
 
-  // WebSocket auto-refresh
   useSocket({
     onNotification: () => {
-      load();
-      loadSummary();
+      invalidateAll();
     },
   });
 
   const markRead = async (id: string) => {
     await api(`/student/dashboard/notifications/${id}/read`, { method: "PATCH" });
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-    setSummary((s) => ({ ...s, unread: Math.max(0, s.unread - 1), read: s.read + 1 }));
+    invalidateAll();
     if (detailNotif?.id === id) setDetailNotif((prev: any) => ({ ...prev, isRead: true }));
   };
 
   const markAllRead = async () => {
-    const unreadCount = items.filter((n) => !n.isRead).length;
     await api("/student/dashboard/notifications/read-all", { method: "PATCH" });
-    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setSummary((s) => ({ ...s, unread: 0, read: s.read + unreadCount }));
+    invalidateAll();
     toast.success("All notifications marked as read");
   };
 
@@ -120,13 +91,7 @@ function StudentNotificationsPage() {
     setDeletingId(id);
     try {
       await api(`/student/dashboard/notifications/${id}`, { method: "DELETE" });
-      setItems((prev) => prev.filter((n) => n.id !== id));
-      setSummary((s) => ({
-        ...s,
-        total: s.total - 1,
-        unread: items.find((n) => n.id === id && !n.isRead) ? s.unread - 1 : s.unread,
-        read: items.find((n) => n.id === id && n.isRead) ? s.read - 1 : s.read,
-      }));
+      invalidateAll();
       if (detailNotif?.id === id) setDetailNotif(null);
       toast.success("Notification deleted");
     } catch {
@@ -144,9 +109,8 @@ function StudentNotificationsPage() {
         body: JSON.stringify({ ids: Array.from(selectedIds) }),
         headers: { "Content-Type": "application/json" },
       });
-      setItems((prev) => prev.filter((n) => !selectedIds.has(n.id)));
       setSelectedIds(new Set());
-      loadSummary();
+      invalidateAll();
       toast.success(`${selectedIds.size} notifications deleted`);
     } catch {
       toast.error("Failed to delete notifications");
@@ -156,9 +120,8 @@ function StudentNotificationsPage() {
   const clearRead = async () => {
     try {
       const res = await api<any>("/student/dashboard/notifications", { method: "DELETE" });
-      setItems((prev) => prev.filter((n) => !n.isRead));
       const deleted = res?.deleted || 0;
-      setSummary((s) => ({ ...s, total: s.total - deleted, read: 0 }));
+      invalidateAll();
       toast.success(`${deleted} read notifications cleared`);
     } catch {
       toast.error("Failed to clear read notifications");

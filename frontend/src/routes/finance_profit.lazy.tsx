@@ -2,20 +2,20 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, formatCurrency } from '@/lib/finance-api';
+import { formatCurrency } from '@/lib/finance-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, TrendingUp, TrendingDown, DollarSign, PiggyBank, Wallet, Download, BarChart3, PieChart as PieChartIcon } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
-import { toast } from 'sonner';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { useQueryClient } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/finance_profit')({
   component: ProfitPage,
@@ -51,24 +51,15 @@ function ProfitPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const billingMonth = `${year}-${String(month).padStart(2, '0')}`;
 
-  const fetchProfit = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await financeFetch<any>(`/net-profit?billingMonth=${billingMonth}`);
-      setData(res);
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [billingMonth]);
-
-  useEffect(() => { fetchProfit(); }, [fetchProfit]);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["net-profit", billingMonth],
+    path: `/finance/net-profit?billingMonth=${billingMonth}`,
+    refetchInterval: 30_000,
+  });
 
   const expensePieData = data
     ? Object.entries(data.expenseBreakdown || {}).map(([k, v]) => ({
@@ -157,7 +148,7 @@ function ProfitPage() {
             onChange={(e) => setYear(Number(e.target.value))}
             className="h-9 w-[100px] rounded-xl text-xs text-center"
           />
-          <Button variant="outline" size="sm" onClick={fetchProfit} className="h-9 rounded-xl">
+          <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["net-profit"] })} className="h-9 rounded-xl">
             <BarChart3 className="h-4 w-4 mr-1" /> Load
           </Button>
         </div>

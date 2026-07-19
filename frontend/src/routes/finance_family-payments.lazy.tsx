@@ -3,12 +3,12 @@
 // Lazy component (code-split).
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, FinanceFilters, statusBadgeVariant, downloadCSV, exportPDF, authHeaders } from '@/lib/finance-api';
+import { FinanceFilters, statusBadgeVariant, downloadCSV, exportPDF, authHeaders } from '@/lib/finance-api';
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,15 +22,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Eye, Loader2, Plus, ChevronsUpDown, Check, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute('/finance_family-payments')({
   component: FamilyPaymentsPage,
 });
 
 function FamilyPaymentsPage() {
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<FinanceFilters>({ page: 1, limit: 20, dateRange: 'month' });
-  const [rows, setRows] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [payAmount, setPayAmount] = useState('');
@@ -54,20 +55,17 @@ function FamilyPaymentsPage() {
   const [formNotes, setFormNotes] = useState('');
   const [submittingForm, setSubmittingForm] = useState(false);
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const res = await financeFetch<any>('/family-payments', filters);
-      setRows(res.data || []);
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setLoading(false);
-    }
+  const { data: result, isLoading: loading } = useApiQuery<{ data: any[] }>({
+    queryKey: ["family-payments", filters],
+    path: `/finance/family-payments?page=${filters.page || 1}&limit=${filters.limit || 20}${filters.dateRange ? `&dateRange=${filters.dateRange}` : ''}`,
+    refetchInterval: 30_000,
+  });
+
+  const rows = result?.data || [];
+
+  const load = () => {
+    queryClient.invalidateQueries({ queryKey: ["family-payments"] });
   };
-  useEffect(() => {
-    load();
-  }, [filters]);
 
   const searchParents = async (q: string) => {
     try {
@@ -79,10 +77,11 @@ function FamilyPaymentsPage() {
     } catch {}
   };
 
-  useEffect(() => {
-    if (parentSearch.length >= 2) searchParents(parentSearch);
+  const handleParentSearch = (value: string) => {
+    setParentSearch(value);
+    if (value.length >= 2) searchParents(value);
     else setParents([]);
-  }, [parentSearch]);
+  };
 
   const selectParent = async (parent: any) => {
     setSelectedParent(parent);
@@ -318,7 +317,7 @@ function FamilyPaymentsPage() {
                     <CommandInput
                       placeholder="Type parent name..."
                       value={parentSearch}
-                      onValueChange={setParentSearch}
+                      onValueChange={handleParentSearch}
                     />
                     <CommandList>
                       <CommandEmpty>No parents found</CommandEmpty>

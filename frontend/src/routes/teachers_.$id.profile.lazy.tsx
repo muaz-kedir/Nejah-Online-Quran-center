@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { createLazyFileRoute, Link } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronLeft,
@@ -45,7 +46,8 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { api, API_BASE, apiUrl } from "@/lib/api";
+import { api, apiUrl } from "@/lib/api";
+import { useApiQuery } from '@/hooks/useApiQuery';
 import {
   getSchedulesForDay,
   getTodayDayName,
@@ -64,12 +66,42 @@ export const Route = createLazyFileRoute('/teachers_/$id/profile')({
 
 function TeacherProfilePage() {
   const { id } = Route.useParams();
-  const [teacher, setTeacher] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  
+  const queryClient = useQueryClient();
+
+  const { data: teacher, isLoading: loading } = useApiQuery<any>({
+    queryKey: ['teacher-profile', id],
+    path: `/teachers/${id}`,
+    refetchInterval: 30_000,
+  });
+
+  const { data: allStudents } = useApiQuery<any[]>({
+    queryKey: ['unassigned-students'],
+    path: '/students/unassigned',
+    refetchInterval: 30_000,
+  });
+
+  const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
+  const [daySchedules, setDaySchedules] = useState<any[]>([]);
+  const [loadingDaySchedules, setLoadingDaySchedules] = useState(false);
+
+  useEffect(() => {
+    if (!id || !selectedDay) return;
+    const fetchDaySchedules = async () => {
+      setLoadingDaySchedules(true);
+      try {
+        const data = await api<any[]>(`/schedules/teacher/${id}/day/${encodeURIComponent(selectedDay)}`);
+        setDaySchedules(Array.isArray(data) ? data : []);
+      } catch {
+        setDaySchedules(getSchedulesForDay(teacher?.schedules, selectedDay));
+      } finally {
+        setLoadingDaySchedules(false);
+      }
+    };
+    fetchDaySchedules();
+  }, [id, selectedDay, teacher?.schedules]);
+
   // Assign Student Modal State
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [allStudents, setAllStudents] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [unassigningId, setUnassigningId] = useState<string | null>(null);
@@ -80,84 +112,16 @@ function TeacherProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Schedule State
-  const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
-  const [daySchedules, setDaySchedules] = useState<any[]>([]);
-  const [loadingDaySchedules, setLoadingDaySchedules] = useState(false);
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
   const [isTempReplacementOpen, setIsTempReplacementOpen] = useState(false);
   const [scheduleToEdit, setScheduleToEdit] = useState<any | null>(null);
   const [confirmDeleteScheduleId, setConfirmDeleteScheduleId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchTeacher = async () => {
-    if (!teacher) setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/teachers/${id}?t=${Date.now()}`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error();
-      const data = await response.json();
-      setTeacher(data);
-    } catch (error) {
-      toast.error('Failed to load teacher profile');
-    } finally {
-      if (!teacher) setLoading(false);
-    }
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['teacher-profile', id] });
+    queryClient.invalidateQueries({ queryKey: ['unassigned-students'] });
   };
-
-  const fetchUnassignedStudents = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(apiUrl(`/students/unassigned`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (data && Array.isArray(data)) {
-        setAllStudents(data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeacher();
-    fetchUnassignedStudents();
-  }, [id]);
-
-  const fetchDaySchedules = async (teacherId: string, day: string) => {
-    setLoadingDaySchedules(true);
-    try {
-      const data = await api<any[]>(
-        `/schedules/teacher/${teacherId}/day/${encodeURIComponent(day)}`,
-      );
-      setDaySchedules(Array.isArray(data) ? data : []);
-    } catch {
-      setDaySchedules(getSchedulesForDay(teacher?.schedules, day));
-    } finally {
-      setLoadingDaySchedules(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!id || !selectedDay) return;
-    fetchDaySchedules(id, selectedDay);
-  }, [id, selectedDay]);
-
-  const refreshScheduleData = async () => {
-    await fetchTeacher();
-    if (id && selectedDay) {
-      await fetchDaySchedules(id, selectedDay);
-    }
-  };
-
-  // Fetch unassigned students when assign modal opens (already done on load, but we can refresh)
-  useEffect(() => {
-    if (isAssignModalOpen || isEditScheduleOpen) {
-      fetchUnassignedStudents();
-    }
-  }, [isAssignModalOpen, isEditScheduleOpen]);
 
   const handleAssignStudent = async () => {
     if (!selectedStudentId) {
@@ -184,8 +148,7 @@ function TeacherProfilePage() {
       toast.success('Student successfully assigned to this teacher!');
       setIsAssignModalOpen(false);
       setSelectedStudentId('');
-      fetchTeacher();
-      fetchUnassignedStudents();
+      invalidateAll();
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
     } finally {
@@ -224,9 +187,8 @@ function TeacherProfilePage() {
       toast.success('Student removed and schedule cleared');
       
       setTimeout(() => {
-        fetchTeacher();
+        invalidateAll();
         setUnassigningId(null);
-        fetchUnassignedStudents();
       }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove student');
@@ -250,7 +212,7 @@ function TeacherProfilePage() {
 
       toast.success('Schedule deleted successfully');
       setConfirmDeleteScheduleId(null);
-      await refreshScheduleData();
+      invalidateAll();
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete schedule');
       setConfirmDeleteScheduleId(null);
@@ -573,7 +535,7 @@ function TeacherProfilePage() {
           setIsEditScheduleOpen(false);
           setScheduleToEdit(null);
         }}
-        onSuccess={refreshScheduleData}
+        onSuccess={invalidateAll}
         teacher={teacher}
         schedule={scheduleToEdit}
         defaultDay={selectedDay}
@@ -721,7 +683,7 @@ function TeacherProfilePage() {
       <EditTeacherModal
         open={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={fetchTeacher}
+        onSuccess={invalidateAll}
         teacher={teacher}
       />
     </DashboardLayout>

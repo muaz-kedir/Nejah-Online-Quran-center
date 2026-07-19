@@ -2,9 +2,10 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { PageHeader } from '@/components/dashboard/design-system';
 import { Button } from '@/components/ui/button';
@@ -50,32 +51,25 @@ function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loadin
 
 function AdminsPage() {
   const [tab, setTab] = useState<'finance_manager' | 'qirat_manager'>('finance_manager');
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [defaultRole, setDefaultRole] = useState('finance_manager');
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({ limit: '100', role: tab });
-      if (search) params.append('search', search);
-      const res = await fetch(apiUrl(`/users?${params}`), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      const result = await res.json();
-      setUsers(result.data || []);
-    } catch {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const params = new URLSearchParams({ limit: '100', role: tab });
+  if (search) params.append('search', search);
 
-  useEffect(() => { fetchUsers(); }, [search, tab]);
+  const { data: result, isLoading: loading } = useApiQuery<{ data: any[] }>({
+    queryKey: ["admins", { tab, search }],
+    path: `/users?${params}`,
+    refetchInterval: 30_000,
+  });
+
+  const users = result?.data || [];
+
+  const fetchUsers = () => {
+    queryClient.invalidateQueries({ queryKey: ["admins", { tab, search }] });
+  };
 
   const openAdd = (role: string) => {
     setDefaultRole(role);

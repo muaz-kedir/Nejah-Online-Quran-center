@@ -2,8 +2,9 @@
 // @ts-nocheck
 // Lazy component (code-split).
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Search, Download, FileText, Image as ImageIcon,
   PlaySquare, Headphones, FileArchive, ArrowRight, Clock, Star,
@@ -14,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { StudentPortalLayout, StudentPageLoader } from '@/components/student/StudentPortalLayout';
-import { api, requireStudentAuth, studentPaths } from '@/lib/student-portal';
+import { api, studentPaths } from '@/lib/student-portal';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 function getYoutubeId(url: string): string | null {
   if (!url) return null;
@@ -168,46 +170,56 @@ export const Route = createLazyFileRoute('/student_/resources')({
 });
 
 function StudentResources() {
-  const [resources, setResources] = useState<any[]>([]);
-  const [featured, setFeatured] = useState<any[]>([]);
-  const [recent, setRecent] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [downloadHistory, setDownloadHistory] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [studentLevel, setStudentLevel] = useState('All Levels');
-
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedType, setSelectedType] = useState('All');
   const [selectedResource, setSelectedResource] = useState<any>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [search, selectedCategory, selectedType]);
+  const { data: resources, isLoading } = useApiQuery<any[]>({
+    queryKey: ['resources', search, selectedCategory, selectedType],
+    path: `/resources?search=${encodeURIComponent(search)}&category=${encodeURIComponent(selectedCategory)}&type=${encodeURIComponent(selectedType)}`,
+    refetchInterval: 30_000,
+  });
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [resAll, resFeat, resRec, resCat, resHist, profile] = await Promise.all([
-        api(`/resources?search=${encodeURIComponent(search)}&category=${encodeURIComponent(selectedCategory)}&type=${encodeURIComponent(selectedType)}`),
-        api('/resources/featured'),
-        api('/resources/recent'),
-        api('/resources/categories'),
-        api('/resources/downloads'),
-        api('/student/profile').catch(() => null),
-      ]);
-      setResources(resAll);
-      setFeatured(resFeat);
-      setRecent(resRec);
-      setCategories(['All', ...resCat]);
-      setDownloadHistory(resHist);
-      setStudentLevel(profile?.student?.level || 'All Levels');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: featured } = useApiQuery<any[]>({
+    queryKey: ['resources-featured'],
+    path: '/resources/featured',
+    refetchInterval: 30_000,
+  });
+
+  const { data: recent } = useApiQuery<any[]>({
+    queryKey: ['resources-recent'],
+    path: '/resources/recent',
+    refetchInterval: 30_000,
+  });
+
+  const { data: categories } = useApiQuery<string[]>({
+    queryKey: ['resources-categories'],
+    path: '/resources/categories',
+    refetchInterval: 30_000,
+  });
+
+  const { data: downloadHistory } = useApiQuery<any[]>({
+    queryKey: ['resources-downloads'],
+    path: '/resources/downloads',
+    refetchInterval: 30_000,
+  });
+
+  useApiQuery<any>({
+    queryKey: ['student-profile-resources'],
+    path: '/student/profile',
+    refetchInterval: 30_000,
+    select: (data) => {
+      if (data?.student?.level) {
+        setStudentLevel(data.student.level);
+      }
+      return data;
+    },
+  });
+
+  const allCategories = useMemo(() => ['All', ...(categories || [])], [categories]);
 
   const levelHint = useMemo(() => {
     const normalized = (studentLevel || 'All Levels').toLowerCase();
@@ -265,13 +277,13 @@ function StudentResources() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      api('/resources/downloads').then(setDownloadHistory).catch(console.error);
+      queryClient.invalidateQueries({ queryKey: ['resources-downloads'] });
     } catch (err) {
       console.error('Failed to download', err);
     }
   };
 
-  if (loading && resources.length === 0) return <StudentPageLoader />;
+  if (isLoading && !resources?.length) return <StudentPageLoader />;
 
   return (
     <StudentPortalLayout activePath={studentPaths.resources}>
@@ -357,7 +369,7 @@ function StudentResources() {
 
               {/* Category filter */}
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide flex-wrap">
-                {categories.map((cat) => (
+                {allCategories.map((cat) => (
                   <Button
                     key={cat}
                     variant={selectedCategory === cat ? 'default' : 'outline'}

@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
@@ -12,23 +13,27 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { requireAuth } from '@/lib/auth';
-import { API_BASE, apiUrl } from "@/lib/api";
+import { api } from "@/lib/api";
 import { User, Key, Save, Loader2, Camera, Bell } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { RoleBadge } from '@/components/ui/role-badge';
 import { PushNotificationToggle } from '@/components/ui/push-notification-toggle';
 import { TelegramLink } from '@/components/ui/telegram-link';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const Route = createLazyFileRoute('/profile')({
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: profile, isLoading: loading } = useApiQuery<any>({
+    queryKey: ['profile'],
+    path: '/users/profile',
+  });
+
   const [savingDetails, setSavingDetails] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-
-  const [profile, setProfile] = useState<any>(null);
 
   // Edit details form state
   const [name, setName] = useState('');
@@ -40,62 +45,25 @@ function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/users/profile`), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (!res.ok) {
-        // Fallback to /auth/profile if users/profile doesn't work for non-admin roles
-        const authRes = await fetch(apiUrl(`/auth/profile`), {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!authRes.ok) throw new Error('Failed to fetch profile');
-        const authData = await authRes.json();
-        setProfile(authData);
-        setName(authData.name || '');
-        setPhone(authData.phone || '');
-      } else {
-        const data = await res.json();
-        setProfile(data);
-        setName(data.name || '');
-        setPhone(data.phone || '');
-      }
-    } catch (error) {
-      toast.error('Failed to load profile');
-    } finally {
-      setLoading(false);
+    if (profile) {
+      setName(profile.name || '');
+      setPhone(profile.phone || '');
     }
-  };
+  }, [profile]);
 
   const handleUpdateDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingDetails(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/users/profile`), {
+      await api(`/users/profile`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ name, phone }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to update profile');
-      }
 
       toast.success('Profile updated successfully');
       localStorage.setItem('userName', name);
       window.dispatchEvent(new Event('profileUpdated'));
-      fetchProfile();
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -119,20 +87,10 @@ function ProfilePage() {
 
     setSavingPassword(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiUrl(`/users/change-password`), {
+      await api(`/users/change-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to change password');
-      }
 
       toast.success('Password changed successfully');
       setCurrentPassword('');

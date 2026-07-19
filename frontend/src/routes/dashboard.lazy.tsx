@@ -16,6 +16,7 @@ import { requireAuth } from '@/lib/auth';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const Route = createLazyFileRoute('/dashboard')({
   component: DashboardPage,
@@ -25,7 +26,7 @@ function DashboardContent() {
   const { t } = useApp();
   const [userName, setUserName] = useState('Administrator');
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -35,9 +36,9 @@ function DashboardContent() {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setRefreshKey(k => k + 1);
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+  }, [queryClient]);
 
   return (
     <AmbientSection>
@@ -53,16 +54,16 @@ function DashboardContent() {
         }
       />
 
-      <DashboardCards key={`cards-${refreshKey}`} />
+      <DashboardCards />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <RecentStudentsTable key={`recent-${refreshKey}`} />
-          <TodaysClasses key={`today-${refreshKey}`} />
+          <RecentStudentsTable />
+          <TodaysClasses />
         </div>
         <div className="space-y-6">
-          <StaffOverview key={`staff-${refreshKey}`} />
-          <SystemAlerts key={`alerts-${refreshKey}`} />
+          <StaffOverview />
+          <SystemAlerts />
         </div>
       </div>
     </AmbientSection>

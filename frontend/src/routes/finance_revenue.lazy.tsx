@@ -2,16 +2,16 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { BentoStatCard, PageHeader } from '@/components/dashboard/design-system';
 import { requireAuth } from '@/lib/auth';
-import { financeFetch, FinanceFilters } from '@/lib/finance-api';
+import { FinanceFilters } from '@/lib/finance-api';
 import { FinanceFilterBar } from '@/components/finance/FinanceFilters';
 import { DollarSign, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { toast } from 'sonner';
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export const Route = createLazyFileRoute('/finance_revenue')({
   component: RevenuePage,
@@ -19,22 +19,12 @@ export const Route = createLazyFileRoute('/finance_revenue')({
 
 function RevenuePage() {
   const [filters, setFilters] = useState<FinanceFilters>({ dateRange: 'year' });
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setData(await financeFetch('/revenue-analytics', filters));
-      } catch (e: any) {
-        toast.error(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [filters]);
+  const { data, isLoading: loading } = useApiQuery<any>({
+    queryKey: ["revenue-analytics", filters],
+    path: `/finance/revenue-analytics?page=1&limit=200${filters.dateRange ? `&dateRange=${filters.dateRange}` : ''}`,
+    refetchInterval: 30_000,
+  });
 
   const stats = data ? [
     { label: 'Daily Revenue', value: `ETB ${data.dailyRevenue}`, icon: DollarSign },
