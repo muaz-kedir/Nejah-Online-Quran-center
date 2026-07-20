@@ -101,292 +101,358 @@ const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
   id: '/zoom-settings',
   path: '/zoom-settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/zoom-settings.lazy').then((d) => d.Route))
 const ZoomGuideRoute = ZoomGuideRouteImport.update({
   id: '/zoom-guide',
   path: '/zoom-guide',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/zoom-guide.lazy').then((d) => d.Route))
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/users.lazy').then((d) => d.Route))
 const TrackApplicationRoute = TrackApplicationRouteImport.update({
   id: '/track-application',
   path: '/track-application',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/track-application.lazy').then((d) => d.Route),
+)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/terms-of-service.lazy').then((d) => d.Route),
+)
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
   path: '/teachers',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teachers.lazy').then((d) => d.Route))
 const Teacher_zoomRoute = Teacher_zoomRouteImport.update({
   id: '/teacher_zoom',
   path: '/teacher_zoom',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teacher_zoom.lazy').then((d) => d.Route))
 const Teacher_studentsRoute = Teacher_studentsRouteImport.update({
   id: '/teacher_students',
   path: '/teacher_students',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_students.lazy').then((d) => d.Route),
+)
 const Teacher_sessionsRoute = Teacher_sessionsRouteImport.update({
   id: '/teacher_sessions',
   path: '/teacher_sessions',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_sessions.lazy').then((d) => d.Route),
+)
 const Teacher_scheduleRoute = Teacher_scheduleRouteImport.update({
   id: '/teacher_schedule',
   path: '/teacher_schedule',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_schedule.lazy').then((d) => d.Route),
+)
 const Teacher_profileRoute = Teacher_profileRouteImport.update({
   id: '/teacher_profile',
   path: '/teacher_profile',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_profile.lazy').then((d) => d.Route),
+)
 const Teacher_notificationsRoute = Teacher_notificationsRouteImport.update({
   id: '/teacher_notifications',
   path: '/teacher_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_notifications.lazy').then((d) => d.Route),
+)
 const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
   id: '/teacher_dashboard',
   path: '/teacher_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_dashboard.lazy').then((d) => d.Route),
+)
 const TeacherReplacementsRoute = TeacherReplacementsRouteImport.update({
   id: '/teacher-replacements',
   path: '/teacher-replacements',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-replacements.lazy').then((d) => d.Route),
+)
 const TeacherApplicationsRoute = TeacherApplicationsRouteImport.update({
   id: '/teacher-applications',
   path: '/teacher-applications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-applications.lazy').then((d) => d.Route),
+)
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/support.lazy').then((d) => d.Route))
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/students.lazy').then((d) => d.Route))
 const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_dashboard.lazy').then((d) => d.Route),
+)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
 const SchedulesRoute = SchedulesRouteImport.update({
   id: '/schedules',
   path: '/schedules',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/schedules.lazy').then((d) => d.Route))
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/reports.lazy').then((d) => d.Route))
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/register.lazy').then((d) => d.Route))
 const Qirat_settingsRoute = Qirat_settingsRouteImport.update({
   id: '/qirat_settings',
   path: '/qirat_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_settings.lazy').then((d) => d.Route),
+)
 const Qirat_notificationsRoute = Qirat_notificationsRouteImport.update({
   id: '/qirat_notifications',
   path: '/qirat_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_notifications.lazy').then((d) => d.Route),
+)
 const Qirat_examsRoute = Qirat_examsRouteImport.update({
   id: '/qirat_exams',
   path: '/qirat_exams',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/qirat_exams.lazy').then((d) => d.Route))
 const Qirat_dashboardRoute = Qirat_dashboardRouteImport.update({
   id: '/qirat_dashboard',
   path: '/qirat_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_dashboard.lazy').then((d) => d.Route),
+)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/progress.lazy').then((d) => d.Route))
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/profile.lazy').then((d) => d.Route))
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/privacy-policy.lazy').then((d) => d.Route),
+)
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/parents.lazy').then((d) => d.Route))
 const Parent_sessionsRoute = Parent_sessionsRouteImport.update({
   id: '/parent_sessions',
   path: '/parent_sessions',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_sessions.lazy').then((d) => d.Route),
+)
 const Parent_notificationsRoute = Parent_notificationsRouteImport.update({
   id: '/parent_notifications',
   path: '/parent_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_notifications.lazy').then((d) => d.Route),
+)
 const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
   id: '/parent_dashboard',
   path: '/parent_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_dashboard.lazy').then((d) => d.Route),
+)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/login.lazy').then((d) => d.Route))
 const LiveSessionsRoute = LiveSessionsRouteImport.update({
   id: '/live-sessions',
   path: '/live-sessions',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/live-sessions.lazy').then((d) => d.Route))
 const HomeworkRoute = HomeworkRouteImport.update({
   id: '/homework',
   path: '/homework',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/homework.lazy').then((d) => d.Route))
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/forgot-password.lazy').then((d) => d.Route),
+)
 const Finance_teacherPaymentsRoute = Finance_teacherPaymentsRouteImport.update({
   id: '/finance_teacher-payments',
   path: '/finance_teacher-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_teacher-payments.lazy').then((d) => d.Route),
+)
 const Finance_studentPaymentsRoute = Finance_studentPaymentsRouteImport.update({
   id: '/finance_student-payments',
   path: '/finance_student-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_student-payments.lazy').then((d) => d.Route),
+)
 const Finance_settingsRoute = Finance_settingsRouteImport.update({
   id: '/finance_settings',
   path: '/finance_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_settings.lazy').then((d) => d.Route),
+)
 const Finance_revenueRoute = Finance_revenueRouteImport.update({
   id: '/finance_revenue',
   path: '/finance_revenue',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_revenue.lazy').then((d) => d.Route),
+)
 const Finance_reportsRoute = Finance_reportsRouteImport.update({
   id: '/finance_reports',
   path: '/finance_reports',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_reports.lazy').then((d) => d.Route),
+)
 const Finance_profitRoute = Finance_profitRouteImport.update({
   id: '/finance_profit',
   path: '/finance_profit',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_profit.lazy').then((d) => d.Route),
+)
 const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
   id: '/finance_notifications',
   path: '/finance_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_notifications.lazy').then((d) => d.Route),
+)
 const Finance_familyPaymentsRoute = Finance_familyPaymentsRouteImport.update({
   id: '/finance_family-payments',
   path: '/finance_family-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_family-payments.lazy').then((d) => d.Route),
+)
 const Finance_expensesRoute = Finance_expensesRouteImport.update({
   id: '/finance_expenses',
   path: '/finance_expenses',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_expenses.lazy').then((d) => d.Route),
+)
 const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
   id: '/finance_dashboard',
   path: '/finance_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_dashboard.lazy').then((d) => d.Route),
+)
 const Fee_settingsRoute = Fee_settingsRouteImport.update({
   id: '/fee_settings',
   path: '/fee_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/fee_settings.lazy').then((d) => d.Route))
 const DebugUserRoute = DebugUserRouteImport.update({
   id: '/debug-user',
   path: '/debug-user',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/debug-user.lazy').then((d) => d.Route))
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/dashboard.lazy').then((d) => d.Route))
 const Currency_settingsRoute = Currency_settingsRouteImport.update({
   id: '/currency_settings',
   path: '/currency_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/currency_settings.lazy').then((d) => d.Route),
+)
 const AuditLogsRoute = AuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/audit-logs.lazy').then((d) => d.Route))
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/attendance.lazy').then((d) => d.Route))
 const ApplyAsTeacherRoute = ApplyAsTeacherRouteImport.update({
   id: '/apply-as-teacher',
   path: '/apply-as-teacher',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/apply-as-teacher.lazy').then((d) => d.Route),
+)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/analytics.lazy').then((d) => d.Route))
 const AdminsRoute = AdminsRouteImport.update({
   id: '/admins',
   path: '/admins',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/admins.lazy').then((d) => d.Route))
 const Admin_teacherHistoryRoute = Admin_teacherHistoryRouteImport.update({
   id: '/admin_teacher-history',
   path: '/admin_teacher-history',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/admin_teacher-history.lazy').then((d) => d.Route),
+)
 const Admin_studentHistoryRoute = Admin_studentHistoryRouteImport.update({
   id: '/admin_student-history',
   path: '/admin_student-history',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/admin_student-history.lazy').then((d) => d.Route),
+)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -396,83 +462,111 @@ const WebsiteTeachersRoute = WebsiteTeachersRouteImport.update({
   id: '/website/teachers',
   path: '/website/teachers',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.teachers.lazy').then((d) => d.Route),
+)
 const WebsiteResourcesRoute = WebsiteResourcesRouteImport.update({
   id: '/website/resources',
   path: '/website/resources',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.resources.lazy').then((d) => d.Route),
+)
 const WebsiteHomeRoute = WebsiteHomeRouteImport.update({
   id: '/website/home',
   path: '/website/home',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/website.home.lazy').then((d) => d.Route))
 const TeachersCreateRoute = TeachersCreateRouteImport.update({
   id: '/teachers_/create',
   path: '/teachers/create',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.create.lazy').then((d) => d.Route),
+)
 const TeachersIdRoute = TeachersIdRouteImport.update({
   id: '/teachers_/$id',
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teachers_.$id.lazy').then((d) => d.Route))
 const Teacher_studentsStudentIdRoute =
   Teacher_studentsStudentIdRouteImport.update({
     id: '/teacher_students_/$studentId',
     path: '/teacher_students/$studentId',
     getParentRoute: () => rootRouteImport,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/teacher_students_.$studentId.lazy').then((d) => d.Route),
+  )
 const TeacherApplicationsIdRoute = TeacherApplicationsIdRouteImport.update({
   id: '/teacher-applications_/$id',
   path: '/teacher-applications/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-applications_.$id.lazy').then((d) => d.Route),
+)
 const StudentResourcesRoute = StudentResourcesRouteImport.update({
   id: '/student_/resources',
   path: '/student/resources',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.resources.lazy').then((d) => d.Route),
+)
 const StudentProgressRoute = StudentProgressRouteImport.update({
   id: '/student_/progress',
   path: '/student/progress',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.progress.lazy').then((d) => d.Route),
+)
 const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
   id: '/student_/notifications',
   path: '/student/notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.notifications.lazy').then((d) => d.Route),
+)
 const StudentHomeworkRoute = StudentHomeworkRouteImport.update({
   id: '/student_/homework',
   path: '/student/homework',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.homework.lazy').then((d) => d.Route),
+)
 const StudentHistoryRoute = StudentHistoryRouteImport.update({
   id: '/student_/history',
   path: '/student/history',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.history.lazy').then((d) => d.Route),
+)
 const StudentEvaluationsRoute = StudentEvaluationsRouteImport.update({
   id: '/student_/evaluations',
   path: '/student/evaluations',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.evaluations.lazy').then((d) => d.Route),
+)
 const StudentClassesRoute = StudentClassesRouteImport.update({
   id: '/student_/classes',
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.classes.lazy').then((d) => d.Route),
+)
 const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
   id: '/student_/attendance',
   path: '/student/attendance',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.attendance.lazy').then((d) => d.Route),
+)
 const SettingsIntegrationsRoute = SettingsIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
   getParentRoute: () => SettingsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/settings.integrations.lazy').then((d) => d.Route),
+)
 const LiveSessionsIdRoute = LiveSessionsIdRouteImport.update({
   id: '/live-sessions_/$id',
   path: '/live-sessions/$id',
@@ -482,17 +576,23 @@ const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => LiveSessionsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/live-sessions.analytics.lazy').then((d) => d.Route),
+)
 const ClassroomSessionIdRoute = ClassroomSessionIdRouteImport.update({
   id: '/classroom_/$sessionId',
   path: '/classroom/$sessionId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/classroom_.$sessionId.lazy').then((d) => d.Route),
+)
 const ClassSessionIdRoute = ClassSessionIdRouteImport.update({
   id: '/class-session_/$id',
   path: '/class-session/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/class-session_.$id.lazy').then((d) => d.Route),
+)
 const TeachersIdIndexRoute = TeachersIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -502,38 +602,54 @@ const WebsiteSupportTicketsRoute = WebsiteSupportTicketsRouteImport.update({
   id: '/website/support/tickets',
   path: '/website/support/tickets',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.tickets.lazy').then((d) => d.Route),
+)
 const WebsiteSupportPagesRoute = WebsiteSupportPagesRouteImport.update({
   id: '/website/support/pages',
   path: '/website/support/pages',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.pages.lazy').then((d) => d.Route),
+)
 const WebsiteSupportAnalyticsRoute = WebsiteSupportAnalyticsRouteImport.update({
   id: '/website/support/analytics',
   path: '/website/support/analytics',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.analytics.lazy').then((d) => d.Route),
+)
 const TeachersIdStudentsRoute = TeachersIdStudentsRouteImport.update({
   id: '/students',
   path: '/students',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.students.lazy').then((d) => d.Route),
+)
 const TeachersIdProfileRoute = TeachersIdProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.profile.lazy').then((d) => d.Route),
+)
 const TeachersIdStudentsStudentIdRoute =
   TeachersIdStudentsStudentIdRouteImport.update({
     id: '/students_/$studentId',
     path: '/students/$studentId',
     getParentRoute: () => TeachersIdRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/teachers_.$id.students_.$studentId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const TeachersIdScheduleDayRoute = TeachersIdScheduleDayRouteImport.update({
   id: '/schedule/$day',
   path: '/schedule/$day',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.schedule.$day.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute

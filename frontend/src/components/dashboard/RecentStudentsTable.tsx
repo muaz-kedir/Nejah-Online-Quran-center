@@ -1,8 +1,7 @@
-import { API_BASE, apiUrl } from "@/lib/api";
 import { ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
-import { memo, useState, useEffect } from 'react';
+import { memo, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { GlassPanel, PanelHeader } from './design-system';
 import {
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 interface Student {
   id: string;
@@ -36,43 +36,29 @@ const avatarColors = [
 export const RecentStudentsTable = memo(function RecentStudentsTable() {
   const { t } = useApp();
   const navigate = useNavigate();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(apiUrl(`/students?limit=5`), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
+  const { data, isLoading } = useApiQuery<{ data: any[] }>({
+    queryKey: ['dashboard', 'recent-students'],
+    path: '/students?limit=5',
+    refetchInterval: 30_000,
+  });
 
-        if (data && Array.isArray(data.data)) {
-          const formattedStudents = data.data.map((student: any, index: number) => ({
-            id: student.id,
-            fullName: student.fullName,
-            initials: student.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
-            avatarColor: avatarColors[index % avatarColors.length],
-            level: student.level || 'Beginner',
-            createdAt: new Date(student.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            }),
-            status: (student.status === 'active' || student.status === 'pending' ? student.status : 'active') as 'active' | 'pending',
-          }));
-          setStudents(formattedStudents);
-        }
-      } catch (error) {
-        console.error('Failed to fetch students:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudents();
-  }, []);
+  const students = useMemo(() => {
+    if (!data || !Array.isArray(data.data)) return [];
+    return data.data.map((student: any, index: number) => ({
+      id: student.id,
+      fullName: student.fullName,
+      initials: student.fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+      avatarColor: avatarColors[index % avatarColors.length],
+      level: student.level || 'Beginner',
+      createdAt: new Date(student.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+      status: (student.status === 'active' || student.status === 'pending' ? student.status : 'active') as 'active' | 'pending',
+    }));
+  }, [data]);
 
   return (
     <GlassPanel className="overflow-hidden">
@@ -99,7 +85,7 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading ? (
+          {isLoading ? (
             <TableRow>
               <TableCell colSpan={4} className="py-8 text-center text-nejah-slate-blue">
                 Loading students...

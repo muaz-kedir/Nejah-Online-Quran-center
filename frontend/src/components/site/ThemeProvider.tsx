@@ -30,7 +30,6 @@ function readThemeForUser(userId?: string): Theme {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem(themeKey(id)) as Theme | null;
     if (stored === "dark" || stored === "light") return stored;
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
   }
   return "light";
 }

@@ -9,14 +9,14 @@ import {
 } from "@tanstack/react-router";
 
 import "../styles.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
-import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
 import { ThemeProvider } from '@/components/site/ThemeProvider';
 import { WS_URL } from "@/lib/api";
+import { useRealtimeSocket } from "@/hooks/useRealtimeSocket";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
@@ -250,15 +250,33 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ClientOnlyPWAPrompt() {
+  const [Comp, setComp] = useState<React.ComponentType | null>(null);
+  useEffect(() => {
+    import("@/components/pwa/PWADownloadPrompt").then((m) => setComp(() => m.default));
+  }, []);
+  if (!Comp) return null;
+  return (
+    <Suspense fallback={null}>
+      <Comp />
+    </Suspense>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const socketRef = useRef<any>(null);
+
+  useRealtimeSocket();
 
   useEffect(() => {
     setupChunkLoadRecovery();
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const interval = setInterval(() => {
       fetch(`${WS_URL}/health`, { mode: 'cors' }).catch(() => {});
     }, 5 * 60 * 1000);
@@ -350,7 +368,7 @@ function RootComponent() {
         <ThemeProvider>
           <Outlet />
           <Toaster richColors position="top-right" />
-          <PWADownloadPrompt />
+          <ClientOnlyPWAPrompt />
         </ThemeProvider>
       </AppProvider>
     </QueryClientProvider>
