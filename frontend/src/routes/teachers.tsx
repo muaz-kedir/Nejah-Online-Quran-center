@@ -674,7 +674,7 @@ function TeacherDetailModal({ teacher, onClose, userRole, onEdit, onRefresh }: {
 }
 
 function TeachersPage() {
-  const userRole = localStorage.getItem('role') || '';
+  const userRole = typeof localStorage !== 'undefined' ? localStorage.getItem('role') || '' : '';
   const [teachers, setTeachers] = useState<any[]>([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [loading, setLoading] = useState(true);
@@ -796,10 +796,10 @@ function TeachersPage() {
         />
 
         <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-          <BentoStatCard label="Total Faculty" value={stats.total} icon={<Calendar className="h-5 w-5" />} />
-          <BentoStatCard label="Active Now" value={stats.active} icon={<Sparkles className="h-5 w-5" />} highlight />
-          <BentoStatCard label="On Leave" value={String(stats.onLeave).padStart(2, '0')} icon={<RotateCcw className="h-5 w-5" />} />
-          <BentoStatCard label="Pending" value={stats.pending} icon={<BookOpen className="h-5 w-5" />} />
+          <BentoStatCard label="Total Faculty" value={stats?.total ?? 0} icon={<Calendar className="h-5 w-5" />} />
+          <BentoStatCard label="Active Now" value={stats?.active ?? 0} icon={<Sparkles className="h-5 w-5" />} highlight />
+          <BentoStatCard label="On Leave" value={String(stats?.onLeave ?? 0).padStart(2, '0')} icon={<RotateCcw className="h-5 w-5" />} />
+          <BentoStatCard label="Pending" value={stats?.pending ?? 0} icon={<BookOpen className="h-5 w-5" />} />
         </div>
 
         <div className="admin-filter-bar">
