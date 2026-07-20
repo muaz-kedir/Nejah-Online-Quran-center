@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useContext, useEffect, useRef } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
 import { WS_URL } from "@/lib/api";
 import { io, Socket } from "socket.io-client";
 
@@ -28,10 +28,11 @@ const DOMAIN_EVENTS: Record<string, string[]> = {
 };
 
 export function useRealtimeSocket() {
-  const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
+  const queryClient = useContext(QueryClientContext);
 
   useEffect(() => {
+    if (!queryClient) return;
     const token = localStorage.getItem("token");
     if (!token) return;
 
