@@ -42,20 +42,22 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     this.configured = true;
 
     try {
-      const { data } = await axios.get(`${this.apiBase}/getMe`);
+      const { data } = await axios.get(`${this.apiBase}/getMe`, { timeout: 10000 });
       if (data.ok) {
         this.botUsername = data.result.username;
         this.logger.log(`Telegram bot @${this.botUsername} initialized`);
       }
-    } catch (err) {
-      this.logger.error(`Failed to verify bot token: ${(err as Error).message}`);
-      this.configured = false;
-      return;
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.error(`Telegram bot token verification failed: ${detail}`);
+      this.logger.warn('Telegram bot will be available for code generation but notifications may not work until the token is fixed.');
     }
 
     await this.deleteWebhook();
     this.cleanupExpiredCodes();
-    this.startPollingLoop();
+    if (this.configured) {
+      this.startPollingLoop();
+    }
   }
 
   onModuleDestroy() {
@@ -64,12 +66,13 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   private async deleteWebhook() {
     try {
-      const { data } = await axios.get(`${this.apiBase}/deleteWebhook`);
+      const { data } = await axios.get(`${this.apiBase}/deleteWebhook`, { timeout: 10000 });
       if (data.ok) {
         this.logger.log('Existing webhook cleared');
       }
-    } catch (err) {
-      this.logger.warn(`Failed to clear webhook: ${(err as Error).message}`);
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Failed to clear webhook: ${detail}`);
     }
   }
 
@@ -211,15 +214,16 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         parse_mode: options?.parseMode || undefined,
         reply_markup: options?.replyMarkup || undefined,
         disable_web_page_preview: true,
-      });
+      }, { timeout: 10000 });
       return true;
-    } catch (err) {
-      const status = (err as any)?.response?.status;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
       if (status === 403) {
         this.logger.warn(`Bot blocked by user ${chatId} — deactivating`);
         await this.subscriptionRepository.update({ chatId }, { isActive: false });
       } else {
-        this.logger.error(`Failed to send Telegram message to ${chatId}: ${(err as Error).message}`);
+        this.logger.error(`Failed to send Telegram message to ${chatId}: ${detail}`);
       }
       return false;
     }
