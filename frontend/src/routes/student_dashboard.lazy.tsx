@@ -33,6 +33,11 @@ import { LiveSessionHero } from "@/components/student/sessions/LiveSessionHero";
 import { TodayScheduleSection } from "@/components/student/sessions/TodayScheduleSection";
 import type { StudentDashboardData, StudentProfileData, StudentClassesData } from "@/lib/student-types";
 
+const dayLabels: Record<string, string> = {
+  Sunday: "Sun", Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed",
+  Thursday: "Thu", Friday: "Fri", Saturday: "Sat",
+};
+
 export const Route = createLazyFileRoute('/student_dashboard')({
   component: StudentDashboard,
 });
