@@ -50,13 +50,16 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn(`Telegram getMe returned not ok: ${JSON.stringify(data)}`);
       }
     } catch (err: any) {
-      this.logger.warn(`Could not verify Telegram bot token via getMe — will continue with best effort: ${err?.message || err?.code || 'unknown error'}`);
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Telegram bot token verification failed (${detail}) — continuing with best effort`);
       this.botUsername = 'NejahQuranBot';
     }
 
     await this.deleteWebhook();
     this.cleanupExpiredCodes();
-    this.startPollingLoop();
+    if (this.configured) {
+      this.startPollingLoop();
+    }
   }
 
   onModuleDestroy() {
@@ -65,12 +68,13 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   private async deleteWebhook() {
     try {
-      const { data } = await axios.get(`${this.apiBase}/deleteWebhook`);
+      const { data } = await axios.get(`${this.apiBase}/deleteWebhook`, { timeout: 10000 });
       if (data.ok) {
         this.logger.log('Existing webhook cleared');
       }
-    } catch (err) {
-      this.logger.warn(`Failed to clear webhook: ${(err as Error).message}`);
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Failed to clear webhook: ${detail}`);
     }
   }
 
@@ -212,15 +216,16 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         parse_mode: options?.parseMode || undefined,
         reply_markup: options?.replyMarkup || undefined,
         disable_web_page_preview: true,
-      });
+      }, { timeout: 10000 });
       return true;
-    } catch (err) {
-      const status = (err as any)?.response?.status;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
       if (status === 403) {
         this.logger.warn(`Bot blocked by user ${chatId} — deactivating`);
         await this.subscriptionRepository.update({ chatId }, { isActive: false });
       } else {
-        this.logger.error(`Failed to send Telegram message to ${chatId}: ${(err as Error).message}`);
+        this.logger.error(`Failed to send Telegram message to ${chatId}: ${detail}`);
       }
       return false;
     }
