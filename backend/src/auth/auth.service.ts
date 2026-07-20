@@ -189,9 +189,8 @@ export class AuthService {
         });
 
         if (student?.userId) {
-          try {
-            user = await this.usersService.findOne(student.userId);
-          } catch {
+          user = await this.usersService.findByIdWithPassword(student.userId);
+          if (!user) {
             throw new UnauthorizedException('Invalid credentials');
           }
         }

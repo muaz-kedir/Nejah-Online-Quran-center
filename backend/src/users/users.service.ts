@@ -179,6 +179,24 @@ export class UsersService {
     return user;
   }
 
+  async findByIdWithPassword(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'email',
+        'password',
+        'name',
+        'role',
+        'phone',
+        'avatar',
+        'isActive',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
@@ -282,6 +300,10 @@ export class UsersService {
       if (existingUser) {
         throw new ConflictException('Email already exists');
       }
+    }
+
+    if (updateDto.password) {
+      updateDto.password = await bcrypt.hash(updateDto.password, 10);
     }
 
     Object.assign(user, updateDto);
