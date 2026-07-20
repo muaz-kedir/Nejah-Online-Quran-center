@@ -128,10 +128,10 @@ function ResourceCard({
           <Badge variant="outline" className="text-[10px] font-bold bg-muted/50 shrink-0">{resource.resourceType}</Badge>
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">{resource.descriptionEn || 'Helpful material for your current learning path.'}</p>
+        <p className="text-sm text-muted-foreground dark:text-gray-200 line-clamp-2">{resource.descriptionEn || 'Helpful material for your current learning path.'}</p>
 
         {!isVideo && (
-          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground dark:text-gray-200">
             <span>{resource.category}</span>
             {resource.fileSize > 0 && <><span>•</span><span>{formatSize(resource.fileSize)}</span></>}
           </div>
@@ -274,7 +274,7 @@ function StudentResources() {
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-1">Student Portal</p>
           <h1 className="text-4xl font-extrabold text-foreground font-serif">Learning Resources</h1>
-          <p className="text-muted-foreground mt-2">Study materials and guides tailored to your current learning level.</p>
+          <p className="text-muted-foreground dark:text-gray-200 mt-2">Study materials and guides tailored to your current learning level.</p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-nejah-blue/20 bg-nejah-blue/5 px-4 py-2 text-sm text-foreground">
             <Sparkles className="h-4 w-4" /> Active level: <span className="font-semibold">{levelHint}</span>
           </div>
@@ -301,7 +301,7 @@ function StudentResources() {
                   </div>
                   <h3 className="text-xl font-bold text-foreground line-clamp-1">{r.titleEn}</h3>
                   <p className="text-sm text-foreground/80 mt-2 line-clamp-2">{r.descriptionEn || 'No description provided.'}</p>
-                  <div className="flex items-center gap-2 mt-4 text-xs font-medium text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-4 text-xs font-medium text-muted-foreground dark:text-gray-200">
                     <span>{r.category}</span> • <span>{formatSize(r.fileSize)}</span>
                   </div>
                   <div className="flex gap-3 mt-6">
@@ -321,7 +321,7 @@ function StudentResources() {
             <div className="bg-card rounded-[32px] p-6 border shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground dark:text-gray-200 w-4 h-4" />
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -400,10 +400,10 @@ function StudentResources() {
               ) : (
                 <div className="bg-card border border-dashed rounded-[32px] p-12 text-center">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="w-8 h-8 text-muted-foreground" />
+                    <AlertCircle className="w-8 h-8 text-muted-foreground dark:text-gray-200" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground">No resources found</h3>
-                  <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                  <p className="text-muted-foreground dark:text-gray-200 mt-2 max-w-md mx-auto">
                     {search || selectedCategory !== 'All' || selectedType !== 'All'
                       ? 'Try adjusting your search or filters.'
                       : `Your learning level (${levelHint}) currently has no active resources. Please check back soon.`}
@@ -429,9 +429,9 @@ function StudentResources() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">{r.titleEn}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
+                        <p className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-muted-foreground dark:text-gray-200/50 shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -449,7 +449,7 @@ function StudentResources() {
                     <div key={d.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border border-muted">
                       <div className="min-w-0 flex-1 pr-3">
                         <p className="text-sm font-bold text-foreground truncate">{d.resource?.titleEn}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium mt-0.5 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {new Date(d.downloadedAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -460,7 +460,7 @@ function StudentResources() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-sm text-muted-foreground py-6 border border-dashed rounded-2xl">You haven't downloaded anything yet.</p>
+                <p className="text-center text-sm text-muted-foreground dark:text-gray-200 py-6 border border-dashed rounded-2xl">You haven't downloaded anything yet.</p>
               )}
             </div>
           </div>
@@ -488,7 +488,7 @@ function StudentResources() {
                   <div>
                     <Badge variant="outline" className="mb-2 font-bold uppercase tracking-wider text-[10px]">{selectedResource.category}</Badge>
                     <DialogTitle className="text-2xl font-bold text-foreground">{selectedResource.titleEn}</DialogTitle>
-                    {selectedResource.titleAr && <p className="text-lg font-arabic text-muted-foreground mt-1 text-right" dir="rtl">{selectedResource.titleAr}</p>}
+                    {selectedResource.titleAr && <p className="text-lg font-arabic text-muted-foreground dark:text-gray-200 mt-1 text-right" dir="rtl">{selectedResource.titleAr}</p>}
                   </div>
                 </div>
 

@@ -71,7 +71,7 @@ function ScheduleCard({
               <h4 className="font-semibold text-sm text-foreground truncate">{name}</h4>
               <SessionStatusBadge status={status} size="sm" />
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground dark:text-gray-200">
               <span className="inline-flex items-center gap-1">
                 <User className="h-3 w-3" />
                 {teacher}
@@ -119,10 +119,10 @@ export function TodayScheduleSection({
           </div>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
-              <CalendarDays className="h-7 w-7 text-muted-foreground/40" />
+              <CalendarDays className="h-7 w-7 text-muted-foreground dark:text-gray-200/40" />
             </div>
             <p className="text-sm font-medium text-foreground">No classes today</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1">
               Enjoy your day or review previous lessons
             </p>
           </div>
@@ -139,7 +139,7 @@ export function TodayScheduleSection({
             <CalendarDays className="h-5 w-5 text-nejah-electric" />
             <h3 className="text-lg font-bold text-foreground">Today&apos;s Schedule</h3>
           </div>
-          <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-medium text-muted-foreground dark:text-gray-200 bg-muted/50 px-2.5 py-1 rounded-full">
             {sessions.length} session{sessions.length !== 1 ? "s" : ""}
           </span>
         </div>

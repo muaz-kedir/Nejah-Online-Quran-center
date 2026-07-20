@@ -96,7 +96,10 @@ function TeacherApplicationsContent() {
         headers: apiHeaders(),
         body: JSON.stringify({ isApplicationsOpen: newState }),
       });
-      if (!res.ok) throw new Error('Failed to toggle application status');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `Failed to toggle application status (HTTP ${res.status})`);
+      }
       setIsApplicationsOpen(newState);
       toast.success(newState ? 'Teacher applications are now OPEN to the public' : 'Teacher applications are now CLOSED');
     } catch (err: any) {

@@ -25,15 +25,15 @@ function StudentEvaluations() {
         <div>
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
           <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">My Exam Evaluations</h1>
-          <p className="text-sm text-muted-foreground mt-2">View details of your level evaluations, grades, and teacher recommendations.</p>
+          <p className="text-sm text-muted-foreground dark:text-gray-200 mt-2">View details of your level evaluations, grades, and teacher recommendations.</p>
         </div>
 
         {evaluations.length === 0 ? (
           <Card className="rounded-[32px] border p-8 text-center bg-card">
             <CardContent className="pt-6">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
+              <FileText className="mx-auto h-12 w-12 text-muted-foreground dark:text-gray-200/30 mb-3" />
               <h3 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif">No evaluations recorded yet</h3>
-              <p className="text-sm text-muted-foreground mt-1">Once your teacher conducts an exam or level evaluation, it will appear here.</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-200 mt-1">Once your teacher conducts an exam or level evaluation, it will appear here.</p>
             </CardContent>
           </Card>
         ) : (
@@ -48,7 +48,7 @@ function StudentEvaluations() {
                       </Badge>
                       <Badge variant="secondary" className="font-bold text-[10px]">{ev.programType}</Badge>
                     </div>
-                    <CardDescription className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground pt-1">
+                    <CardDescription className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground dark:text-gray-200 pt-1">
                       <Calendar className="h-3.5 w-3.5" /> Evaluation Date: {new Date(ev.evaluationDate).toLocaleDateString()}
                     </CardDescription>
                   </div>
@@ -56,7 +56,7 @@ function StudentEvaluations() {
                   <div className="text-right">
                     <span className="text-[10px] text-foreground font-bold block uppercase tracking-wider">Overall Grade</span>
                     <span className="text-3xl font-black text-nejah-sapphire text-foreground font-serif">{ev.score}</span>
-                    <span className="text-sm font-bold text-muted-foreground">/100</span>
+                    <span className="text-sm font-bold text-muted-foreground dark:text-gray-200">/100</span>
                   </div>
                 </CardHeader>
                 
@@ -96,7 +96,7 @@ function StudentEvaluations() {
                   {ev.recommendations && (
                     <div className="space-y-2 pt-2">
                       <h4 className="text-sm font-extrabold text-nejah-sapphire text-foreground uppercase tracking-wider">Recommendations</h4>
-                      <p className="text-sm text-muted-foreground">{ev.recommendations}</p>
+                      <p className="text-sm text-muted-foreground dark:text-gray-200">{ev.recommendations}</p>
                     </div>
                   )}
 
@@ -107,7 +107,7 @@ function StudentEvaluations() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         {Object.entries(ev.criteriaRatings).map(([crit, rating]) => (
                           <div key={crit} className="flex justify-between items-center bg-muted/10 p-3 rounded-xl border text-xs">
-                            <span className="font-bold text-muted-foreground">{crit}</span>
+                            <span className="font-bold text-muted-foreground dark:text-gray-200">{crit}</span>
                             <Badge variant="outline" className="font-bold text-[10px] text-primary border-primary/20 bg-primary/5">
                               {String(rating)}
                             </Badge>
@@ -119,7 +119,7 @@ function StudentEvaluations() {
 
                   {/* Level curriculum metadata */}
                   {ev.metadata && Object.keys(ev.metadata).length > 0 && (
-                    <div className="text-[10px] text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 bg-muted/40 p-3 rounded-xl font-bold">
+                    <div className="text-[10px] text-muted-foreground dark:text-gray-200 flex flex-wrap gap-x-4 gap-y-1 bg-muted/40 p-3 rounded-xl font-bold">
                       {ev.metadata.topic && <span><strong>Topic/Lesson:</strong> {ev.metadata.topic}</span>}
                       {ev.metadata.surah && <span><strong>Surah:</strong> {ev.metadata.surah}</span>}
                       {ev.metadata.ayah && <span><strong>Ayah Range:</strong> {ev.metadata.ayah}</span>}

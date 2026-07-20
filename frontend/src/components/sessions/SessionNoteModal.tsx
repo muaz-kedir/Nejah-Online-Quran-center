@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface SessionNoteModalProps {

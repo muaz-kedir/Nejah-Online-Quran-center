@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { GlassPanel } from '@/components/dashboard/design-system';
-import { api, requireAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
+import { requireAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 
 interface AttendanceRecord {

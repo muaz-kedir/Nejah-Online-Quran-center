@@ -60,8 +60,8 @@ function StudentHomework() {
 
         {homeworks.length === 0 ? (
           <div className="bg-muted rounded-[32px] p-16 text-center border">
-            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No homework assigned.</p>
+            <ClipboardList className="h-12 w-12 text-muted-foreground dark:text-gray-200 mx-auto mb-4" />
+            <p className="text-muted-foreground dark:text-gray-200">No homework assigned.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -77,8 +77,8 @@ function StudentHomework() {
                   >
                     <div>
                       <h3 className="font-bold text-lg text-nejah-sapphire text-foreground">{hw.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">Teacher: {hw.teacher}</p>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1">Teacher: {hw.teacher}</p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground dark:text-gray-200">
                         <CalendarDays className="h-3 w-3" />
                         Due: {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString() : '—'}
                       </div>
@@ -92,8 +92,8 @@ function StudentHomework() {
                   </button>
                   {isOpen && (
                     <div className="px-6 pb-6 border-t bg-muted/30">
-                      <p className="text-sm text-muted-foreground mt-4 whitespace-pre-wrap">{hw.description}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
+                      <p className="text-sm text-muted-foreground dark:text-gray-200 mt-4 whitespace-pre-wrap">{hw.description}</p>
+                      <p className="text-xs text-muted-foreground dark:text-gray-200 mt-2">
                         Assigned: {hw.assignedDate ? new Date(hw.assignedDate).toLocaleDateString() : '—'}
                       </p>
                       {status === 'Pending' || status === 'Late' ? (

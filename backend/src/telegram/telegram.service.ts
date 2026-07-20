@@ -42,15 +42,16 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     this.configured = true;
 
     try {
-      const { data } = await axios.get(`${this.apiBase}/getMe`);
+      const { data } = await axios.get(`${this.apiBase}/getMe`, { timeout: 10000 });
       if (data.ok) {
         this.botUsername = data.result.username;
         this.logger.log(`Telegram bot @${this.botUsername} initialized`);
+      } else {
+        this.logger.warn(`Telegram getMe returned not ok: ${JSON.stringify(data)}`);
       }
-    } catch (err) {
-      this.logger.error(`Failed to verify bot token: ${(err as Error).message}`);
-      this.configured = false;
-      return;
+    } catch (err: any) {
+      this.logger.warn(`Could not verify Telegram bot token via getMe — will continue with best effort: ${err?.message || err?.code || 'unknown error'}`);
+      this.botUsername = 'NejahQuranBot';
     }
 
     await this.deleteWebhook();

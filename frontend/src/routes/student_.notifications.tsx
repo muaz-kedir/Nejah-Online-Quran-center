@@ -207,7 +207,7 @@ function StudentNotificationsPage() {
   const summaryCards = [
     { label: "Total", value: summary.total, color: "text-foreground", bg: "bg-card/80" },
     { label: "Unread", value: summary.unread, color: "text-nejah-electric", bg: "bg-nejah-electric/8" },
-    { label: "Read", value: summary.read, color: "text-muted-foreground", bg: "bg-muted/50" },
+    { label: "Read", value: summary.read, color: "text-muted-foreground dark:text-gray-200", bg: "bg-muted/50" },
     { label: "Today", value: summary.today, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/20" },
   ];
 
@@ -265,7 +265,7 @@ function StudentNotificationsPage() {
                   "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
                   filter === f
                     ? "bg-nejah-electric text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-primary/10",
+                    : "bg-muted text-muted-foreground dark:text-gray-200 hover:bg-primary/10",
                 )}
               >
                 {f === "all" ? "All" : f === "unread" ? "Unread" : "Read"}
@@ -295,7 +295,7 @@ function StudentNotificationsPage() {
           {/* Search + Type chips */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-gray-200" />
               <Input
                 placeholder="Search notifications..."
                 value={search}
@@ -308,12 +308,12 @@ function StudentNotificationsPage() {
                   onClick={() => { setSearch(""); setPage(1); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
-                  <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  <X className="h-3.5 w-3.5 text-muted-foreground dark:text-gray-200" />
                 </button>
               )}
             </div>
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Filter className="h-3.5 w-3.5 text-muted-foreground dark:text-gray-200 shrink-0" />
               {TYPE_CHIPS.map((chip) => (
                 <button
                   key={chip.value}
@@ -323,7 +323,7 @@ function StudentNotificationsPage() {
                     "px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all",
                     typeFilter === chip.value
                       ? "bg-primary/15 text-primary border border-primary/30"
-                      : "text-muted-foreground hover:text-foreground border border-transparent",
+                      : "text-muted-foreground dark:text-gray-200 hover:text-foreground border border-transparent",
                   )}
                 >
                   {chip.label}
@@ -335,7 +335,7 @@ function StudentNotificationsPage() {
           {/* Bulk actions */}
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs font-semibold text-muted-foreground">
+              <span className="text-xs font-semibold text-muted-foreground dark:text-gray-200">
                 {selectedIds.size} selected
               </span>
               <Button
@@ -361,9 +361,9 @@ function StudentNotificationsPage() {
         {/* Notification List */}
         {displayedItems.length === 0 ? (
           <div className="rounded-3xl p-16 text-center border border-border/50 dark:border-nejah-border-blue/30 bg-muted/30">
-            <Bell className="h-14 w-14 text-muted-foreground mx-auto mb-4 opacity-40" />
-            <p className="text-muted-foreground font-semibold text-lg">No notifications</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">
+            <Bell className="h-14 w-14 text-muted-foreground dark:text-gray-200 mx-auto mb-4 opacity-40" />
+            <p className="text-muted-foreground dark:text-gray-200 font-semibold text-lg">No notifications</p>
+            <p className="text-sm text-muted-foreground dark:text-gray-200/60 mt-1">
               {search || typeFilter
                 ? "Try adjusting your search or filters"
                 : "You're all caught up!"}
@@ -373,7 +373,7 @@ function StudentNotificationsPage() {
           <div className="space-y-2">
             {displayedItems.map((n) => {
               const Icon = NOTIFICATION_ICONS[n.channel] || Bell;
-              const iconColor = NOTIFICATION_COLORS[n.channel] || "text-muted-foreground";
+              const iconColor = NOTIFICATION_COLORS[n.channel] || "text-muted-foreground dark:text-gray-200";
               const bgColor = NOTIFICATION_BG_COLORS[n.channel] || "";
               const action = NOTIFICATION_ACTIONS[n.channel];
               const isDeleting = deletingId === n.id;
@@ -420,23 +420,23 @@ function StudentNotificationsPage() {
                           )}
                           <h3 className={cn(
                             "text-sm truncate",
-                            n.isRead ? "text-muted-foreground font-medium" : "text-foreground font-bold",
+                            n.isRead ? "text-muted-foreground dark:text-gray-200 font-medium" : "text-foreground font-bold",
                           )}>
                             {n.title}
                           </h3>
                         </div>
                         <p className={cn(
                           "text-xs mt-0.5 line-clamp-2",
-                          n.isRead ? "text-muted-foreground/70" : "text-muted-foreground",
+                          n.isRead ? "text-muted-foreground dark:text-gray-200/70" : "text-muted-foreground dark:text-gray-200",
                         )}>
                           {n.content}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-muted-foreground font-medium whitespace-nowrap">
+                        <span className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium whitespace-nowrap">
                           {formatRelativeTime(n.createdAt)}
                         </span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground dark:text-gray-200/40" />
                       </div>
                     </div>
                   </div>
@@ -449,7 +449,7 @@ function StudentNotificationsPage() {
                       deleteNotification(n.id);
                     }}
                     disabled={isDeleting}
-                    className="sm:absolute sm:top-3 sm:right-3 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-500 transition-all shrink-0"
+                    className="sm:absolute sm:top-3 sm:right-3 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground dark:text-gray-200 hover:text-red-500 transition-all shrink-0"
                   >
                     {isDeleting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -474,7 +474,7 @@ function StudentNotificationsPage() {
             >
               Previous
             </Button>
-            <span className="text-xs font-medium text-muted-foreground px-3">
+            <span className="text-xs font-medium text-muted-foreground dark:text-gray-200 px-3">
               Page {page} of {totalPages}
             </span>
             <Button
@@ -503,7 +503,7 @@ function StudentNotificationsPage() {
                   onClick={() => setDetailNotif(null)}
                   className="p-2 rounded-xl hover:bg-primary/10 transition-colors"
                 >
-                  <X className="h-5 w-5 text-muted-foreground" />
+                  <X className="h-5 w-5 text-muted-foreground dark:text-gray-200" />
                 </button>
               </div>
 
@@ -516,7 +516,7 @@ function StudentNotificationsPage() {
                   )}>
                     {(() => {
                       const Icon = NOTIFICATION_ICONS[detailNotif.channel] || Bell;
-                      return <Icon className={cn("h-7 w-7", NOTIFICATION_COLORS[detailNotif.channel] || "text-muted-foreground")} />;
+                      return <Icon className={cn("h-7 w-7", NOTIFICATION_COLORS[detailNotif.channel] || "text-muted-foreground dark:text-gray-200")} />;
                     })()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -528,14 +528,14 @@ function StudentNotificationsPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground font-medium mt-1">
+                    <p className="text-xs text-muted-foreground dark:text-gray-200 font-medium mt-1">
                       {detailNotif.channel.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
                     </p>
                   </div>
                 </div>
 
                 {/* Timestamp */}
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground dark:text-gray-200">
                   <p className="font-semibold">{formatFullDate(detailNotif.createdAt)}</p>
                   {detailNotif.readAt && (
                     <p className="text-xs mt-1">Read {formatRelativeTime(detailNotif.readAt)}</p>
@@ -578,10 +578,10 @@ function StudentNotificationsPage() {
                 {/* Data info */}
                 {detailNotif.dataJson && (
                   <div className="rounded-2xl bg-muted/30 p-4 border border-border/40">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-gray-200 uppercase tracking-wider mb-2">
                       Additional Info
                     </p>
-                    <pre className="text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-xs text-muted-foreground dark:text-gray-200 overflow-x-auto whitespace-pre-wrap">
                       {JSON.stringify(detailNotif.dataJson, null, 2)}
                     </pre>
                   </div>

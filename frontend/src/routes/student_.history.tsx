@@ -88,17 +88,17 @@ function StudentHistoryPage() {
           <div>
             <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-2">Student</p>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">My Class History</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Review your past sessions and attendance records.</p>
+            <p className="text-muted-foreground dark:text-gray-200 mt-1 text-sm">Review your past sessions and attendance records.</p>
           </div>
           <div className="flex gap-2">
             <div className="flex bg-muted/50 rounded-xl p-0.5">
               <button
                 onClick={() => setTab('history')}
-                className={cn("px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors", tab === 'history' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                className={cn("px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors", tab === 'history' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground dark:text-gray-200 hover:text-foreground')}
               >History</button>
               <button
                 onClick={() => setTab('stats')}
-                className={cn("px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors", tab === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                className={cn("px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors", tab === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground dark:text-gray-200 hover:text-foreground')}
               >Statistics</button>
             </div>
             <Button variant="outline" size="sm" className="rounded-xl" onClick={() => fetchHistory(false)}>
@@ -119,7 +119,7 @@ function StudentHistoryPage() {
                 <GlassPanel key={card.label} className="p-4">
                   <card.icon className={cn("h-4 w-4 mb-2", card.color)} />
                   <p className={cn("text-2xl font-bold font-mono", card.color)}>{card.value}</p>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-1">{card.label}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground dark:text-gray-200 uppercase tracking-wider mt-1">{card.label}</p>
                 </GlassPanel>
               ))}
             </div>
@@ -137,7 +137,7 @@ function StudentHistoryPage() {
                   return <div key={i} className={seg.color} style={{ width: `${pct}%` }} title={`${seg.value}`} />;
                 })}
               </div>
-              <div className="flex gap-4 mt-2 text-[11px] text-muted-foreground">
+              <div className="flex gap-4 mt-2 text-[11px] text-muted-foreground dark:text-gray-200">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Present ({data.summary.present})</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Late ({data.summary.late})</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> Absent ({data.summary.absent})</span>
@@ -197,7 +197,7 @@ function StudentHistoryPage() {
 
                 {data.totalPages > 1 && (
                   <div className="flex items-center justify-between pt-6">
-                    <p className="text-sm text-muted-foreground">Page {data.page} of {data.totalPages} ({data.total} records)</p>
+                    <p className="text-sm text-muted-foreground dark:text-gray-200">Page {data.page} of {data.totalPages} ({data.total} records)</p>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="rounded-xl" disabled={data.page <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
@@ -209,9 +209,9 @@ function StudentHistoryPage() {
               </>
             ) : (
               <div className="bg-muted/30 border border-dashed rounded-2xl p-12 text-center">
-                <CalendarDays className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <CalendarDays className="h-12 w-12 text-muted-foreground dark:text-gray-200/30 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-foreground">No class history found</h3>
-                <p className="text-muted-foreground text-sm mt-2 max-w-sm mx-auto">
+                <p className="text-muted-foreground dark:text-gray-200 text-sm mt-2 max-w-sm mx-auto">
                   Your completed sessions will appear here.
                 </p>
               </div>

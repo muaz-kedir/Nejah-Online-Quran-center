@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Play, Calendar, Clock, User, Video, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SessionStatusBadge } from "./SessionStatusBadge";

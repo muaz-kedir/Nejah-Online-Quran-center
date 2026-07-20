@@ -114,7 +114,7 @@
   --secondary-foreground: #E8EDF5;
 
   --muted: #111C30;
-  --muted-foreground: #94A3B8;
+  --muted-foreground: #F1F5F9;
 
   --accent: #0f62ac;
   --accent-foreground: #ffffff;
@@ -132,6 +132,7 @@
   --grid-line-color: rgba(0, 145, 255, 0.025);
 
   --color-nejah-slate-blue: #94A3B8;
+  --color-nejah-sapphire: #E8EDF5;
 }
 
 @layer base {

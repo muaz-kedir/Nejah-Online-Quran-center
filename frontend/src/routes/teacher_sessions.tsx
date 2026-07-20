@@ -4,7 +4,8 @@ import { CalendarDays, Clock, BookOpen, Users, BarChart3, Timer, Filter, Refresh
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { api, requireAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
+import { requireAuth } from '@/lib/auth';
 import { SessionCard } from '@/components/sessions/SessionCard';
 import { SessionDetailView } from '@/components/sessions/SessionDetailView';
 import { SessionNoteModal } from '@/components/sessions/SessionNoteModal';

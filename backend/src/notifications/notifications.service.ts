@@ -226,6 +226,46 @@ export class NotificationsService {
           createdAt: notif.createdAt,
         });
       }
+
+      // Send push notification (VAPID) to all recipients
+      await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : undefined),
+        data: payload.data,
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+      }).catch((err) => {
+        this.logger.error('Failed to send VAPID push notification', err);
+      });
+
+      // Send FCM push notification to all recipients
+      await this.fcmService.sendToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        data: Object.fromEntries(
+          Object.entries({
+            ...(payload.data || {}),
+            sessionId: typeof payload.data?.sessionId === 'string' ? payload.data.sessionId : undefined,
+            url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+            channel,
+          }).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)]),
+        ),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+        clickAction: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+      }).catch((err) => {
+        this.logger.error('Failed to send FCM push notification', err);
+      });
+
+      // Send Telegram notification to all recipients
+      await this.telegramService.sendToUsers(uniqueRecipientIds,
+        `${payload.title}\n\n${payload.message}${payload.actionUrl ? `\n\n${payload.actionUrl}` : ''}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notification', err);
+      });
     }
   }
 

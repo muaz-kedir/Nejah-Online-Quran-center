@@ -458,7 +458,7 @@ export class LiveSessionService {
       if (session.teacherId !== options.teacherId) {
         throw new ForbiddenException('You are not assigned to this session');
       }
-      if (!session.zoomMeetingId) {
+      if (!session.zoomMeetingId && !session.meetingLink) {
         await this.ensureZoomMeeting(session);
       }
       if (session.status === LiveSessionStatus.SCHEDULED) {

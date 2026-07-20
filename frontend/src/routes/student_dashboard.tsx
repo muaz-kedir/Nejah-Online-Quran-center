@@ -204,15 +204,15 @@ function StudentDashboard() {
                 Your Learning Center
               </h2>
               <div className="flex flex-wrap gap-2 sm:gap-3 mt-4">
-                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground dark:text-gray-200 bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
                   <GraduationCap className="h-3.5 w-3.5 text-nejah-electric" />
                   {displayLevel}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground dark:text-gray-200 bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
                   <UserCheck className="h-3.5 w-3.5 text-nejah-electric" />
                   {displayTeacher}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground dark:text-gray-200 bg-card/60 dark:bg-nejah-surface/60 border border-border/40 rounded-full px-3 py-1.5">
                   <Calendar className="h-3.5 w-3.5 text-nejah-electric" />
                   {displayEnrolled}
                 </span>
@@ -284,7 +284,7 @@ function StudentDashboard() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-foreground">Current Hifz Progress</h3>
-                      <p className="text-sm text-muted-foreground mt-0.5">
+                      <p className="text-sm text-muted-foreground dark:text-gray-200 mt-0.5">
                         {progress?.currentSurah
                           ? `${progress.currentSurah} · Ayah ${progress.currentAyah}`
                           : "Not started yet"}
@@ -370,7 +370,7 @@ function StudentDashboard() {
                       <p className="text-xs text-nejah-electric font-medium">
                         {f.teacherName} · {f.date ? new Date(f.date).toLocaleDateString() : ""}
                       </p>
-                      <p className="text-sm mt-1.5 italic text-muted-foreground">
+                      <p className="text-sm mt-1.5 italic text-muted-foreground dark:text-gray-200">
                         &quot;{f.summary}&quot;
                       </p>
                     </div>
@@ -414,7 +414,7 @@ function StudentDashboard() {
                             : "bg-muted dark:bg-nejah-surface"
                         }`}
                       />
-                      <span className="text-[10px] font-bold text-muted-foreground">{short}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground dark:text-gray-200">{short}</span>
                     </div>
                   );
                 })}
@@ -450,7 +450,7 @@ function StudentDashboard() {
                     return (
                       <li
                         key={n.id}
-                        className={`flex items-start gap-2.5 ${n.isRead ? "text-muted-foreground" : "font-medium text-foreground"}`}
+                        className={`flex items-start gap-2.5 ${n.isRead ? "text-muted-foreground dark:text-gray-200" : "font-medium text-foreground"}`}
                       >
                         <div
                           className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center relative ${bgColor}`}
@@ -466,7 +466,7 @@ function StudentDashboard() {
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">No notifications</p>
+                <p className="text-sm text-muted-foreground dark:text-gray-200">No notifications</p>
               )}
               <Button
                 variant="link"

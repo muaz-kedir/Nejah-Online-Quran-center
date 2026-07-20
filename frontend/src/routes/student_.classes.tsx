@@ -70,7 +70,7 @@ function StudentClasses() {
       case 'Absent':
         return <Badge className="bg-rose-100 text-rose-700 border-rose-200"><XCircle className="w-3 h-3 mr-1"/> Absent</Badge>;
       default:
-        return <Badge variant="outline" className="text-muted-foreground">{status}</Badge>;
+        return <Badge variant="outline" className="text-muted-foreground dark:text-gray-200">{status}</Badge>;
     }
   };
 
@@ -98,13 +98,13 @@ function StudentClasses() {
               )}
             </div>
             <div className="flex flex-wrap gap-4 mt-4 text-sm">
-              <span className="flex items-center gap-1.5 text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+              <span className="flex items-center gap-1.5 text-muted-foreground dark:text-gray-200 bg-muted/50 px-3 py-1.5 rounded-full">
                 <CalendarDays className="h-4 w-4 text-nejah-blue" /> {cls.dayOfWeek || cls.day || '—'}
               </span>
-              <span className="flex items-center gap-1.5 text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+              <span className="flex items-center gap-1.5 text-muted-foreground dark:text-gray-200 bg-muted/50 px-3 py-1.5 rounded-full">
                 <Clock className="h-4 w-4 text-nejah-blue" /> {cls.time || `${cls.startTime || ''} - ${cls.endTime || ''}`}
               </span>
-              <span className="flex items-center gap-1.5 text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+              <span className="flex items-center gap-1.5 text-muted-foreground dark:text-gray-200 bg-muted/50 px-3 py-1.5 rounded-full">
                 <User className="h-4 w-4 text-nejah-blue" /> {cls.teacherName || cls.teacher}
               </span>
             </div>
@@ -132,10 +132,10 @@ function StudentClasses() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>
             <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-2">Student Portal</p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif tracking-tight">My Classes</h1>
-            <p className="text-muted-foreground mt-2">Manage your schedule and access live sessions.</p>
+            <h1 className="text-4xl font-extrabold text-foreground font-serif tracking-tight">My Classes</h1>
+            <p className="text-muted-foreground dark:text-gray-200/90 dark:text-gray-300 mt-2">Manage your schedule and access live sessions.</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-gray-200">
             {isPolling ? <RefreshCw className="h-4 w-4 animate-spin text-nejah-electric" /> : <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-green-500" /></div>}
             Real-time tracking active
           </div>
@@ -192,9 +192,9 @@ function StudentClasses() {
               </div>
             ) : (
               <div className="bg-muted/30 border border-dashed rounded-[24px] p-10 text-center flex flex-col items-center justify-center">
-                <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                <CalendarDays className="h-12 w-12 text-muted-foreground dark:text-gray-200/30 mb-4" />
                 <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">No classes today</h3>
-                <p className="text-muted-foreground text-sm max-w-sm mt-2">You don't have any classes scheduled for today. Enjoy your day or review your previous lessons!</p>
+                <p className="text-muted-foreground dark:text-gray-200 text-sm max-w-sm mt-2">You don't have any classes scheduled for today. Enjoy your day or review your previous lessons!</p>
               </div>
             )}
           </section>
@@ -211,7 +211,7 @@ function StudentClasses() {
                 {data.upcoming.map((c: any) => <ClassCard key={c.id} cls={c} />)}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm bg-muted/50 p-6 rounded-2xl border text-center">No upcoming classes scheduled.</p>
+              <p className="text-muted-foreground dark:text-gray-200 text-sm bg-muted/50 p-6 rounded-2xl border text-center">No upcoming classes scheduled.</p>
             )}
           </section>
 
@@ -237,14 +237,14 @@ function StudentClasses() {
                       
                       <div className="flex items-center gap-6 text-sm mt-3">
                         <p className="font-medium flex items-center gap-2">
-                          <BookOpen className="w-4 h-4 text-muted-foreground" />
+                          <BookOpen className="w-4 h-4 text-muted-foreground dark:text-gray-200" />
                           {c.lessonCovered || 'Quran Class'}
                         </p>
-                        <p className="text-muted-foreground flex items-center gap-2">
+                        <p className="text-muted-foreground dark:text-gray-200 flex items-center gap-2">
                           <User className="w-4 h-4" />
                           {c.teacherName || '—'}
                         </p>
-                        <p className="text-muted-foreground flex items-center gap-2">
+                        <p className="text-muted-foreground dark:text-gray-200 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           {c.duration ? `${c.duration} min` : '—'}
                         </p>
@@ -261,7 +261,7 @@ function StudentClasses() {
               </div>
             ) : (
               <div className="bg-muted/30 border border-dashed rounded-[24px] p-10 text-center">
-                <p className="text-muted-foreground">No completed class history yet.</p>
+                <p className="text-muted-foreground dark:text-gray-200">No completed class history yet.</p>
               </div>
             )}
           </section>

@@ -27,7 +27,7 @@ function StudentProgress() {
   }, []);
 
   if (loading) return <StudentPageLoader />;
-  if (!data) return <div className="p-8 text-center text-muted-foreground">No progress data found.</div>;
+  if (!data) return <div className="p-8 text-center text-muted-foreground dark:text-gray-200">No progress data found.</div>;
 
   const overview = data.overview || {};
   const learningTrack = overview.learningTrack || 'quran_reading';
@@ -41,7 +41,7 @@ function StudentProgress() {
       case 'Present': return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-1"/> Present</Badge>;
       case 'Late': return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1"/> Late</Badge>;
       case 'Absent': return <Badge className="bg-rose-100 text-rose-700 border-rose-200"><XCircle className="w-3 h-3 mr-1"/> Absent</Badge>;
-      default: return <Badge variant="outline" className="text-muted-foreground">{status}</Badge>;
+      default: return <Badge variant="outline" className="text-muted-foreground dark:text-gray-200">{status}</Badge>;
     }
   };
 
@@ -166,7 +166,7 @@ function StudentProgress() {
         <div className="hidden print:block text-center mb-8 border-b pb-6">
           <h1 className="text-3xl font-extrabold text-nejah-sapphire text-foreground font-serif">Nejah Quran Institute</h1>
           <p className="text-xl font-bold mt-2">Student Progress Report</p>
-          <p className="text-muted-foreground mt-1">Generated on {new Date().toLocaleDateString()}</p>
+          <p className="text-muted-foreground dark:text-gray-200 mt-1">Generated on {new Date().toLocaleDateString()}</p>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 print:hidden">
@@ -184,7 +184,7 @@ function StudentProgress() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-xl font-bold text-nejah-sapphire text-foreground">Academic Overview</h3>
-              <p className="text-sm text-muted-foreground mt-1">{overview.learningTrackLabel || overview.quranLevel || 'Quran Reading'}</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-200 mt-1">{overview.learningTrackLabel || overview.quranLevel || 'Quran Reading'}</p>
             </div>
             <div className="text-right">
               <Badge className="bg-nejah-blue/10 text-nejah-sapphire text-foreground border-none px-3 py-1 mb-2">
@@ -209,7 +209,7 @@ function StudentProgress() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h4 className="font-bold text-nejah-sapphire text-foreground text-lg">{ev.evaluationType}</h4>
-                      <p className="text-sm text-muted-foreground">{ev.programType} · {new Date(ev.date).toLocaleDateString()}</p>
+                      <p className="text-sm text-muted-foreground dark:text-gray-200">{ev.programType} · {new Date(ev.date).toLocaleDateString()}</p>
                     </div>
                     <Badge variant="outline" className="text-lg px-4 py-1 border-primary text-primary">
                       {ev.score}/100
@@ -229,13 +229,13 @@ function StudentProgress() {
 
                   <div className="bg-primary/5 p-4 rounded-xl">
                     <p className="font-bold text-sm mb-1 text-primary">Teacher Comments</p>
-                    <p className="text-sm text-foreground/80">{ev.notes || 'No additional comments.'}</p>
+                    <p className="text-sm text-gray-100 dark:text-gray-300">{ev.notes || 'No additional comments.'}</p>
                   </div>
                   
                   {ev.recommendations && (
                     <div className="mt-3 p-4 rounded-xl border border-dashed">
                       <p className="font-bold text-sm mb-1">Recommendations</p>
-                      <p className="text-sm text-muted-foreground">{ev.recommendations}</p>
+                      <p className="text-sm text-muted-foreground dark:text-gray-200">{ev.recommendations}</p>
                     </div>
                   )}
                 </div>
@@ -259,15 +259,15 @@ function StudentProgress() {
                     <div className="bg-muted/50 p-4 rounded-2xl border hover:border-nejah-blue/30 transition-colors cursor-pointer print:border-none print:p-0 print:bg-transparent" onClick={() => setSelectedDetails(item)}>
                       <div className="flex justify-between items-start mb-1">
                         <Badge variant="outline" className="text-[10px] uppercase font-bold">{item.courseLevel}</Badge>
-                        <span className="text-[10px] text-muted-foreground font-medium">{new Date(item.date).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium">{new Date(item.date).toLocaleDateString()}</span>
                       </div>
                       <p className="font-bold text-nejah-sapphire text-foreground mt-2">Lesson completed</p>
-                      <p className="text-sm text-foreground/80 mt-1">{item.description}</p>
+                      <p className="text-sm text-gray-100 dark:text-gray-300 mt-1">{item.description}</p>
                       
-                      {item.notes && <p className="text-xs text-muted-foreground mt-3 italic line-clamp-2 print:line-clamp-none">"{item.notes}"</p>}
+                      {item.notes && <p className="text-xs text-muted-foreground dark:text-gray-200 mt-3 italic line-clamp-2 print:line-clamp-none">"{item.notes}"</p>}
                       
                       <div className="flex items-center justify-between mt-3 print:hidden">
-                        <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5"><User className="w-3 h-3"/> {item.teacherName}</p>
+                        <p className="text-xs text-muted-foreground dark:text-gray-200 font-medium flex items-center gap-1.5"><User className="w-3 h-3"/> {item.teacherName}</p>
                         <Button variant="ghost" size="sm" className="h-6 text-xs px-2 text-nejah-sapphire text-foreground">View Details <ChevronRight className="w-3 h-3 ml-1" /></Button>
                       </div>
                     </div>
@@ -275,7 +275,7 @@ function StudentProgress() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground p-8 bg-muted/30 rounded-2xl border border-dashed">No timeline entries yet.</p>
+              <p className="text-center text-muted-foreground dark:text-gray-200 p-8 bg-muted/30 rounded-2xl border border-dashed">No timeline entries yet.</p>
             )}
           </div>
 
@@ -314,17 +314,17 @@ function StudentProgress() {
                     <div key={ah.id} className="flex items-center justify-between p-3 rounded-xl border bg-card text-sm">
                       <div>
                         <p className="font-bold text-nejah-sapphire text-foreground">{new Date(ah.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{ah.course}</p>
+                        <p className="text-xs text-muted-foreground dark:text-gray-200 mt-0.5">{ah.course}</p>
                       </div>
                       <div className="text-right">
                         <div className="mb-1">{getAttendanceBadge(ah.status)}</div>
-                        <p className="text-[10px] text-muted-foreground font-medium flex items-center justify-end gap-1"><Clock className="w-3 h-3"/> {ah.joinTime ? new Date(ah.joinTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—'}</p>
+                        <p className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium flex items-center justify-end gap-1"><Clock className="w-3 h-3"/> {ah.joinTime ? new Date(ah.joinTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—'}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground text-sm p-4">No attendance records found.</p>
+                <p className="text-center text-muted-foreground dark:text-gray-200 text-sm p-4">No attendance records found.</p>
               )}
             </div>
 
@@ -339,14 +339,14 @@ function StudentProgress() {
                     <div key={f.id} className="border-b pb-4 last:border-0 last:pb-0">
                       <div className="flex justify-between items-center mb-2">
                         <p className="font-bold text-sm text-nejah-sapphire text-foreground flex items-center gap-1.5"><User className="w-3 h-3"/> {f.teacherName}</p>
-                        <p className="text-xs text-muted-foreground font-medium bg-muted px-2 py-1 rounded-md">{new Date(f.date).toLocaleDateString()}</p>
+                        <p className="text-xs text-muted-foreground dark:text-gray-200 font-medium bg-muted px-2 py-1 rounded-md">{new Date(f.date).toLocaleDateString()}</p>
                       </div>
-                      <p className="text-sm text-foreground/80 leading-relaxed bg-primary/5 p-3 rounded-xl border border-primary/10">{f.content}</p>
+                      <p className="text-sm text-gray-100 dark:text-gray-300 leading-relaxed bg-primary/5 p-3 rounded-xl border border-primary/10">{f.content}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground p-8 bg-muted/30 rounded-2xl border border-dashed">No daily feedback yet.</p>
+                <p className="text-center text-muted-foreground dark:text-gray-200 p-8 bg-muted/30 rounded-2xl border border-dashed">No daily feedback yet.</p>
               )}
             </div>
           </div>

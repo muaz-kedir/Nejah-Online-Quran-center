@@ -102,7 +102,7 @@ function QaidaCard({
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 font-bold uppercase tracking-wider mb-1">
             Current Topic
           </p>
           <p
@@ -111,18 +111,18 @@ function QaidaCard({
           >
             {currentTopic?.nameAr || "—"}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[10px] text-muted-foreground dark:text-gray-200 mt-0.5">
             {currentTopic?.nameEn || ""}
           </p>
         </div>
         <div className="stat-card text-center">
           <p className="font-bold text-xl text-foreground">
             {progressSummary.completed}{" "}
-            <span className="text-sm text-muted-foreground font-medium">
+            <span className="text-sm text-muted-foreground dark:text-gray-200 font-medium">
               / {progressSummary.total}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Completed
           </p>
         </div>
@@ -130,7 +130,7 @@ function QaidaCard({
           <p className="font-bold text-xl text-foreground">
             {progressSummary.remaining}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Remaining
           </p>
         </div>
@@ -149,14 +149,14 @@ function QuranReadingCard({
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 font-bold uppercase tracking-wider mb-1">
             Current Surah
           </p>
           <p className="font-bold text-foreground text-sm leading-snug">
             {lastPosition.lastStudiedSurah || "Not started"}
           </p>
           {lastPosition.lastStudiedAyah ? (
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+            <p className="text-[10px] text-muted-foreground dark:text-gray-200 mt-0.5">
               Ayah {lastPosition.lastStudiedAyah}
             </p>
           ) : null}
@@ -165,7 +165,7 @@ function QuranReadingCard({
           <p className="font-bold text-xl text-foreground">
             {progressSummary.completed}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Surahs
           </p>
         </div>
@@ -173,7 +173,7 @@ function QuranReadingCard({
           <p className="font-bold text-xl text-foreground">
             {progress.ayahsCount}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Ayahs
           </p>
         </div>
@@ -192,7 +192,7 @@ function TajweedCard({
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card">
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 font-bold uppercase tracking-wider mb-1">
             Current Rule
           </p>
           <p
@@ -201,18 +201,18 @@ function TajweedCard({
           >
             {currentTopic?.nameAr || "—"}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
+          <p className="text-[10px] text-muted-foreground dark:text-gray-200 mt-0.5">
             {currentTopic?.nameEn || ""}
           </p>
         </div>
         <div className="stat-card text-center">
           <p className="font-bold text-xl text-foreground">
             {progressSummary.completed}{" "}
-            <span className="text-sm text-muted-foreground font-medium">
+            <span className="text-sm text-muted-foreground dark:text-gray-200 font-medium">
               / {progressSummary.total}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Lessons
           </p>
         </div>
@@ -220,7 +220,7 @@ function TajweedCard({
           <p className="font-bold text-xl text-foreground">
             {progressSummary.remaining}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Remaining
           </p>
         </div>
@@ -246,7 +246,7 @@ function HifzCard({
           <p className="font-bold text-xl text-foreground">
             {progressSummary.completed}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Surahs
           </p>
         </div>
@@ -254,13 +254,13 @@ function HifzCard({
           <p className="font-bold text-xl text-foreground">
             {progress.ayahsCount}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">
             Ayahs
           </p>
         </div>
         <div className="stat-card text-center">
           <p className="font-bold text-xl text-foreground">{juzCount}</p>
-          <p className="text-xs text-muted-foreground mt-1 font-medium">Juz</p>
+          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1 font-medium">Juz</p>
         </div>
       </div>
     </>
@@ -320,7 +320,7 @@ export function LevelProgressCard({
                 {config.title}
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+            <p className="text-sm text-muted-foreground dark:text-gray-200 mt-0.5">{subtitle}</p>
           </div>
           <Badge className="bg-nejah-electric/10 text-nejah-electric border border-nejah-electric/20 font-semibold">
             {rank}
@@ -334,7 +334,7 @@ export function LevelProgressCard({
             style={{ width: `${percentage}%` }}
           />
         </div>
-        <p className="text-right text-xs font-bold text-muted-foreground mb-4">
+        <p className="text-right text-xs font-bold text-muted-foreground dark:text-gray-200 mb-4">
           {percentage}%
         </p>
 

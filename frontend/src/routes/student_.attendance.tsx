@@ -99,7 +99,7 @@ function StudentAttendance() {
 
   const SummaryCard = ({ label, value, color }: { label: string; value: string | number; color: string }) => (
     <div className="bg-card rounded-2xl p-4 border shadow-sm">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-medium text-muted-foreground dark:text-gray-200 uppercase tracking-wider">{label}</p>
       <p className={cn("text-2xl font-bold mt-1", color)}>{value}</p>
     </div>
   );
@@ -111,9 +111,9 @@ function StudentAttendance() {
           <div>
             <p className="text-[10px] font-extrabold text-nejah-electric uppercase tracking-widest mb-2">Student Portal</p>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground font-serif tracking-tight">My Attendance</h1>
-            <p className="text-muted-foreground mt-2">Track your attendance history across all sessions.</p>
+            <p className="text-muted-foreground dark:text-gray-200 mt-2">Track your attendance history across all sessions.</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-gray-200">
             {isPolling ? (
               <RefreshCw className="h-4 w-4 animate-spin text-nejah-electric" />
             ) : (
@@ -142,7 +142,7 @@ function StudentAttendance() {
         <div className="bg-card rounded-2xl p-4 border shadow-sm mb-6">
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <label className="text-xs font-medium text-muted-foreground dark:text-gray-200">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
@@ -154,7 +154,7 @@ function StudentAttendance() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">From</label>
+              <label className="text-xs font-medium text-muted-foreground dark:text-gray-200">From</label>
               <input
                 type="date"
                 value={fromDate}
@@ -163,7 +163,7 @@ function StudentAttendance() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">To</label>
+              <label className="text-xs font-medium text-muted-foreground dark:text-gray-200">To</label>
               <input
                 type="date"
                 value={toDate}
@@ -204,7 +204,7 @@ function StudentAttendance() {
                           {cfg.label}
                         </Badge>
                       </div>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground dark:text-gray-200">
                         <span className="inline-flex items-center gap-1">
                           <CalendarDays className="h-3.5 w-3.5" />
                           {record.sessionDate}
@@ -233,7 +233,7 @@ function StudentAttendance() {
             {/* Pagination */}
             {data.totalPages > 1 && (
               <div className="flex items-center justify-between pt-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground dark:text-gray-200">
                   Page {data.page} of {data.totalPages} ({data.total} total)
                 </p>
                 <div className="flex gap-2">
@@ -261,9 +261,9 @@ function StudentAttendance() {
           </div>
         ) : (
           <div className="bg-muted/30 border border-dashed rounded-2xl p-12 text-center">
-            <CalendarDays className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <CalendarDays className="h-12 w-12 text-muted-foreground dark:text-gray-200/30 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-foreground">No attendance records found</h3>
-            <p className="text-muted-foreground text-sm mt-2 max-w-sm mx-auto">
+            <p className="text-muted-foreground dark:text-gray-200 text-sm mt-2 max-w-sm mx-auto">
               {statusFilter || fromDate || toDate
                 ? 'No records match your filters. Try adjusting your search criteria.'
                 : 'Your attendance records will appear here once you start attending classes.'}

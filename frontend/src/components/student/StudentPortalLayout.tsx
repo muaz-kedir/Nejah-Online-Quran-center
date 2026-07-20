@@ -190,7 +190,7 @@ export function StudentPortalLayout({
           onClick={toggleTheme}
           className={cn(
             "ml-auto p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
-            "text-muted-foreground hover:text-foreground hover:bg-primary/8",
+            "text-muted-foreground dark:text-gray-200 hover:text-foreground hover:bg-primary/8",
             collapsed && !isMobile && "ml-0",
           )}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -225,7 +225,7 @@ export function StudentPortalLayout({
                     "h-5 w-5 shrink-0 transition-colors duration-200",
                     isActive
                       ? "text-nejah-electric"
-                      : "text-muted-foreground group-hover:text-nejah-electric",
+                      : "text-muted-foreground dark:text-gray-200 group-hover:text-nejah-electric",
                   )}
                 />
                 {(!collapsed || isMobile) && (
@@ -285,7 +285,7 @@ export function StudentPortalLayout({
             type="button"
             onClick={handleLogout}
             className={cn(
-              "sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground",
+              "sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground dark:text-gray-200",
               collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
             )}
           >
@@ -329,12 +329,12 @@ export function StudentPortalLayout({
               <p className="text-sm font-extrabold text-foreground leading-tight truncate">
                 {displayName}
               </p>
-              <p className="text-[10px] text-muted-foreground font-medium truncate">
+              <p className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium truncate">
                 {student?.level || t.studentPortal} Program
               </p>
             </div>
           )}
-          {(!collapsed || isMobile) && <User className="h-4 w-4 text-muted-foreground shrink-0" />}
+          {(!collapsed || isMobile) && <User className="h-4 w-4 text-muted-foreground dark:text-gray-200 shrink-0" />}
         </button>
       </div>
     </>
@@ -375,7 +375,7 @@ export function StudentPortalLayout({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="w-full flex items-center justify-center py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-all duration-200"
+            className="w-full flex items-center justify-center py-2 rounded-xl text-muted-foreground dark:text-gray-200 hover:text-foreground hover:bg-primary/8 transition-all duration-200"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -407,7 +407,7 @@ export function StudentPortalLayout({
             onClick={() => navigate({ to: studentPaths.notifications })}
             className="relative p-2 rounded-xl hover:bg-primary/10 transition-colors"
           >
-            <Bell className="h-5 w-5 text-muted-foreground" />
+            <Bell className="h-5 w-5 text-muted-foreground dark:text-gray-200" />
             {liveUnread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                 {liveUnread}
@@ -540,7 +540,7 @@ export function StudentPageLoader() {
           <div className="w-12 h-12 rounded-full border-[3px] border-primary/20" />
           <div className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-transparent border-t-nejah-electric animate-spin" />
         </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">{loadingText}</p>
+        <p className="text-sm font-medium text-muted-foreground dark:text-gray-200 animate-pulse">{loadingText}</p>
       </div>
     </div>
   );
