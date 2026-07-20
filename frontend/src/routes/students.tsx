@@ -570,26 +570,26 @@ function StudentsPage() {
         <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-4">
           <BentoStatCard
             label="Total Students"
-            value={stats.total}
+            value={stats?.total ?? 0}
             sub="All registered students"
             icon={<Users className="h-5 w-5" />}
             highlight
           />
           <BentoStatCard
             label="Active Students"
-            value={stats.active}
+            value={stats?.active ?? 0}
             icon={<Activity className="h-5 w-5" />}
-            progress={(stats.active / (stats.total || 1)) * 100}
+            progress={((stats?.active ?? 0) / ((stats?.total ?? 0) || 1)) * 100}
           />
           <BentoStatCard
             label="Inactive Students"
-            value={stats.inactive}
+            value={stats?.inactive ?? 0}
             icon={<TrendingUp className="h-5 w-5" />}
-            progress={(stats.inactive / (stats.total || 1)) * 100}
+            progress={((stats?.inactive ?? 0) / ((stats?.total ?? 0) || 1)) * 100}
           />
           <BentoStatCard
             label="New This Month"
-            value={`+${stats.newStudentsThisMonth}`}
+            value={`+${stats?.newStudentsThisMonth ?? 0}`}
             sub="Recently enrolled"
             icon={<Calendar className="h-5 w-5" />}
           />
