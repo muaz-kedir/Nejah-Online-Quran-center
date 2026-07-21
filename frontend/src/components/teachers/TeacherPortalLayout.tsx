@@ -3,11 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
-  Video,
-  Settings,
   Calendar,
   Bell,
   User,
+  Clock,
   Menu,
   X,
   LogOut,
@@ -23,9 +22,8 @@ import { apiUrl } from "@/lib/api";
 const menuItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/teacher_dashboard" },
   { label: "Students", icon: Users, path: "/teacher_students" },
-  { label: "Zoom Sessions", icon: Video, path: "/teacher_zoom" },
-  { label: "Zoom Settings", icon: Settings, path: "/zoom-settings" },
   { label: "Schedule", icon: Calendar, path: "/teacher_schedule" },
+  { label: "Session History", icon: Clock, path: "/teacher_sessions" },
   { label: "Notifications", icon: Bell, path: "/teacher_notifications" },
   { label: "Profile", icon: User, path: "/teacher_profile" },
 ];
@@ -124,6 +122,7 @@ export function TeacherPortalLayout({
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
     }, 0);
   };
 

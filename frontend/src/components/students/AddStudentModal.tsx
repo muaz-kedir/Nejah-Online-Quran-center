@@ -249,12 +249,12 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] dark:bg-nejah-surface dark:border-nejah-border-blue">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">Add New Student</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="fullName" className="dark:text-muted-foreground">Full Name *</Label>

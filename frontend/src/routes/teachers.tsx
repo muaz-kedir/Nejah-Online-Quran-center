@@ -1,71 +1,7 @@
-import { API_BASE, apiUrl } from "@/lib/api";
-import { useState, useEffect, useCallback, memo, useRef } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import {
-  Search,
-  Plus,
-  Eye,
-  Pencil,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-  RefreshCw,
-  BookOpen,
-  Calendar,
-  Sparkles,
-  TrendingUp,
-  Award,
-  ArrowRight,
-  X,
-  Download,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  GraduationCap,
-  Users,
-  CheckCircle,
-  Loader2,
-  Star,
-  AlertTriangle,
-  Flag,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ThumbsUp,
-  Ban,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { AmbientSection, BentoStatCard, GlassPanel, PageHeader } from '@/components/dashboard/design-system';
-import { AddTeacherModal } from '@/components/teachers/AddTeacherModal';
-import { EditTeacherModal } from '@/components/teachers/EditTeacherModal';
-import { DeleteTeacherModal } from '@/components/teachers/DeleteTeacherModal';
-import { toast } from 'sonner';
+import { createFileRoute } from '@tanstack/react-router';
 import { requireAuth } from '@/lib/auth';
 
 export const Route = createFileRoute('/teachers')({
-  component: TeachersPage,
   beforeLoad: () => requireAuth(['super_admin', 'qirat_manager']),
 });
 

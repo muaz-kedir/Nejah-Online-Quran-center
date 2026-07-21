@@ -26,6 +26,12 @@ export interface NotificationPayload {
   actionUrl?: string;
 }
 
+export interface NotificationDispatchResult {
+  studentCount: number;
+  parentCount: number;
+  warnings: string[];
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -220,6 +226,46 @@ export class NotificationsService {
           createdAt: notif.createdAt,
         });
       }
+
+      // Send push notification (VAPID) to all recipients
+      await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : undefined),
+        data: payload.data,
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+      }).catch((err) => {
+        this.logger.error('Failed to send VAPID push notification', err);
+      });
+
+      // Send FCM push notification to all recipients
+      await this.fcmService.sendToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        data: Object.fromEntries(
+          Object.entries({
+            ...(payload.data || {}),
+            sessionId: typeof payload.data?.sessionId === 'string' ? payload.data.sessionId : undefined,
+            url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+            channel,
+          }).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)]),
+        ),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+        clickAction: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+      }).catch((err) => {
+        this.logger.error('Failed to send FCM push notification', err);
+      });
+
+      // Send Telegram notification to all recipients
+      await this.telegramService.sendToUsers(uniqueRecipientIds,
+        `${payload.title}\n\n${payload.message}${payload.actionUrl ? `\n\n${payload.actionUrl}` : ''}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notification', err);
+      });
     }
   }
 
@@ -440,9 +486,10 @@ export class NotificationsService {
     }
   }
 
-  async notifyLiveSessionStarted(session: LiveSession): Promise<void> {
+  async notifyLiveSessionStarted(session: LiveSession): Promise<NotificationDispatchResult> {
     const studentUserIds = new Set<string>();
     const parentUserIds = new Set<string>();
+    const warnings: string[] = [];
 
     const collectStudent = (student?: Student | null) => {
       if (!student) return;
@@ -461,12 +508,26 @@ export class NotificationsService {
       collectStudent(scheduleStudent.student);
     }
 
+    if (!session.studentId && (!session.attendances || session.attendances.length === 0) && (!session.schedule?.scheduleStudents || session.schedule.scheduleStudents.length === 0)) {
+      this.logger.warn(`No students found for session ${session.id} — skipping notification`);
+      return { studentCount: 0, parentCount: 0, warnings: [] };
+    }
+
     const className =
       session.schedule?.className || session.metadata?.className || 'Quran Class';
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
-    const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const joinUrl = session.meetingLink || session.zoomJoinUrl || `/classroom/${sessionId}`;
     const classroomUrl = `/classroom/${sessionId}`;
+
+    const scheduledTime = session.scheduledStart
+      ? new Date(session.scheduledStart).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        })
+      : '';
+
     const enrolledCount =
       session.schedule?.scheduleStudents?.length ||
       (session.studentId ? 1 : 0) ||
@@ -475,9 +536,13 @@ export class NotificationsService {
 
     const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
 
+    const learnerBody = scheduledTime
+      ? `${teacherName}'s ${className} class has begun. Scheduled at ${scheduledTime}. Tap to join!`
+      : `${teacherName}'s ${className} class has begun. Tap to join now!`;
+
     const learnerPayload = {
       title: 'Class Started — Nejah',
-      body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
+      body: learnerBody,
       icon: '/logo.png',
       badge: '/logo.png',
       url: classroomUrl,
@@ -489,9 +554,10 @@ export class NotificationsService {
         channel: 'MEETING_STARTED',
         className,
         teacherName,
+        scheduledTime,
       },
       actions: [
-        { action: 'join', title: '▶ Join Class' },
+        { action: 'join', title: 'Join Class' },
         { action: 'dismiss', title: 'Dismiss' },
       ],
       renotify: true,
@@ -508,6 +574,7 @@ export class NotificationsService {
         channel: 'MEETING_STARTED',
         className,
         teacherName,
+        scheduledTime,
         enrolledCount,
       },
     };
@@ -519,22 +586,18 @@ export class NotificationsService {
         learnerPayload.body,
         learnerPayload.data,
         NotificationChannel.MEETING_STARTED,
-        true,
-      );
-      await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
+        false,
+        classroomUrl,
+      ).catch((err) => {
+        this.logger.error('Failed to send in-app notifications to students', err);
+        warnings.push('Some in-app notifications could not be delivered');
+      });
+
       await this.telegramService.sendToUsers(studentParentIds,
-        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\nTap to join: ${joinUrl}`,
-      );
-      await this.fcmService.sendToUsers(studentParentIds, {
-        title: learnerPayload.title,
-        body: learnerPayload.body,
-        icon: learnerPayload.icon,
-        badge: learnerPayload.badge,
-        tag: learnerPayload.tag,
-        clickAction: learnerPayload.url,
-        data: Object.fromEntries(
-          Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
-        ),
+        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\n${scheduledTime ? `Scheduled at ${scheduledTime}\n` : ''}Tap to join: ${joinUrl}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notifications to students', err);
+        warnings.push('Some Telegram messages could not be delivered');
       });
     }
 
@@ -550,29 +613,32 @@ export class NotificationsService {
         adminPayload.body,
         adminPayload.data,
         NotificationChannel.MEETING_STARTED,
-        true,
-      );
-      await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+        false,
+        `/live-sessions/${sessionId}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send in-app notifications to admins', err);
+        warnings.push('Some admin notifications could not be delivered');
+      });
+
       await this.telegramService.sendToUsers(adminUserIds,
         `Session Started — Admin\n\nTeacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.\nView: /live-sessions/${sessionId}`,
-      );
-      await this.fcmService.sendToUsers(adminUserIds, {
-        title: adminPayload.title,
-        body: adminPayload.body,
-        icon: adminPayload.icon,
-        badge: adminPayload.badge,
-        tag: adminPayload.tag,
-        clickAction: adminPayload.url,
-        data: Object.fromEntries(
-          Object.entries(adminPayload.data || {}).map(([k, v]) => [k, String(v)]),
-        ),
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notifications to admins', err);
       });
     }
 
     await this.pushSubscriptionService.sendToUserTypes(
       [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER],
       adminPayload,
-    );
+    ).catch((err) => {
+      this.logger.error('Failed to send push to admin user types', err);
+    });
+
+    return {
+      studentCount: studentUserIds.size,
+      parentCount: parentUserIds.size,
+      warnings,
+    };
   }
 
   async notifyResourceAdded(resource: any): Promise<void> {

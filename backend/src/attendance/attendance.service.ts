@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-// dkaskd ask
 import { Repository } from 'typeorm';
-import { ClassSession, SessionStatus, TeacherAttendanceStatus } from './entities/class-session.entity';
+import {
+  ClassSession,
+  SessionStatus,
+  TeacherAttendanceStatus,
+} from './entities/class-session.entity';
 import { StudentAttendance, StudentAttendanceStatus } from './entities/student-attendance.entity';
 import { CreateClassSessionDto } from './dto/create-class-session.dto';
 import { StartMeetingDto } from './dto/start-meeting.dto';
@@ -10,6 +18,10 @@ import { RecordStudentAttendanceDto } from './dto/record-student-attendance.dto'
 import { EndSessionDto } from './dto/end-session.dto';
 import { Student } from '../students/entities/student.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
+import { Schedule } from '../schedules/entities/schedule.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { ZoomService } from '../zoom/zoom.service';
+import { ZoomIntegration } from '../zoom/entities/zoom-integration.entity';
 
 @Injectable()
 export class AttendanceService {
@@ -22,6 +34,12 @@ export class AttendanceService {
     private studentRepository: Repository<Student>,
     @InjectRepository(Teacher)
     private teacherRepository: Repository<Teacher>,
+    @InjectRepository(Schedule)
+    private scheduleRepository: Repository<Schedule>,
+    @InjectRepository(ZoomIntegration)
+    private readonly zoomIntegrationRepository: Repository<ZoomIntegration>,
+    private notificationsService: NotificationsService,
+    private readonly zoomService: ZoomService,
   ) {}
 
   async createClassSession(dto: CreateClassSessionDto): Promise<ClassSession> {
@@ -65,9 +83,89 @@ export class AttendanceService {
     return this.getClassSessionWithAttendance(savedSession.id);
   }
 
+  async getLiveClassSessionByScheduleToday(
+    scheduleId: string,
+    requestingTeacherId?: string,
+  ): Promise<ClassSession> {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    let session = await this.classSessionRepository.findOne({
+      where: {
+        scheduleId,
+        sessionDate: todayStr as any,
+      },
+      relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
+    });
+
+    if (!session) {
+      const schedule = await this.scheduleRepository.findOne({
+        where: { id: scheduleId },
+        relations: [
+          'student',
+          'teacher',
+          'teacher.user',
+          'scheduleStudents',
+          'scheduleStudents.student',
+        ],
+      });
+
+      if (!schedule) {
+        throw new NotFoundException('Schedule not found');
+      }
+
+      if (requestingTeacherId && schedule.teacherId !== requestingTeacherId) {
+        throw new ForbiddenException('You do not have access to this schedule');
+      }
+
+      const assignedStudentIds = schedule.isGroupSession
+        ? (schedule.scheduleStudents || []).map((ss) => ss.studentId)
+        : schedule.studentId
+          ? [schedule.studentId]
+          : [];
+
+      const quranLevel = schedule.isGroupSession
+        ? schedule.scheduleStudents?.[0]?.student?.level || 'Beginner'
+        : schedule.student?.level || 'Beginner';
+
+      session = this.classSessionRepository.create({
+        classTitle: schedule.className || 'Quran Class',
+        subject: 'Quran & Islamic Studies',
+        quranLevel,
+        sessionDate: todayStr as any,
+        scheduledStartTime: schedule.startTimeString || '12:00',
+        scheduledEndTime: schedule.endTimeString || '13:00',
+        teacherId: schedule.teacherId,
+        scheduleId: schedule.id,
+        status: SessionStatus.SCHEDULED,
+        totalStudentsAssigned: assignedStudentIds.length,
+      });
+
+      const savedSession = await this.classSessionRepository.save(session);
+
+      for (const sid of assignedStudentIds) {
+        const attendance = this.studentAttendanceRepository.create({
+          studentId: sid,
+          classSessionId: savedSession.id,
+          attendanceStatus: StudentAttendanceStatus.ABSENT,
+        });
+        await this.studentAttendanceRepository.save(attendance);
+      }
+
+      session = await this.getClassSessionWithAttendance(savedSession.id);
+    }
+
+    if (requestingTeacherId && session.teacherId !== requestingTeacherId) {
+      throw new ForbiddenException('You do not have access to this class session');
+    }
+
+    return session;
+  }
+
   async startMeeting(dto: StartMeetingDto): Promise<ClassSession> {
     const session = await this.classSessionRepository.findOne({
       where: { id: dto.classSessionId },
+      relations: ['teacher'],
     });
 
     if (!session) {
@@ -78,21 +176,77 @@ export class AttendanceService {
       throw new BadRequestException('Cannot start a completed session');
     }
 
-    // Update session status
-    session.meetingLink = dto.meetingLink;
-    session.status = SessionStatus.LIVE;
-    session.actualStartTime = new Date();
+    let meetingLink = dto.meetingLink;
 
-    // Record teacher attendance as PRESENT
-    session.teacherAttendanceStatus = TeacherAttendanceStatus.PRESENT;
-    session.teacherJoinTime = new Date();
+    // If no meeting link provided, try to auto-create Zoom meeting
+    if (!meetingLink || meetingLink.trim() === '') {
+      const integration = await this.zoomIntegrationRepository.findOne({
+        where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+      });
+
+      if (integration?.zoomUserId && this.zoomService.isPlatformConfigured()) {
+        try {
+          // Auto-create Zoom meeting
+          const now = new Date();
+          const durationMinutes = 90; // 90 minutes default
+
+          const meeting = await this.zoomService.createMeetingForTeacher(
+            session.classTitle || 'Quran Class',
+            now,
+            durationMinutes,
+            session.teacherId,
+          );
+
+          meetingLink = meeting.joinUrl;
+          session.meetingLink = meetingLink;
+          session.zoomMeetingId = meeting.meetingId;
+          session.zoomPassword = meeting.password;
+        } catch (error) {
+          throw new BadRequestException(
+            'Failed to auto-create Zoom meeting. Please provide a meeting link manually or check your Zoom connection.',
+          );
+        }
+      } else {
+        throw new BadRequestException(
+          'No meeting link provided and Zoom is not connected. Please provide a meeting link or connect your Zoom account in Settings.',
+        );
+      }
+    } else {
+      session.meetingLink = meetingLink;
+    }
+
+    session.status = SessionStatus.LIVE;
+    const now = new Date();
+    session.actualStartTime = now;
+
+    // Determine teacher attendance status (LATE or PRESENT)
+    const todayStr = now.toISOString().split('T')[0];
+    const scheduledStart = new Date(`${todayStr}T${session.scheduledStartTime}:00`);
+
+    if (now > scheduledStart) {
+      session.teacherAttendanceStatus = TeacherAttendanceStatus.LATE;
+    } else {
+      session.teacherAttendanceStatus = TeacherAttendanceStatus.PRESENT;
+    }
+    session.teacherJoinTime = now;
 
     const updatedSession = await this.classSessionRepository.save(session);
 
-    // Trigger notifications (will be handled by notification service)
-    // This is where we'd emit events for notifications
+    // Retrieve assigned student IDs for notification
+    const attendances = await this.studentAttendanceRepository.find({
+      where: { classSessionId: session.id },
+    });
+    const studentIds = attendances.map((a) => a.studentId);
 
-    return this.getClassSessionWithAttendance(updatedSession.id);
+    const sessionWithTeacher = await this.getClassSessionWithAttendance(updatedSession.id);
+
+    try {
+      await this.notificationsService.notifyMeetingStarted(sessionWithTeacher, studentIds);
+    } catch (err) {
+      console.error('Failed to trigger meeting started notifications', err);
+    }
+
+    return sessionWithTeacher;
   }
 
   async recordStudentAttendance(dto: RecordStudentAttendanceDto): Promise<StudentAttendance> {
@@ -112,20 +266,18 @@ export class AttendanceService {
     });
 
     if (!attendance) {
-      // Create new attendance record if it doesn't exist
       attendance = this.studentAttendanceRepository.create({
         studentId: dto.studentId,
         classSessionId: dto.classSessionId,
+        attendanceStatus: StudentAttendanceStatus.ABSENT,
       });
     }
 
+    const now = new Date();
     if (dto.action === 'join') {
-      const now = new Date();
-      const scheduledStart = new Date(
-        `${session.sessionDate}T${session.scheduledStartTime}`,
-      );
+      const todayStr = now.toISOString().split('T')[0];
+      const scheduledStart = new Date(`${todayStr}T${session.scheduledStartTime}:00`);
 
-      // Check if student is late
       if (now > scheduledStart) {
         attendance.attendanceStatus = StudentAttendanceStatus.LATE;
       } else {
@@ -135,17 +287,14 @@ export class AttendanceService {
       attendance.joinTime = now;
       attendance.notificationSent = true;
     } else if (dto.action === 'leave') {
-      attendance.leaveTime = new Date();
+      attendance.leaveTime = now;
 
-      // Calculate duration
       if (attendance.joinTime) {
         const durationMs = attendance.leaveTime.getTime() - attendance.joinTime.getTime();
         attendance.durationMinutes = Math.floor(durationMs / 60000);
 
-        // Mark as LEFT_EARLY if left before scheduled end time
-        const scheduledEnd = new Date(
-          `${session.sessionDate}T${session.scheduledEndTime}`,
-        );
+        const todayStr = now.toISOString().split('T')[0];
+        const scheduledEnd = new Date(`${todayStr}T${session.scheduledEndTime}:00`);
         if (attendance.leaveTime < scheduledEnd) {
           attendance.attendanceStatus = StudentAttendanceStatus.LEFT_EARLY;
         }
@@ -153,9 +302,17 @@ export class AttendanceService {
     }
 
     const savedAttendance = await this.studentAttendanceRepository.save(attendance);
-
-    // Update session statistics
     await this.updateSessionStatistics(dto.classSessionId);
+
+    try {
+      await this.notificationsService.notifyAttendanceRecorded(
+        dto.studentId,
+        dto.classSessionId,
+        savedAttendance.attendanceStatus,
+      );
+    } catch (err) {
+      console.error('Failed to notify parent about attendance', err);
+    }
 
     return savedAttendance;
   }
@@ -163,7 +320,7 @@ export class AttendanceService {
   async endSession(dto: EndSessionDto): Promise<ClassSession> {
     const session = await this.classSessionRepository.findOne({
       where: { id: dto.classSessionId },
-      relations: ['studentAttendances'],
+      relations: ['teacher', 'studentAttendances'],
     });
 
     if (!session) {
@@ -171,11 +328,16 @@ export class AttendanceService {
     }
 
     session.status = SessionStatus.COMPLETED;
-    session.actualEndTime = new Date();
-    session.teacherLeaveTime = new Date();
+    const now = new Date();
+    session.actualEndTime = now;
+    session.teacherLeaveTime = now;
     session.notes = dto.notes;
 
-    // Mark students who never joined as ABSENT
+    if (session.teacherJoinTime) {
+      const durationMs = now.getTime() - session.teacherJoinTime.getTime();
+      session.teacherDuration = Math.floor(durationMs / 60000);
+    }
+
     const attendances = await this.studentAttendanceRepository.find({
       where: { classSessionId: dto.classSessionId },
     });
@@ -184,11 +346,29 @@ export class AttendanceService {
       if (!attendance.joinTime) {
         attendance.attendanceStatus = StudentAttendanceStatus.ABSENT;
         await this.studentAttendanceRepository.save(attendance);
+      } else if (!attendance.leaveTime) {
+        attendance.leaveTime = now;
+        const durationMs = now.getTime() - attendance.joinTime.getTime();
+        attendance.durationMinutes = Math.floor(durationMs / 60000);
+
+        const todayStr = now.toISOString().split('T')[0];
+        const scheduledEnd = new Date(`${todayStr}T${session.scheduledEndTime}:00`);
+        if (now < scheduledEnd) {
+          attendance.attendanceStatus = StudentAttendanceStatus.LEFT_EARLY;
+        }
+        await this.studentAttendanceRepository.save(attendance);
       }
     }
 
     const updatedSession = await this.classSessionRepository.save(session);
     await this.updateSessionStatistics(dto.classSessionId);
+
+    try {
+      const sessionWithTeacher = await this.getClassSessionWithAttendance(updatedSession.id);
+      await this.notificationsService.notifyMeetingEnded(sessionWithTeacher);
+    } catch (err) {
+      console.error('Failed to notify meeting ended', err);
+    }
 
     return this.getClassSessionWithAttendance(updatedSession.id);
   }
@@ -242,7 +422,10 @@ export class AttendanceService {
       query.andWhere('session.sessionDate = :date', { date });
     }
 
-    return query.orderBy('session.sessionDate', 'DESC').addOrderBy('session.scheduledStartTime', 'DESC').getMany();
+    return query
+      .orderBy('session.sessionDate', 'DESC')
+      .addOrderBy('session.scheduledStartTime', 'DESC')
+      .getMany();
   }
 
   async getStudentAttendanceHistory(studentId: string): Promise<StudentAttendance[]> {
@@ -304,53 +487,39 @@ export class AttendanceService {
     return query.orderBy('session.scheduledStartTime', 'ASC').getMany();
   }
 
-  async getLiveClassSessionByScheduleToday(
-    scheduleId: string,
-    requestingTeacherId?: string,
-  ): Promise<ClassSession | null> {
+  async getStudentLiveClass(studentId: string): Promise<ClassSession> {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const query = this.classSessionRepository
-      .createQueryBuilder('session')
-      .where('session.scheduleId = :scheduleId', { scheduleId })
-      .andWhere('session.sessionDate = :date', { date: today })
-      .leftJoinAndSelect('session.teacher', 'teacher')
-      .leftJoinAndSelect('session.studentAttendances', 'attendance')
-      .leftJoinAndSelect('attendance.student', 'student');
+    const todayStr = today.toISOString().split('T')[0];
 
-    if (requestingTeacherId) {
-      query.andWhere('session.teacherId = :teacherId', { teacherId: requestingTeacherId });
+    const liveSessions = await this.classSessionRepository.find({
+      where: {
+        status: SessionStatus.LIVE,
+        sessionDate: todayStr as any,
+      },
+      relations: ['teacher', 'studentAttendances', 'studentAttendances.student'],
+    });
+
+    for (const session of liveSessions) {
+      const isAssigned = session.studentAttendances.some((a) => a.studentId === studentId);
+      if (isAssigned) {
+        return session;
+      }
     }
-
-    return query.getOne() || null;
+    return null;
   }
 
-  async getStudentLiveClass(studentId: string): Promise<ClassSession | null> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return this.classSessionRepository
-      .createQueryBuilder('session')
-      .innerJoin('session.studentAttendances', 'attendance')
-      .where('attendance.studentId = :studentId', { studentId })
-      .andWhere('session.sessionDate = :date', { date: today })
-      .andWhere('session.status = :status', { status: SessionStatus.LIVE })
-      .leftJoinAndSelect('session.teacher', 'teacher')
-      .leftJoinAndSelect('session.studentAttendances', 'attendances')
-      .leftJoinAndSelect('attendances.student', 'student')
-      .getOne() || null;
-  }
-
-  async getAllSessions(limitNum: number, status?: string): Promise<ClassSession[]> {
+  async getAllSessions(limit: number = 100, status?: string): Promise<ClassSession[]> {
     const query = this.classSessionRepository
       .createQueryBuilder('session')
       .leftJoinAndSelect('session.teacher', 'teacher')
       .leftJoinAndSelect('session.studentAttendances', 'attendance')
       .leftJoinAndSelect('attendance.student', 'student')
-      .orderBy('session.scheduledStartTime', 'DESC')
-      .take(limitNum);
+      .orderBy('session.sessionDate', 'DESC')
+      .addOrderBy('session.scheduledStartTime', 'DESC')
+      .take(limit);
 
-    if (status) {
-      query.andWhere('session.status = :status', { status });
+    if (status && status !== 'all') {
+      query.where('session.status = :status', { status });
     }
 
     return query.getMany();

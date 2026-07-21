@@ -31,6 +31,18 @@ export class UsersService {
     const demoAccounts = [
       { email: 'admin@nejah.com', password: 'Admin123', name: 'Admin User', role: UserRole.ADMIN },
       {
+        email: 'finance@nejah.com',
+        password: 'Finance123',
+        name: 'Finance Manager',
+        role: UserRole.FINANCE_MANAGER,
+      },
+      {
+        email: 'qirat@nejah.com',
+        password: 'Qirat123',
+        name: 'Qirat Manager',
+        role: UserRole.QIRAT_MANAGER,
+      },
+      {
         email: 'teacher@nejah.com',
         password: 'Teacher123',
         name: 'Demo Teacher',

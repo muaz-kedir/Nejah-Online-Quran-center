@@ -10,18 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
+import { Route as ZoomGuideRouteImport } from './routes/zoom-guide'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as Teacher_zoomRouteImport } from './routes/teacher_zoom'
 import { Route as Teacher_studentsRouteImport } from './routes/teacher_students'
+import { Route as Teacher_sessionsRouteImport } from './routes/teacher_sessions'
 import { Route as Teacher_scheduleRouteImport } from './routes/teacher_schedule'
 import { Route as Teacher_profileRouteImport } from './routes/teacher_profile'
 import { Route as Teacher_notificationsRouteImport } from './routes/teacher_notifications'
 import { Route as Teacher_dashboardRouteImport } from './routes/teacher_dashboard'
 import { Route as TeacherReplacementsRouteImport } from './routes/teacher-replacements'
 import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applications'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
 import { Route as SetupRequiredRouteImport } from './routes/setup-required'
@@ -63,6 +66,8 @@ import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as ApplyAsTeacherRouteImport } from './routes/apply-as-teacher'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
+import { Route as Admin_teacherHistoryRouteImport } from './routes/admin_teacher-history'
+import { Route as Admin_studentHistoryRouteImport } from './routes/admin_student-history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WebsiteTeachersRouteImport } from './routes/website.teachers'
 import { Route as WebsiteResourcesRouteImport } from './routes/website.resources'
@@ -75,8 +80,10 @@ import { Route as StudentResourcesRouteImport } from './routes/student_.resource
 import { Route as StudentProgressRouteImport } from './routes/student_.progress'
 import { Route as StudentNotificationsRouteImport } from './routes/student_.notifications'
 import { Route as StudentHomeworkRouteImport } from './routes/student_.homework'
+import { Route as StudentHistoryRouteImport } from './routes/student_.history'
 import { Route as StudentEvaluationsRouteImport } from './routes/student_.evaluations'
 import { Route as StudentClassesRouteImport } from './routes/student_.classes'
+import { Route as StudentAttendanceRouteImport } from './routes/student_.attendance'
 import { Route as SettingsIntegrationsRouteImport } from './routes/settings.integrations'
 import { Route as LiveSessionsIdRouteImport } from './routes/live-sessions_.$id'
 import { Route as LiveSessionsAnalyticsRouteImport } from './routes/live-sessions.analytics'
@@ -95,72 +102,107 @@ const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
   id: '/zoom-settings',
   path: '/zoom-settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/zoom-settings.lazy').then((d) => d.Route))
+const ZoomGuideRoute = ZoomGuideRouteImport.update({
+  id: '/zoom-guide',
+  path: '/zoom-guide',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/zoom-guide.lazy').then((d) => d.Route))
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/users.lazy').then((d) => d.Route))
 const TrackApplicationRoute = TrackApplicationRouteImport.update({
   id: '/track-application',
   path: '/track-application',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/track-application.lazy').then((d) => d.Route),
+)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/terms-of-service.lazy').then((d) => d.Route),
+)
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
   path: '/teachers',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teachers.lazy').then((d) => d.Route))
 const Teacher_zoomRoute = Teacher_zoomRouteImport.update({
   id: '/teacher_zoom',
   path: '/teacher_zoom',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teacher_zoom.lazy').then((d) => d.Route))
 const Teacher_studentsRoute = Teacher_studentsRouteImport.update({
   id: '/teacher_students',
   path: '/teacher_students',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_students.lazy').then((d) => d.Route),
+)
+const Teacher_sessionsRoute = Teacher_sessionsRouteImport.update({
+  id: '/teacher_sessions',
+  path: '/teacher_sessions',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/teacher_sessions.lazy').then((d) => d.Route),
+)
 const Teacher_scheduleRoute = Teacher_scheduleRouteImport.update({
   id: '/teacher_schedule',
   path: '/teacher_schedule',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_schedule.lazy').then((d) => d.Route),
+)
 const Teacher_profileRoute = Teacher_profileRouteImport.update({
   id: '/teacher_profile',
   path: '/teacher_profile',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_profile.lazy').then((d) => d.Route),
+)
 const Teacher_notificationsRoute = Teacher_notificationsRouteImport.update({
   id: '/teacher_notifications',
   path: '/teacher_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_notifications.lazy').then((d) => d.Route),
+)
 const Teacher_dashboardRoute = Teacher_dashboardRouteImport.update({
   id: '/teacher_dashboard',
   path: '/teacher_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher_dashboard.lazy').then((d) => d.Route),
+)
 const TeacherReplacementsRoute = TeacherReplacementsRouteImport.update({
   id: '/teacher-replacements',
   path: '/teacher-replacements',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-replacements.lazy').then((d) => d.Route),
+)
 const TeacherApplicationsRoute = TeacherApplicationsRouteImport.update({
   id: '/teacher-applications',
   path: '/teacher-applications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-applications.lazy').then((d) => d.Route),
+)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/support.lazy').then((d) => d.Route))
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
   path: '/students',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/students.lazy').then((d) => d.Route))
 const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
@@ -175,192 +217,246 @@ const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
 const SchedulesRoute = SchedulesRouteImport.update({
   id: '/schedules',
   path: '/schedules',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/schedules.lazy').then((d) => d.Route))
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/reports.lazy').then((d) => d.Route))
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/register.lazy').then((d) => d.Route))
 const Qirat_settingsRoute = Qirat_settingsRouteImport.update({
   id: '/qirat_settings',
   path: '/qirat_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_settings.lazy').then((d) => d.Route),
+)
 const Qirat_notificationsRoute = Qirat_notificationsRouteImport.update({
   id: '/qirat_notifications',
   path: '/qirat_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_notifications.lazy').then((d) => d.Route),
+)
 const Qirat_examsRoute = Qirat_examsRouteImport.update({
   id: '/qirat_exams',
   path: '/qirat_exams',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/qirat_exams.lazy').then((d) => d.Route))
 const Qirat_dashboardRoute = Qirat_dashboardRouteImport.update({
   id: '/qirat_dashboard',
   path: '/qirat_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/qirat_dashboard.lazy').then((d) => d.Route),
+)
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/progress.lazy').then((d) => d.Route))
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/profile.lazy').then((d) => d.Route))
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/privacy-policy.lazy').then((d) => d.Route),
+)
 const ParentsRoute = ParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/parents.lazy').then((d) => d.Route))
 const Parent_sessionsRoute = Parent_sessionsRouteImport.update({
   id: '/parent_sessions',
   path: '/parent_sessions',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_sessions.lazy').then((d) => d.Route),
+)
 const Parent_notificationsRoute = Parent_notificationsRouteImport.update({
   id: '/parent_notifications',
   path: '/parent_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_notifications.lazy').then((d) => d.Route),
+)
 const Parent_dashboardRoute = Parent_dashboardRouteImport.update({
   id: '/parent_dashboard',
   path: '/parent_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/parent_dashboard.lazy').then((d) => d.Route),
+)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/login.lazy').then((d) => d.Route))
 const LiveSessionsRoute = LiveSessionsRouteImport.update({
   id: '/live-sessions',
   path: '/live-sessions',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/live-sessions.lazy').then((d) => d.Route))
 const HomeworkRoute = HomeworkRouteImport.update({
   id: '/homework',
   path: '/homework',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/homework.lazy').then((d) => d.Route))
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/forgot-password.lazy').then((d) => d.Route),
+)
 const Finance_teacherPaymentsRoute = Finance_teacherPaymentsRouteImport.update({
   id: '/finance_teacher-payments',
   path: '/finance_teacher-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_teacher-payments.lazy').then((d) => d.Route),
+)
 const Finance_studentPaymentsRoute = Finance_studentPaymentsRouteImport.update({
   id: '/finance_student-payments',
   path: '/finance_student-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_student-payments.lazy').then((d) => d.Route),
+)
 const Finance_settingsRoute = Finance_settingsRouteImport.update({
   id: '/finance_settings',
   path: '/finance_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_settings.lazy').then((d) => d.Route),
+)
 const Finance_revenueRoute = Finance_revenueRouteImport.update({
   id: '/finance_revenue',
   path: '/finance_revenue',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_revenue.lazy').then((d) => d.Route),
+)
 const Finance_reportsRoute = Finance_reportsRouteImport.update({
   id: '/finance_reports',
   path: '/finance_reports',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_reports.lazy').then((d) => d.Route),
+)
 const Finance_profitRoute = Finance_profitRouteImport.update({
   id: '/finance_profit',
   path: '/finance_profit',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_profit.lazy').then((d) => d.Route),
+)
 const Finance_notificationsRoute = Finance_notificationsRouteImport.update({
   id: '/finance_notifications',
   path: '/finance_notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_notifications.lazy').then((d) => d.Route),
+)
 const Finance_familyPaymentsRoute = Finance_familyPaymentsRouteImport.update({
   id: '/finance_family-payments',
   path: '/finance_family-payments',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_family-payments.lazy').then((d) => d.Route),
+)
 const Finance_expensesRoute = Finance_expensesRouteImport.update({
   id: '/finance_expenses',
   path: '/finance_expenses',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_expenses.lazy').then((d) => d.Route),
+)
 const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
   id: '/finance_dashboard',
   path: '/finance_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/finance_dashboard.lazy').then((d) => d.Route),
+)
 const Fee_settingsRoute = Fee_settingsRouteImport.update({
   id: '/fee_settings',
   path: '/fee_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/fee_settings.lazy').then((d) => d.Route))
 const DebugUserRoute = DebugUserRouteImport.update({
   id: '/debug-user',
   path: '/debug-user',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/debug-user.lazy').then((d) => d.Route))
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/dashboard.lazy').then((d) => d.Route))
 const Currency_settingsRoute = Currency_settingsRouteImport.update({
   id: '/currency_settings',
   path: '/currency_settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/currency_settings.lazy').then((d) => d.Route),
+)
 const AuditLogsRoute = AuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/audit-logs.lazy').then((d) => d.Route))
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/attendance.lazy').then((d) => d.Route))
 const ApplyAsTeacherRoute = ApplyAsTeacherRouteImport.update({
   id: '/apply-as-teacher',
   path: '/apply-as-teacher',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/apply-as-teacher.lazy').then((d) => d.Route),
+)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/analytics.lazy').then((d) => d.Route))
 const AdminsRoute = AdminsRouteImport.update({
   id: '/admins',
   path: '/admins',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/admins.lazy').then((d) => d.Route))
+const Admin_teacherHistoryRoute = Admin_teacherHistoryRouteImport.update({
+  id: '/admin_teacher-history',
+  path: '/admin_teacher-history',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/admin_teacher-history.lazy').then((d) => d.Route),
+)
+const Admin_studentHistoryRoute = Admin_studentHistoryRouteImport.update({
+  id: '/admin_student-history',
+  path: '/admin_student-history',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/admin_student-history.lazy').then((d) => d.Route),
+)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -370,73 +466,111 @@ const WebsiteTeachersRoute = WebsiteTeachersRouteImport.update({
   id: '/website/teachers',
   path: '/website/teachers',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.teachers.lazy').then((d) => d.Route),
+)
 const WebsiteResourcesRoute = WebsiteResourcesRouteImport.update({
   id: '/website/resources',
   path: '/website/resources',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.resources.lazy').then((d) => d.Route),
+)
 const WebsiteHomeRoute = WebsiteHomeRouteImport.update({
   id: '/website/home',
   path: '/website/home',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/website.home.lazy').then((d) => d.Route))
 const TeachersCreateRoute = TeachersCreateRouteImport.update({
   id: '/teachers_/create',
   path: '/teachers/create',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.create.lazy').then((d) => d.Route),
+)
 const TeachersIdRoute = TeachersIdRouteImport.update({
   id: '/teachers_/$id',
   path: '/teachers/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/teachers_.$id.lazy').then((d) => d.Route))
 const Teacher_studentsStudentIdRoute =
   Teacher_studentsStudentIdRouteImport.update({
     id: '/teacher_students_/$studentId',
     path: '/teacher_students/$studentId',
     getParentRoute: () => rootRouteImport,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/teacher_students_.$studentId.lazy').then((d) => d.Route),
+  )
 const TeacherApplicationsIdRoute = TeacherApplicationsIdRouteImport.update({
   id: '/teacher-applications_/$id',
   path: '/teacher-applications/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teacher-applications_.$id.lazy').then((d) => d.Route),
+)
 const StudentResourcesRoute = StudentResourcesRouteImport.update({
   id: '/student_/resources',
   path: '/student/resources',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.resources.lazy').then((d) => d.Route),
+)
 const StudentProgressRoute = StudentProgressRouteImport.update({
   id: '/student_/progress',
   path: '/student/progress',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.progress.lazy').then((d) => d.Route),
+)
 const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
   id: '/student_/notifications',
   path: '/student/notifications',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.notifications.lazy').then((d) => d.Route),
+)
 const StudentHomeworkRoute = StudentHomeworkRouteImport.update({
   id: '/student_/homework',
   path: '/student/homework',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.homework.lazy').then((d) => d.Route),
+)
+const StudentHistoryRoute = StudentHistoryRouteImport.update({
+  id: '/student_/history',
+  path: '/student/history',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/student_.history.lazy').then((d) => d.Route),
+)
 const StudentEvaluationsRoute = StudentEvaluationsRouteImport.update({
   id: '/student_/evaluations',
   path: '/student/evaluations',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.evaluations.lazy').then((d) => d.Route),
+)
 const StudentClassesRoute = StudentClassesRouteImport.update({
   id: '/student_/classes',
   path: '/student/classes',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_.classes.lazy').then((d) => d.Route),
+)
+const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
+  id: '/student_/attendance',
+  path: '/student/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/student_.attendance.lazy').then((d) => d.Route),
+)
 const SettingsIntegrationsRoute = SettingsIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
   getParentRoute: () => SettingsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/settings.integrations.lazy').then((d) => d.Route),
+)
 const LiveSessionsIdRoute = LiveSessionsIdRouteImport.update({
   id: '/live-sessions_/$id',
   path: '/live-sessions/$id',
@@ -446,17 +580,23 @@ const LiveSessionsAnalyticsRoute = LiveSessionsAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => LiveSessionsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/live-sessions.analytics.lazy').then((d) => d.Route),
+)
 const ClassroomSessionIdRoute = ClassroomSessionIdRouteImport.update({
   id: '/classroom_/$sessionId',
   path: '/classroom/$sessionId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/classroom_.$sessionId.lazy').then((d) => d.Route),
+)
 const ClassSessionIdRoute = ClassSessionIdRouteImport.update({
   id: '/class-session_/$id',
   path: '/class-session/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/class-session_.$id.lazy').then((d) => d.Route),
+)
 const TeachersIdIndexRoute = TeachersIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -466,41 +606,59 @@ const WebsiteSupportTicketsRoute = WebsiteSupportTicketsRouteImport.update({
   id: '/website/support/tickets',
   path: '/website/support/tickets',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.tickets.lazy').then((d) => d.Route),
+)
 const WebsiteSupportPagesRoute = WebsiteSupportPagesRouteImport.update({
   id: '/website/support/pages',
   path: '/website/support/pages',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.pages.lazy').then((d) => d.Route),
+)
 const WebsiteSupportAnalyticsRoute = WebsiteSupportAnalyticsRouteImport.update({
   id: '/website/support/analytics',
   path: '/website/support/analytics',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/website.support.analytics.lazy').then((d) => d.Route),
+)
 const TeachersIdStudentsRoute = TeachersIdStudentsRouteImport.update({
   id: '/students',
   path: '/students',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.students.lazy').then((d) => d.Route),
+)
 const TeachersIdProfileRoute = TeachersIdProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.profile.lazy').then((d) => d.Route),
+)
 const TeachersIdStudentsStudentIdRoute =
   TeachersIdStudentsStudentIdRouteImport.update({
     id: '/students_/$studentId',
     path: '/students/$studentId',
     getParentRoute: () => TeachersIdRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/teachers_.$id.students_.$studentId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const TeachersIdScheduleDayRoute = TeachersIdScheduleDayRouteImport.update({
   id: '/schedule/$day',
   path: '/schedule/$day',
   getParentRoute: () => TeachersIdRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/teachers_.$id.schedule.$day.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -542,26 +700,31 @@ export interface FileRoutesByFullPath {
   '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
+  '/student/history': typeof StudentHistoryRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
@@ -584,6 +747,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -625,26 +790,31 @@ export interface FileRoutesByTo {
   '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
   '/student/classes': typeof StudentClassesRoute
   '/student/evaluations': typeof StudentEvaluationsRoute
+  '/student/history': typeof StudentHistoryRoute
   '/student/homework': typeof StudentHomeworkRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/progress': typeof StudentProgressRoute
@@ -667,6 +837,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin_student-history': typeof Admin_studentHistoryRoute
+  '/admin_teacher-history': typeof Admin_teacherHistoryRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
   '/apply-as-teacher': typeof ApplyAsTeacherRoute
@@ -708,26 +880,31 @@ export interface FileRoutesById {
   '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
+  '/support': typeof SupportRoute
   '/teacher-applications': typeof TeacherApplicationsRoute
   '/teacher-replacements': typeof TeacherReplacementsRoute
   '/teacher_dashboard': typeof Teacher_dashboardRoute
   '/teacher_notifications': typeof Teacher_notificationsRoute
   '/teacher_profile': typeof Teacher_profileRoute
   '/teacher_schedule': typeof Teacher_scheduleRoute
+  '/teacher_sessions': typeof Teacher_sessionsRoute
   '/teacher_students': typeof Teacher_studentsRoute
   '/teacher_zoom': typeof Teacher_zoomRoute
   '/teachers': typeof TeachersRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
+  '/zoom-guide': typeof ZoomGuideRoute
   '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
   '/live-sessions_/$id': typeof LiveSessionsIdRoute
   '/settings/integrations': typeof SettingsIntegrationsRoute
+  '/student_/attendance': typeof StudentAttendanceRoute
   '/student_/classes': typeof StudentClassesRoute
   '/student_/evaluations': typeof StudentEvaluationsRoute
+  '/student_/history': typeof StudentHistoryRoute
   '/student_/homework': typeof StudentHomeworkRoute
   '/student_/notifications': typeof StudentNotificationsRoute
   '/student_/progress': typeof StudentProgressRoute
@@ -752,6 +929,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -793,26 +972,31 @@ export interface FileRouteTypes {
     | '/setup-required'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/settings/integrations'
+    | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
+    | '/student/history'
     | '/student/homework'
     | '/student/notifications'
     | '/student/progress'
@@ -835,6 +1019,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -876,26 +1062,31 @@ export interface FileRouteTypes {
     | '/setup-required'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions/$id'
     | '/settings/integrations'
+    | '/student/attendance'
     | '/student/classes'
     | '/student/evaluations'
+    | '/student/history'
     | '/student/homework'
     | '/student/notifications'
     | '/student/progress'
@@ -917,6 +1108,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin_student-history'
+    | '/admin_teacher-history'
     | '/admins'
     | '/analytics'
     | '/apply-as-teacher'
@@ -958,26 +1151,31 @@ export interface FileRouteTypes {
     | '/setup-required'
     | '/student_dashboard'
     | '/students'
+    | '/support'
     | '/teacher-applications'
     | '/teacher-replacements'
     | '/teacher_dashboard'
     | '/teacher_notifications'
     | '/teacher_profile'
     | '/teacher_schedule'
+    | '/teacher_sessions'
     | '/teacher_students'
     | '/teacher_zoom'
     | '/teachers'
     | '/terms-of-service'
     | '/track-application'
     | '/users'
+    | '/zoom-guide'
     | '/zoom-settings'
     | '/class-session_/$id'
     | '/classroom_/$sessionId'
     | '/live-sessions/analytics'
     | '/live-sessions_/$id'
     | '/settings/integrations'
+    | '/student_/attendance'
     | '/student_/classes'
     | '/student_/evaluations'
+    | '/student_/history'
     | '/student_/homework'
     | '/student_/notifications'
     | '/student_/progress'
@@ -1001,6 +1199,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Admin_studentHistoryRoute: typeof Admin_studentHistoryRoute
+  Admin_teacherHistoryRoute: typeof Admin_teacherHistoryRoute
   AdminsRoute: typeof AdminsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   ApplyAsTeacherRoute: typeof ApplyAsTeacherRoute
@@ -1042,24 +1242,29 @@ export interface RootRouteChildren {
   SetupRequiredRoute: typeof SetupRequiredRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
+  SupportRoute: typeof SupportRoute
   TeacherApplicationsRoute: typeof TeacherApplicationsRoute
   TeacherReplacementsRoute: typeof TeacherReplacementsRoute
   Teacher_dashboardRoute: typeof Teacher_dashboardRoute
   Teacher_notificationsRoute: typeof Teacher_notificationsRoute
   Teacher_profileRoute: typeof Teacher_profileRoute
   Teacher_scheduleRoute: typeof Teacher_scheduleRoute
+  Teacher_sessionsRoute: typeof Teacher_sessionsRoute
   Teacher_studentsRoute: typeof Teacher_studentsRoute
   Teacher_zoomRoute: typeof Teacher_zoomRoute
   TeachersRoute: typeof TeachersRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
+  ZoomGuideRoute: typeof ZoomGuideRoute
   ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
   LiveSessionsIdRoute: typeof LiveSessionsIdRoute
+  StudentAttendanceRoute: typeof StudentAttendanceRoute
   StudentClassesRoute: typeof StudentClassesRoute
   StudentEvaluationsRoute: typeof StudentEvaluationsRoute
+  StudentHistoryRoute: typeof StudentHistoryRoute
   StudentHomeworkRoute: typeof StudentHomeworkRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentProgressRoute: typeof StudentProgressRoute
@@ -1083,6 +1288,13 @@ declare module '@tanstack/react-router' {
       path: '/zoom-settings'
       fullPath: '/zoom-settings'
       preLoaderRoute: typeof ZoomSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zoom-guide': {
+      id: '/zoom-guide'
+      path: '/zoom-guide'
+      fullPath: '/zoom-guide'
+      preLoaderRoute: typeof ZoomGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/users': {
@@ -1127,6 +1339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Teacher_studentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher_sessions': {
+      id: '/teacher_sessions'
+      path: '/teacher_sessions'
+      fullPath: '/teacher_sessions'
+      preLoaderRoute: typeof Teacher_sessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher_schedule': {
       id: '/teacher_schedule'
       path: '/teacher_schedule'
@@ -1167,6 +1386,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher-applications'
       fullPath: '/teacher-applications'
       preLoaderRoute: typeof TeacherApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/students': {
@@ -1456,6 +1682,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_teacher-history': {
+      id: '/admin_teacher-history'
+      path: '/admin_teacher-history'
+      fullPath: '/admin_teacher-history'
+      preLoaderRoute: typeof Admin_teacherHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_student-history': {
+      id: '/admin_student-history'
+      path: '/admin_student-history'
+      fullPath: '/admin_student-history'
+      preLoaderRoute: typeof Admin_studentHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -1540,6 +1780,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentHomeworkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student_/history': {
+      id: '/student_/history'
+      path: '/student/history'
+      fullPath: '/student/history'
+      preLoaderRoute: typeof StudentHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student_/evaluations': {
       id: '/student_/evaluations'
       path: '/student/evaluations'
@@ -1552,6 +1799,13 @@ declare module '@tanstack/react-router' {
       path: '/student/classes'
       fullPath: '/student/classes'
       preLoaderRoute: typeof StudentClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student_/attendance': {
+      id: '/student_/attendance'
+      path: '/student/attendance'
+      fullPath: '/student/attendance'
+      preLoaderRoute: typeof StudentAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/integrations': {
@@ -1694,6 +1948,8 @@ const TeachersIdRouteWithChildren = TeachersIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Admin_studentHistoryRoute: Admin_studentHistoryRoute,
+  Admin_teacherHistoryRoute: Admin_teacherHistoryRoute,
   AdminsRoute: AdminsRoute,
   AnalyticsRoute: AnalyticsRoute,
   ApplyAsTeacherRoute: ApplyAsTeacherRoute,
@@ -1735,24 +1991,29 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRequiredRoute: SetupRequiredRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
+  SupportRoute: SupportRoute,
   TeacherApplicationsRoute: TeacherApplicationsRoute,
   TeacherReplacementsRoute: TeacherReplacementsRoute,
   Teacher_dashboardRoute: Teacher_dashboardRoute,
   Teacher_notificationsRoute: Teacher_notificationsRoute,
   Teacher_profileRoute: Teacher_profileRoute,
   Teacher_scheduleRoute: Teacher_scheduleRoute,
+  Teacher_sessionsRoute: Teacher_sessionsRoute,
   Teacher_studentsRoute: Teacher_studentsRoute,
   Teacher_zoomRoute: Teacher_zoomRoute,
   TeachersRoute: TeachersRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
+  ZoomGuideRoute: ZoomGuideRoute,
   ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
   LiveSessionsIdRoute: LiveSessionsIdRoute,
+  StudentAttendanceRoute: StudentAttendanceRoute,
   StudentClassesRoute: StudentClassesRoute,
   StudentEvaluationsRoute: StudentEvaluationsRoute,
+  StudentHistoryRoute: StudentHistoryRoute,
   StudentHomeworkRoute: StudentHomeworkRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentProgressRoute: StudentProgressRoute,

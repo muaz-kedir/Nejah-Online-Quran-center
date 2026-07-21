@@ -5,8 +5,10 @@ import {
   Users,
   TrendingUp,
   ClipboardList,
+  ClipboardCheck,
   FolderOpen,
   Bell,
+  Clock,
   Settings,
   LogOut,
   User,
@@ -16,10 +18,12 @@ import {
   X,
   Sun,
   Moon,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
 import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
+import { TelegramOnboardingOverlay } from "@/components/student/TelegramOnboardingOverlay";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,8 +41,6 @@ type Props = {
     initials?: string;
   };
   unreadNotifications?: number;
-  onOpenSettings?: () => void;
-  onOpenProfile?: () => void;
   children: ReactNode;
 };
 
@@ -48,8 +50,6 @@ export function StudentPortalLayout({
   activePath,
   student,
   unreadNotifications = 0,
-  onOpenSettings,
-  onOpenProfile,
   children,
 }: Props) {
   const navigate = useNavigate();
@@ -68,12 +68,27 @@ export function StudentPortalLayout({
 
   const { t } = useApp();
 
+  // Settings & profile dialogs state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [profileData, setProfileData] = useState<StudentProfileData | null>(null);
+
+  // Fetch profile data when dialog opens
+  useEffect(() => {
+    if (profileOpen && !profileData) {
+      api<StudentProfileData>("/student/profile").then(setProfileData).catch(() => {});
+    }
+  }, [profileOpen, profileData]);
+
   const menuItems = [
     { label: t.dashboard, icon: LayoutDashboard, path: studentPaths.dashboard },
     { label: t.myClasses, icon: Users, path: studentPaths.classes },
     { label: t.myProgress, icon: TrendingUp, path: studentPaths.progress },
     { label: t.homework, icon: ClipboardList, path: studentPaths.homework },
     { label: t.resources, icon: FolderOpen, path: studentPaths.resources },
+    { label: t.attendance, icon: ClipboardCheck, path: studentPaths.attendance },
+    { label: 'Class History', icon: Clock, path: '/student/history' },
     { label: t.notifications, icon: Bell, path: studentPaths.notifications },
   ];
 
@@ -132,6 +147,7 @@ export function StudentPortalLayout({
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
     }, 0);
   };
 
@@ -164,7 +180,7 @@ export function StudentPortalLayout({
           onClick={toggleTheme}
           className={cn(
             "ml-auto p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
-            "text-muted-foreground hover:text-foreground hover:bg-primary/8",
+            "text-muted-foreground dark:text-gray-200 hover:text-foreground hover:bg-primary/8",
             collapsed && !isMobile && "ml-0",
           )}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
@@ -199,7 +215,7 @@ export function StudentPortalLayout({
                     "h-5 w-5 shrink-0 transition-colors duration-200",
                     isActive
                       ? "text-nejah-electric"
-                      : "text-muted-foreground group-hover:text-nejah-electric",
+                      : "text-muted-foreground dark:text-gray-200 group-hover:text-nejah-electric",
                   )}
                 />
                 {(!collapsed || isMobile) && (
@@ -236,32 +252,30 @@ export function StudentPortalLayout({
 
       {/* Bottom actions */}
       <div className={cn("space-y-1", collapsed && !isMobile ? "px-2 pb-2" : "px-3 pb-2")}>
-        {onOpenSettings && (
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className={cn(
-                "sidebar-nav-item sidebar-nav-item-inactive w-full",
-                collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
-              )}
-            >
-              <Settings className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && <span>{t.settings}</span>}
-            </button>
-            {collapsed && !isMobile && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
-                {t.settings}
-              </div>
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className={cn(
+              "sidebar-nav-item sidebar-nav-item-inactive w-full",
+              collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
             )}
-          </div>
-        )}
+          >
+            <Settings className="h-5 w-5 shrink-0" />
+            {(!collapsed || isMobile) && <span>{t.settings}</span>}
+          </button>
+          {collapsed && !isMobile && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 shadow-lg">
+              {t.settings}
+            </div>
+          )}
+        </div>
         <div className="relative group">
           <button
             type="button"
             onClick={handleLogout}
             className={cn(
-              "sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground",
+              "sidebar-nav-item w-full hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground dark:text-gray-200",
               collapsed && !isMobile ? "justify-center px-3 py-3" : "px-4 py-3",
             )}
           >
@@ -280,7 +294,7 @@ export function StudentPortalLayout({
       <div className={cn(collapsed && !isMobile ? "px-2 pb-4" : "px-3 pb-4")}>
         <button
           type="button"
-          onClick={onOpenProfile}
+          onClick={() => setProfileOpen(true)}
           className={cn(
             "w-full rounded-2xl border border-border/60 dark:border-nejah-border-blue/50 shadow-sm flex items-center gap-3 hover:border-nejah-electric/30 transition-colors text-left",
             "bg-gradient-to-br from-card to-muted/30 dark:from-nejah-surface dark:to-nejah-surface/50",
@@ -305,12 +319,12 @@ export function StudentPortalLayout({
               <p className="text-sm font-extrabold text-foreground leading-tight truncate">
                 {displayName}
               </p>
-              <p className="text-[10px] text-muted-foreground font-medium truncate">
+              <p className="text-[10px] text-muted-foreground dark:text-gray-200 font-medium truncate">
                 {student?.level || t.studentPortal} Program
               </p>
             </div>
           )}
-          {(!collapsed || isMobile) && <User className="h-4 w-4 text-muted-foreground shrink-0" />}
+          {(!collapsed || isMobile) && <User className="h-4 w-4 text-muted-foreground dark:text-gray-200 shrink-0" />}
         </button>
       </div>
     </>
@@ -352,7 +366,7 @@ export function StudentPortalLayout({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="w-full flex items-center justify-center py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-all duration-200"
+            className="w-full flex items-center justify-center py-2 rounded-xl text-muted-foreground dark:text-gray-200 hover:text-foreground hover:bg-primary/8 transition-all duration-200"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -384,7 +398,7 @@ export function StudentPortalLayout({
             onClick={() => navigate({ to: studentPaths.notifications })}
             className="relative p-2 rounded-xl hover:bg-primary/10 transition-colors"
           >
-            <Bell className="h-5 w-5 text-muted-foreground" />
+            <Bell className="h-5 w-5 text-muted-foreground dark:text-gray-200" />
             {liveUnread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                 {liveUnread}
@@ -394,7 +408,7 @@ export function StudentPortalLayout({
 
           <button
             type="button"
-            onClick={onOpenProfile}
+            onClick={() => setProfileOpen(true)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden"
           >
             {student?.avatarUrl ? (
@@ -457,6 +471,49 @@ export function StudentPortalLayout({
         onOpenChange={setShowLogoutConfirm}
         onConfirm={confirmLogout}
       />
+
+      <TelegramOnboardingOverlay />
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 p-4 rounded-xl dark:bg-nejah-surface/50 bg-muted hover:bg-primary/5 transition-colors"
+              onClick={() => {
+                setSettingsOpen(false);
+                setChangePasswordOpen(true);
+              }}
+            >
+              <Lock className="h-5 w-5 text-nejah-electric" />
+              <span className="font-bold text-sm">Change Password</span>
+            </button>
+            <div className="border-t border-border pt-3 space-y-4">
+              <PushNotificationToggle variant="card" />
+              <div className="border-t pt-4">
+                <TelegramLink />
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <ProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        profile={profileData}
+      />
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
     </div>
     </OnboardingGuard>
   );
@@ -475,7 +532,7 @@ export function StudentPageLoader() {
           <div className="w-12 h-12 rounded-full border-[3px] border-primary/20" />
           <div className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-transparent border-t-nejah-electric animate-spin" />
         </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">{loadingText}</p>
+        <p className="text-sm font-medium text-muted-foreground dark:text-gray-200 animate-pulse">{loadingText}</p>
       </div>
     </div>
   );

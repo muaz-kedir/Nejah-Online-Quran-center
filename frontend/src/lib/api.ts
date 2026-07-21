@@ -50,6 +50,7 @@ export function clearAuthStorage() {
   localStorage.removeItem('userEmail');
   localStorage.removeItem('userId');
   localStorage.removeItem('studentId');
+  window.dispatchEvent(new Event('auth-changed'));
 }
 
 function shouldForceLogout(status: number, body: unknown): boolean {

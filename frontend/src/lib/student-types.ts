@@ -49,9 +49,13 @@ export interface StudentDashboardData {
     scheduledStart?: string;
   };
   upcomingClass?: {
+    id?: string;
     name: string;
     teacher: string;
     time: string;
+    startTime?: string;
+    endTime?: string;
+    sessionId?: string | null;
   };
   todaysLesson?:
     | {
@@ -104,4 +108,33 @@ export interface StudentProfileData {
     progressPercentage?: number;
     homeworkCompletionRate?: number;
   };
+}
+
+export interface StudentClassSession {
+  id?: string;
+  className?: string;
+  name?: string;
+  dayOfWeek?: string;
+  day?: string;
+  time?: string;
+  startTime?: string;
+  endTime?: string;
+  teacherName?: string;
+  teacher?: string;
+  status?: string;
+  sessionId?: string | null;
+  liveSessionId?: string | null;
+}
+
+export interface StudentClassesData {
+  current: StudentClassSession[];
+  upcoming: StudentClassSession[];
+  previous: StudentClassSession[];
+  liveClass?: {
+    id?: string;
+    status?: string;
+    classTitle?: string;
+    scheduledStart?: string;
+    teacher?: { fullName: string };
+  } | null;
 }

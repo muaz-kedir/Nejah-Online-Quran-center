@@ -49,6 +49,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       if (data.ok) {
         this.botUsername = data.result.username;
         this.logger.log(`Telegram bot @${this.botUsername} initialized`);
+      } else {
+        this.logger.warn(`Telegram getMe returned not ok: ${JSON.stringify(data)}`);
       }
     } catch (err: any) {
       const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';

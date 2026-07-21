@@ -1,10 +1,10 @@
 import { ChevronLeft, ChevronRight, Clock, MapPin, Wifi } from 'lucide-react';
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/context/AppContext';
 import { GlassPanel, PanelHeader } from './design-system';
-import { API_BASE, apiHeaders, apiUrl } from "@/lib/api";
+import { useApiQuery } from '@/hooks/useApiQuery';
 
 interface ClassSession {
   id: string;
@@ -22,76 +22,62 @@ const ITEMS_PER_PAGE = 2;
 
 export const TodaysClasses = memo(function TodaysClasses() {
   const { t } = useApp();
-  const [classes, setClasses] = useState<ClassSession[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const response = await fetch(apiUrl(`/schedules`), {
-          headers: apiHeaders(),
-        });
-        if (!response.ok) throw new Error('Failed to fetch schedules');
-        const data = await response.json();
+  const { data, isLoading } = useApiQuery<any[]>({
+    queryKey: ['dashboard', 'schedules'],
+    path: '/schedules',
+    refetchInterval: 30_000,
+  });
 
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const todayName = days[new Date().getDay()];
+  const classes = useMemo(() => {
+    if (!Array.isArray(data)) return [];
 
-        if (Array.isArray(data)) {
-          const todays = data.filter(
-            (schedule: any) => schedule.dayOfWeek?.toLowerCase() === todayName.toLowerCase(),
-          );
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = days[new Date().getDay()];
 
-          const formatted = todays.map((schedule: any) => {
-            const teacherName = schedule.teacher?.fullName || 'Assigned Teacher';
-            const initials = teacherName
-              .split(' ')
-              .map((n: string) => n[0])
-              .join('')
-              .toUpperCase()
-              .slice(0, 2);
+    const todays = data.filter(
+      (schedule: any) => schedule.dayOfWeek?.toLowerCase() === todayName.toLowerCase(),
+    );
 
-            const isOnline = schedule.classType?.toLowerCase() === 'online' || !!schedule.meetingLink;
-            const location = isOnline
-              ? schedule.meetingLink ? 'Online Room' : 'Online Class'
-              : schedule.notes || 'Classroom';
+    return todays.map((schedule: any) => {
+      const teacherName = schedule.teacher?.fullName || 'Assigned Teacher';
+      const initials = teacherName
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
 
-            const category = (schedule.classType || 'tajweed').toUpperCase();
-            let categoryColor = 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
-            if (category.includes('KIDS') || category.includes('FOUNDATION')) {
-              categoryColor = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-            } else if (category.includes('TAFSIR')) {
-              categoryColor = 'bg-violet-500/10 text-violet-400 border-violet-500/20';
-            }
+      const isOnline = schedule.classType?.toLowerCase() === 'online' || !!schedule.meetingLink;
+      const location = isOnline
+        ? schedule.meetingLink ? 'Online Room' : 'Online Class'
+        : schedule.notes || 'Classroom';
 
-            return {
-              id: schedule.id,
-              title: schedule.className || 'Quran Class',
-              teacher: teacherName,
-              teacherInitials: initials || 'AT',
-              location,
-              time:
-                schedule.startTimeString && schedule.endTimeString
-                  ? `${schedule.startTimeString} - ${schedule.endTimeString}`
-                  : 'N/A',
-              category: (schedule.classType || 'Tajweed').toUpperCase(),
-              categoryColor,
-              isOnline,
-            };
-          });
-
-          setClasses(formatted);
-        }
-      } catch (error) {
-        console.error("Failed to fetch today's classes:", error);
-      } finally {
-        setLoading(false);
+      const category = (schedule.classType || 'tajweed').toUpperCase();
+      let categoryColor = 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
+      if (category.includes('KIDS') || category.includes('FOUNDATION')) {
+        categoryColor = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      } else if (category.includes('TAFSIR')) {
+        categoryColor = 'bg-violet-500/10 text-violet-400 border-violet-500/20';
       }
-    };
 
-    fetchClasses();
-  }, []);
+      return {
+        id: schedule.id,
+        title: schedule.className || 'Quran Class',
+        teacher: teacherName,
+        teacherInitials: initials || 'AT',
+        location,
+        time:
+          schedule.startTimeString && schedule.endTimeString
+            ? `${schedule.startTimeString} - ${schedule.endTimeString}`
+            : 'N/A',
+        category: (schedule.classType || 'Tajweed').toUpperCase(),
+        categoryColor,
+        isOnline,
+      };
+    });
+  }, [data]);
 
   const maxPage = Math.max(0, Math.ceil(classes.length / ITEMS_PER_PAGE) - 1);
   const visible = classes.slice(page * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE + ITEMS_PER_PAGE);
@@ -130,7 +116,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
       />
 
       <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
-        {loading ? (
+        {isLoading ? (
           <div className="col-span-1 py-8 text-center font-medium text-nejah-slate-blue md:col-span-2">
             Loading today's classes...
           </div>

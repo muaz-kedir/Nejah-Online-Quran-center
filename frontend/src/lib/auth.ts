@@ -44,6 +44,7 @@ export function requireAuth(allowedRoles?: string[]) {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userId");
     localStorage.removeItem("studentId");
+    window.dispatchEvent(new Event("auth-changed"));
     throw redirect({ to: "/login?reason=session_expired" });
   }
 
@@ -64,5 +65,6 @@ export function logout() {
   localStorage.removeItem("userEmail");
   localStorage.removeItem("userId");
   localStorage.removeItem("studentId");
+  window.dispatchEvent(new Event("auth-changed"));
   window.location.href = "/login";
 }
