@@ -415,12 +415,13 @@ export class ZoomService {
   async registerParticipant(
     meetingId: string,
     student: { email: string; firstName: string; lastName: string },
-    accessToken: string,
+    accessToken?: string,
   ): Promise<string> {
+    const token = accessToken ?? await this.getAccessToken();
     const data = await this.zoomRequest<{ join_url?: string }>(
       'POST',
       `/meetings/${meetingId}/registrants`,
-      accessToken,
+      token,
       {
         email: student.email,
         first_name: student.firstName,
@@ -440,13 +441,14 @@ export class ZoomService {
 
   async getMeetingParticipantsReport(
     meetingUUID: string,
-    accessToken: string,
+    accessToken?: string,
   ): Promise<ZoomReportParticipant[]> {
+    const token = accessToken ?? await this.getAccessToken();
     const encodedUUID = encodeURIComponent(encodeURIComponent(meetingUUID));
     const data = await this.zoomRequest<{ participants?: ZoomReportParticipant[] }>(
       'GET',
       `/report/meetings/${encodedUUID}/participants?page_size=300`,
-      accessToken,
+      token,
     );
 
     return data.participants || [];
@@ -455,8 +457,9 @@ export class ZoomService {
   async updateMeeting(
     zoomMeetingId: string,
     updateData: Record<string, unknown>,
-    accessToken: string,
+    accessToken?: string,
   ): Promise<void> {
+    const token = accessToken ?? await this.getAccessToken();
     const payload: Record<string, unknown> = {};
     if (updateData.topic) payload.topic = updateData.topic;
     if (updateData.startTime) {
@@ -466,19 +469,21 @@ export class ZoomService {
     if (updateData.durationMinutes) payload.duration = updateData.durationMinutes;
     if (updateData.settings) payload.settings = updateData.settings;
 
-    await this.zoomRequest('PATCH', `/meetings/${zoomMeetingId}`, accessToken, payload);
+    await this.zoomRequest('PATCH', `/meetings/${zoomMeetingId}`, token, payload);
   }
 
-  async deleteMeeting(zoomMeetingId: string, accessToken: string): Promise<void> {
-    await this.zoomRequest('DELETE', `/meetings/${zoomMeetingId}`, accessToken);
+  async deleteMeeting(zoomMeetingId: string, accessToken?: string): Promise<void> {
+    const token = accessToken ?? await this.getAccessToken();
+    await this.zoomRequest('DELETE', `/meetings/${zoomMeetingId}`, token);
   }
 
-  async getMeeting(zoomMeetingId: string, accessToken: string): Promise<Record<string, unknown> | null> {
+  async getMeeting(zoomMeetingId: string, accessToken?: string): Promise<Record<string, unknown> | null> {
+    const token = accessToken ?? await this.getAccessToken();
     try {
       return await this.zoomRequest<Record<string, unknown>>(
         'GET',
         `/meetings/${zoomMeetingId}`,
-        accessToken,
+        token,
       );
     } catch {
       return null;
@@ -538,17 +543,18 @@ export class ZoomService {
   /*  ZAK token (requires OAuth access token)                             */
   /* ------------------------------------------------------------------ */
 
-  async getUserZakToken(zoomUserIdOrEmail: string, accessToken: string): Promise<string | null> {
+  async getUserZakToken(zoomUserIdOrEmail: string, accessToken?: string): Promise<string | null> {
     try {
+      const token = accessToken ?? await this.getAccessToken();
       const resolved = await this.resolveZoomUser(
         zoomUserIdOrEmail,
         zoomUserIdOrEmail.includes('@') ? zoomUserIdOrEmail : undefined,
-        accessToken,
+        token,
       );
       const data = await this.zoomRequest<{ token?: string }>(
         'GET',
         `/users/${this.encodeZoomUserId(resolved.id)}/token?type=zak`,
-        accessToken,
+        token,
       );
       return data.token || null;
     } catch (error) {
@@ -860,8 +866,9 @@ export class ZoomService {
   async resolveZoomUser(
     identifier: string,
     fallbackEmail: string | undefined,
-    accessToken: string,
+    accessToken?: string,
   ): Promise<{ id: string; email: string }> {
+    const token = accessToken ?? await this.getAccessToken();
     const rawCandidates = [identifier, fallbackEmail]
       .map((value) => value?.trim())
       .filter(Boolean) as string[];
@@ -885,24 +892,24 @@ export class ZoomService {
     }
 
     for (const candidate of candidates) {
-      const direct = await this.fetchZoomUserByPath(candidate, accessToken);
+      const direct = await this.fetchZoomUserByPath(candidate, token);
       if (direct) return direct;
     }
 
     const emailCandidates = [...new Set(rawCandidates.filter((c) => c.includes('@')))];
     for (const email of emailCandidates) {
-      const fromSearch = await this.findZoomUserBySearchKey(email, accessToken);
+      const fromSearch = await this.findZoomUserBySearchKey(email, token);
       if (fromSearch) return fromSearch;
     }
 
     for (const email of emailCandidates) {
-      const fromList = await this.scanUsersInAccount(email, accessToken);
+      const fromList = await this.scanUsersInAccount(email, token);
       if (fromList) return fromList;
     }
 
     let accountUsers: Array<{ id: string; email: string; displayName?: string }> = [];
     try {
-      accountUsers = await this.listAccountUsers(accessToken);
+      accountUsers = await this.listAccountUsers(token);
     } catch (error) {
       if (error instanceof HttpException) throw error;
     }
