@@ -1,58 +1,92 @@
-import { memo, useMemo } from 'react';
+import { API_BASE } from "@/lib/api";
+import { memo, useState, useEffect } from 'react';
 import { Users, GraduationCap, BookOpen, TrendingUp } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { BentoStatCard } from './design-system';
-import { useApiQuery } from '@/hooks/useApiQuery';
 
 export const DashboardCards = memo(function DashboardCards() {
   const { t } = useApp();
-
-  const studentsQuery = useApiQuery<{ meta: { total: number } }>({
-    queryKey: ['dashboard', 'students-count'],
-    path: '/students?limit=1',
-    refetchInterval: 30_000,
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalTeachers: 0,
+    activeClasses: 0,
+    attendanceRate: 0,
+    avgSessionDuration: 0,
+    completedSessions: 0,
   });
+  const [loading, setLoading] = useState(true);
 
-  const teachersQuery = useApiQuery<{ meta: { total: number } }>({
-    queryKey: ['dashboard', 'teachers-count'],
-    path: '/teachers?limit=1',
-    refetchInterval: 30_000,
-  });
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const base = API_BASE;
 
-  const statsQuery = useApiQuery<{ live: number; completed: number }>({
-    queryKey: ['dashboard', 'live-stats'],
-    path: '/live-sessions/stats',
-    refetchInterval: 30_000,
-  });
+        // Zoom analytics commented out -- manual meeting links
+        // const [studentsRes, teachersRes, statsRes, analyticsRes] = await Promise.all([
+        //   fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/live-sessions/stats`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/zoom-analytics/dashboard`, { headers, signal: controller.signal }),
+        // ]);
+        const [studentsRes, teachersRes, statsRes] = await Promise.all([
+          fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
+          fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
+          fetch(`${base}/live-sessions/stats`, { headers, signal: controller.signal }),
+        ]);
 
-  const analyticsQuery = useApiQuery<{
-    liveSessions: number;
-    attendanceRate: number;
-    averageSessionDuration: number;
-    completedSessions: number;
-  }>({
-    queryKey: ['dashboard', 'zoom-analytics'],
-    path: '/zoom-analytics/dashboard',
-    refetchInterval: 30_000,
-  });
+        let totalStudents = 0;
+        let totalTeachers = 0;
+        let activeClasses = 0;
+        let attendanceRate = 0;
+        let avgSessionDuration = 0;
+        let completedSessions = 0;
 
-  const isLoading = studentsQuery.isLoading || teachersQuery.isLoading || statsQuery.isLoading || analyticsQuery.isLoading;
+        if (studentsRes.ok) {
+          const data = await studentsRes.json();
+          totalStudents = data?.meta?.total || 0;
+        }
+        if (teachersRes.ok) {
+          const data = await teachersRes.json();
+          totalTeachers = data?.meta?.total || 0;
+        }
+        if (statsRes.ok) {
+          const data = await statsRes.json();
+          activeClasses = data?.live || 0;
+          completedSessions = data?.completed || 0;
+        }
+        // Zoom analytics block commented out
+        // if (analyticsRes.ok) {
+        //   const data = await analyticsRes.json();
+        //   activeClasses = activeClasses || data?.liveSessions || 0;
+        //   attendanceRate = data?.attendanceRate ?? 0;
+        //   avgSessionDuration = data?.averageSessionDuration || 0;
+        //   completedSessions = completedSessions || data?.completedSessions || 0;
+        // }
 
-  const stats = useMemo(() => {
-    const totalStudents = studentsQuery.data?.meta?.total || 0;
-    const totalTeachers = teachersQuery.data?.meta?.total || 0;
-    let activeClasses = statsQuery.data?.live || 0;
-    const attendanceRate = analyticsQuery.data?.attendanceRate ?? 0;
-    const avgSessionDuration = analyticsQuery.data?.averageSessionDuration || 0;
-    let completedSessions = statsQuery.data?.completed || 0;
+        setStats({
+          totalStudents,
+          totalTeachers,
+          activeClasses,
+          attendanceRate,
+          avgSessionDuration,
+          completedSessions,
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    activeClasses = activeClasses || analyticsQuery.data?.liveSessions || 0;
-    completedSessions = completedSessions || analyticsQuery.data?.completedSessions || 0;
+    fetchStats();
+    return () => controller.abort();
+  }, []);
 
-    return { totalStudents, totalTeachers, activeClasses, attendanceRate, avgSessionDuration, completedSessions };
-  }, [studentsQuery.data, teachersQuery.data, statsQuery.data, analyticsQuery.data]);
-
-  const display = (v: string | number) => (isLoading ? '...' : v);
+  const display = (v: string | number) => (loading ? '...' : v);
 
   return (
     <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

@@ -12,6 +12,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";

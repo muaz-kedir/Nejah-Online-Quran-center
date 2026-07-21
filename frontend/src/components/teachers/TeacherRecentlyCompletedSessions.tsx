@@ -48,15 +48,22 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
 
     const load = async () => {
       try {
-        const [todayRes, analyticsRes] = await Promise.all([
+        // Zoom analytics commented out -- manual meeting links
+        // const [todayRes, analyticsRes] = await Promise.all([
+        //   fetch(
+        //     `${API_BASE}/live-sessions/today?teacherId=${encodeURIComponent(teacherId)}`,
+        //     { headers, signal: controller.signal },
+        //   ),
+        //   fetch(`${API_BASE}/zoom-analytics/teacher/${teacherId}`, {
+        //     headers,
+        //     signal: controller.signal,
+        //   }),
+        // ]);
+        const [todayRes] = await Promise.all([
           fetch(
             `${API_BASE}/live-sessions/today?teacherId=${encodeURIComponent(teacherId)}`,
             { headers, signal: controller.signal },
           ),
-          fetch(`${API_BASE}/zoom-analytics/teacher/${teacherId}`, {
-            headers,
-            signal: controller.signal,
-          }),
         ]);
 
         if (todayRes.ok) {
@@ -69,12 +76,13 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
           setCompletedSessions(completed);
         }
 
-        if (analyticsRes.ok) {
-          const analytics = await analyticsRes.json();
-          if (analytics?.averageSessionDuration) {
-            setAverageDuration(analytics.averageSessionDuration);
-          }
-        }
+        // Zoom analytics block commented out
+        // if (analyticsRes.ok) {
+        //   const analytics = await analyticsRes.json();
+        //   if (analytics?.averageSessionDuration) {
+        //     setAverageDuration(analytics.averageSessionDuration);
+        //   }
+        // }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('Failed to load completed sessions:', error);

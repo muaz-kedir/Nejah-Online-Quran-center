@@ -108,11 +108,11 @@ export class LiveSessionService {
       (endTime.getTime() - dto.scheduledStart.getTime()) / 60000,
     );
 
-    const meeting = await this.zoomService.createMeetingForTeacher(
+    const meeting = await this.zoomService.createMeeting(
       `Quran Class - ${dto.metadata?.className || 'Session'}`,
       dto.scheduledStart,
       durationMinutes,
-      dto.teacherId,
+      session.teacherId,
     );
 
     session.zoomMeetingId = meeting.meetingId;
@@ -253,10 +253,7 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-        if (accessToken) {
-          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
-        }
+        await this.zoomService.deleteMeeting(session.zoomMeetingId);
       } catch (error) {
         this.logger.warn(
           `Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`,
@@ -290,37 +287,21 @@ export class LiveSessionService {
     teacherId: string,
     meetingLink?: string,
   ): Promise<{
-    zoomMeetingId: string | null;
-    startUrl: string | null;
-    joinUrl: string | null;
-    zoomStartUrl: string | null;
-    zoomJoinUrl: string | null;
-    meetingLink: string | null;
-    notificationSummary: {
-      studentCount: number;
-      parentCount: number;
-      warnings: string[];
-    };
+    zoomMeetingId?: string;
+    startUrl?: string;
+    joinUrl?: string;
+    zoomStartUrl?: string;
+    zoomJoinUrl?: string;
+    meetingLink?: string;
   }> {
     const session = await this.start(teacherId, sessionId, meetingLink);
-
-    let notificationSummary = { studentCount: 0, parentCount: 0, warnings: [] as string[] };
-    try {
-      const fullSession = await this.findById(sessionId);
-      notificationSummary = await this.notificationsService.notifyLiveSessionStarted(fullSession);
-    } catch (err) {
-      this.logger.error('Failed to send session started notifications', err);
-      notificationSummary.warnings.push('Notifications could not be sent');
-    }
-
     return {
-      zoomMeetingId: session.zoomMeetingId || null,
-      startUrl: session.meetingLink || session.zoomStartUrl || null,
-      joinUrl: session.meetingLink || session.zoomJoinUrl || null,
-      zoomStartUrl: session.zoomStartUrl || null,
-      zoomJoinUrl: session.zoomJoinUrl || null,
-      meetingLink: session.meetingLink || null,
-      notificationSummary,
+      zoomMeetingId: session.zoomMeetingId || undefined,
+      startUrl: session.zoomStartUrl || undefined,
+      joinUrl: session.zoomJoinUrl || undefined,
+      zoomStartUrl: session.zoomStartUrl || undefined,
+      zoomJoinUrl: session.zoomJoinUrl || undefined,
+      meetingLink: session.metadata?.meetingLink || undefined,
     };
   }
 
@@ -401,14 +382,14 @@ export class LiveSessionService {
       );
     }
 
-    if (session.status === LiveSessionStatus.LIVE) {
-      return await this.findById(id);
+    if (!session.zoomMeetingId && !session.metadata?.meetingLink) {
+      // Zoom auto-creation removed — teachers paste meeting links manually.
+      // Sessions without a meeting link can still be started; no Zoom meeting will be created.
+      // await this.ensureZoomMeeting(session);
     }
 
     if (meetingLink) {
-      session.meetingLink = meetingLink;
-    } else if (!session.zoomMeetingId) {
-      await this.ensureZoomMeeting(session);
+      session.metadata = { ...(session.metadata || {}), meetingLink };
     }
 
     session.status = LiveSessionStatus.LIVE;
@@ -420,8 +401,7 @@ export class LiveSessionService {
     this.logger.log(
       `Live session started — liveSessionId=${id}, teacherId=${teacherId}, ` +
         `studentId=${session.studentId || 'n/a'}, scheduleId=${session.scheduleId || 'n/a'}, ` +
-        `meetingLink=${session.meetingLink ? 'provided' : 'n/a'}, ` +
-        `zoomMeetingId=${session.zoomMeetingId || 'n/a'}, ` +
+        `zoomMeetingId=${session.zoomMeetingId}, zoomMeetingUUID=${session.zoomMeetingUUID || 'n/a'}, ` +
         `status=${session.status}, timestamp=${session.actualStart?.toISOString()}`,
     );
 
@@ -441,6 +421,12 @@ export class LiveSessionService {
 
     const fullSession = await this.findById(id);
 
+    try {
+      await this.notificationsService.notifyLiveSessionStarted(fullSession);
+    } catch (err) {
+      this.logger.error('Failed to send session started notifications', err);
+    }
+
     return fullSession;
   }
 
@@ -458,8 +444,9 @@ export class LiveSessionService {
       if (session.teacherId !== options.teacherId) {
         throw new ForbiddenException('You are not assigned to this session');
       }
-      if (!session.zoomMeetingId && !session.meetingLink) {
-        await this.ensureZoomMeeting(session);
+      if (!session.zoomMeetingId && !session.metadata?.meetingLink) {
+        // Zoom auto-creation removed — teachers paste meeting links manually
+        // await this.ensureZoomMeeting(session);
       }
       if (session.status === LiveSessionStatus.SCHEDULED) {
         session.status = LiveSessionStatus.LIVE;
@@ -545,7 +532,6 @@ export class LiveSessionService {
     session: LiveSession;
     joinUrl: string | null;
     startUrl: string | null;
-    meetingLink: string | null;
     sdkSignature: string | null;
     clientId: string | null;
     meetingNumber: string | null;
@@ -578,7 +564,7 @@ export class LiveSessionService {
     const meetingNumber = session.zoomMeetingId
       ? String(session.zoomMeetingId).replace(/\D/g, '')
       : null;
-    const sdkConfigured = this.zoomService.isSdkConfigured();
+    const sdkConfigured = this.zoomService.isPlatformConfigured();
 
     let sdkSignature: string | null = null;
     if (meetingNumber && sdkConfigured) {
@@ -592,14 +578,7 @@ export class LiveSessionService {
       });
       const zakTarget = integration?.zoomUserId || integration?.zoomEmail;
       if (zakTarget) {
-        try {
-          const accessToken = await this.zoomService.getTeacherAccessToken(options.teacherId);
-          if (accessToken) {
-            zak = await this.zoomService.getUserZakToken(zakTarget, accessToken);
-          }
-        } catch {
-          // OAuth not configured — ZAK unavailable
-        }
+        zak = await this.zoomService.getUserZakToken(zakTarget);
       }
     }
 
@@ -651,8 +630,8 @@ export class LiveSessionService {
 
     return {
       session,
-      joinUrl: session.meetingLink || session.zoomJoinUrl,
-      startUrl: session.meetingLink || session.zoomStartUrl,
+      joinUrl: session.zoomJoinUrl,
+      startUrl: session.zoomStartUrl,
       sdkSignature,
       clientId: sdkConfigured ? this.zoomService.getOAuthClientId() : null,
       meetingNumber,
@@ -665,7 +644,6 @@ export class LiveSessionService {
       classroomStatus: classroomStatus as any,
       countdownSeconds,
       joinWindowOpenAt,
-      meetingLink: session.meetingLink || null,
     };
   }
 
@@ -744,10 +722,7 @@ export class LiveSessionService {
     for (const session of sessions) {
       if (session.zoomMeetingId) {
         try {
-          const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-          if (accessToken) {
-            await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
-          }
+          await this.zoomService.deleteMeeting(session.zoomMeetingId);
         } catch (error) {
           this.logger.warn(`Failed to delete Zoom meeting ${session.zoomMeetingId}: ${error.message}`);
         }
@@ -761,11 +736,9 @@ export class LiveSessionService {
     integration: ZoomIntegration,
     session?: LiveSession,
   ): Promise<string> {
-    const accessToken = await this.zoomService.requireTeacherAccessToken(integration.teacherId);
     const resolved = await this.zoomService.resolveZoomUser(
       integration.zoomUserId,
       integration.zoomEmail || session?.teacher?.email || undefined,
-      accessToken,
     );
 
     if (
@@ -781,15 +754,21 @@ export class LiveSessionService {
   }
 
   private async ensureZoomMeeting(session: LiveSession): Promise<void> {
-    if (!session.teacherId) {
-      throw new BadRequestException('Session has no assigned teacher — cannot create Zoom meeting');
+    const integration = await this.zoomIntegrationRepository.findOne({
+      where: { teacherId: session.teacherId, connectionStatus: 'connected' },
+    });
+
+    if (!this.zoomService.isPlatformConfigured() && !integration) {
+      throw new BadRequestException(
+        'Zoom platform is not configured and teacher has no Zoom connection. Contact your administrator.',
+      );
     }
 
     const durationMinutes = Math.round(
       (session.scheduledEnd.getTime() - session.scheduledStart.getTime()) / 60000,
     );
 
-    const meeting = await this.zoomService.createMeetingForTeacher(
+    const meeting = await this.zoomService.createMeeting(
       `Quran Class - ${session.metadata?.className || session.schedule?.className || 'Session'}`,
       session.scheduledStart,
       durationMinutes || 60,
@@ -813,7 +792,6 @@ export class LiveSessionService {
     sessionId: string,
     studentId: string,
     meetingId: string,
-    teacherId: string,
   ): Promise<void> {
     const student = await this.studentRepository.findOne({ where: { id: studentId } });
     if (!student?.email) return;
@@ -823,12 +801,11 @@ export class LiveSessionService {
     const lastName = nameParts.slice(1).join(' ') || 'Student';
 
     try {
-      const accessToken = await this.zoomService.requireTeacherAccessToken(teacherId);
       const joinUrl = await this.zoomService.registerParticipant(meetingId, {
         email: student.email,
         firstName,
         lastName,
-      }, accessToken);
+      });
 
       let attendance = await this.attendanceRepository.findOne({
         where: { sessionId, studentId },
@@ -952,9 +929,6 @@ export class LiveSessionService {
     if (!session || !session.zoomMeetingId) return;
 
     try {
-      const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-      if (!accessToken) return;
-
       await this.zoomService.updateMeeting(session.zoomMeetingId, {
         topic: className ? `Quran Class - ${className}` : undefined,
         startTime,
@@ -962,7 +936,7 @@ export class LiveSessionService {
           startTime && endTime
             ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
             : undefined,
-      }, accessToken);
+      });
 
       if (startTime) session.scheduledStart = startTime;
       if (endTime) session.scheduledEnd = endTime;
@@ -985,15 +959,14 @@ export class LiveSessionService {
     if (!session || !session.zoomMeetingId) return;
 
     try {
-      const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-      if (accessToken) {
-        await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
-      }
+      await this.zoomService.deleteMeeting(session.zoomMeetingId);
     } catch (error) {
       this.logger.warn(
         `Failed to delete Zoom meeting for schedule ${scheduleId}: ${error.message}`,
       );
     }
+
+    await this.liveSessionRepository.delete(session.id);
   }
 
   async markNoShow(id: string, reason?: string): Promise<LiveSession> {
@@ -1010,10 +983,7 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-        if (accessToken) {
-          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
-        }
+        await this.zoomService.deleteMeeting(session.zoomMeetingId);
       } catch (error) {
         this.logger.warn(`Failed to delete Zoom meeting for no-show session ${session.zoomMeetingId}: ${error.message}`);
       }
@@ -1053,10 +1023,7 @@ export class LiveSessionService {
 
     if (session.zoomMeetingId) {
       try {
-        const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
-        if (accessToken) {
-          await this.zoomService.deleteMeeting(session.zoomMeetingId, accessToken);
-        }
+        await this.zoomService.deleteMeeting(session.zoomMeetingId);
       } catch (error) {
         this.logger.warn(`Failed to delete Zoom meeting for expired session ${session.zoomMeetingId}: ${error.message}`);
       }
@@ -1173,862 +1140,6 @@ export class LiveSessionService {
     });
 
     return { total, completed, cancelled, live, scheduled };
-  }
-
-  async getStudentAttendanceHistory(
-    studentId: string,
-    options: {
-      page?: number;
-      limit?: number;
-      from?: string;
-      to?: string;
-      status?: string;
-    } = {},
-  ): Promise<{
-    data: Array<{
-      id: string;
-      sessionId: string;
-      classTitle: string;
-      teacherName: string;
-      sessionDate: string;
-      scheduledStart: string;
-      scheduledEnd: string;
-      joinTime: string | null;
-      leaveTime: string | null;
-      duration: number | null;
-      attendanceStatus: string;
-      status: string;
-    }>;
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    summary: {
-      total: number;
-      present: number;
-      late: number;
-      absent: number;
-      leftEarly: number;
-      partial: number;
-      excused: number;
-    };
-  }> {
-    const page = options.page || 1;
-    const limit = Math.min(options.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const query = this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoinAndSelect('a.session', 'session')
-      .innerJoinAndSelect('session.teacher', 'teacher')
-      .leftJoinAndSelect('session.schedule', 'schedule')
-      .where('a.studentId = :studentId', { studentId });
-
-    if (options.from) {
-      query.andWhere('session.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('session.scheduledStart <= :to', { to: options.to });
-    }
-    if (options.status) {
-      query.andWhere('a.attendanceStatus = :status', { status: options.status.toUpperCase() });
-    }
-
-    const total = await query.getCount();
-
-    // Get summary stats (unpaginated)
-    const summaryQuery = this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoin('a.session', 'session')
-      .where('a.studentId = :studentId', { studentId });
-    if (options.from) summaryQuery.andWhere('session.scheduledStart >= :from', { from: options.from });
-    if (options.to) summaryQuery.andWhere('session.scheduledStart <= :to', { to: options.to });
-    const allRecords = await summaryQuery.select(['a.attendanceStatus']).getRawMany();
-
-    const summary = {
-      total: allRecords.length,
-      present: 0,
-      late: 0,
-      absent: 0,
-      leftEarly: 0,
-      partial: 0,
-      excused: 0,
-    };
-    for (const r of allRecords) {
-      const s = r.a_attendanceStatus;
-      if (s === 'PRESENT') summary.present++;
-      else if (s === 'LATE') summary.late++;
-      else if (s === 'ABSENT') summary.absent++;
-      else if (s === 'LEFT_EARLY') summary.leftEarly++;
-      else if (s === 'PARTIAL') summary.partial++;
-      else if (s === 'EXCUSED') summary.excused++;
-    }
-
-    const records = await query
-      .orderBy('session.scheduledStart', 'DESC')
-      .skip(skip)
-      .take(limit)
-      .getMany();
-
-    const data = records.map((a) => ({
-      id: a.id,
-      sessionId: a.sessionId,
-      classTitle:
-        a.session.metadata?.className ||
-        a.session.schedule?.className ||
-        'Quran Class',
-      teacherName: a.session.teacher?.fullName || '—',
-      sessionDate: a.session.scheduledStart
-        ? a.session.scheduledStart.toISOString().split('T')[0]
-        : '—',
-      scheduledStart: a.session.scheduledStart?.toISOString() || null,
-      scheduledEnd: a.session.scheduledEnd?.toISOString() || null,
-      joinTime: a.joinTime?.toISOString() || null,
-      leaveTime: a.leaveTime?.toISOString() || null,
-      duration: a.duration || null,
-      attendanceStatus: a.attendanceStatus,
-      status: a.session.status,
-    }));
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      summary,
-    };
-  }
-
-  async getSessionAttendanceDetail(
-    sessionId: string,
-  ): Promise<{
-    session: {
-      id: string;
-      classTitle: string;
-      teacherName: string;
-      sessionDate: string;
-      scheduledStart: string | null;
-      scheduledEnd: string | null;
-      actualStart: string | null;
-      actualEnd: string | null;
-      durationMinutes: number | null;
-      status: string;
-    };
-    students: Array<{
-      id: string;
-      studentId: string;
-      studentName: string;
-      joinTime: string | null;
-      leaveTime: string | null;
-      duration: number | null;
-      attendanceStatus: string;
-    }>;
-    summary: {
-      total: number;
-      present: number;
-      late: number;
-      absent: number;
-      leftEarly: number;
-      partial: number;
-      excused: number;
-      attendancePercentage: number;
-    };
-  }> {
-    const session = await this.liveSessionRepository.findOne({
-      where: { id: sessionId },
-      relations: ['teacher', 'schedule'],
-    });
-
-    if (!session) {
-      throw new NotFoundException('Session not found');
-    }
-
-    const attendances = await this.attendanceRepository.find({
-      where: { sessionId },
-      relations: ['student'],
-      order: { joinTime: 'ASC' },
-    });
-
-    const summary = {
-      total: attendances.length,
-      present: 0,
-      late: 0,
-      absent: 0,
-      leftEarly: 0,
-      partial: 0,
-      excused: 0,
-      attendancePercentage: 0,
-    };
-
-    const students = attendances.map((a) => {
-      if (a.attendanceStatus === 'PRESENT') summary.present++;
-      else if (a.attendanceStatus === 'LATE') summary.late++;
-      else if (a.attendanceStatus === 'ABSENT') summary.absent++;
-      else if (a.attendanceStatus === 'LEFT_EARLY') summary.leftEarly++;
-      else if (a.attendanceStatus === 'PARTIAL') summary.partial++;
-      else if (a.attendanceStatus === 'EXCUSED') summary.excused++;
-
-      return {
-        id: a.id,
-        studentId: a.studentId,
-        studentName: a.student?.fullName || 'Unknown',
-        joinTime: a.joinTime?.toISOString() || null,
-        leaveTime: a.leaveTime?.toISOString() || null,
-        duration: a.duration || null,
-        attendanceStatus: a.attendanceStatus,
-      };
-    });
-
-    const accounted = summary.present + summary.late;
-    summary.attendancePercentage = summary.total > 0
-      ? Math.round((accounted / summary.total) * 100)
-      : 0;
-
-    return {
-      session: {
-        id: session.id,
-        classTitle: session.metadata?.className || session.schedule?.className || 'Quran Class',
-        teacherName: session.teacher?.fullName || '—',
-        sessionDate: session.scheduledStart
-          ? session.scheduledStart.toISOString().split('T')[0]
-          : '—',
-        scheduledStart: session.scheduledStart?.toISOString() || null,
-        scheduledEnd: session.scheduledEnd?.toISOString() || null,
-        actualStart: session.actualStart?.toISOString() || null,
-        actualEnd: session.actualEnd?.toISOString() || null,
-        durationMinutes: session.durationMinutes || null,
-        status: session.status,
-      },
-      students,
-      summary,
-    };
-  }
-
-  async getAdminAttendanceOverview(
-    options: {
-      teacherId?: string;
-      studentId?: string;
-      from?: string;
-      to?: string;
-      status?: string;
-      page?: number;
-      limit?: number;
-    } = {},
-  ): Promise<{
-    data: Array<{
-      id: string;
-      sessionId: string;
-      studentName: string;
-      teacherName: string;
-      classTitle: string;
-      sessionDate: string;
-      joinTime: string | null;
-      leaveTime: string | null;
-      duration: number | null;
-      attendanceStatus: string;
-    }>;
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    summary: {
-      totalSessions: number;
-      totalAttendances: number;
-      present: number;
-      late: number;
-      absent: number;
-      overallPercentage: number;
-    };
-  }> {
-    const page = options.page || 1;
-    const limit = Math.min(options.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const query = this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoinAndSelect('a.session', 'session')
-      .innerJoinAndSelect('session.teacher', 'teacher')
-      .leftJoinAndSelect('a.student', 'student')
-      .leftJoinAndSelect('session.schedule', 'schedule');
-
-    if (options.teacherId) {
-      query.andWhere('session.teacherId = :teacherId', { teacherId: options.teacherId });
-    }
-    if (options.studentId) {
-      query.andWhere('a.studentId = :studentId', { studentId: options.studentId });
-    }
-    if (options.from) {
-      query.andWhere('session.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('session.scheduledStart <= :to', { to: options.to });
-    }
-    if (options.status) {
-      query.andWhere('a.attendanceStatus = :status', { status: options.status.toUpperCase() });
-    }
-
-    const total = await query.getCount();
-
-    // summary stats (unpaginated)
-    const sumQuery = this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoin('a.session', 'session');
-    if (options.teacherId) sumQuery.andWhere('session.teacherId = :teacherId', { teacherId: options.teacherId });
-    if (options.studentId) sumQuery.andWhere('a.studentId = :studentId', { studentId: options.studentId });
-    if (options.from) sumQuery.andWhere('session.scheduledStart >= :from', { from: options.from });
-    if (options.to) sumQuery.andWhere('session.scheduledStart <= :to', { to: options.to });
-    const allStatuses = await sumQuery.select(['a.attendanceStatus']).getRawMany();
-
-    const present = allStatuses.filter((r) => r.a_attendanceStatus === 'PRESENT' || r.a_attendanceStatus === 'LATE').length;
-    const summary = {
-      totalSessions: 0,
-      totalAttendances: allStatuses.length,
-      present: allStatuses.filter((r) => r.a_attendanceStatus === 'PRESENT').length,
-      late: allStatuses.filter((r) => r.a_attendanceStatus === 'LATE').length,
-      absent: allStatuses.filter((r) => r.a_attendanceStatus === 'ABSENT').length,
-      overallPercentage: allStatuses.length > 0
-        ? Math.round((present / allStatuses.length) * 100)
-        : 0,
-    };
-
-    const records = await query
-      .orderBy('session.scheduledStart', 'DESC')
-      .skip(skip)
-      .take(limit)
-      .getMany();
-
-    const data = records.map((a) => ({
-      id: a.id,
-      sessionId: a.sessionId,
-      studentName: a.student?.fullName || 'Unknown',
-      teacherName: a.session.teacher?.fullName || '—',
-      classTitle:
-        a.session.metadata?.className ||
-        a.session.schedule?.className ||
-        'Quran Class',
-      sessionDate: a.session.scheduledStart
-        ? a.session.scheduledStart.toISOString().split('T')[0]
-        : '—',
-      joinTime: a.joinTime?.toISOString() || null,
-      leaveTime: a.leaveTime?.toISOString() || null,
-      duration: a.duration || null,
-      attendanceStatus: a.attendanceStatus,
-    }));
-
-    summary.totalSessions = new Set(data.map((d) => d.sessionId)).size;
-
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit), summary };
-  }
-
-  async getTeacherSessionHistory(
-    teacherId: string,
-    options: {
-      page?: number;
-      limit?: number;
-      status?: string;
-      from?: string;
-      to?: string;
-    } = {},
-  ): Promise<{
-    data: Array<{
-      id: string;
-      classTitle: string;
-      teacherId: string;
-      studentId: string | null;
-      scheduledStart: string;
-      scheduledEnd: string;
-      actualStart: string | null;
-      actualEnd: string | null;
-      durationMinutes: number | null;
-      status: string;
-      studentCount: number;
-      attendanceSummary: {
-        present: number;
-        late: number;
-        absent: number;
-        leftEarly: number;
-        partial: number;
-        excused: number;
-        total: number;
-      };
-    }>;
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    summary: {
-      totalSessions: number;
-      completedSessions: number;
-      totalHours: number;
-      uniqueStudents: number;
-    };
-  }> {
-    const page = options.page || 1;
-    const limit = Math.min(options.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const query = this.liveSessionRepository
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.attendances', 'a')
-      .leftJoinAndSelect('s.schedule', 'schedule')
-      .where('s.teacherId = :teacherId', { teacherId });
-
-    if (options.status) {
-      query.andWhere('s.status = :status', { status: options.status });
-    }
-    if (options.from) {
-      query.andWhere('s.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('s.scheduledStart <= :to', { to: options.to });
-    }
-
-    const total = await query.getCount();
-
-    const sessions = await query
-      .orderBy('s.scheduledStart', 'DESC')
-      .skip(skip)
-      .take(limit)
-      .getMany();
-
-    const uniqueStudentIds = new Set<string>();
-    const data = sessions.map((s) => {
-      const att = s.attendances || [];
-      att.forEach((a) => uniqueStudentIds.add(a.studentId));
-      const present = att.filter((a) => a.attendanceStatus === 'PRESENT').length;
-      const late = att.filter((a) => a.attendanceStatus === 'LATE').length;
-      const absent = att.filter((a) => a.attendanceStatus === 'ABSENT').length;
-      const leftEarly = att.filter((a) => a.attendanceStatus === 'LEFT_EARLY').length;
-      const partial = att.filter((a) => a.attendanceStatus === 'PARTIAL').length;
-      const excused = att.filter((a) => a.attendanceStatus === 'EXCUSED').length;
-
-      return {
-        id: s.id,
-        classTitle: s.metadata?.className || s.schedule?.className || 'Quran Class',
-        teacherId: s.teacherId,
-        studentId: s.studentId || null,
-        scheduledStart: s.scheduledStart.toISOString(),
-        scheduledEnd: s.scheduledEnd.toISOString(),
-        actualStart: s.actualStart?.toISOString() || null,
-        actualEnd: s.actualEnd?.toISOString() || null,
-        durationMinutes: s.durationMinutes || null,
-        status: s.status,
-        studentCount: att.length,
-        attendanceSummary: {
-          present, late, absent, leftEarly, partial, excused,
-          total: att.length,
-        },
-      };
-    });
-
-    const summarySessions = await this.liveSessionRepository
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.attendances', 'a')
-      .where('s.teacherId = :teacherId', { teacherId })
-      .getMany();
-
-    const completedSessions = summarySessions.filter((s) => s.status === 'COMPLETED').length;
-    const totalHours = summarySessions.reduce(
-      (acc, s) => acc + (s.durationMinutes || 0), 0,
-    ) / 60;
-    const allUniqueStudents = new Set<string>();
-    summarySessions.forEach((s) =>
-      (s.attendances || []).forEach((a) => allUniqueStudents.add(a.studentId)),
-    );
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      summary: {
-        totalSessions: summarySessions.length,
-        completedSessions,
-        totalHours: Math.round(totalHours * 10) / 10,
-        uniqueStudents: allUniqueStudents.size,
-      },
-    };
-  }
-
-  async getStudentClassHistory(
-    studentId: string,
-    options: {
-      page?: number;
-      limit?: number;
-      from?: string;
-      to?: string;
-      status?: string;
-    } = {},
-  ): Promise<{
-    data: Array<{
-      id: string;
-      sessionId: string;
-      classTitle: string;
-      teacherName: string;
-      teacherId: string;
-      scheduledStart: string;
-      scheduledEnd: string;
-      actualStart: string | null;
-      actualEnd: string | null;
-      durationMinutes: number | null;
-      status: string;
-      attendanceStatus: string | null;
-      joinTime: string | null;
-      leaveTime: string | null;
-      duration: number | null;
-    }>;
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    summary: {
-      total: number;
-      present: number;
-      late: number;
-      absent: number;
-      attendancePercentage: number;
-    };
-  }> {
-    const page = options.page || 1;
-    const limit = Math.min(options.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const query = this.liveSessionRepository
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.attendances', 'a')
-      .leftJoinAndSelect('s.teacher', 'teacher')
-      .leftJoinAndSelect('s.schedule', 'schedule')
-      .where('a.studentId = :studentId', { studentId });
-
-    if (options.status) {
-      query.andWhere('s.status = :status', { status: options.status });
-    }
-    if (options.from) {
-      query.andWhere('s.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('s.scheduledStart <= :to', { to: options.to });
-    }
-
-    const total = await query.getCount();
-
-    const sessions = await query
-      .orderBy('s.scheduledStart', 'DESC')
-      .skip(skip)
-      .take(limit)
-      .getMany();
-
-    const data = sessions.map((s) => {
-      const myAttendance = (s.attendances || []).find((a) => a.studentId === studentId);
-      return {
-        id: s.id,
-        sessionId: s.id,
-        classTitle: s.metadata?.className || s.schedule?.className || 'Quran Class',
-        teacherName: s.teacher?.fullName || '—',
-        teacherId: s.teacherId,
-        scheduledStart: s.scheduledStart.toISOString(),
-        scheduledEnd: s.scheduledEnd.toISOString(),
-        actualStart: s.actualStart?.toISOString() || null,
-        actualEnd: s.actualEnd?.toISOString() || null,
-        durationMinutes: s.durationMinutes || null,
-        status: s.status,
-        attendanceStatus: myAttendance?.attendanceStatus || null,
-        joinTime: myAttendance?.joinTime?.toISOString() || null,
-        leaveTime: myAttendance?.leaveTime?.toISOString() || null,
-        duration: myAttendance?.duration || null,
-      };
-    });
-
-    const allRecords = await this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoin('a.session', 'session')
-      .where('a.studentId = :studentId', { studentId })
-      .select(['a.attendanceStatus'])
-      .getRawMany();
-
-    const present = allRecords.filter((r) => r.a_attendanceStatus === 'PRESENT').length;
-    const late = allRecords.filter((r) => r.a_attendanceStatus === 'LATE').length;
-    const absent = allRecords.filter((r) => r.a_attendanceStatus === 'ABSENT').length;
-    const totalRecords = allRecords.length;
-    const attendancePercentage = totalRecords > 0
-      ? Math.round(((present + late) / totalRecords) * 100)
-      : 0;
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      summary: {
-        total: totalRecords,
-        present,
-        late,
-        absent,
-        attendancePercentage,
-      },
-    };
-  }
-
-  async getSessionDetail(
-    sessionId: string,
-    userId?: string,
-    userRole?: string,
-  ): Promise<{
-    session: LiveSession;
-    notes: any[];
-    timeline: Array<{
-      event: string;
-      timestamp: string | null;
-      description: string;
-    }>;
-  }> {
-    const session = await this.findById(sessionId);
-
-    const isTeacher = session.teacherId
-      && await this.teacherRepository.findOne({
-        where: { id: session.teacherId, userId },
-      }).then(Boolean);
-
-    const isAdmin = userRole === UserRole.ADMIN
-      || userRole === UserRole.SUPER_ADMIN
-      || userRole === UserRole.QIRAT_MANAGER;
-
-    let notes;
-    if (isTeacher || isAdmin) {
-      notes = (session.sessionNotes || []).map((n) => ({
-        id: n.id,
-        content: n.content,
-        lessonSummary: n.lessonSummary,
-        topicsCovered: n.topicsCovered,
-        homeworkAssigned: n.homeworkAssigned,
-        completionRemarks: n.completionRemarks,
-        studentPerformance: n.studentPerformance,
-        visibility: n.visibility,
-        teacherName: n.teacher?.fullName || '—',
-        createdAt: n.createdAt,
-      }));
-    } else {
-      notes = (session.sessionNotes || [])
-        .filter((n) => n.visibility === 'all')
-        .map((n) => ({
-          id: n.id,
-          content: n.content,
-          lessonSummary: n.lessonSummary,
-          topicsCovered: n.topicsCovered,
-          homeworkAssigned: n.homeworkAssigned,
-          completionRemarks: n.completionRemarks,
-          studentPerformance: n.studentPerformance,
-          visibility: n.visibility,
-          createdAt: n.createdAt,
-        }));
-    }
-
-    const timeline: Array<{
-      event: string;
-      timestamp: string | null;
-      description: string;
-    }> = [
-      {
-        event: 'SCHEDULED',
-        timestamp: session.scheduledStart?.toISOString() || null,
-        description: 'Session was scheduled',
-      },
-    ];
-
-    if (session.actualStart) {
-      timeline.push({
-        event: 'LIVE',
-        timestamp: session.actualStart.toISOString(),
-        description: 'Session started',
-      });
-    }
-    if (session.actualEnd || session.completedAt) {
-      timeline.push({
-        event: 'COMPLETED',
-        timestamp: (session.completedAt || session.actualEnd)?.toISOString() || null,
-        description: session.completionReason || 'Session completed',
-      });
-    }
-    if (session.status === 'CANCELLED') {
-      timeline.push({
-        event: 'CANCELLED',
-        timestamp: session.updatedAt?.toISOString() || null,
-        description: session.cancellationReason || 'Session was cancelled',
-      });
-    }
-    if (session.status === 'NO_SHOW') {
-      timeline.push({
-        event: 'NO_SHOW',
-        timestamp: null,
-        description: 'No one joined the session',
-      });
-    }
-
-    // Remove sessionNotes from the session object to avoid duplication
-    const { sessionNotes: _, ...sessionData } = session;
-
-    return {
-      session: sessionData as LiveSession,
-      notes,
-      timeline,
-    };
-  }
-
-  async getTeacherTeachingStats(
-    teacherId: string,
-    options: { from?: string; to?: string } = {},
-  ): Promise<{
-    totalSessions: number;
-    completedSessions: number;
-    cancelledSessions: number;
-    totalHours: number;
-    totalMinutes: number;
-    uniqueStudents: number;
-    averageAttendanceRate: number;
-    monthlyBreakdown: Array<{
-      month: string;
-      sessions: number;
-      hours: number;
-    }>;
-  }> {
-    const query = this.liveSessionRepository
-      .createQueryBuilder('s')
-      .leftJoinAndSelect('s.attendances', 'a')
-      .where('s.teacherId = :teacherId', { teacherId });
-
-    if (options.from) {
-      query.andWhere('s.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('s.scheduledStart <= :to', { to: options.to });
-    }
-
-    const sessions = await query.getMany();
-
-    const totalSessions = sessions.length;
-    const completedSessions = sessions.filter((s) => s.status === 'COMPLETED').length;
-    const cancelledSessions = sessions.filter((s) => s.status === 'CANCELLED').length;
-    const totalMinutes = sessions.reduce((acc, s) => acc + (s.durationMinutes || 0), 0);
-    const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-    const uniqueStudents = new Set<string>();
-    sessions.forEach((s) =>
-      (s.attendances || []).forEach((a) => uniqueStudents.add(a.studentId)),
-    );
-
-    // Average attendance rate across all completed/live sessions
-    const sessionsWithAttendance = sessions.filter(
-      (s) => (s.attendances || []).length > 0,
-    );
-    const totalAttendanceRate = sessionsWithAttendance.reduce((acc, s) => {
-      const att = s.attendances || [];
-      const present = att.filter(
-        (a) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE',
-      ).length;
-      return acc + (att.length > 0 ? (present / att.length) * 100 : 0);
-    }, 0);
-    const averageAttendanceRate = sessionsWithAttendance.length > 0
-      ? Math.round(totalAttendanceRate / sessionsWithAttendance.length)
-      : 0;
-
-    // Monthly breakdown
-    const monthlyMap = new Map<string, { sessions: number; hours: number }>();
-    sessions.forEach((s) => {
-      const monthKey = s.scheduledStart.toISOString().slice(0, 7);
-      const existing = monthlyMap.get(monthKey) || { sessions: 0, hours: 0 };
-      existing.sessions++;
-      existing.hours += (s.durationMinutes || 0) / 60;
-      monthlyMap.set(monthKey, existing);
-    });
-
-    const monthlyBreakdown = Array.from(monthlyMap.entries())
-      .map(([month, data]) => ({
-        month,
-        sessions: data.sessions,
-        hours: Math.round(data.hours * 10) / 10,
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-
-    return {
-      totalSessions,
-      completedSessions,
-      cancelledSessions,
-      totalHours,
-      totalMinutes,
-      uniqueStudents: uniqueStudents.size,
-      averageAttendanceRate,
-      monthlyBreakdown,
-    };
-  }
-
-  async getStudentLearningStats(
-    studentId: string,
-    options: { from?: string; to?: string } = {},
-  ): Promise<{
-    totalSessions: number;
-    attended: number;
-    attendancePercentage: number;
-    uniqueTeachers: number;
-    monthlyBreakdown: Array<{
-      month: string;
-      sessions: number;
-      attended: number;
-    }>;
-  }> {
-    const query = this.attendanceRepository
-      .createQueryBuilder('a')
-      .innerJoinAndSelect('a.session', 'session')
-      .innerJoinAndSelect('session.teacher', 'teacher')
-      .where('a.studentId = :studentId', { studentId });
-
-    if (options.from) {
-      query.andWhere('session.scheduledStart >= :from', { from: options.from });
-    }
-    if (options.to) {
-      query.andWhere('session.scheduledStart <= :to', { to: options.to });
-    }
-
-    const records = await query.getMany();
-
-    const totalSessions = records.length;
-    const attended = records.filter(
-      (r) => r.attendanceStatus === 'PRESENT' || r.attendanceStatus === 'LATE',
-    ).length;
-    const attendancePercentage = totalSessions > 0
-      ? Math.round((attended / totalSessions) * 100)
-      : 0;
-
-    const uniqueTeachers = new Set(records.map((r) => r.session.teacherId)).size;
-
-    const monthlyMap = new Map<string, { sessions: number; attended: number }>();
-    records.forEach((r) => {
-      const monthKey = r.session.scheduledStart.toISOString().slice(0, 7);
-      const existing = monthlyMap.get(monthKey) || { sessions: 0, attended: 0 };
-      existing.sessions++;
-      if (r.attendanceStatus === 'PRESENT' || r.attendanceStatus === 'LATE') {
-        existing.attended++;
-      }
-      monthlyMap.set(monthKey, existing);
-    });
-
-    const monthlyBreakdown = Array.from(monthlyMap.entries())
-      .map(([month, data]) => ({
-        month,
-        sessions: data.sessions,
-        attended: data.attended,
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-
-    return {
-      totalSessions,
-      attended,
-      attendancePercentage,
-      uniqueTeachers,
-      monthlyBreakdown,
-    };
   }
 
   private async resolveStudentUserIds(session: LiveSession): Promise<string[]> {
