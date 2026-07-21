@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check, RotateCw } from 'lucide-react';
+import { useTheme } from '@/components/site/ThemeProvider';
 import {
   DropdownMenu,
   DropdownMenuContent,

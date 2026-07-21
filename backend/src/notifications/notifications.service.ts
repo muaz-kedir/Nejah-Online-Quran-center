@@ -517,7 +517,8 @@ export class NotificationsService {
       session.schedule?.className || session.metadata?.className || 'Quran Class';
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
-    const joinUrl = session.meetingLink || session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const meetingLink = session.meetingLink || session.metadata?.meetingLink || session.zoomJoinUrl || '';
+    const joinUrl = meetingLink || `/classroom/${sessionId}`;
     const classroomUrl = `/classroom/${sessionId}`;
 
     const scheduledTime = session.scheduledStart
@@ -594,10 +595,22 @@ export class NotificationsService {
       });
 
       await this.telegramService.sendToUsers(studentParentIds,
-        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\n${scheduledTime ? `Scheduled at ${scheduledTime}\n` : ''}Tap to join: ${joinUrl}`,
+        `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n🔗 Meeting: ${meetingLink || joinUrl}\n\nTap "Join Class" to mark attendance and open the meeting room.`,
+        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Class', callback_data: `join:${sessionId}` }]] } },
       ).catch((err) => {
         this.logger.error('Failed to send Telegram notifications to students', err);
         warnings.push('Some Telegram messages could not be delivered');
+      });
+      await this.fcmService.sendToUsers(studentParentIds, {
+        title: learnerPayload.title,
+        body: learnerPayload.body,
+        icon: learnerPayload.icon,
+        badge: learnerPayload.badge,
+        tag: learnerPayload.tag,
+        clickAction: learnerPayload.url,
+        data: Object.fromEntries(
+          Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
+        ),
       });
     }
 
@@ -621,9 +634,21 @@ export class NotificationsService {
       });
 
       await this.telegramService.sendToUsers(adminUserIds,
-        `Session Started — Admin\n\nTeacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.\nView: /live-sessions/${sessionId}`,
+        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${meetingLink || joinUrl}`,
+        { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', callback_data: `join:${sessionId}` }]] } },
       ).catch((err) => {
         this.logger.error('Failed to send Telegram notifications to admins', err);
+      });
+      await this.fcmService.sendToUsers(adminUserIds, {
+        title: adminPayload.title,
+        body: adminPayload.body,
+        icon: adminPayload.icon,
+        badge: adminPayload.badge,
+        tag: adminPayload.tag,
+        clickAction: adminPayload.url,
+        data: Object.fromEntries(
+          Object.entries(adminPayload.data || {}).map(([k, v]) => [k, String(v)]),
+        ),
       });
     }
 
