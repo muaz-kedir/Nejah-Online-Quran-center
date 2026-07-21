@@ -53,6 +53,11 @@ export function requireAuth(allowedRoles?: string[]) {
   }
 }
 
+export function requireParentAuth(allowedRoles?: string[]) {
+  if (typeof window === "undefined") return;
+  requireAuth(allowedRoles);
+}
+
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("userRole");

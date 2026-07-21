@@ -164,6 +164,7 @@ export class AuthService {
           role: studentUser.role,
           studentId: createdStudent.id,
         },
+        onboardingRequired: true,
       };
     } catch (error) {
       console.error('[AuthService] Registration error:', error.message);

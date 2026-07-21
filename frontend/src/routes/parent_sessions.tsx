@@ -1,5 +1,34 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { requireAuth } from '@/lib/auth';
+import { useState, useEffect, useMemo } from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { ParentPortalLayout } from '@/components/parents/ParentPortalLayout';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { PageHeader, GlassPanel, BentoStatCard } from '@/components/dashboard/design-system';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { requireParentAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import {
+  Video,
+  Calendar,
+  Clock,
+  Users,
+  ExternalLink,
+  CheckCircle2,
+  XCircle,
+  Activity,
+  Percent,
+  GraduationCap,
+  RefreshCw,
+  Filter,
+} from 'lucide-react';
 
-export const Route = createFileRoute('/parent_sessions')({beforeLoad: () => requireAuth(['parent'])
+export const Route = createFileRoute('/parent_sessions')({
+  component: ParentSessionsRoute,
+  beforeLoad: () => requireParentAuth(['parent']),
 });

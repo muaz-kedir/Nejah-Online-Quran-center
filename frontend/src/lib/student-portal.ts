@@ -3,7 +3,7 @@ import { API_BASE, api, apiHeaders, apiUrl } from '@/lib/api';
 
 export { API_BASE, api, apiHeaders, apiUrl };
 
-export function requireStudentAuth() {
+export async function requireStudentAuth() {
   if (typeof window === 'undefined') return;
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('userRole');

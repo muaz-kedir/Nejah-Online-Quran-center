@@ -27,17 +27,7 @@ import { TelegramOnboardingOverlay } from "@/components/student/TelegramOnboardi
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
-import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
-import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
-import { TelegramLink } from "@/components/ui/telegram-link";
-import type { StudentProfileData } from "@/lib/student-types";
+import { OnboardingGuard } from "@/components/ui/OnboardingGuard";
 
 
 
@@ -341,7 +331,8 @@ export function StudentPortalLayout({
   );
 
   return (
-    <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+    <OnboardingGuard>
+      <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
       {/* ─── Ambient Background ─── */}
       <div className="bg-ambient-layer">
         <div className="bg-mesh-gradient animate-mesh w-full h-full" />
@@ -524,6 +515,7 @@ export function StudentPortalLayout({
         onOpenChange={setChangePasswordOpen}
       />
     </div>
+    </OnboardingGuard>
   );
 }
 

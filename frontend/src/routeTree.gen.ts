@@ -27,6 +27,7 @@ import { Route as TeacherApplicationsRouteImport } from './routes/teacher-applic
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as Student_dashboardRouteImport } from './routes/student_dashboard'
+import { Route as SetupRequiredRouteImport } from './routes/setup-required'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SchedulesRouteImport } from './routes/schedules'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -206,9 +207,12 @@ const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/student_dashboard.lazy').then((d) => d.Route),
-)
+} as any)
+const SetupRequiredRoute = SetupRequiredRouteImport.update({
+  id: '/setup-required',
+  path: '/setup-required',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -693,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/support': typeof SupportRoute
@@ -782,6 +787,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/support': typeof SupportRoute
@@ -871,6 +877,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/schedules': typeof SchedulesRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/setup-required': typeof SetupRequiredRoute
   '/student_dashboard': typeof Student_dashboardRoute
   '/students': typeof StudentsRoute
   '/support': typeof SupportRoute
@@ -962,6 +969,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/support'
@@ -1051,6 +1059,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/support'
@@ -1139,6 +1148,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/schedules'
     | '/settings'
+    | '/setup-required'
     | '/student_dashboard'
     | '/students'
     | '/support'
@@ -1229,6 +1239,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SchedulesRoute: typeof SchedulesRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  SetupRequiredRoute: typeof SetupRequiredRoute
   Student_dashboardRoute: typeof Student_dashboardRoute
   StudentsRoute: typeof StudentsRoute
   SupportRoute: typeof SupportRoute
@@ -1396,6 +1407,13 @@ declare module '@tanstack/react-router' {
       path: '/student_dashboard'
       fullPath: '/student_dashboard'
       preLoaderRoute: typeof Student_dashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup-required': {
+      id: '/setup-required'
+      path: '/setup-required'
+      fullPath: '/setup-required'
+      preLoaderRoute: typeof SetupRequiredRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -1970,6 +1988,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SchedulesRoute: SchedulesRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  SetupRequiredRoute: SetupRequiredRoute,
   Student_dashboardRoute: Student_dashboardRoute,
   StudentsRoute: StudentsRoute,
   SupportRoute: SupportRoute,

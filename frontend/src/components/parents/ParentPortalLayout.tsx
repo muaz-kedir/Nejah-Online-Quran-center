@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { OnboardingGuard } from '@/components/ui/OnboardingGuard';
 
 type TabType =
   | 'dashboard'
@@ -310,7 +311,8 @@ export function ParentPortalLayout({
   );
 
   return (
-    <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+    <OnboardingGuard>
+      <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
@@ -422,6 +424,7 @@ export function ParentPortalLayout({
         {children}
       </div>
     </div>
+    </OnboardingGuard>
   );
 }
 

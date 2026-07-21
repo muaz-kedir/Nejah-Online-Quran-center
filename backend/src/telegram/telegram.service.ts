@@ -54,8 +54,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     } catch (err: any) {
       const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
-      this.logger.warn(`Telegram bot token verification failed (${detail}) — continuing with best effort`);
-      this.botUsername = 'NejahQuranBot';
+      this.logger.error(`Telegram bot token verification failed: ${detail}`);
+      this.logger.warn('Telegram bot will be available for code generation but notifications may not work until the token is fixed.');
     }
 
     await this.deleteWebhook();
