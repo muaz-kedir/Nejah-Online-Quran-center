@@ -25,5 +25,8 @@ npm-debug.log*
 .env.local
 .env*.local
 
+# Graphify outputs
+graphify-out/
+
 # Firebase service account JSON
 *-firebase-adminsdk-*.json

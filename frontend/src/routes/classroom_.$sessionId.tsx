@@ -1,4 +1,4 @@
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiUrl } from "@/lib/api";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
@@ -197,10 +197,13 @@ function ClassroomPage() {
   };
 
   const openExternalZoom = (access: ClassroomAccess) => {
-    const url = role === "teacher" ? access.startUrl || access.joinUrl : access.joinUrl;
+    const meetingLink = access.session?.metadata?.meetingLink;
+    const url = role === "teacher"
+      ? access.startUrl || access.joinUrl || meetingLink
+      : access.joinUrl || meetingLink;
     if (url) {
       window.location.href = url;
-      toast.success("Opened Zoom in a new tab");
+      toast.success("Opened meeting link");
     } else {
       toast.error("Meeting link not available yet");
     }
@@ -236,7 +239,14 @@ function ClassroomPage() {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.message || "Failed to join session");
         }
-        openExternalZoom(classroom);
+        const body = await res.json().catch(() => ({}));
+        const meetingUrl = body.joinUrl || body.meetingLink || classroom?.session?.metadata?.meetingLink;
+        if (meetingUrl) {
+          window.location.href = meetingUrl;
+          toast.success("Meeting link opened");
+        } else {
+          openExternalZoom(classroom);
+        }
       }
       loadClassroom();
     } catch (e: any) {

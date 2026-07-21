@@ -28,7 +28,7 @@ export async function joinLiveSessionAsStudent(sessionId: string): Promise<Stude
     throw new Error(body.message || 'Failed to record attendance and join session');
   }
 
-  const joinUrl = body.joinUrl || body.zoomJoinUrl;
+  const joinUrl = body.joinUrl || body.zoomJoinUrl || body.meetingLink;
   if (!joinUrl) {
     throw new Error('Meeting link is not available yet. Please try again in a moment.');
   }

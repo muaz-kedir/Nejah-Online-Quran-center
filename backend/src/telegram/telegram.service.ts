@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, LessThan } from 'typeorm';
@@ -8,9 +9,11 @@ import { randomBytes } from 'crypto';
 import { TelegramSubscription } from './entities/telegram-subscription.entity';
 import { TelegramLinkingCode } from './entities/telegram-linking-code.entity';
 import { User } from '../users/entities/user.entity';
+import { Student } from '../students/entities/student.entity';
+import { LiveSession } from '../zoom/entities/live-session.entity';
 
 export interface TelegramMessage {
-  text: string;
+  text?: string;
   parseMode?: 'HTML' | 'Markdown';
   replyMarkup?: Record<string, unknown>;
 }
@@ -26,6 +29,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private pollingTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
+    private readonly moduleRef: ModuleRef,
     private readonly configService: ConfigService,
     @InjectRepository(TelegramSubscription)
     private readonly subscriptionRepository: Repository<TelegramSubscription>,
@@ -33,6 +37,10 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     private readonly linkingCodeRepository: Repository<TelegramLinkingCode>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
+    @InjectRepository(LiveSession)
+    private readonly liveSessionRepository: Repository<LiveSession>,
   ) {}
 
   async onModuleInit() {
@@ -87,7 +95,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         params: {
           offset: this.lastUpdateId + 1,
           timeout: 30,
-          allowed_updates: ['message'],
+          allowed_updates: ['message', 'callback_query'],
         },
         timeout: 35000,
       });
@@ -118,6 +126,11 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleUpdate(update: any) {
+    if (update.callback_query) {
+      await this.handleCallbackQuery(update.callback_query);
+      return;
+    }
+
     const message = update.message;
     if (!message?.text) return;
 
@@ -223,6 +236,77 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
   private async cleanupExpiredCodes() {
     await this.linkingCodeRepository.delete({ expiresAt: LessThan(new Date()) });
+  }
+
+  private async handleCallbackQuery(callbackQuery: any) {
+    const { id, data, message, from } = callbackQuery;
+    if (!data || !message) return;
+
+    const chatId = message.chat.id;
+    this.logger.log(`Callback query from ${chatId}: "${data}"`);
+
+    if (data.startsWith('join:')) {
+      const sessionId = data.replace('join:', '');
+      await this.processJoinCallback(id, chatId, sessionId);
+    }
+  }
+
+  private async processJoinCallback(callbackQueryId: string, chatId: number, sessionId: string) {
+    const sub = await this.subscriptionRepository.findOne({ where: { chatId, isActive: true } });
+    if (!sub) {
+      await this.answerCallbackQuery(callbackQueryId, '❌ Your Telegram is not linked to an account.');
+      return;
+    }
+
+    const student = await this.studentRepository.findOne({ where: { userId: sub.userId } });
+    if (!student) {
+      await this.answerCallbackQuery(callbackQueryId, '❌ No student profile found for your account.');
+      return;
+    }
+
+    const session = await this.liveSessionRepository.findOne({ where: { id: sessionId } });
+    if (!session) {
+      await this.answerCallbackQuery(callbackQueryId, '❌ Session not found.');
+      return;
+    }
+
+    const meetingLink = session.metadata?.meetingLink || session.zoomJoinUrl || '';
+
+    try {
+      const { LiveSessionService } = await import('../zoom/live-session.service');
+      const liveSessionService = this.moduleRef.get(LiveSessionService, { strict: false });
+      await liveSessionService.joinSession(sessionId, {
+        studentId: student.id,
+        isTeacher: false,
+      });
+      await this.answerCallbackQuery(
+        callbackQueryId,
+        '✅ Attendance marked! Opening meeting...',
+        meetingLink || undefined,
+      );
+    } catch (err: any) {
+      this.logger.error(`Failed to join session via Telegram: ${err.message}`);
+      await this.answerCallbackQuery(
+        callbackQueryId,
+        `❌ ${err.message || 'Failed to join session.'}`,
+      );
+    }
+  }
+
+  private async answerCallbackQuery(callbackQueryId: string, text?: string, url?: string): Promise<void> {
+    if (!this.configured) return;
+
+    try {
+      await axios.post(`${this.apiBase}/answerCallbackQuery`, {
+        callback_query_id: callbackQueryId,
+        text,
+        show_alert: false,
+        url,
+      }, { timeout: 10000 });
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Failed to answer callback query: ${detail}`);
+    }
   }
 
   async sendMessage(chatId: number, text: string, options?: TelegramMessage): Promise<boolean> {

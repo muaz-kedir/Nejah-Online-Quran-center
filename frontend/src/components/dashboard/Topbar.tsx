@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { Search, Bell, Menu, User, Settings, LogOut, Sun, Moon, Globe, Check, RotateCw } from 'lucide-react';
+import { useTheme } from '@/components/site/ThemeProvider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,13 +27,10 @@ const LANGUAGES = [
   { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
 ];
 
-const getIsDark = () =>
-  typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-
 function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useApp();
-  const [isDark, setIsDark] = useState(getIsDark);
+  const { theme, toggleTheme } = useTheme();
   const [userName, setUserName] = useState('Admin User');
   const [userRole, setUserRole] = useState('super_admin');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -51,14 +49,6 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
       };
     }
   }, []);
-
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    const nowDark = root.classList.contains('dark');
-    root.classList.toggle('dark', !nowDark);
-    localStorage.setItem('theme', !nowDark ? 'dark' : 'light');
-    setIsDark(!nowDark);
-  };
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
@@ -106,10 +96,10 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
       <div className="ml-auto flex items-center gap-1">
         <button
           onClick={toggleTheme}
-          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           className={iconBtn}
         >
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
         <button

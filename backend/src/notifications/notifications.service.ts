@@ -465,6 +465,7 @@ export class NotificationsService {
       session.schedule?.className || session.metadata?.className || 'Quran Class';
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
+    const meetingLink = session.metadata?.meetingLink || session.zoomJoinUrl || '';
     const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
     const classroomUrl = `/classroom/${sessionId}`;
     const enrolledCount =
@@ -523,7 +524,8 @@ export class NotificationsService {
       );
       await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
       await this.telegramService.sendToUsers(studentParentIds,
-        `Class Started — ${className}\n\n${teacherName}'s ${className} class has begun.\nTap to join: ${joinUrl}`,
+        `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n🔗 Meeting: ${meetingLink || joinUrl}\n\nTap "Join Class" to mark attendance and open the meeting room.`,
+        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Class', callback_data: `join:${sessionId}` }]] } },
       );
       await this.fcmService.sendToUsers(studentParentIds, {
         title: learnerPayload.title,
@@ -554,7 +556,8 @@ export class NotificationsService {
       );
       await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
       await this.telegramService.sendToUsers(adminUserIds,
-        `Session Started — Admin\n\nTeacher ${teacherName} has started ${className}. ${enrolledCount} student(s) enrolled.\nView: /live-sessions/${sessionId}`,
+        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${meetingLink || joinUrl}`,
+        { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', callback_data: `join:${sessionId}` }]] } },
       );
       await this.fcmService.sendToUsers(adminUserIds, {
         title: adminPayload.title,

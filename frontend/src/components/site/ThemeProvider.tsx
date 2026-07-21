@@ -14,25 +14,24 @@ interface Ctx {
 
 const ThemeCtx = createContext<Ctx | null>(null);
 
-const getInitialTheme = (): Theme => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("theme") as Theme | null;
-    if (stored) return stored;
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
-  }
-  return "light";
-};
-const getInitialLang = (): Lang => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("lang") as Lang | null;
-    if (stored && translations[stored]) return stored;
-  }
-  return "en";
-};
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [lang, setLang] = useState<Lang>(getInitialLang);
+  const [theme, setTheme] = useState<Theme>("light");
+  const [lang, setLang] = useState<Lang>("en");
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme") as Theme | null;
+    if (storedTheme === "dark" || storedTheme === "light") {
+      setTheme(storedTheme);
+      document.documentElement.classList.toggle("dark", storedTheme === "dark");
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
+    }
+    const storedLang = localStorage.getItem("lang") as Lang | null;
+    if (storedLang && translations[storedLang]) {
+      setLang(storedLang);
+    }
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

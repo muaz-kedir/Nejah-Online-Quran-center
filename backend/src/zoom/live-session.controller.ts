@@ -186,10 +186,12 @@ export class LiveSessionController {
         teacherId: teacher.id,
         isTeacher: true,
       });
+      const meetingLink = session.metadata?.meetingLink || '';
       return {
         sessionId: id,
-        joinUrl: session.zoomJoinUrl,
+        joinUrl: session.zoomJoinUrl || meetingLink,
         zoomJoinUrl: session.zoomJoinUrl,
+        meetingLink,
         startUrl: session.zoomStartUrl,
         status: session.status,
       };
@@ -205,10 +207,12 @@ export class LiveSessionController {
     });
     const attendance = await this.sessionAttendanceService.getStudentAttendance(id, student.id);
 
+    const meetingLink = session.metadata?.meetingLink || '';
     return {
       sessionId: id,
-      joinUrl: session.zoomJoinUrl,
+      joinUrl: session.zoomJoinUrl || meetingLink,
       zoomJoinUrl: session.zoomJoinUrl,
+      meetingLink,
       status: session.status,
       alreadyJoined,
       attendance: attendance
