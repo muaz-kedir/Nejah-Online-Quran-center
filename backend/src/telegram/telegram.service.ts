@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, LessThan } from 'typeorm';
+import { In, Repository, LessThan, Raw } from 'typeorm';
 
 import axios from 'axios';
 import { randomBytes } from 'crypto';
@@ -132,8 +132,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     // /start with optional code
     if (text.startsWith('/start')) {
       const parts = text.split(/\s+/);
-      const code = parts[1];
-      if (!code) {
+      const rawCode = parts[1];
+      if (!rawCode) {
         // Check if user is already linked
         const existing = await this.subscriptionRepository.findOne({
           where: { chatId, isActive: true },
@@ -145,7 +145,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         }
         return;
       }
-      await this.handleLinkCode(chatId, code, username);
+      await this.handleLinkCode(chatId, rawCode.toUpperCase(), username);
       return;
     }
 
@@ -161,8 +161,17 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleLinkCode(chatId: number, code: string, username: string | null) {
-    const linkingCode = await this.linkingCodeRepository.findOne({ where: { code } });
+    let linkingCode = await this.linkingCodeRepository.findOne({ where: { code } });
+
     if (!linkingCode) {
+      // Fallback: case-insensitive lookup
+      linkingCode = await this.linkingCodeRepository.findOne({
+        where: { code: Raw((alias) => `UPPER(${alias}) = UPPER(:code)`, { code }) },
+      });
+    }
+
+    if (!linkingCode) {
+      this.logger.warn(`Linking code not found in DB for chatId ${chatId}: "${code}"`);
       await this.sendMessage(chatId, 'Invalid or expired code. Please generate a new code from your profile settings.');
       return;
     }
