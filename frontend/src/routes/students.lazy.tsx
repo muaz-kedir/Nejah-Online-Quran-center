@@ -59,6 +59,32 @@ export const Route = createLazyFileRoute('/students')({
   component: StudentsPage,
 });
 
+function getDateRange(filter: string): { startDate: string; endDate: string } {
+  const now = new Date();
+  const end = now.toISOString().slice(0, 10);
+  let start: string;
+  switch (filter) {
+    case 'today':
+      start = end;
+      break;
+    case 'week': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - d.getDay());
+      start = d.toISOString().slice(0, 10);
+      break;
+    }
+    case 'month':
+      start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      break;
+    case 'year':
+      start = `${now.getFullYear()}-01-01`;
+      break;
+    default:
+      start = end;
+  }
+  return { startDate: start, endDate: end };
+}
+
 function StudentsPage() {
   const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 2, totalPages: 1 });

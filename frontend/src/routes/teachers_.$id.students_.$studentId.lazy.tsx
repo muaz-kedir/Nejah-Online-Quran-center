@@ -20,6 +20,14 @@ export const Route = createLazyFileRoute('/teachers_/$id/students_/$studentId')(
   component: StudentDetailsPage,
 });
 
+type TabId = 'schedule' | 'attendance' | 'progress';
+
+const TABS: { id: TabId; label: string; icon: typeof Calendar }[] = [
+  { id: 'schedule', label: 'Schedule', icon: Calendar },
+  { id: 'attendance', label: 'Attendance', icon: ClipboardList },
+  { id: 'progress', label: 'Progress', icon: TrendingUp },
+];
+
 function StudentDetailsPage() {
   const { id: teacherId, studentId } = Route.useParams();
   const { tab } = Route.useSearch();

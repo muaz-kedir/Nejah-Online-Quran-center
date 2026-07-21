@@ -31,6 +31,9 @@ import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { OnboardingGuard } from "@/components/ui/OnboardingGuard";
+import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
+import { TelegramLink } from "@/components/ui/telegram-link";
+import type { StudentProfileData } from "@/lib/student-types";
 
 
 

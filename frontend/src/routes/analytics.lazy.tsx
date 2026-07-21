@@ -28,6 +28,8 @@ export const Route = createLazyFileRoute('/analytics')({
   component: AnalyticsPage,
 });
 
+const COLORS = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
+
 function AnalyticsPage() {
   const { data: studentsStats, isLoading: loadingStudents } = useApiQuery<any>({
     queryKey: ['students-stats'],

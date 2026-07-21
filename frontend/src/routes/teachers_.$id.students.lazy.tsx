@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { requireAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { EditScheduleModal } from '@/components/teachers/EditScheduleModal';
+import { getTodayDayName } from '@/lib/schedule-day';
 
 export const Route = createLazyFileRoute('/teachers_/$id/students')({
   component: AssignedStudentsPage,
@@ -210,7 +211,7 @@ function AssignedStudentsPage() {
         }}
         teacher={teacher}
         schedule={scheduleToEdit}
-        defaultDay={getTodayName()}
+        defaultDay={getTodayDayName()}
         defaultStudentId={scheduleStudentId || undefined}
         unassignedStudents={unassignedStudents}
       />

@@ -348,7 +348,7 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
   });
   const loadingLearningTime = false;
 
-  const { data: evaluations } = useApiQuery<any>({
+  const { data: evaluations, isLoading: loadingEvaluations } = useApiQuery<any>({
     queryKey: ["evaluations", selectedChildId],
     path: `/evaluations?studentId=${selectedChildId}`,
     enabled: !!selectedChildId,
