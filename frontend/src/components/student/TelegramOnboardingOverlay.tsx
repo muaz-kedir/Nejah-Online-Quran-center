@@ -30,11 +30,27 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
   return (
     <ol className="text-sm text-muted-foreground space-y-3 list-decimal list-inside">
       <li>
-        Open Telegram and search for{" "}
-        <strong className="text-foreground">@{botUsername}</strong>
+        Open Telegram and tap the link below (or search for{" "}
+        <strong className="text-foreground">@{botUsername}</strong>):
+        <div className="mt-2">
+          <a
+            href={`https://t.me/${botUsername}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 font-medium hover:bg-sky-500/20 transition-colors"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+            </svg>
+            Open @{botUsername} in Telegram
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+            </svg>
+          </a>
+        </div>
       </li>
       <li>
-        Send this code:
+        Send this code in the chat:
         <div className="flex items-center gap-2 mt-2">
           <code className="px-4 py-2 rounded-lg bg-foreground/10 font-mono text-base font-bold tracking-wider text-foreground">
             {code}
@@ -50,6 +66,7 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
             )}
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-1.5">Just paste and send — no need to type any command.</p>
       </li>
       <li>
         Wait for confirmation{" "}
@@ -61,10 +78,12 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
 
 export function TelegramOnboardingOverlay() {
   const [linked, setLinked] = useState<boolean | null>(null);
+  const [linkedUsername, setLinkedUsername] = useState<string | undefined>(undefined);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [generating, setGenerating] = useState(false);
   const [linkInfo, setLinkInfo] = useState<{ code: string; botUsername: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const overlayPollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
@@ -124,6 +143,7 @@ export function TelegramOnboardingOverlay() {
         const s = await fetchApi<TelegramStatus>("/telegram/status");
         if (s.linked) {
           setLinked(true);
+          setLinkedUsername(s.username);
           if (overlayPollRef.current) clearInterval(overlayPollRef.current);
           if (pollRef.current) clearInterval(pollRef.current);
         }
@@ -171,9 +191,11 @@ export function TelegramOnboardingOverlay() {
         try {
           const s = await fetchApi<TelegramStatus>("/telegram/status");
           if (s.linked) {
-            setLinked(true);
-            setLinkInfo(null);
             clearInterval(pollRef.current!);
+            if (overlayPollRef.current) clearInterval(overlayPollRef.current);
+            setLinkInfo(null);
+            setLinked(true);
+            setLinkedUsername(s.username);
           }
         } catch {
           /* ignore */
@@ -203,7 +225,67 @@ export function TelegramOnboardingOverlay() {
     );
   }
 
-  if (linked) return null;
+  if (linked && !showSuccess) {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-background/60 backdrop-blur-lg"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Telegram connected successfully"
+      >
+        <div className="w-full max-w-md mx-4 bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl border border-border dark:border-nejah-border-blue/30 overflow-hidden animate-fade-in-up">
+          <div className="p-8 sm:p-10 space-y-6 text-center">
+            <div className="flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold font-serif text-foreground">
+                Telegram Connected!
+              </h2>
+              {linkedUsername && (
+                <p className="text-sm text-muted-foreground">
+                  Linked as <strong className="text-foreground">@{linkedUsername}</strong>
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                You will now receive class notifications, meeting links, and important announcements on Telegram.
+              </p>
+            </div>
+
+            <ul className="text-sm text-foreground space-y-1.5 text-left max-w-xs mx-auto">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                Live class notifications
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                Meeting links
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                Class reminders
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                Important announcements
+              </li>
+            </ul>
+
+            <Button
+              onClick={() => setShowSuccess(true)}
+              className="w-full h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold text-white gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Continue to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!configured) return null;
 
   return (

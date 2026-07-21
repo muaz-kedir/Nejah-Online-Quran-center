@@ -129,15 +129,35 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.log(`Received message from ${chatId}: "${text.substring(0, 50)}"`);
 
+    // /start with optional code
     if (text.startsWith('/start')) {
       const parts = text.split(/\s+/);
       const code = parts[1];
       if (!code) {
-        await this.sendMessage(chatId, 'Welcome to Nejah Online Quran Center!\n\nUse the "Link Telegram" button in your profile settings to get a linking code, then send: /start YOUR_CODE');
+        // Check if user is already linked
+        const existing = await this.subscriptionRepository.findOne({
+          where: { chatId, isActive: true },
+        });
+        if (existing) {
+          await this.sendMessage(chatId, 'Your Telegram account is already linked to Nejah Online Quran Center! You will receive notifications for class sessions, attendance updates, and more.');
+        } else {
+          await this.sendMessage(chatId, 'Welcome to Nejah Online Quran Center!\n\nOpen the Nejah app → Profile Settings → "Link Telegram" to get a code, then send that code here.');
+        }
         return;
       }
       await this.handleLinkCode(chatId, code, username);
+      return;
     }
+
+    // Bare code (no /start prefix): treat as linking code attempt
+    const codeCandidate = text.trim().toUpperCase();
+    if (/^[A-Z0-9]{6,12}$/.test(codeCandidate)) {
+      await this.handleLinkCode(chatId, codeCandidate, username);
+      return;
+    }
+
+    // Unrecognized message
+    await this.sendMessage(chatId, 'To link your account, open the Nejah app → Profile Settings → "Link Telegram" to get a code, then send that code here.');
   }
 
   private async handleLinkCode(chatId: number, code: string, username: string | null) {
@@ -148,12 +168,25 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (linkingCode.consumed) {
-      await this.sendMessage(chatId, 'This code has already been used. Your Telegram account should already be linked! If not, please generate a new code from your profile settings.');
+      await this.sendMessage(chatId, 'This code has already been used. Your Telegram account should already be linked! If not, generate a new code from your profile settings.');
       return;
     }
 
     if (new Date() > linkingCode.expiresAt) {
       await this.sendMessage(chatId, 'This code has expired. Please generate a new code from your profile settings.');
+      return;
+    }
+
+    // Mark code as consumed atomically
+    const updateResult = await this.linkingCodeRepository
+      .createQueryBuilder()
+      .update(TelegramLinkingCode)
+      .set({ consumed: true })
+      .where('code = :code AND consumed = false', { code })
+      .execute();
+
+    if (updateResult.affected === 0) {
+      await this.sendMessage(chatId, 'This code has already been used or is no longer valid. Please generate a new code from your profile settings.');
       return;
     }
 
@@ -176,9 +209,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       await this.subscriptionRepository.save(sub);
     }
 
-    linkingCode.consumed = true;
-    await this.linkingCodeRepository.save(linkingCode);
-
     await this.userRepository.update(linkingCode.userId, {
       telegramConnected: true,
       telegramChatId: `${chatId}`,
@@ -192,9 +222,10 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Onboarding auto-completed for user ${user.id} after Telegram link`);
     }
 
+    const displayName = user?.name || user?.email || 'Student';
     await this.sendMessage(
       chatId,
-      '✅ Your Telegram account has been linked to Nejah Online Quran Center!\n\nYou will now receive notifications for class sessions, attendance updates, and more.',
+      `✅ Telegram Connected!\n\nWelcome, ${displayName}! Your account has been linked to Nejah Online Quran Center.\n\nYou will now receive:\n• Live class notifications\n• Meeting links\n• Class reminders\n• Important announcements\n\nYou can close this chat — notifications will be delivered automatically.`,
     );
   }
 
