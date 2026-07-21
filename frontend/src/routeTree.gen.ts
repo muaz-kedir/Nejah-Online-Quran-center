@@ -207,7 +207,9 @@ const Student_dashboardRoute = Student_dashboardRouteImport.update({
   id: '/student_dashboard',
   path: '/student_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/student_dashboard.lazy').then((d) => d.Route),
+)
 const SetupRequiredRoute = SetupRequiredRouteImport.update({
   id: '/setup-required',
   path: '/setup-required',
