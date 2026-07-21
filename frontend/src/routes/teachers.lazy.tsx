@@ -679,7 +679,7 @@ function TeacherDetailModal({ teacher, onClose, userRole, onEdit, onRefresh }: {
 }
 
 function TeachersPage() {
-  const userRole = localStorage.getItem('userRole') || '';
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
   const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [search, setSearch] = useState('');
