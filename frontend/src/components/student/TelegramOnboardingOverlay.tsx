@@ -107,37 +107,13 @@ export function TelegramOnboardingOverlay() {
 
     const ctrl = new AbortController();
     const ctrl2 = new AbortController();
-    let statusResolved = false;
-    let configResolved = false;
-
-    const resolve = () => {
-      if (!statusResolved || !configResolved) return;
-      if (linked === null) setLinked(false);
-      if (configured === null) setConfigured(false);
-    };
 
     fetchApi<{ configured: boolean }>("/telegram/config", { signal: ctrl2.signal })
-      .then((res) => {
-        setConfigured(res.configured);
-        configResolved = true;
-        resolve();
-      })
-      .catch(() => {
-        setConfigured(false);
-        configResolved = true;
-        resolve();
-      });
+      .then((res) => setConfigured(res.configured))
+      .catch(() => setConfigured(false));
     fetchApi<TelegramStatus>("/telegram/status", { signal: ctrl.signal })
-      .then((res) => {
-        setLinked(res.linked);
-        statusResolved = true;
-        resolve();
-      })
-      .catch(() => {
-        setLinked(false);
-        statusResolved = true;
-        resolve();
-      });
+      .then((res) => setLinked(res.linked))
+      .catch(() => setLinked(false));
 
     return () => {
       ctrl.abort();
