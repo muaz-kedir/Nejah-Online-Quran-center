@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
 import { PageHeader } from "@/components/dashboard/design-system";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -27,6 +29,7 @@ import {
   AlertTriangle,
   X,
   ChevronLeft,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/teacher_zoom")({
@@ -66,13 +69,14 @@ function TeacherZoomPage() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
+  const [startLink, setStartLink] = useState('');
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [pendingStartId, setPendingStartId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [detailSessionId, setDetailSessionId] = useState<string | null>(null);
   const [detailSession, setDetailSession] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
-
   useEffect(() => {
     fetchAll();
   }, []);
@@ -98,16 +102,21 @@ function TeacherZoomPage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [upcomingData, sessionsData, analyticsData, zoomStatus] = await Promise.all([
+      // Zoom OAuth/analytics commented out -- manual meeting links
+      // const [upcomingData, sessionsData, analyticsData, zoomStatus] = await Promise.all([
+      //   api<any[]>("/live-sessions/upcoming").catch(() => []),
+      //   api<any>("/live-sessions/teacher?limit=50").catch(() => ({ data: [] })),
+      //   api<any>("/zoom-analytics/teacher").catch(() => null),
+      //   api<{ connected: boolean }>("/zoom/oauth/status").catch(() => ({ connected: false })),
+      // ]);
+      const [upcomingData, sessionsData] = await Promise.all([
         api<any[]>("/live-sessions/upcoming").catch(() => []),
         api<any>("/live-sessions/teacher?limit=50").catch(() => ({ data: [] })),
-        api<any>("/zoom-analytics/teacher").catch(() => null),
-        api<{ connected: boolean }>("/zoom/oauth/status").catch(() => ({ connected: false })),
       ]);
       setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       setTeacherSessions(Array.isArray(sessionsData?.data) ? sessionsData.data : []);
-      setAnalytics(analyticsData);
-      setZoomConnected(zoomStatus.connected);
+      // setAnalytics(analyticsData);
+      // setZoomConnected(zoomStatus.connected);
     } catch {
       toast.error("Failed to load workspace data");
     } finally {
@@ -116,19 +125,35 @@ function TeacherZoomPage() {
   };
 
   const handleStartSession = async (sessionId: string) => {
-    setStartingId(sessionId);
+    setPendingStartId(sessionId);
+    setStartLink('');
+    setShowStartModal(true);
+  };
+
+  const doStartSession = async () => {
+    if (!pendingStartId) return;
+    if (!startLink.trim()) {
+      toast.error("Please paste your meeting link before starting.");
+      return;
+    }
+    if (!startLink.startsWith('http://') && !startLink.startsWith('https://')) {
+      toast.error("Link must start with http:// or https://");
+      return;
+    }
+    setStartingId(pendingStartId);
+    setShowStartModal(false);
     try {
-      await api(`/live-sessions/${sessionId}/start`, { method: "POST" });
-      toast.success("Session started! Opening Zoom...");
-      const session =
-        upcoming.find((s: any) => s.id === sessionId) ||
-        teacherSessions.find((s: any) => s.id === sessionId);
-      if (session?.zoomJoinUrl) window.location.href = session.zoomJoinUrl;
+      await api(`/live-sessions/${pendingStartId}/start`, {
+        method: "POST",
+        body: JSON.stringify({ meetingLink: startLink.trim() }),
+      });
+      toast.success("Session started!");
       fetchAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to start session");
     } finally {
       setStartingId(null);
+      setPendingStartId(null);
     }
   };
 
@@ -383,22 +408,11 @@ function TeacherZoomPage() {
       <div className="space-y-8 pb-12">
         <PageHeader
           eyebrow="Teacher Workspace"
-          title="My Zoom Sessions"
-          description="Manage your live Zoom sessions, start classes, and review attendance."
+          title="My Sessions"
+          description="Manage your live sessions, start classes, and review attendance."
         />
 
-        {zoomConnected === false && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              Zoom account is not connected.{' '}
-              <Link to="/zoom-settings" className="underline font-bold hover:text-amber-900 dark:hover:text-amber-200">
-                Connect in Settings
-              </Link>{' '}
-              to start live sessions.
-            </p>
-          </div>
-        )}
+        {/* Zoom connection status removed -- teachers paste meeting links manually */}
 
         <div className="grid grid-cols-4 gap-4">
           <StatCard label="Upcoming" value={upcoming.length} icon={<Clock className="h-4 w-4" />} />
@@ -689,6 +703,66 @@ function TeacherZoomPage() {
                 className="rounded-xl px-6 h-10 text-sm font-bold"
               >
                 Close
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showStartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-border dark:border-white/5"
+          >
+            <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
+              <div>
+                <h3 className="text-xl font-bold font-serif">Start Session</h3>
+                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
+                  Paste your meeting link to start the session live.
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowStartModal(false); setPendingStartId(null); }}
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-8 py-6 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Meeting Link <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="https://zoom.us/j/...  or  https://meet.google.com/..."
+                  value={startLink}
+                  onChange={(e) => setStartLink(e.target.value)}
+                  className="h-12 rounded-xl border-border dark:border-white/10 bg-background text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-8 pb-8 border-t border-border dark:border-white/5 pt-6">
+              <button
+                onClick={() => { setShowStartModal(false); setPendingStartId(null); }}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+              >
+                Cancel
+              </button>
+              <Button
+                onClick={doStartSession}
+                disabled={startingId === pendingStartId}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white gap-2"
+              >
+                {startingId === pendingStartId ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {startingId === pendingStartId ? 'Starting...' : 'Start Session'}
               </Button>
             </div>
           </motion.div>

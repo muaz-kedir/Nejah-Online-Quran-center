@@ -99,24 +99,22 @@ function ClassSessionContent() {
   }, [id, fetchSessionDetails]);
 
   const handleStartMeeting = async () => {
-    // If meeting link is empty, try auto-creating with Zoom
-    const hasLink = meetingLink.trim().length > 0;
-    
-    if (hasLink) {
-      // Validate the manual link
-      if (!meetingLink.startsWith("http://") && !meetingLink.startsWith("https://")) {
-        toast.error("Link must start with http:// or https://");
-        return;
-      }
+    if (!meetingLink.trim()) {
+      toast.error("Please paste your Zoom/Google Meet link above before starting.");
+      return;
+    }
+    if (!meetingLink.startsWith("http://") && !meetingLink.startsWith("https://")) {
+      toast.error("Link must start with http:// or https://");
+      return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await api("/attendance/sessions/start-meeting", {
+      await api("/attendance/sessions/start-meeting", {
         method: "POST",
         body: JSON.stringify({
           classSessionId: id,
-          ...(hasLink ? { meetingLink: meetingLink.trim() } : {}),
+          meetingLink: meetingLink.trim(),
         }),
       });
       
@@ -126,11 +124,6 @@ function ClassSessionContent() {
           ? "Online session is now LIVE! Notifications sent to all assigned students & parents."
           : "Online session is now LIVE! Notifications sent to students & parents.",
       );
-      
-      // Update meeting link from response if auto-created
-      if (!hasLink && response?.meetingLink) {
-        setMeetingLink(response.meetingLink);
-      }
       
       fetchSessionDetails();
     } catch (err: any) {
@@ -367,21 +360,15 @@ function ClassSessionContent() {
                 {userRole === "teacher" ? (
                   <div className="space-y-4">
                     <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
-                      To initialize this class session, you can either:
-                      <br />
-                      • <strong>Auto-create a Zoom meeting</strong> (if you have Zoom connected - just click Start Meeting)
-                      <br />
-                      • <strong>Paste your own meeting link</strong> (Google Meet or Zoom) below
-                      <br />
-                      <br />
+                      Paste your meeting link below (Zoom, Google Meet, or any video platform).
                       Students and parents will be automatically notified when you start.
                     </p>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest ml-1">
-                        Meeting Connection URL (Optional if Zoom is connected)
+                        Meeting Connection URL
                       </label>
                       <Input
-                        placeholder="https://meet.google.com/abc-defg-hij  OR  https://zoom.us/j/... (or leave empty for auto-Zoom)"
+                        placeholder="https://zoom.us/j/...  or  https://meet.google.com/..."
                         value={meetingLink}
                         onChange={(e) => setMeetingLink(e.target.value)}
                         className="h-12 bg-background/50 border-none rounded-xl text-sm"

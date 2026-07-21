@@ -18,12 +18,19 @@ import {
   ArrowRight,
   Timer,
   CheckCircle2,
+  X,
+  Video,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { TemporaryReplacementClassCard } from "@/components/teachers/TemporaryReplacementClassCard";
 import { TeacherPortalLayout, TeacherPageLoader } from "@/components/teachers/TeacherPortalLayout";
 import { TeacherTopbar } from "@/components/teachers/TeacherTopbar";
@@ -64,6 +71,12 @@ function TeacherDashboard() {
     open: false,
     note: null,
   });
+  const [startModal, setStartModal] = useState<{
+    open: boolean;
+    session: TodaySession | null;
+    meetingLink: string;
+    starting: boolean;
+  }>({ open: false, session: null, meetingLink: '', starting: false });
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -81,13 +94,32 @@ function TeacherDashboard() {
       toast.error("Session not ready yet. Please wait a moment and refresh.");
       return;
     }
+    setStartModal({ open: true, session, meetingLink: '', starting: false });
+  };
+
+  const doStartSession = async () => {
+    const { session, meetingLink } = startModal;
+    if (!session?.liveSessionId) return;
+    if (!meetingLink.trim()) {
+      toast.error("Please paste your meeting link before starting.");
+      return;
+    }
+    if (!meetingLink.startsWith('http://') && !meetingLink.startsWith('https://')) {
+      toast.error("Link must start with http:// or https://");
+      return;
+    }
+    setStartModal(prev => ({ ...prev, starting: true }));
     try {
-      if (session.sessionStatus !== "LIVE") {
-        await api(`/live-sessions/${session.liveSessionId}/start`, { method: "POST" });
-      }
+      await api(`/live-sessions/${session.liveSessionId}/start`, {
+        method: "POST",
+        body: JSON.stringify({ meetingLink: meetingLink.trim() }),
+      });
+      toast.success("Session started!");
+      setStartModal({ open: false, session: null, meetingLink: '', starting: false });
       window.location.href = `/classroom/${session.liveSessionId}`;
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to start session");
+      setStartModal(prev => ({ ...prev, starting: false }));
     }
   };
 
@@ -176,14 +208,15 @@ function TeacherDashboard() {
           /* ignore non-critical fetch */
         }
 
-        try {
-          const analyticsRes = await fetch(`${API_BASE}/zoom-analytics/teacher`, {
-            headers: authHeaders(),
-          });
-          if (analyticsRes.ok) setTeacherAnalytics(await analyticsRes.json());
-        } catch {
-          /* ignore non-critical fetch */
-        }
+        // Zoom analytics commented out -- manual meeting links
+        // try {
+        //   const analyticsRes = await fetch(`${API_BASE}/zoom-analytics/teacher`, {
+        //     headers: authHeaders(),
+        //   });
+        //   if (analyticsRes.ok) setTeacherAnalytics(await analyticsRes.json());
+        // } catch {
+        //   /* ignore non-critical fetch */
+        // }
       } catch {
         console.error("Dashboard load failed");
       } finally {
@@ -318,7 +351,7 @@ function TeacherDashboard() {
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-amber-900 mb-1">Temporary Students</h3>
             <p className="text-xs text-amber-700 mb-4">
-              Enter your Zoom link and create the class — the student will be notified to join.
+              Enter your meeting link and create the class — the student will be notified to join.
             </p>
             <ul className="space-y-3">
               {data!.temporaryStudents!.map((r) => (
@@ -717,6 +750,75 @@ function TeacherDashboard() {
 
       {noteModal.open && (
         <NoteModal note={noteModal.note} onClose={closeModal} onSave={handleSaveNote} />
+      )}
+
+      {startModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card dark:bg-nejah-surface rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-border dark:border-white/5"
+          >
+            <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
+              <div>
+                <h3 className="text-xl font-bold font-serif">Start Session</h3>
+                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
+                  Paste your meeting link to start the session live.
+                </p>
+              </div>
+              <button
+                onClick={() => setStartModal({ open: false, session: null, meetingLink: '', starting: false })}
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-8 py-6 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Student
+                </Label>
+                <div className="h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium flex items-center">
+                  {startModal.session?.studentName || 'Student'}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Meeting Link <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="https://zoom.us/j/...  or  https://meet.google.com/..."
+                  value={startModal.meetingLink}
+                  onChange={(e) => setStartModal(prev => ({ ...prev, meetingLink: e.target.value }))}
+                  className="h-12 rounded-xl border-border dark:border-white/10 bg-background text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-8 pb-8 border-t border-border dark:border-white/5 pt-6">
+              <button
+                onClick={() => setStartModal({ open: false, session: null, meetingLink: '', starting: false })}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+              >
+                Cancel
+              </button>
+              <Button
+                onClick={doStartSession}
+                disabled={startModal.starting}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-nejah-sapphire hover:bg-nejah-azure text-white gap-2"
+              >
+                {startModal.starting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {startModal.starting ? 'Starting...' : 'Start Session'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </TeacherPortalLayout>
   );

@@ -41,8 +41,12 @@ export class LiveSessionController {
   ) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
   async create(@Request() req, @Body() dto: CreateLiveSessionDto) {
+    if (req.user.role === UserRole.TEACHER && !dto.teacherId) {
+      const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
+      dto.teacherId = teacher.id;
+    }
     return this.liveSessionService.create(dto);
   }
 
@@ -258,9 +262,9 @@ export class LiveSessionController {
 
   @Post(':id/start')
   @Roles(UserRole.TEACHER)
-  async startSession(@Param('id') id: string, @Request() req) {
+  async startSession(@Param('id') id: string, @Request() req, @Body() body: { meetingLink?: string }) {
     const teacher = await this.teachersService.resolveAuthenticatedTeacher(req.user.id);
-    return this.liveSessionService.startSession(id, teacher.id);
+    return this.liveSessionService.startSession(id, teacher.id, body.meetingLink);
   }
 
   @Post(':id/complete')

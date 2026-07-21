@@ -285,24 +285,27 @@ export class LiveSessionService {
   async startSession(
     sessionId: string,
     teacherId: string,
+    meetingLink?: string,
   ): Promise<{
-    zoomMeetingId: string;
-    startUrl: string;
-    joinUrl: string;
-    zoomStartUrl: string;
-    zoomJoinUrl: string;
+    zoomMeetingId?: string;
+    startUrl?: string;
+    joinUrl?: string;
+    zoomStartUrl?: string;
+    zoomJoinUrl?: string;
+    meetingLink?: string;
   }> {
-    const session = await this.start(teacherId, sessionId);
+    const session = await this.start(teacherId, sessionId, meetingLink);
     return {
-      zoomMeetingId: session.zoomMeetingId!,
-      startUrl: session.zoomStartUrl!,
-      joinUrl: session.zoomJoinUrl!,
-      zoomStartUrl: session.zoomStartUrl!,
-      zoomJoinUrl: session.zoomJoinUrl!,
+      zoomMeetingId: session.zoomMeetingId || undefined,
+      startUrl: session.zoomStartUrl || undefined,
+      joinUrl: session.zoomJoinUrl || undefined,
+      zoomStartUrl: session.zoomStartUrl || undefined,
+      zoomJoinUrl: session.zoomJoinUrl || undefined,
+      meetingLink: session.metadata?.meetingLink || undefined,
     };
   }
 
-  async start(teacherId: string, id: string): Promise<LiveSession> {
+  async start(teacherId: string, id: string, meetingLink?: string): Promise<LiveSession> {
     const session = await this.findById(id);
 
     if (session.teacherId !== teacherId) {
@@ -379,8 +382,14 @@ export class LiveSessionService {
       );
     }
 
-    if (!session.zoomMeetingId) {
-      await this.ensureZoomMeeting(session);
+    if (!session.zoomMeetingId && !session.metadata?.meetingLink) {
+      // Zoom auto-creation removed — teachers paste meeting links manually.
+      // Sessions without a meeting link can still be started; no Zoom meeting will be created.
+      // await this.ensureZoomMeeting(session);
+    }
+
+    if (meetingLink) {
+      session.metadata = { ...(session.metadata || {}), meetingLink };
     }
 
     session.status = LiveSessionStatus.LIVE;
@@ -435,8 +444,9 @@ export class LiveSessionService {
       if (session.teacherId !== options.teacherId) {
         throw new ForbiddenException('You are not assigned to this session');
       }
-      if (!session.zoomMeetingId) {
-        await this.ensureZoomMeeting(session);
+      if (!session.zoomMeetingId && !session.metadata?.meetingLink) {
+        // Zoom auto-creation removed — teachers paste meeting links manually
+        // await this.ensureZoomMeeting(session);
       }
       if (session.status === LiveSessionStatus.SCHEDULED) {
         session.status = LiveSessionStatus.LIVE;

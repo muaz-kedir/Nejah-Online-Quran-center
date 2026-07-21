@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
@@ -91,11 +90,6 @@ import { Route as TeachersIdProfileRouteImport } from './routes/teachers_.$id.pr
 import { Route as TeachersIdStudentsStudentIdRouteImport } from './routes/teachers_.$id.students_.$studentId'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
-const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
-  id: '/zoom-settings',
-  path: '/zoom-settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -554,7 +548,6 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
-  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -637,7 +630,6 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
-  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -720,7 +712,6 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
-  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -805,7 +796,6 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
-    | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
@@ -888,7 +878,6 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
-    | '/zoom-settings'
     | '/class-session/$id'
     | '/classroom/$sessionId'
     | '/live-sessions/analytics'
@@ -970,7 +959,6 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/track-application'
     | '/users'
-    | '/zoom-settings'
     | '/class-session_/$id'
     | '/classroom_/$sessionId'
     | '/live-sessions/analytics'
@@ -1054,7 +1042,6 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
-  ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
   LiveSessionsIdRoute: typeof LiveSessionsIdRoute
@@ -1078,13 +1065,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/zoom-settings': {
-      id: '/zoom-settings'
-      path: '/zoom-settings'
-      fullPath: '/zoom-settings'
-      preLoaderRoute: typeof ZoomSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/users': {
       id: '/users'
       path: '/users'
@@ -1747,7 +1727,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
-  ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
   LiveSessionsIdRoute: LiveSessionsIdRoute,

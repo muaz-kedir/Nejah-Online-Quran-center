@@ -11,6 +11,7 @@ import { TeacherStudentProgressPanel } from '@/components/teachers/TeacherStuden
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
@@ -47,28 +48,37 @@ function TeacherStudentDetailContent() {
   const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoomConnected, setZoomConnected] = useState<boolean | null>(null);
-
   const activeTab: TabValue = tab || 'overview';
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [sessionStart, setSessionStart] = useState(new Date().toISOString().slice(0, 16));
+  const [sessionMeetingLink, setSessionMeetingLink] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
   const [schedulingSession, setSchedulingSession] = useState(false);
 
   const handleScheduleSession = async () => {
+    if (!sessionMeetingLink.trim()) {
+      toast.error('Please paste your meeting link');
+      return;
+    }
+    if (!sessionMeetingLink.startsWith('http://') && !sessionMeetingLink.startsWith('https://')) {
+      toast.error('Link must start with http:// or https://');
+      return;
+    }
     setSchedulingSession(true);
     try {
       const startDate = new Date(sessionStart);
-      await api('/live-sessions/with-zoom', {
+      await api('/live-sessions', {
         method: 'POST',
         body: JSON.stringify({
           studentId,
           scheduledStart: startDate.toISOString(),
           notes: sessionNotes || undefined,
+          metadata: { meetingLink: sessionMeetingLink.trim() },
         }),
       });
-      toast.success('Zoom session created! Student has been notified.');
+      toast.success('Session created! Student has been notified with the meeting link.');
       setShowSessionModal(false);
+      setSessionMeetingLink('');
       setSessionNotes('');
       setSessionStart(new Date().toISOString().slice(0, 16));
     } catch (err: any) {
@@ -97,9 +107,11 @@ function TeacherStudentDetailContent() {
     };
     load();
 
+    /* Zoom OAuth check commented out — teachers paste meeting links manually
     api<{ connected: boolean }>('/zoom/oauth/status')
       .then((res) => { if (!cancelled) setZoomConnected(res.connected); })
       .catch(() => { if (!cancelled) setZoomConnected(false); });
+    */
 
     return () => {
       cancelled = true;
@@ -224,43 +236,23 @@ function TeacherStudentDetailContent() {
                   <Video className="h-5 w-5 text-primary" /> Quick Actions
                 </h2>
               </div>
-              {zoomConnected === false ? (
-                <div className="w-full p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                      <Video className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Zoom Not Connected</p>
-                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                        Connect your Zoom account in{' '}
-                        <Link to="/zoom-settings" className="underline font-bold hover:text-amber-800 dark:hover:text-amber-200">
-                          Settings
-                        </Link>{' '}
-                        before starting sessions.
-                      </p>
-                    </div>
+              <button
+                onClick={() => setShowSessionModal(true)}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-nejah-sapphire/10 to-nejah-azure/5 dark:from-nejah-sapphire/20 dark:to-nejah-azure/10 border border-nejah-sapphire/20 hover:border-nejah-sapphire/40 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
+                    <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-nejah-sapphire text-foreground">Schedule a Session</p>
+                    <p className="text-[10px] text-nejah-slate-blue font-medium">
+                      Create a live session with your meeting link — student will be notified
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setShowSessionModal(true)}
-                  className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-nejah-sapphire/10 to-nejah-azure/5 dark:from-nejah-sapphire/20 dark:to-nejah-azure/10 border border-nejah-sapphire/20 hover:border-nejah-sapphire/40 transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
-                      <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-nejah-sapphire text-foreground">Start a Zoom Session</p>
-                      <p className="text-[10px] text-nejah-slate-blue font-medium">
-                        Schedule a live session — student will be notified in real-time
-                      </p>
-                    </div>
-                  </div>
-                  <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              )}
+                <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             </div>
 
             <div
@@ -320,7 +312,7 @@ function TeacherStudentDetailContent() {
         )}
       </div>
 
-      {/* Schedule Zoom Session Modal */}
+      {/* Schedule Session Modal */}
       {showSessionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <motion.div
@@ -330,9 +322,9 @@ function TeacherStudentDetailContent() {
           >
             <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
               <div>
-                <h3 className="text-xl font-bold font-serif">Start Zoom Session</h3>
+                <h3 className="text-xl font-bold font-serif">Schedule a Session</h3>
                 <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
-                  A Zoom meeting will be created and {student?.fullName || 'the student'} will be notified.
+                  {student?.fullName || 'The student'} will be notified with the meeting link.
                 </p>
               </div>
               <button
@@ -355,6 +347,18 @@ function TeacherStudentDetailContent() {
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                  Meeting Link <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="https://zoom.us/j/...  or  https://meet.google.com/..."
+                  value={sessionMeetingLink}
+                  onChange={(e) => setSessionMeetingLink(e.target.value)}
+                  className="h-12 rounded-xl border-border dark:border-white/10 bg-background text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
                   Start Date & Time <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-2 items-center">
@@ -373,7 +377,7 @@ function TeacherStudentDetailContent() {
                   </button>
                 </div>
                 <p className="text-[10px] text-nejah-slate-blue font-medium mt-1">
-                  Duration is auto-set to 60 minutes. Ends when you click "End Session".
+                  Duration is auto-set to 60 minutes.
                 </p>
               </div>
 

@@ -106,11 +106,15 @@ function LiveSessionsPage() {
 
   const fetchKPIs = async () => {
     try {
-      const [analyticsData, statsData] = await Promise.all([
-        api<any>('/zoom-analytics/dashboard').catch(() => null),
+      // Zoom analytics commented out -- manual meeting links
+      // const [analyticsData, statsData] = await Promise.all([
+      //   api<any>('/zoom-analytics/dashboard').catch(() => null),
+      //   api<any>('/live-sessions/stats').catch(() => null),
+      // ]);
+      // setAnalytics(analyticsData);
+      const [statsData] = await Promise.all([
         api<any>('/live-sessions/stats').catch(() => null),
       ]);
-      setAnalytics(analyticsData);
       setStats(statsData);
     } catch {}
   };
@@ -148,6 +152,8 @@ function LiveSessionsPage() {
       toast.success('Session started!');
       if (res?.zoomStartUrl || res?.startUrl) {
         window.open(res.zoomStartUrl || res.startUrl, '_blank');
+      } else if (res?.meetingLink) {
+        window.open(res.meetingLink, '_blank');
       }
       fetchAll();
     } catch (err: any) {
@@ -251,7 +257,7 @@ function LiveSessionsPage() {
         <PageHeader
           eyebrow="Session Center"
           title="Live Sessions"
-          description="Monitor and manage all live Zoom sessions across the platform."
+          description="Monitor and manage all live sessions across the platform."
           actions={
             <Button onClick={fetchAll} variant="outline" className="gap-2 rounded-xl h-11" disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -575,7 +581,7 @@ function LiveSessionsPage() {
               Cancel Session
             </DialogTitle>
             <DialogDescription className="text-xs text-nejah-slate-blue">
-              This will cancel the session, delete the Zoom meeting, and notify the student. This action cannot be undone.
+              This will cancel the session and notify the student. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 pt-2">

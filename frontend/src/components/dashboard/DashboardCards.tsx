@@ -24,11 +24,17 @@ export const DashboardCards = memo(function DashboardCards() {
         const headers = { Authorization: `Bearer ${token}` };
         const base = API_BASE;
 
-        const [studentsRes, teachersRes, statsRes, analyticsRes] = await Promise.all([
+        // Zoom analytics commented out -- manual meeting links
+        // const [studentsRes, teachersRes, statsRes, analyticsRes] = await Promise.all([
+        //   fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/live-sessions/stats`, { headers, signal: controller.signal }),
+        //   fetch(`${base}/zoom-analytics/dashboard`, { headers, signal: controller.signal }),
+        // ]);
+        const [studentsRes, teachersRes, statsRes] = await Promise.all([
           fetch(`${base}/students?limit=1`, { headers, signal: controller.signal }),
           fetch(`${base}/teachers?limit=1`, { headers, signal: controller.signal }),
           fetch(`${base}/live-sessions/stats`, { headers, signal: controller.signal }),
-          fetch(`${base}/zoom-analytics/dashboard`, { headers, signal: controller.signal }),
         ]);
 
         let totalStudents = 0;
@@ -51,13 +57,14 @@ export const DashboardCards = memo(function DashboardCards() {
           activeClasses = data?.live || 0;
           completedSessions = data?.completed || 0;
         }
-        if (analyticsRes.ok) {
-          const data = await analyticsRes.json();
-          activeClasses = activeClasses || data?.liveSessions || 0;
-          attendanceRate = data?.attendanceRate ?? 0;
-          avgSessionDuration = data?.averageSessionDuration || 0;
-          completedSessions = completedSessions || data?.completedSessions || 0;
-        }
+        // Zoom analytics block commented out
+        // if (analyticsRes.ok) {
+        //   const data = await analyticsRes.json();
+        //   activeClasses = activeClasses || data?.liveSessions || 0;
+        //   attendanceRate = data?.attendanceRate ?? 0;
+        //   avgSessionDuration = data?.averageSessionDuration || 0;
+        //   completedSessions = completedSessions || data?.completedSessions || 0;
+        // }
 
         setStats({
           totalStudents,

@@ -187,7 +187,7 @@ function ParentSessionsPage() {
         <PageHeader
           eyebrow="Parent Portal"
           title={`My Children's Sessions${activeSessions > 0 ? ' 🔴' : ''}`}
-          description={`View all Zoom sessions, attendance records, and class details for your children${activeSessions > 0 ? `. ${activeSessions} session${activeSessions > 1 ? 's are' : ' is'} live now!` : '.'}`}
+          description={`View all sessions, attendance records, and class details for your children${activeSessions > 0 ? `. ${activeSessions} session${activeSessions > 1 ? 's are' : ' is'} live now!` : '.'}`}
           actions={
             <div className="flex items-center gap-3">
               {children.length > 1 && (
@@ -257,7 +257,7 @@ function ParentSessionsPage() {
                     <Video className="h-8 w-8 text-nejah-slate-blue" />
                   </div>
                   <p className="text-sm font-bold text-nejah-slate-blue">No sessions found</p>
-                  <p className="text-xs text-nejah-slate-blue mt-1">Your children's Zoom sessions will appear here</p>
+                  <p className="text-xs text-nejah-slate-blue mt-1">Your children's sessions will appear here</p>
                 </div>
               ) : (
                 <GlassPanel className="overflow-hidden">

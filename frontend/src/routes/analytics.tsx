@@ -14,17 +14,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 
 export const Route = createFileRoute('/analytics')({
   component: AnalyticsPage,
   beforeLoad: () => requireAuth(['super_admin']),
 });
-
-const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
 
 function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
@@ -43,7 +38,6 @@ function AnalyticsPage() {
   });
 
   const [enrollmentTrends, setEnrollmentTrends] = useState<any[]>([]);
-  const [sessionDistribution, setSessionDistribution] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -54,19 +48,11 @@ function AnalyticsPage() {
           studentsStats,
           teachersStats,
           schedulesData,
-          zoomDashboard,
           studentsList,
         ] = await Promise.all([
           api('/students/stats').catch(() => ({ total: 0, active: 0, newStudentsThisMonth: 0, averageAttendance: 0 })),
           api('/teachers/stats').catch(() => ({ total: 0, active: 0, pending: 0 })),
           api('/schedules').catch(() => []),
-          api('/zoom-analytics/dashboard').catch(() => ({
-            attendanceRate: 0,
-            completedSessions: 0,
-            cancelledSessions: 0,
-            liveSessions: 0,
-            noShowSessions: 0,
-          })),
           api('/students?limit=1000').catch(() => ({ data: [] })),
         ]);
 
@@ -113,14 +99,7 @@ function AnalyticsPage() {
           }));
         }
 
-        // 3. Format session distribution
-        const dist = [
-          { name: 'Completed', value: zoomDashboard.completedSessions || 0 },
-          { name: 'Cancelled', value: zoomDashboard.cancelledSessions || 0 },
-          { name: 'Live Now', value: zoomDashboard.liveSessions || 0 },
-          { name: 'No Show', value: zoomDashboard.noShowSessions || 0 },
-        ];
-
+        // 3. Session distribution from Zoom analytics removed — manual meeting links
         // 4. Calculate enrollment and metrics changes/trends
         const totalStuds = studentsStats.total || 0;
         const newStuds = studentsStats.newStudentsThisMonth || 0;
@@ -142,12 +121,12 @@ function AnalyticsPage() {
           teachersChange: teacherPending > 0 ? `${teacherPending} pending` : 'Full Capacity',
           classesToday: todayClassesCount,
           classesChange: `${todayClassesCount > 0 ? 'Live rooms ready' : 'No classes today'}`,
-          avgAttendance: zoomDashboard.attendanceRate || studentsStats.averageAttendance || 0,
-          attendanceChange: zoomDashboard.attendanceRate ? '+1.5% vs average' : 'N/A',
+          avgAttendance: studentsStats.averageAttendance || 0,
+          attendanceChange: 'N/A',
         });
 
         setEnrollmentTrends(trends);
-        setSessionDistribution(dist);
+        // Session distribution from Zoom analytics removed
       } catch (error) {
         console.error('Error loading dashboard analytics:', error);
       } finally {
@@ -251,59 +230,11 @@ function AnalyticsPage() {
                 </div>
               </GlassPanel>
 
+              {/* Zoom Sessions Distribution section removed — manual meeting links
               <GlassPanel className="p-6">
-                <h3 className="mb-6 text-sm font-bold text-foreground tracking-wide uppercase">Zoom Sessions Distribution</h3>
-                <div className="h-72 w-full flex flex-col md:flex-row items-center justify-center gap-4">
-                  {sessionDistribution.every((s) => s.value === 0) ? (
-                    <div className="text-center text-nejah-slate-blue py-8">
-                      <Clock className="mx-auto mb-2 h-12 w-12 opacity-30" />
-                      <p className="text-sm">No Zoom sessions recorded yet</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="h-56 w-56 flex-shrink-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={sessionDistribution.filter((s) => s.value > 0)}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={4}
-                              dataKey="value"
-                            >
-                              {sessionDistribution.filter((s) => s.value > 0).map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '12px',
-                                color: '#fff',
-                              }}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="flex flex-col gap-3 min-w-[150px]">
-                        {sessionDistribution.map((item, idx) => (
-                          <div key={item.name} className="flex items-center gap-2">
-                            <span
-                              className="h-3 w-3 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                            />
-                            <span className="text-xs text-nejah-slate-blue font-medium">{item.name}:</span>
-                            <span className="text-xs font-bold font-mono text-foreground">{item.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                ...
               </GlassPanel>
+              */}
             </div>
           </>
         )}
