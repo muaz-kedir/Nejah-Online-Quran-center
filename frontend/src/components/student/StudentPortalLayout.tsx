@@ -23,6 +23,9 @@ import {
 import { cn } from "@/lib/utils";
 import { studentPaths, api } from "@/lib/student-portal";
 import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ProfileDialog } from "@/components/student/dialogs/ProfileDialog";
+import { ChangePasswordDialog } from "@/components/student/dialogs/ChangePasswordDialog";
 import { TelegramOnboardingOverlay } from "@/components/student/TelegramOnboardingOverlay";
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
