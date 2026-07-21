@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Send, CheckCircle2, Loader2, AlertCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiUrl, apiHeaders } from "@/lib/api";
 
@@ -77,6 +78,7 @@ function LinkingSteps({ botUsername, code }: { botUsername: string; code: string
 }
 
 export function TelegramOnboardingOverlay() {
+  const navigate = useNavigate();
   const [linked, setLinked] = useState<boolean | null>(null);
   const [linkedUsername, setLinkedUsername] = useState<string | undefined>(undefined);
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -86,6 +88,14 @@ export function TelegramOnboardingOverlay() {
   const [showSuccess, setShowSuccess] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const overlayPollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  const handleLogout = () => {
+    navigate({ to: "/login", replace: true });
+    setTimeout(() => {
+      localStorage.clear();
+      window.dispatchEvent(new Event("auth-changed"));
+    }, 0);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -371,6 +381,24 @@ export function TelegramOnboardingOverlay() {
               {generating ? "Generating..." : "Connect Telegram"}
             </Button>
           )}
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full h-11 rounded-xl border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 font-semibold gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
     </div>
