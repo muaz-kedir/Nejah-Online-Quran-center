@@ -679,28 +679,35 @@ function TeacherDetailModal({ teacher, onClose, userRole, onEdit, onRefresh }: {
 }
 
 function TeachersPage() {
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
+  const [userRole, setUserRole] = useState('');
   const queryClient = useQueryClient();
   const [meta, setMeta] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole') || '');
+  }, []);
+
   const { data: teachersData, isLoading: loading } = useApiQuery<{ data: any[]; meta: any }>({
     queryKey: ['teachers', meta.page, search, status],
     path: `/teachers?page=${meta.page}&limit=${meta.limit}${search ? `&search=${encodeURIComponent(search)}` : ''}${status !== 'all' ? `&status=${encodeURIComponent(status)}` : ''}`,
     refetchInterval: 30_000,
   });
 
-  const { data: stats } = useApiQuery<{ total: number; active: number; onLeave: number; pending: number }>({
+  const { data: stats = { total: 0, active: 0, onLeave: 0, pending: 0 } } = useApiQuery<{ total: number; active: number; onLeave: number; pending: number }>({
     queryKey: ['teachers-stats'],
     path: '/teachers/stats',
     refetchInterval: 30_000,
   });
 
   const teachers = teachersData?.data || [];
-  if (teachersData?.meta) {
-    setMeta(prev => ({ ...prev, ...teachersData.meta }));
-  }
+
+  useEffect(() => {
+    if (teachersData?.meta) {
+      setMeta(prev => ({ ...prev, ...teachersData.meta }));
+    }
+  }, [teachersData]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any | null>(null);

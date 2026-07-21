@@ -8,9 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ZoomSettingsRouteImport } from './routes/zoom-settings'
 import { Route as ZoomGuideRouteImport } from './routes/zoom-guide'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TrackApplicationRouteImport } from './routes/track-application'
@@ -99,9 +98,7 @@ import { Route as TeachersIdProfileRouteImport } from './routes/teachers_.$id.pr
 import { Route as TeachersIdStudentsStudentIdRouteImport } from './routes/teachers_.$id.students_.$studentId'
 import { Route as TeachersIdScheduleDayRouteImport } from './routes/teachers_.$id.schedule.$day'
 
-const ZoomSettingsLazyRouteImport = createFileRoute('/zoom-settings')()
-
-const ZoomSettingsLazyRoute = ZoomSettingsLazyRouteImport.update({
+const ZoomSettingsRoute = ZoomSettingsRouteImport.update({
   id: '/zoom-settings',
   path: '/zoom-settings',
   getParentRoute: () => rootRouteImport,
@@ -720,7 +717,7 @@ export interface FileRoutesByFullPath {
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-guide': typeof ZoomGuideRoute
-  '/zoom-settings': typeof ZoomSettingsLazyRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -810,7 +807,7 @@ export interface FileRoutesByTo {
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-guide': typeof ZoomGuideRoute
-  '/zoom-settings': typeof ZoomSettingsLazyRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session/$id': typeof ClassSessionIdRoute
   '/classroom/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -900,7 +897,7 @@ export interface FileRoutesById {
   '/track-application': typeof TrackApplicationRoute
   '/users': typeof UsersRoute
   '/zoom-guide': typeof ZoomGuideRoute
-  '/zoom-settings': typeof ZoomSettingsLazyRoute
+  '/zoom-settings': typeof ZoomSettingsRoute
   '/class-session_/$id': typeof ClassSessionIdRoute
   '/classroom_/$sessionId': typeof ClassroomSessionIdRoute
   '/live-sessions/analytics': typeof LiveSessionsAnalyticsRoute
@@ -1262,7 +1259,7 @@ export interface RootRouteChildren {
   TrackApplicationRoute: typeof TrackApplicationRoute
   UsersRoute: typeof UsersRoute
   ZoomGuideRoute: typeof ZoomGuideRoute
-  ZoomSettingsLazyRoute: typeof ZoomSettingsLazyRoute
+  ZoomSettingsRoute: typeof ZoomSettingsRoute
   ClassSessionIdRoute: typeof ClassSessionIdRoute
   ClassroomSessionIdRoute: typeof ClassroomSessionIdRoute
   LiveSessionsIdRoute: typeof LiveSessionsIdRoute
@@ -1292,7 +1289,7 @@ declare module '@tanstack/react-router' {
       id: '/zoom-settings'
       path: '/zoom-settings'
       fullPath: '/zoom-settings'
-      preLoaderRoute: typeof ZoomSettingsLazyRouteImport
+      preLoaderRoute: typeof ZoomSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/zoom-guide': {
@@ -2011,7 +2008,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackApplicationRoute: TrackApplicationRoute,
   UsersRoute: UsersRoute,
   ZoomGuideRoute: ZoomGuideRoute,
-  ZoomSettingsLazyRoute: ZoomSettingsLazyRoute,
+  ZoomSettingsRoute: ZoomSettingsRoute,
   ClassSessionIdRoute: ClassSessionIdRoute,
   ClassroomSessionIdRoute: ClassroomSessionIdRoute,
   LiveSessionsIdRoute: LiveSessionsIdRoute,
