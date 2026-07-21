@@ -112,14 +112,30 @@ function SetupRequiredPage() {
       }
       try {
         const result = await api<OnboardingStatus>('/onboarding/status');
+        setStatus(result);
         if (result.telegramConnected) {
           clearInterval(interval);
-          setStatus(result);
           setLinkInfo(null);
           toast.success('Telegram connected!');
+          if (result.onboardingCompleted) {
+            navigateToDashboard();
+          }
         }
       } catch {}
     }, 3000);
+  };
+
+  const navigateToDashboard = () => {
+    const role = localStorage.getItem('userRole');
+    const dashboards: Record<string, string> = {
+      student: '/student_dashboard',
+      parent: '/parent_dashboard',
+      teacher: '/teacher_dashboard',
+      super_admin: '/dashboard',
+      finance_manager: '/finance_dashboard',
+      qirat_manager: '/qirat_dashboard',
+    };
+    setTimeout(() => navigate({ to: dashboards[role || ''] || '/login' }), 1500);
   };
 
   const copyCode = () => {

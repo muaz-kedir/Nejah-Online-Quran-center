@@ -7,6 +7,7 @@ import axios from 'axios';
 import { randomBytes } from 'crypto';
 import { TelegramSubscription } from './entities/telegram-subscription.entity';
 import { TelegramLinkingCode } from './entities/telegram-linking-code.entity';
+import { User } from '../users/entities/user.entity';
 
 export interface TelegramMessage {
   text: string;
@@ -30,6 +31,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     private readonly subscriptionRepository: Repository<TelegramSubscription>,
     @InjectRepository(TelegramLinkingCode)
     private readonly linkingCodeRepository: Repository<TelegramLinkingCode>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async onModuleInit() {
@@ -136,9 +139,14 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleLinkCode(chatId: number, code: string, username: string | null) {
-    const linkingCode = await this.linkingCodeRepository.findOne({ where: { code, consumed: false } });
+    const linkingCode = await this.linkingCodeRepository.findOne({ where: { code } });
     if (!linkingCode) {
       await this.sendMessage(chatId, 'Invalid or expired code. Please generate a new code from your profile settings.');
+      return;
+    }
+
+    if (linkingCode.consumed) {
+      await this.sendMessage(chatId, 'This code has already been used. Your Telegram account should already be linked! If not, please generate a new code from your profile settings.');
       return;
     }
 
@@ -168,6 +176,19 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     linkingCode.consumed = true;
     await this.linkingCodeRepository.save(linkingCode);
+
+    await this.userRepository.update(linkingCode.userId, {
+      telegramConnected: true,
+      telegramChatId: `${chatId}`,
+      telegramUsername: username,
+    });
+
+    const user = await this.userRepository.findOne({ where: { id: linkingCode.userId } });
+    if (user && user.notificationEnabled && !user.onboardingCompleted) {
+      user.onboardingCompleted = true;
+      await this.userRepository.save(user);
+      this.logger.log(`Onboarding auto-completed for user ${user.id} after Telegram link`);
+    }
 
     await this.sendMessage(
       chatId,
