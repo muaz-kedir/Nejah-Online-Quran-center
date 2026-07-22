@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
   Search, Filter, ChevronLeft, ChevronRight, FileCheck, Clock, CheckCircle2, XCircle, AlertCircle,
@@ -81,15 +81,16 @@ function TeacherApplicationsContent() {
     path: `/teacher-applications/settings`,
   });
 
-  // Apply settings when loaded
-  if (settingsData && !isApplicationsOpen && settingsData.isApplicationsOpen !== undefined) {
-    setIsApplicationsOpen(settingsData.isApplicationsOpen);
-    setAnnouncementText({
-      en: settingsData.announcementText?.en || '',
-      ar: settingsData.announcementText?.ar || '',
-      am: settingsData.announcementText?.am || '',
-    });
-  }
+  useEffect(() => {
+    if (settingsData && settingsData.isApplicationsOpen !== undefined) {
+      setIsApplicationsOpen(settingsData.isApplicationsOpen);
+      setAnnouncementText({
+        en: settingsData.announcementText?.en || '',
+        ar: settingsData.announcementText?.ar || '',
+        am: settingsData.announcementText?.am || '',
+      });
+    }
+  }, [settingsData]);
 
   const toggleApplicationsOpen = async (open?: boolean) => {
     setIsToggling(true);
@@ -150,7 +151,9 @@ function TeacherApplicationsContent() {
     refetchInterval: 30_000,
   });
 
-  if (statsResult) setStats(statsResult);
+  useEffect(() => {
+    if (statsResult) setStats(statsResult);
+  }, [statsResult]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
