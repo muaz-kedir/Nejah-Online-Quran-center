@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { LiveSession } from './entities/live-session.entity';
@@ -54,6 +54,7 @@ export class LiveSessionAttendanceReportService {
     private readonly attendanceIntelligence: AttendanceIntelligenceService,
     private readonly reconciliationService: AttendanceReconciliationService,
     private readonly sessionAttendanceService: SessionAttendanceService,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     private readonly liveSessionLookup: LiveSessionLookupService,
   ) {}

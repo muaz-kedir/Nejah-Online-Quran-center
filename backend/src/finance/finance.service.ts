@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, In, Like } from 'typeorm';
 import { StudentFeeAccount } from './entities/student-fee-account.entity';
@@ -62,6 +62,7 @@ export class FinanceService {
     @InjectRepository(TeacherReplacement) private replacementRepo: Repository<TeacherReplacement>,
     @InjectRepository(FinanceExpense) private expenseRepo: Repository<FinanceExpense>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 
