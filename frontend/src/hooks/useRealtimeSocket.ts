@@ -28,6 +28,7 @@ const DOMAIN_EVENTS: Record<string, string[]> = {
 };
 
 let globalSocket: Socket | null = null;
+let globalSocketToken: string | null = null;
 let globalRefCount = 0;
 
 function getGlobalSocket(token: string): Socket {
@@ -40,6 +41,11 @@ function getGlobalSocket(token: string): Socket {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 60000,
     });
+    globalSocketToken = token;
+  } else if (token !== globalSocketToken) {
+    globalSocket.auth = { token };
+    globalSocket.disconnect().connect();
+    globalSocketToken = token;
   }
   return globalSocket;
 }
@@ -92,8 +98,6 @@ export function useRealtimeSocket() {
       globalRefCount--;
       if (globalRefCount <= 0 && globalSocket) {
         globalSocket.removeAllListeners();
-        globalSocket.disconnect();
-        globalSocket = null;
       }
       socketRef.current = null;
     };

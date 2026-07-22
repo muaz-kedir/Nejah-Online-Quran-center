@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -62,9 +62,12 @@ function TeacherReplacementsPage() {
   });
 
   const replacements = res?.data || [];
-  if (res?.meta) {
-    setMeta(prev => ({ ...prev, ...res.meta }));
-  }
+
+  useEffect(() => {
+    if (res?.meta) {
+      setMeta(prev => ({ ...prev, ...res.meta }));
+    }
+  }, [res?.meta]);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['teacher-replacements'] });

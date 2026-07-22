@@ -326,15 +326,17 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     language: "English",
   });
 
-  if (data?.parent && profileForm.name === "" && data.parent.name) {
-    setProfileForm({
-      name: data.parent.name || "",
-      email: data.parent.email || "",
-      phone: "+251 912 345678",
-      address: "Addis Ababa, Ethiopia",
-      language: "English",
-    });
-  }
+  useEffect(() => {
+    if (data?.parent && profileForm.name === "" && data.parent.name) {
+      setProfileForm({
+        name: data.parent.name || "",
+        email: data.parent.email || "",
+        phone: "+251 912 345678",
+        address: "Addis Ababa, Ethiopia",
+        language: "English",
+      });
+    }
+  }, [data?.parent]);
 
   useEffect(() => {
     if (!selectedChildId && data?.children?.length > 0) {
