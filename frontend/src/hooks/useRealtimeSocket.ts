@@ -27,6 +27,23 @@ const DOMAIN_EVENTS: Record<string, string[]> = {
   "application:status_changed": ["teacher-applications"],
 };
 
+let globalSocket: Socket | null = null;
+let globalRefCount = 0;
+
+function getGlobalSocket(token: string): Socket {
+  if (!globalSocket) {
+    globalSocket = io(`${WS_URL}/ws`, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 60000,
+    });
+  }
+  return globalSocket;
+}
+
 export function useRealtimeSocket() {
   const socketRef = useRef<Socket | null>(null);
   const queryClient = useContext(QueryClientContext);
@@ -36,22 +53,19 @@ export function useRealtimeSocket() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const socket = io(`${WS_URL}/ws`, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 20,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 60000,
-    });
+    const socket = getGlobalSocket(token);
+    globalRefCount++;
+    socketRef.current = socket;
 
-    socket.on("connect", () => console.log("[WS Realtime] Connected"));
-    socket.on("connected", (data: any) =>
-      console.log("[WS Realtime] Authenticated:", data.userId)
-    );
+    const onConnect = () => console.log("[WS Realtime] Connected");
+    const onConnected = (data: any) =>
+      console.log("[WS Realtime] Authenticated:", data.userId);
 
-    Object.entries(DOMAIN_EVENTS).forEach(([event, queryPrefixes]) => {
-      socket.on(event, () => {
+    socket.on("connect", onConnect);
+    socket.on("connected", onConnected);
+
+    const domainHandlers = Object.entries(DOMAIN_EVENTS).map(([event, queryPrefixes]) => {
+      const handler = () => {
         console.log(`[WS Realtime] ${event} — invalidating:`, queryPrefixes);
         queryPrefixes.forEach((prefix) => {
           queryClient.invalidateQueries({ predicate: (q) => {
@@ -59,16 +73,28 @@ export function useRealtimeSocket() {
             return typeof key === "string" && key.startsWith(prefix);
           }});
         });
-      });
+      };
+      socket.on(event, handler);
+      return [event, handler] as const;
     });
 
-    socket.on("error", (err) => console.error("[WS Realtime] Error:", err.message));
-
-    socketRef.current = socket;
+    const onError = (err: Error) => console.error("[WS Realtime] Error:", err.message);
+    socket.on("error", onError);
 
     return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
+      socket.off("connect", onConnect);
+      socket.off("connected", onConnected);
+      domainHandlers.forEach(([event, handler]) => {
+        socket.off(event, handler);
+      });
+      socket.off("error", onError);
+
+      globalRefCount--;
+      if (globalRefCount <= 0 && globalSocket) {
+        globalSocket.removeAllListeners();
+        globalSocket.disconnect();
+        globalSocket = null;
+      }
       socketRef.current = null;
     };
   }, [queryClient]);

@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { apiUrl } from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createLazyFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
   Search,
@@ -336,9 +336,11 @@ function ParentDashboard({ initialTab }: { initialTab?: string }) {
     });
   }
 
-  if (!selectedChildId && data?.children?.length > 0) {
-    setSelectedChildId(data.children[0].id);
-  }
+  useEffect(() => {
+    if (!selectedChildId && data?.children?.length > 0) {
+      setSelectedChildId(data.children[0].id);
+    }
+  }, [selectedChildId, data?.children]);
 
   const { data: learningTime } = useApiQuery<any>({
     queryKey: ["learning-time", selectedChildId],

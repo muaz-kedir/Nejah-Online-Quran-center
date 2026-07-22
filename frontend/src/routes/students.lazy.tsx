@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { API_BASE, apiUrl } from "@/lib/api";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createLazyFileRoute} from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -125,9 +125,12 @@ function StudentsPage() {
   const students = studentsData?.data || [];
   const teachers = Array.isArray(teachersData) ? teachersData : teachersData?.data || [];
   const parents = Array.isArray(parentsData) ? parentsData : parentsData?.data || [];
-  if (studentsData?.meta) {
-    setMeta(prev => ({ ...prev, ...studentsData.meta }));
-  }
+
+  useEffect(() => {
+    if (studentsData?.meta) {
+      setMeta(prev => ({ ...prev, ...studentsData.meta }));
+    }
+  }, [studentsData?.meta]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -510,26 +513,26 @@ function StudentsPage() {
         <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-4">
           <BentoStatCard
             label="Total Students"
-            value={stats.total}
+            value={stats?.total ?? 0}
             sub="All registered students"
             icon={<Users className="h-5 w-5" />}
             highlight
           />
           <BentoStatCard
             label="Active Students"
-            value={stats.active}
+            value={stats?.active ?? 0}
             icon={<Activity className="h-5 w-5" />}
-            progress={(stats.active / (stats.total || 1)) * 100}
+            progress={((stats?.active ?? 0) / (stats?.total ?? 1)) * 100}
           />
           <BentoStatCard
             label="Inactive Students"
-            value={stats.inactive}
+            value={stats?.inactive ?? 0}
             icon={<TrendingUp className="h-5 w-5" />}
-            progress={(stats.inactive / (stats.total || 1)) * 100}
+            progress={((stats?.inactive ?? 0) / (stats?.total ?? 1)) * 100}
           />
           <BentoStatCard
             label="New This Month"
-            value={`+${stats.newStudentsThisMonth}`}
+            value={`+${stats?.newStudentsThisMonth ?? 0}`}
             sub="Recently enrolled"
             icon={<Calendar className="h-5 w-5" />}
           />

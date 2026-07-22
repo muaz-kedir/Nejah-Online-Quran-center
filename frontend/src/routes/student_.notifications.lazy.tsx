@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -140,16 +140,16 @@ function StudentNotificationsPage() {
   const displayedItems = items.filter((n) => matchesTypeFilter(n.channel, typeFilter));
 
   const summaryCards = [
-    { label: "Total", value: summary.total, color: "text-foreground", bg: "bg-card/80" },
-    { label: "Unread", value: summary.unread, color: "text-nejah-electric", bg: "bg-nejah-electric/8" },
-    { label: "Read", value: summary.read, color: "text-muted-foreground dark:text-gray-200", bg: "bg-muted/50" },
-    { label: "Today", value: summary.today, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/20" },
+    { label: "Total", value: summary?.total ?? 0, color: "text-foreground", bg: "bg-card/80" },
+    { label: "Unread", value: summary?.unread ?? 0, color: "text-nejah-electric", bg: "bg-nejah-electric/8" },
+    { label: "Read", value: summary?.read ?? 0, color: "text-muted-foreground dark:text-gray-200", bg: "bg-muted/50" },
+    { label: "Today", value: summary?.today ?? 0, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/20" },
   ];
 
   if (loading) return <StudentPageLoader />;
 
   return (
-    <StudentPortalLayout activePath={studentPaths.notifications} unreadNotifications={summary.unread}>
+    <StudentPortalLayout activePath={studentPaths.notifications} unreadNotifications={summary?.unread ?? 0}>
       <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-5xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -160,9 +160,9 @@ function StudentNotificationsPage() {
             <h1 className="text-4xl font-extrabold text-foreground font-serif flex items-center gap-3">
               <Bell className="h-8 w-8 text-nejah-electric" />
               Notifications
-              {summary.unread > 0 && (
+              {(summary?.unread ?? 0) > 0 && (
                 <Badge className="bg-red-500 text-white border-none text-xs font-bold px-3 py-1">
-                  {summary.unread} new
+                  {summary?.unread ?? 0} new
                 </Badge>
               )}
             </h1>

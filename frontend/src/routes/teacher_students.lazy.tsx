@@ -2,7 +2,7 @@
 // @ts-nocheck
 // Lazy component (code-split). Do not edit.
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { TeacherLayout } from "@/components/dashboard/TeacherLayout";
 import { requireAuth } from "@/lib/auth";
@@ -56,9 +56,12 @@ function TeacherStudentsPage() {
   });
 
   const students = res?.data || [];
-  if (res?.meta) {
-    setMeta(prev => ({ ...prev, ...res.meta }));
-  }
+
+  useEffect(() => {
+    if (res?.meta) {
+      setMeta(prev => ({ ...prev, ...res.meta }));
+    }
+  }, [res?.meta]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
