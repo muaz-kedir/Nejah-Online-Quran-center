@@ -76,7 +76,7 @@ import { EncryptionService } from '../common/encryption.service';
       }),
       inject: [ConfigService],
     }),
-    NotificationsModule,
+    forwardRef(() => NotificationsModule),
     forwardRef(() => TeachersModule),
   ],
   controllers: [
