@@ -3,7 +3,7 @@
 // Lazy component (code-split). Do not edit.
 
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
   ArrowLeft, CheckCircle2, XCircle, AlertCircle, Clock, Download, User,
@@ -85,9 +85,11 @@ function ApplicationDetailContent() {
     path: `/teacher-applications/${id}`,
   });
 
-  if (app && !adminNotes && app.adminNotes) {
-    setAdminNotes(app.adminNotes || '');
-  }
+  useEffect(() => {
+    if (app?.adminNotes) {
+      setAdminNotes(app.adminNotes);
+    }
+  }, [app?.adminNotes]);
 
   const handleReview = async (action: string, extra: Record<string, string> = {}) => {
     setActionLoading(true);

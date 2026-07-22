@@ -594,13 +594,40 @@ export class NotificationsService {
         warnings.push('Some in-app notifications could not be delivered');
       });
 
-      await this.telegramService.sendToUsers(studentParentIds,
-        `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n🔗 Meeting: ${meetingLink || joinUrl}\n\nTap "Join Class" to mark attendance and open the meeting room.`,
-        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Class', callback_data: `join:${sessionId}` }]] } },
-      ).catch((err) => {
-        this.logger.error('Failed to send Telegram notifications to students', err);
-        warnings.push('Some Telegram messages could not be delivered');
-      });
+      const joinUrl_ = meetingLink || joinUrl;
+
+      const studentIds = Array.from(studentUserIds);
+      const parentIdsArr = Array.from(parentUserIds);
+
+      if (studentIds.length > 0) {
+        await this.telegramService.sendToUsers(studentIds,
+          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n\n✅ Tap "Mark Attendance" to record your presence, then tap "Join Meeting" to enter the class.`,
+          {
+            replyMarkup: {
+              inline_keyboard: [
+                [{ text: '✅ Mark Attendance', callback_data: `join:${sessionId}` }],
+                ...(joinUrl_ ? [[{ text: '▶ Join Meeting', url: joinUrl_ }]] : []),
+              ],
+            },
+          },
+        ).catch((err) => {
+          this.logger.error('Failed to send Telegram notifications to students', err);
+          warnings.push('Some Telegram messages could not be delivered');
+        });
+      }
+
+      if (parentIdsArr.length > 0) {
+        await this.telegramService.sendToUsers(parentIdsArr,
+          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n\nYour child's class has started. Tap below to view the session.`,
+          joinUrl_
+            ? { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', url: joinUrl_ }]] } }
+            : undefined,
+        ).catch((err) => {
+          this.logger.error('Failed to send Telegram notifications to parents', err);
+          warnings.push('Some parent Telegram messages could not be delivered');
+        });
+      }
+
       await this.fcmService.sendToUsers(studentParentIds, {
         title: learnerPayload.title,
         body: learnerPayload.body,
@@ -633,9 +660,12 @@ export class NotificationsService {
         warnings.push('Some admin notifications could not be delivered');
       });
 
+      const adminJoinUrl = meetingLink || joinUrl;
       await this.telegramService.sendToUsers(adminUserIds,
-        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${meetingLink || joinUrl}`,
-        { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', callback_data: `join:${sessionId}` }]] } },
+        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${adminJoinUrl}`,
+        adminJoinUrl
+          ? { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', url: adminJoinUrl }]] } }
+          : undefined,
       ).catch((err) => {
         this.logger.error('Failed to send Telegram notifications to admins', err);
       });

@@ -6,6 +6,7 @@ import { In, Repository, LessThan, Raw } from 'typeorm';
 
 import axios from 'axios';
 import { randomBytes } from 'crypto';
+import { LiveSessionService } from '../zoom/live-session.service';
 import { TelegramSubscription } from './entities/telegram-subscription.entity';
 import { TelegramLinkingCode } from './entities/telegram-linking-code.entity';
 import { User } from '../users/entities/user.entity';
@@ -312,20 +313,13 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const meetingLink = session.metadata?.meetingLink || session.zoomJoinUrl || '';
-
     try {
-      const { LiveSessionService } = await import('../zoom/live-session.service');
       const liveSessionService = this.moduleRef.get(LiveSessionService, { strict: false });
       await liveSessionService.joinSession(sessionId, {
         studentId: student.id,
         isTeacher: false,
       });
-      await this.answerCallbackQuery(
-        callbackQueryId,
-        '✅ Attendance marked! Opening meeting...',
-        meetingLink || undefined,
-      );
+      await this.answerCallbackQuery(callbackQueryId, '✅ Attendance marked!');
     } catch (err: any) {
       this.logger.error(`Failed to join session via Telegram: ${err.message}`);
       await this.answerCallbackQuery(
@@ -335,7 +329,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async answerCallbackQuery(callbackQueryId: string, text?: string, url?: string): Promise<void> {
+  private async answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
     if (!this.configured) return;
 
     try {
@@ -343,7 +337,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         callback_query_id: callbackQueryId,
         text,
         show_alert: false,
-        url,
       }, { timeout: 10000 });
     } catch (err: any) {
       const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
