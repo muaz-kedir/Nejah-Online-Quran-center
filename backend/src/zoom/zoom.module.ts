@@ -79,19 +79,17 @@ import { EncryptionService } from '../common/encryption.service';
     NotificationsModule,
     forwardRef(() => TeachersModule),
   ],
-  // Controllers disabled — Zoom endpoints are temporarily unreachable.
-  // Re-enable by uncommenting the lines below.
   controllers: [
-    // LiveSessionController,
-    // SessionNoteController,
-    // ZoomWebhookController,
-    // ZoomSettingsController,
-    // ZoomOAuthController,
-    // ZoomAnalyticsController,
-    // SessionAttendanceController,
-    // ParentSessionController,
-    // AnalyticsController,
-    // LiveSessionAttendanceReportController,
+    LiveSessionController,
+    SessionNoteController,
+    // ZoomWebhookController,   // disabled — Zoom webhooks temporarily unreachable
+    // ZoomSettingsController,   // disabled — Zoom settings temporarily unreachable
+    // ZoomOAuthController,      // disabled — Zoom OAuth temporarily unreachable
+    // ZoomAnalyticsController,  // disabled — Zoom analytics temporarily unreachable
+    SessionAttendanceController,
+    ParentSessionController,
+    AnalyticsController,
+    LiveSessionAttendanceReportController,
   ],
   providers: [
     EncryptionService,
