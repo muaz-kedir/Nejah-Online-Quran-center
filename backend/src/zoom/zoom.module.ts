@@ -72,7 +72,7 @@ import { EncryptionService } from '../common/encryption.service';
       timeout: 15000,
       maxRedirects: 3,
     }),
-    NotificationsModule,
+    forwardRef(() => NotificationsModule),
     forwardRef(() => TeachersModule),
   ],
   // controllers disabled — Zoom endpoints are not ready.

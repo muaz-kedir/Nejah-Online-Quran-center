@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { LiveSession } from './entities/live-session.entity';
@@ -47,6 +47,7 @@ export class LiveSessionService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly zoomService: ZoomService,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
     private readonly attendanceReportService: LiveSessionAttendanceReportService,
