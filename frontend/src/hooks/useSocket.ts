@@ -60,6 +60,7 @@ export function useSocket(callbacks?: SocketCallbacks) {
     socketRef.current = socket;
 
     return () => {
+      socket.removeAllListeners();
       socket.disconnect();
       socketRef.current = null;
     };

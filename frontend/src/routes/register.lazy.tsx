@@ -747,7 +747,7 @@ function RegisterPage() {
                                   <FormItem>
                                     <FormLabel>Specify Source *</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="Please specify" value={field.value !== "Other" ? field.value : ""} onChange={(e) => field.onChange(e.target.value || "Other")} />
+                                      <Input placeholder="Please specify" value={field.value && field.value !== "Other" ? field.value : ""} onChange={(e) => field.onChange(e.target.value)} />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>

@@ -67,6 +67,7 @@ export function useRealtimeSocket() {
     socketRef.current = socket;
 
     return () => {
+      socket.removeAllListeners();
       socket.disconnect();
       socketRef.current = null;
     };
