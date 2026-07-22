@@ -42,7 +42,12 @@ function TeacherProfilePage() {
   });
 
   useEffect(() => {
-    setLocalTeacher(getLocalUser());
+    if (typeof window === 'undefined') return;
+
+    setLocalTeacher({
+      fullName: localStorage.getItem('userName') || '',
+      email: localStorage.getItem('userEmail') || '',
+    });
   }, []);
 
   const teacher = apiData ? { ...apiData.teacher, stats: apiData.stats } : localTeacher;
