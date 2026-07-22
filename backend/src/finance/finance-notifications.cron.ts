@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
@@ -21,6 +21,7 @@ import { fmtDate, currentBillingMonth } from './finance-date.util';
 @Injectable()
 export class FinanceNotificationsCron {
   constructor(
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(StudentFeeAccount) private readonly feeRepo: Repository<StudentFeeAccount>,

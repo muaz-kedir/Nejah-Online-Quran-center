@@ -166,8 +166,8 @@ function SetupRequiredPage() {
     );
   }
 
-  const notifDone = status?.notificationEnabled || !status?.requireNotifications;
-  const tgDone = status?.telegramConnected || !status?.requireTelegram;
+  const notifDone = status ? (status.notificationEnabled || !status.requireNotifications) : false;
+  const tgDone = status ? (status.telegramConnected || !status.requireTelegram) : false;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-nejah-surface to-nejah-azure/5 flex items-center justify-center p-4">

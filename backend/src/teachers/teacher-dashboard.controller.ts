@@ -68,9 +68,9 @@ export class TeacherDashboardController {
         name: data.teacher.fullName,
         title: data.teacher.specialization || 'Teacher',
         avatar: data.teacher.avatarUrl
-          ? data.teacher.avatarUrl.startsWith('http')
-            ? data.teacher.avatarUrl
-            : `http://localhost:3000${data.teacher.avatarUrl}`
+            ? data.teacher.avatarUrl.startsWith('http')
+              ? data.teacher.avatarUrl
+              : `${process.env.API_BASE_URL || 'https://nejah-online-quran-center.onrender.com'}${data.teacher.avatarUrl}`
           : null,
       },
     };

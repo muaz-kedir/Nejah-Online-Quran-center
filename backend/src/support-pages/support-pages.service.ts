@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 import { SupportPage, PageStatus } from './entities/support-page.entity';
@@ -24,6 +24,7 @@ export class SupportPagesService {
     @InjectRepository(ArticleVersion) private versionRepo: Repository<ArticleVersion>,
     @InjectRepository(SupportTicket) private ticketRepo: Repository<SupportTicket>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 
