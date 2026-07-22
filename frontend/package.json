@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "build:app": "node scripts/generate-sw.mjs && vite build",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "build:app": "NODE_OPTIONS=--max-old-space-size=4096 node scripts/generate-sw.mjs && NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "build:vercel": "node scripts/vercel-build.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
