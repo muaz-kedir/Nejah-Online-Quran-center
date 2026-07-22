@@ -513,31 +513,41 @@ export class NotificationsService {
       },
     };
 
-    if (studentParentIds.length > 0) {
+    if (studentUserIds.size > 0) {
+      const studentIds = Array.from(studentUserIds);
       await this.sendCustomNotifications(
-        studentParentIds,
-        learnerPayload.title,
-        learnerPayload.body,
-        learnerPayload.data,
+        studentIds,
+        '🎓 Class Started',
+        `Your Quran session with ${teacherName} is ready.`,
+        { sessionId, className, teacherName, meetingLink },
         NotificationChannel.MEETING_STARTED,
         true,
       );
-      await this.pushSubscriptionService.sendPushToUsers(studentParentIds, learnerPayload);
-      await this.telegramService.sendToUsers(studentParentIds,
-        `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n🔗 Meeting: ${meetingLink || joinUrl}\n\nTap "Join Class" to mark attendance and open the meeting room.`,
-        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Class', callback_data: `join:${sessionId}` }]] } },
+      await this.telegramService.sendToUsers(studentIds,
+        `🎓 ${className}\n\nYour Quran session is ready.\n👤 Teacher: ${teacherName}\n\nTap below to join.`,
+        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Session', callback_data: `join:${sessionId}` }]] } },
       );
-      await this.fcmService.sendToUsers(studentParentIds, {
-        title: learnerPayload.title,
-        body: learnerPayload.body,
-        icon: learnerPayload.icon,
-        badge: learnerPayload.badge,
-        tag: learnerPayload.tag,
-        clickAction: learnerPayload.url,
-        data: Object.fromEntries(
-          Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
-        ),
-      });
+    }
+
+    if (parentUserIds.size > 0) {
+      const parentIds = Array.from(parentUserIds);
+      await this.sendCustomNotifications(
+        parentIds,
+        '🎓 Class Started',
+        `Your child's Quran session has started with ${teacherName}.`,
+        { sessionId, className, teacherName },
+        NotificationChannel.MEETING_STARTED,
+        true,
+      );
+    }
+
+    const meetingLinkDisplay = meetingLink || joinUrl;
+    const teacherIds = session.teacher?.userId ? [session.teacher.userId] : [];
+    if (teacherIds.length > 0) {
+      await this.telegramService.sendToUsers(teacherIds,
+        `✅ Invitation sent successfully.\n\n📚 ${className}\n🔗 ${meetingLinkDisplay}\n\nTap below to end the session when done.`,
+        { replyMarkup: { inline_keyboard: [[{ text: '⏹ End Session', callback_data: `end:${sessionId}` }]] } },
+      );
     }
 
     const admins = await this.userRepository.find({
@@ -576,6 +586,79 @@ export class NotificationsService {
       [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER],
       adminPayload,
     );
+  }
+
+  async notifyLiveSessionEnded(session: LiveSession): Promise<void> {
+    const studentUserIds = new Set<string>();
+    const parentUserIds = new Set<string>();
+
+    const collectStudent = (student?: Student | null) => {
+      if (!student) return;
+      if (student.userId) studentUserIds.add(student.userId);
+      const parentUser = student.parent?.user;
+      if (parentUser?.id) parentUserIds.add(parentUser.id);
+    };
+
+    collectStudent(session.student);
+
+    for (const attendance of session.attendances || []) {
+      collectStudent(attendance.student);
+    }
+
+    for (const scheduleStudent of session.schedule?.scheduleStudents || []) {
+      collectStudent(scheduleStudent.student);
+    }
+
+    const className =
+      session.schedule?.className || session.metadata?.className || 'Quran Class';
+    const teacherName = session.teacher?.fullName || 'Your teacher';
+    const sessionId = session.id;
+    const classroomUrl = `/classroom/${sessionId}`;
+
+    if (studentUserIds.size > 0) {
+      const studentIds = Array.from(studentUserIds);
+      await this.sendCustomNotifications(
+        studentIds,
+        'Session Completed',
+        'Session completed.',
+        { sessionId, className, teacherName },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(studentIds,
+        `✅ ${className}\n\nSession completed.`,
+      );
+    }
+
+    if (parentUserIds.size > 0) {
+      const parentIds = Array.from(parentUserIds);
+      await this.sendCustomNotifications(
+        parentIds,
+        'Session Completed',
+        `Your child's Quran session has ended.`,
+        { sessionId, className, teacherName },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(parentIds,
+        `✅ ${className}\n\nYour child's Quran session has ended.`,
+      );
+    }
+
+    const teacherIds = session.teacher?.userId ? [session.teacher.userId] : [];
+    if (teacherIds.length > 0) {
+      await this.sendCustomNotifications(
+        teacherIds,
+        'Session Completed',
+        'Session completed successfully.',
+        { sessionId, className },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(teacherIds,
+        `✅ Session completed successfully.\n\n📚 ${className}`,
+      );
+    }
   }
 
   async notifyResourceAdded(resource: any): Promise<void> {

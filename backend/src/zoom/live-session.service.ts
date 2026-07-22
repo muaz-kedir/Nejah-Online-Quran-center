@@ -433,7 +433,7 @@ export class LiveSessionService {
 
   async joinSession(
     sessionId: string,
-    options: { studentId?: string; teacherId?: string; isTeacher?: boolean },
+    options: { studentId?: string; teacherId?: string; isTeacher?: boolean; joinedViaTelegram?: boolean },
   ): Promise<LiveSession> {
     const session = await this.findById(sessionId);
 
@@ -496,6 +496,21 @@ export class LiveSessionService {
     }
 
     await this.sessionAttendanceService.recordJoin(sessionId, options.studentId);
+
+    if (options.joinedViaTelegram) {
+      try {
+        const attendance = await this.attendanceRepository.findOne({
+          where: { sessionId, studentId: options.studentId },
+        });
+        if (attendance) {
+          attendance.joinedViaTelegram = true;
+          await this.attendanceRepository.save(attendance);
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to set joinedViaTelegram flag: ${(err as Error).message}`);
+      }
+    }
+
     return this.findById(sessionId);
   }
 
@@ -867,7 +882,15 @@ export class LiveSessionService {
       completionReason,
     });
 
-    return this.findById(id);
+    const endedSession = await this.findById(id);
+
+    try {
+      await this.notificationsService.notifyLiveSessionEnded(endedSession);
+    } catch (err) {
+      this.logger.error('Failed to send session ended notifications', err);
+    }
+
+    return endedSession;
   }
 
   async getUpcoming(teacherId?: string, studentId?: string): Promise<LiveSession[]> {

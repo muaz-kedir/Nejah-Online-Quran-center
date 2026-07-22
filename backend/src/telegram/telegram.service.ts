@@ -247,11 +247,15 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     if (data.startsWith('join:')) {
       const sessionId = data.replace('join:', '');
-      await this.processJoinCallback(id, chatId, sessionId);
+      await this.processJoinCallback(id, chatId, sessionId, message.message_id);
+    }
+    if (data.startsWith('end:')) {
+      const sessionId = data.replace('end:', '');
+      await this.processEndCallback(id, chatId, sessionId, message.message_id, from);
     }
   }
 
-  private async processJoinCallback(callbackQueryId: string, chatId: number, sessionId: string) {
+  private async processJoinCallback(callbackQueryId: string, chatId: number, sessionId: string, messageId?: number) {
     const sub = await this.subscriptionRepository.findOne({ where: { chatId, isActive: true } });
     if (!sub) {
       await this.answerCallbackQuery(callbackQueryId, '❌ Your Telegram is not linked to an account.');
@@ -278,6 +282,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       await liveSessionService.joinSession(sessionId, {
         studentId: student.id,
         isTeacher: false,
+        joinedViaTelegram: true,
       });
       await this.answerCallbackQuery(
         callbackQueryId,
@@ -290,6 +295,68 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         callbackQueryId,
         `❌ ${err.message || 'Failed to join session.'}`,
       );
+    }
+  }
+
+  private async processEndCallback(callbackQueryId: string, chatId: number, sessionId: string, messageId: number, from: any) {
+    const sub = await this.subscriptionRepository.findOne({ where: { chatId, isActive: true } });
+    if (!sub) {
+      await this.answerCallbackQuery(callbackQueryId, '❌ Your Telegram is not linked.');
+      return;
+    }
+
+    const { LiveSessionService } = await import('../zoom/live-session.service');
+    const liveSessionService = this.moduleRef.get(LiveSessionService, { strict: false });
+
+    try {
+      await liveSessionService.complete(sessionId);
+      await this.answerCallbackQuery(callbackQueryId, '✅ Session ended successfully.');
+      await this.editMessageText(
+        chatId,
+        messageId,
+        '✅ Session completed successfully.',
+        { replyMarkup: { inline_keyboard: [] } },
+      );
+    } catch (err: any) {
+      this.logger.error(`Failed to end session via Telegram: ${err.message}`);
+      await this.answerCallbackQuery(callbackQueryId, `❌ ${err.message || 'Failed to end session.'}`);
+    }
+  }
+
+  async editMessageText(chatId: number, messageId: number, text: string, options?: TelegramMessage): Promise<boolean> {
+    if (!this.configured) return false;
+
+    try {
+      await axios.post(`${this.apiBase}/editMessageText`, {
+        chat_id: chatId,
+        message_id: messageId,
+        text,
+        parse_mode: options?.parseMode || undefined,
+        reply_markup: options?.replyMarkup || undefined,
+        disable_web_page_preview: true,
+      }, { timeout: 10000 });
+      return true;
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Failed to edit message: ${detail}`);
+      return false;
+    }
+  }
+
+  async editMessageReplyMarkup(chatId: number, messageId: number, replyMarkup: Record<string, unknown>): Promise<boolean> {
+    if (!this.configured) return false;
+
+    try {
+      await axios.post(`${this.apiBase}/editMessageReplyMarkup`, {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: replyMarkup,
+      }, { timeout: 10000 });
+      return true;
+    } catch (err: any) {
+      const detail = err?.response?.data?.description || err?.message || err?.code || 'unknown';
+      this.logger.warn(`Failed to edit reply markup: ${detail}`);
+      return false;
     }
   }
 
