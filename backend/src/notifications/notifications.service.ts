@@ -580,12 +580,13 @@ export class NotificationsService {
       },
     };
 
-    if (studentParentIds.length > 0) {
+    if (studentUserIds.size > 0) {
+      const studentIds = Array.from(studentUserIds);
       await this.sendCustomNotifications(
-        studentParentIds,
-        learnerPayload.title,
-        learnerPayload.body,
-        learnerPayload.data,
+        studentIds,
+        '🎓 Class Started',
+        `Your Quran session with ${teacherName} is ready.`,
+        { sessionId, className, teacherName, meetingLink },
         NotificationChannel.MEETING_STARTED,
         false,
         classroomUrl,
@@ -596,32 +597,20 @@ export class NotificationsService {
 
       const joinUrl_ = meetingLink || joinUrl;
 
-      const studentIds = Array.from(studentUserIds);
-      const parentIdsArr = Array.from(parentUserIds);
-
       if (studentIds.length > 0) {
         await this.telegramService.sendToUsers(studentIds,
-          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n\n✅ Tap "Mark Attendance" to record your presence, then tap "Join Meeting" to enter the class.`,
-          {
-            replyMarkup: {
-              inline_keyboard: [
-                [{ text: '✅ Mark Attendance', callback_data: `join:${sessionId}` }],
-                ...(joinUrl_ ? [[{ text: '▶ Join Meeting', url: joinUrl_ }]] : []),
-              ],
-            },
-          },
+          `🎓 ${className}\n\nYour Quran session is ready.\n👤 Teacher: ${teacherName}\n\nTap below to join.`,
+          { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Session', callback_data: `join:${sessionId}` }]] } },
         ).catch((err) => {
           this.logger.error('Failed to send Telegram notifications to students', err);
           warnings.push('Some Telegram messages could not be delivered');
         });
       }
 
+      const parentIdsArr = Array.from(parentUserIds);
       if (parentIdsArr.length > 0) {
         await this.telegramService.sendToUsers(parentIdsArr,
-          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n\nYour child's class has started. Tap below to view the session.`,
-          joinUrl_
-            ? { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', url: joinUrl_ }]] } }
-            : undefined,
+          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n\nYour child's class has started.`,
         ).catch((err) => {
           this.logger.error('Failed to send Telegram notifications to parents', err);
           warnings.push('Some parent Telegram messages could not be delivered');
@@ -638,6 +627,18 @@ export class NotificationsService {
         data: Object.fromEntries(
           Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
         ),
+      });
+    }
+
+    const meetingLinkDisplay = meetingLink || joinUrl;
+    const teacherIds = session.teacher?.userId ? [session.teacher.userId] : [];
+    if (teacherIds.length > 0) {
+      await this.telegramService.sendToUsers(teacherIds,
+        `✅ Session started.\n\n📚 ${className}\n🔗 ${meetingLinkDisplay}\n\nTap below to end the session when done.`,
+        { replyMarkup: { inline_keyboard: [[{ text: '⏹ End Session', callback_data: `end:${sessionId}` }]] } },
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notification to teacher', err);
+        warnings.push('Teacher Telegram notification could not be delivered');
       });
     }
 
@@ -694,6 +695,79 @@ export class NotificationsService {
       parentCount: parentUserIds.size,
       warnings,
     };
+  }
+
+  async notifyLiveSessionEnded(session: LiveSession): Promise<void> {
+    const studentUserIds = new Set<string>();
+    const parentUserIds = new Set<string>();
+
+    const collectStudent = (student?: Student | null) => {
+      if (!student) return;
+      if (student.userId) studentUserIds.add(student.userId);
+      const parentUser = student.parent?.user;
+      if (parentUser?.id) parentUserIds.add(parentUser.id);
+    };
+
+    collectStudent(session.student);
+
+    for (const attendance of session.attendances || []) {
+      collectStudent(attendance.student);
+    }
+
+    for (const scheduleStudent of session.schedule?.scheduleStudents || []) {
+      collectStudent(scheduleStudent.student);
+    }
+
+    const className =
+      session.schedule?.className || session.metadata?.className || 'Quran Class';
+    const teacherName = session.teacher?.fullName || 'Your teacher';
+    const sessionId = session.id;
+    const classroomUrl = `/classroom/${sessionId}`;
+
+    if (studentUserIds.size > 0) {
+      const studentIds = Array.from(studentUserIds);
+      await this.sendCustomNotifications(
+        studentIds,
+        'Session Completed',
+        'Session completed.',
+        { sessionId, className, teacherName },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(studentIds,
+        `✅ ${className}\n\nSession completed.`,
+      );
+    }
+
+    if (parentUserIds.size > 0) {
+      const parentIds = Array.from(parentUserIds);
+      await this.sendCustomNotifications(
+        parentIds,
+        'Session Completed',
+        `Your child's Quran session has ended.`,
+        { sessionId, className, teacherName },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(parentIds,
+        `✅ ${className}\n\nYour child's Quran session has ended.`,
+      );
+    }
+
+    const teacherIds = session.teacher?.userId ? [session.teacher.userId] : [];
+    if (teacherIds.length > 0) {
+      await this.sendCustomNotifications(
+        teacherIds,
+        'Session Completed',
+        'Session completed successfully.',
+        { sessionId, className },
+        NotificationChannel.MEETING_ENDED,
+        true,
+      );
+      await this.telegramService.sendToUsers(teacherIds,
+        `✅ Session completed successfully.\n\n📚 ${className}`,
+      );
+    }
   }
 
   async notifyResourceAdded(resource: any): Promise<void> {

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { LiveSession } from './live-session.entity';
 import { Student } from '../../students/entities/student.entity';
+import { Teacher } from '../../teachers/entities/teacher.entity';
 import { AttendanceStatus } from '../enums/live-session-status.enum';
 
 export interface AttendanceThresholds {
@@ -43,6 +44,22 @@ export class SessionAttendance {
 
   @Column()
   studentId: string;
+
+  @ManyToOne(() => Teacher, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'teacherId' })
+  teacher: Teacher;
+
+  @Column({ nullable: true })
+  teacherId: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  teacherStartTime: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  teacherEndTime: Date;
+
+  @Column({ type: 'int', nullable: true })
+  teacherDuration: number;
 
   @Column({ type: 'timestamp', nullable: true })
   joinTime: Date;
@@ -82,6 +99,15 @@ export class SessionAttendance {
 
   @Column({ default: false })
   isReconciled: boolean;
+
+  @Column({ default: false })
+  joinedViaTelegram: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  invitationSentAt: Date;
+
+  @Column({ nullable: true })
+  sessionStatus: string;
 
   @CreateDateColumn()
   createdAt: Date;

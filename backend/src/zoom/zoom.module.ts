@@ -79,10 +79,10 @@ import { EncryptionService } from '../common/encryption.service';
     forwardRef(() => NotificationsModule),
     forwardRef(() => TeachersModule),
   ],
-  // controllers disabled — Zoom endpoints are not ready.
-  // Teacher provides manual meeting links; Telegram bot posts them to students.
+  // Only LiveSessionController is enabled — manual meeting links via Telegram.
+  // All Zoom-specific controllers (Webhook, OAuth, Settings, Analytics) remain disabled.
   controllers: [
-    // LiveSessionController,
+    LiveSessionController,
     // SessionNoteController,
     // ZoomWebhookController,
     // ZoomSettingsController,
