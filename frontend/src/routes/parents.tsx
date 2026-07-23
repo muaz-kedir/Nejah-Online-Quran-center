@@ -96,10 +96,10 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
             {getInitials(parent.fullName)}
           </div>
           <div>
-            <p className="font-bold text-foreground dark:text-foreground group-hover:text-nejah-sapphire dark:group-hover:text-nejah-electric transition-colors">
+            <p className="font-bold text-foreground dark:text-foreground group-hover:text-foreground dark:group-hover:text-nejah-electric transition-colors">
               {parent.fullName}
             </p>
-            <p className="text-xs text-nejah-slate-blue mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               ID: {parentIdCode(parent.id)}
             </p>
           </div>
@@ -110,7 +110,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
       <td className="py-5 px-6">
         {parent.students && parent.students.length > 0 ? (
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-nejah-sapphire dark:text-nejah-electric">
+            <span className="text-sm font-semibold text-foreground dark:text-nejah-electric">
               {parent.students.length > 2
                 ? `${parent.students[0].fullName} +${parent.students.length - 1}`
                 : parent.students.map((s: any) => s.fullName).join(' & ')}
@@ -129,7 +129,7 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
             </span>
           </div>
         ) : (
-          <span className="text-sm text-nejah-slate-blue italic">
+          <span className="text-sm text-muted-foreground italic">
             No students linked
           </span>
         )}
@@ -138,12 +138,12 @@ const ParentRow = memo(function ParentRow({ parent, onView, onEdit, onDelete }: 
       {/* Contact Information */}
       <td className="py-5 px-6">
         <div className="space-y-1.5 text-sm">
-          <div className="flex items-center gap-2 text-nejah-slate-blue">
-            <Phone className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Phone className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             <span>{parent.phoneNumber || 'N/A'}</span>
           </div>
-          <div className="flex items-center gap-2 text-nejah-slate-blue">
-            <Mail className="h-3.5 w-3.5 text-nejah-slate-blue flex-shrink-0" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             <span className="truncate max-w-[200px]">{parent.email}</span>
           </div>
         </div>
@@ -306,7 +306,7 @@ function ParentsPage() {
         <GlassPanel className="p-5 flex flex-wrap items-end gap-4">
           <div className="flex-1 min-w-[220px]">
             <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-nejah-slate-blue" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search for parents or students..."
                 value={search}
@@ -318,7 +318,7 @@ function ParentsPage() {
 
           <div className="flex items-end gap-3 flex-wrap">
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest ml-1 mb-1.5">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 mb-1.5">
                 Filter by Status
               </span>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -334,7 +334,7 @@ function ParentsPage() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest ml-1 mb-1.5">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 mb-1.5">
                 Class Assignment
               </span>
               <Select value={classFilter} onValueChange={setClassFilter}>
@@ -374,19 +374,19 @@ function ParentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-background/50 border-b border-white/5">
-                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Parent Name
                   </th>
-                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Students
                   </th>
-                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
+                  <th className="text-left py-4 px-6 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Contact Information
                   </th>
-                  <th className="text-center py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
+                  <th className="text-center py-4 px-6 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Status
                   </th>
-                  <th className="text-right py-4 px-6 text-[10px] font-semibold text-nejah-slate-blue uppercase tracking-widest">
+                  <th className="text-right py-4 px-6 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                     Actions
                   </th>
                 </tr>
@@ -426,12 +426,12 @@ function ParentsPage() {
                     <td colSpan={5} className="py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-background/50 flex items-center justify-center">
-                          <Search className="h-7 w-7 text-nejah-slate-blue" />
+                          <Search className="h-7 w-7 text-muted-foreground" />
                         </div>
-                        <p className="text-nejah-slate-blue font-medium font-serif text-lg">
+                        <p className="text-muted-foreground font-medium font-serif text-lg">
                           No parents found
                         </p>
-                        <p className="text-nejah-slate-blue/60 text-sm">
+                        <p className="text-muted-foreground/60 text-sm">
                           Try adjusting your filters or add a new parent
                         </p>
                       </div>
@@ -448,7 +448,7 @@ function ParentsPage() {
 
           {/* ─── Pagination ─── */}
           <div className="px-6 py-4 border-t border-white/5 bg-background/30 flex items-center justify-between">
-            <p className="text-xs text-nejah-slate-blue">
+            <p className="text-xs text-muted-foreground">
               Showing{' '}
               <span className="font-bold text-foreground">
                 {meta.total > 0 ? (meta.page - 1) * meta.limit + 1 : 0}-
@@ -477,7 +477,7 @@ function ParentsPage() {
                     'h-8 w-8 rounded-lg font-bold text-xs border-none',
                     meta.page === i + 1
                       ? 'bg-nejah-sapphire hover:bg-background text-white'
-                      : 'bg-transparent text-nejah-slate-blue hover:bg-primary/10 dark:hover:bg-nejah-surface hover:text-nejah-sapphire'
+                      : 'bg-transparent text-muted-foreground hover:bg-primary/10 dark:hover:bg-nejah-surface hover:text-foreground'
                   )}
                 >
                   {i + 1}

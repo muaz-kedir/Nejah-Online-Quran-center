@@ -92,11 +92,11 @@
 //     <Layout>
 //       <div className="space-y-8 pb-12">
 //         <div>
-//           <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-nejah-slate-blue mb-1">
+//           <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1">
 //             Integration
 //           </p>
 //           <h1 className="text-3xl font-medium tracking-tight text-foreground">Zoom Settings</h1>
-//           <p className="text-sm leading-relaxed text-nejah-slate-blue mt-1">
+//           <p className="text-sm leading-relaxed text-muted-foreground mt-1">
 //             {isAdminView
 //               ? 'Manage Zoom connections for all teachers. Server-to-Server OAuth is configured at the platform level.'
 //               : 'Connect your Zoom account to enable automatic meeting creation and attendance tracking.'}
@@ -169,7 +169,7 @@
 //   if (loading) {
 //     return (
 //       <div className="flex items-center justify-center py-24">
-//         <Loader2 className="h-8 w-8 animate-spin text-nejah-slate-blue" />
+//         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 //       </div>
 //     );
 //   }
@@ -301,7 +301,7 @@
 //   if (loading) {
 //     return (
 //       <div className="flex items-center justify-center py-24">
-//         <Loader2 className="h-8 w-8 animate-spin text-nejah-slate-blue" />
+//         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 //       </div>
 //     );
 //   }
@@ -313,7 +313,7 @@
 //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 //         <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 rounded-3xl shadow-sm">
 //           <CardContent className="pt-6">
-//             <p className="text-xs font-medium text-nejah-slate-blue uppercase tracking-wider">Total Teachers</p>
+//             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Teachers</p>
 //             <p className="text-3xl font-bold mt-1">{summary?.totalTeachers ?? '-'}</p>
 //           </CardContent>
 //         </Card>
@@ -331,7 +331,7 @@
 //         </Card>
 //         <Card className="glass-panel bg-card dark:bg-nejah-surface border-border dark:border-white/5 rounded-3xl shadow-sm">
 //           <CardContent className="pt-6">
-//             <p className="text-xs font-medium text-nejah-slate-blue uppercase tracking-wider">Platform Config</p>
+//             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Platform Config</p>
 //             <p className="text-3xl font-bold mt-1">{platformConfig?.configured ? '✅' : '❌'}</p>
 //           </CardContent>
 //         </Card>
@@ -342,7 +342,7 @@
 //           <div className="flex items-center justify-between">
 //             <div>
 //               <p className="text-sm font-semibold">Platform Configuration</p>
-//               <p className="text-xs text-nejah-slate-blue mt-1">
+//               <p className="text-xs text-muted-foreground mt-1">
 //                 {platformConfig?.configured
 //                   ? `Configured via ${platformConfig.source} (Account: ${platformConfig.accountId})`
 //                   : 'Zoom Server-to-Server OAuth is not configured'}
@@ -361,7 +361,7 @@
 //             <CardTitle className="text-lg font-bold">Teacher Connections</CardTitle>
 //             <div className="flex items-center gap-3">
 //               <div className="relative">
-//                 <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-nejah-slate-blue" />
+//                 <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
 //                 <Input
 //                   placeholder="Search teachers..."
 //                   value={searchQuery}
@@ -380,26 +380,26 @@
 //             <table className="w-full text-sm">
 //               <thead>
 //                 <tr className="border-b border-border dark:border-white/5">
-//                   <th className="text-left py-3 px-4 font-semibold text-nejah-slate-blue">Name</th>
-//                   <th className="text-left py-3 px-4 font-semibold text-nejah-slate-blue">Email</th>
-//                   <th className="text-left py-3 px-4 font-semibold text-nejah-slate-blue">Status</th>
-//                   <th className="text-left py-3 px-4 font-semibold text-nejah-slate-blue">Zoom Email</th>
-//                   <th className="text-left py-3 px-4 font-semibold text-nejah-slate-blue">Connected</th>
-//                   <th className="text-right py-3 px-4 font-semibold text-nejah-slate-blue">Actions</th>
+//                   <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Name</th>
+//                   <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Email</th>
+//                   <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+//                   <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Zoom Email</th>
+//                   <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Connected</th>
+//                   <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Actions</th>
 //                 </tr>
 //               </thead>
 //               <tbody>
 //                 {filteredTeachers.map((teacher) => (
 //                   <tr key={teacher.teacherId} className="border-b border-border dark:border-white/5 hover:bg-muted/30 transition-colors">
 //                     <td className="py-3 px-4 font-medium">{teacher.teacherName}</td>
-//                     <td className="py-3 px-4 text-nejah-slate-blue">{teacher.teacherEmail}</td>
+//                     <td className="py-3 px-4 text-muted-foreground">{teacher.teacherEmail}</td>
 //                     <td className="py-3 px-4">
 //                       <Badge variant={teacher.connectionStatus === 'connected' ? 'default' : 'secondary'}>
 //                         {teacher.connectionStatus}
 //                       </Badge>
 //                     </td>
-//                     <td className="py-3 px-4 text-nejah-slate-blue">{teacher.zoomEmail || '-'}</td>
-//                     <td className="py-3 px-4 text-xs text-nejah-slate-blue">
+//                     <td className="py-3 px-4 text-muted-foreground">{teacher.zoomEmail || '-'}</td>
+//                     <td className="py-3 px-4 text-xs text-muted-foreground">
 //                       {teacher.connectedAt ? new Date(teacher.connectedAt).toLocaleDateString() : '-'}
 //                     </td>
 //                     <td className="py-3 px-4 text-right">
@@ -417,7 +417,7 @@
 //                 ))}
 //                 {filteredTeachers.length === 0 && (
 //                   <tr>
-//                     <td colSpan={6} className="py-8 text-center text-nejah-slate-blue">No teachers found</td>
+//                     <td colSpan={6} className="py-8 text-center text-muted-foreground">No teachers found</td>
 //                     </tr>
 //                 )}
 //               </tbody>

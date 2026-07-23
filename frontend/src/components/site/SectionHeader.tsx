@@ -23,7 +23,7 @@ export function SectionHeader({ eyebrow, title, description, align = "center" }:
       )}
       <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl lg:text-5xl">{title}</h2>
       {description && (
-        <p className="text-base leading-relaxed text-nejah-slate-blue md:text-lg">{description}</p>
+        <p className="text-base leading-relaxed text-muted-foreground md:text-lg">{description}</p>
       )}
     </motion.div>
   );

@@ -123,72 +123,72 @@ function WebsiteResources() {
         <main className="p-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Learning Resources</h1>
-              <p className="text-gray-500 mt-1">Manage study materials, worksheets, and media for students.</p>
+              <h1 className="text-3xl font-bold text-foreground tracking-tight">Learning Resources</h1>
+              <p className="text-muted-foreground mt-1">Manage study materials, worksheets, and media for students.</p>
             </div>
             <Button onClick={() => handleOpenDialog()} className="bg-primary hover:bg-primary/90 text-white rounded-xl gap-2 px-6 h-12 shadow-md">
               <Plus className="w-5 h-5" /> Add Resource
             </Button>
           </div>
 
-          <div className="bg-white rounded-2xl border shadow-sm p-6 mb-8 flex flex-col sm:flex-row gap-4">
+          <div className="bg-card rounded-2xl border shadow-sm p-6 mb-8 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <Input 
                 placeholder="Search resources by title or description..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-gray-50 border-transparent focus:bg-white h-12 rounded-xl text-base"
+                className="pl-10 bg-muted border-transparent focus:bg-card h-12 rounded-xl text-base"
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b bg-gray-50/50">
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Resource</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Classification</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Metrics</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Status</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm text-right">Actions</th>
+                  <tr className="border-b bg-muted/50">
+                    <th className="p-4 font-semibold text-muted-foreground text-sm">Resource</th>
+                    <th className="p-4 font-semibold text-muted-foreground text-sm">Classification</th>
+                    <th className="p-4 font-semibold text-muted-foreground text-sm">Metrics</th>
+                    <th className="p-4 font-semibold text-muted-foreground text-sm">Status</th>
+                    <th className="p-4 font-semibold text-muted-foreground text-sm text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {resources.map((r) => (
-                    <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={r.id} className="hover:bg-muted/50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                            {r.thumbnailUrl ? <img src={r.thumbnailUrl} className="w-full h-full object-cover" /> : <FolderOpen className="w-5 h-5 text-gray-400" />}
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                            {r.thumbnailUrl ? <img src={r.thumbnailUrl} className="w-full h-full object-cover" /> : <FolderOpen className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900 line-clamp-1">{r.titleEn}</p>
-                            <p className="text-xs text-gray-500 font-medium">{r.resourceType}</p>
+                            <p className="font-bold text-foreground line-clamp-1">{r.titleEn}</p>
+                            <p className="text-xs text-muted-foreground font-medium">{r.resourceType}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <p className="text-sm font-bold text-gray-700">{r.learningLevel}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{r.category}</p>
+                        <p className="text-sm font-bold text-foreground">{r.learningLevel}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{r.category}</p>
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline" className="bg-gray-50 text-gray-600">
+                        <Badge variant="outline" className="bg-muted text-muted-foreground">
                           {r.downloadCount} Downloads
                         </Badge>
                         {r.isFeatured && <Badge className="ml-2 bg-amber-100 text-amber-700 border-amber-200">Featured</Badge>}
                       </td>
                       <td className="p-4">
-                        <Badge className={r.status === 'active' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-700 border-gray-200'}>
+                        <Badge className={r.status === 'active' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-muted text-foreground border-border'}>
                           {r.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
                       <td className="p-4 text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(r)} className="text-gray-500 hover:text-primary">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(r)} className="text-muted-foreground hover:text-primary">
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="text-gray-500 hover:text-rose-600 ml-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="text-muted-foreground hover:text-rose-600 ml-1">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </td>
@@ -196,9 +196,9 @@ function WebsiteResources() {
                   ))}
                   {resources.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-12 text-center text-gray-500">
-                        <FolderOpen className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-                        <p className="text-lg font-medium text-gray-900">No resources found</p>
+                      <td colSpan={5} className="p-12 text-center text-muted-foreground">
+                        <FolderOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-lg font-medium text-foreground">No resources found</p>
                         <p className="mt-1">Add your first learning resource to get started.</p>
                       </td>
                     </tr>
@@ -217,8 +217,8 @@ function WebsiteResources() {
           </DialogHeader>
           <div className="grid gap-6 py-4">
             
-            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2"><Layout className="w-4 h-4 text-gray-500"/> Basic Information</h3>
+            <div className="space-y-4 bg-muted p-4 rounded-xl border">
+              <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2"><Layout className="w-4 h-4 text-muted-foreground"/> Basic Information</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label>Title (English) *</Label>
@@ -235,8 +235,8 @@ function WebsiteResources() {
               </div>
             </div>
 
-            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2"><ListFilter className="w-4 h-4 text-gray-500"/> Classification</h3>
+            <div className="space-y-4 bg-muted p-4 rounded-xl border">
+              <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2"><ListFilter className="w-4 h-4 text-muted-foreground"/> Classification</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Learning Level</Label>
@@ -273,8 +273,8 @@ function WebsiteResources() {
               </div>
             </div>
 
-            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2"><UploadCloud className="w-4 h-4 text-gray-500"/> Media & URLs</h3>
+            <div className="space-y-4 bg-muted p-4 rounded-xl border">
+              <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2"><UploadCloud className="w-4 h-4 text-muted-foreground"/> Media & URLs</h3>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>File URL *</Label>
@@ -291,20 +291,20 @@ function WebsiteResources() {
               </div>
             </div>
 
-            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2"><Settings className="w-4 h-4 text-gray-500"/> Settings</h3>
+            <div className="space-y-4 bg-muted p-4 rounded-xl border">
+              <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2"><Settings className="w-4 h-4 text-muted-foreground"/> Settings</h3>
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base font-medium">Active Status</Label>
-                    <p className="text-xs text-gray-500">Visible to students</p>
+                    <p className="text-xs text-muted-foreground">Visible to students</p>
                   </div>
                   <Switch checked={formData.status === 'active'} onCheckedChange={(c) => setFormData({...formData, status: c ? 'active' : 'inactive'})} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base font-medium">Featured</Label>
-                    <p className="text-xs text-gray-500">Pin to top of list</p>
+                    <p className="text-xs text-muted-foreground">Pin to top of list</p>
                   </div>
                   <Switch checked={formData.isFeatured} onCheckedChange={(c) => setFormData({...formData, isFeatured: c})} />
                 </div>

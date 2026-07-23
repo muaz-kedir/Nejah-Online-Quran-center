@@ -483,7 +483,7 @@ export function AddStudentModal({ open, onClose, onSuccess, teachers }: AddStude
                         <div className="flex items-center gap-2">
                           <Check className="w-5 h-5 text-nejah-electric" />
                           <div>
-                            <p className="text-sm font-medium text-nejah-sapphire dark:text-nejah-electric">
+                            <p className="text-sm font-medium text-foreground dark:text-nejah-electric">
                               Selected: {selectedParent.fullName}
                             </p>
                             <p className="text-xs text-nejah-electric">

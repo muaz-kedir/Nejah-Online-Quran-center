@@ -125,7 +125,7 @@ function UsersPage() {
         {/* Filters */}
         <div className="admin-filter-bar">
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name or email..."
               value={search}
@@ -164,24 +164,24 @@ function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-white/5 bg-background/50 hover:bg-background/50">
-                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Name</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Email</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Role</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Status</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Created Date</TableHead>
-                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Actions</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Name</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Email</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Role</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</TableHead>
+                <TableHead className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Created Date</TableHead>
+                <TableHead className="text-right text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-nejah-slate-blue">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-nejah-slate-blue">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -189,7 +189,7 @@ function UsersPage() {
                 users.map((user) => (
                   <TableRow key={user.id} className="hover:bg-primary/5 transition-colors">
                     <TableCell className="font-medium text-foreground">{user.name}</TableCell>
-                    <TableCell className="text-nejah-slate-blue">{user.email}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
                     <TableCell>
                       <RoleBadge role={user.role} />
                     </TableCell>
@@ -198,7 +198,7 @@ function UsersPage() {
                         {user.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-nejah-slate-blue">
+                    <TableCell className="text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
@@ -253,7 +253,7 @@ function UsersPage() {
               >
                 Previous
               </Button>
-              <span className="flex items-center px-4 text-nejah-slate-blue">
+              <span className="flex items-center px-4 text-muted-foreground">
                 Page {page} of {totalPages}
               </span>
               <Button

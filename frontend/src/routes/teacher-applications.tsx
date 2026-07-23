@@ -418,7 +418,7 @@ function TeacherApplicationsContent() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-nejah-sapphire dark:hover:text-nejah-electric hover:bg-primary/10"
+                        <Button variant="ghost" size="sm" className="text-primary hover:text-foreground dark:hover:text-nejah-electric hover:bg-primary/10"
                           onClick={(e) => { e.stopPropagation(); navigate({ to: '/teacher-applications/$id', params: { id: app.id } }); }}
                         >
                           <Eye className="h-4 w-4 mr-1" /> View

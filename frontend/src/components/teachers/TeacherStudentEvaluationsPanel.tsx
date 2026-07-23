@@ -181,7 +181,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold font-serif text-nejah-sapphire dark:text-foreground">Exam Evaluations</h3>
+        <h3 className="text-xl font-bold font-serif text-foreground dark:text-foreground">Exam Evaluations</h3>
         {!showForm && (
           <Button onClick={handleOpenForm} className="bg-nejah-surface text-white hover:bg-nejah-sapphire">
             <Plus className="mr-2 h-4 w-4" /> Conduct Evaluation
@@ -193,7 +193,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
         <form onSubmit={handleSubmit} className="bg-card p-6 md:p-8 rounded-3xl border border-border space-y-6">
           <div className="flex justify-between items-center pb-4 border-b">
             <div>
-              <h4 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif">New Evaluation</h4>
+              <h4 className="text-lg font-bold text-foreground font-serif">New Evaluation</h4>
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 <span>Level:</span>
                 <Badge variant="outline">{studentLevel}</Badge>
@@ -381,7 +381,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
 
           {/* Criteria Ratings */}
           <div className="space-y-4">
-            <h5 className="text-sm font-bold text-nejah-sapphire text-foreground font-serif border-b pb-2">Criteria Ratings</h5>
+            <h5 className="text-sm font-bold text-foreground font-serif border-b pb-2">Criteria Ratings</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.keys(ratings).map((crit) => (
                 <div key={crit} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/20 rounded-xl border">
@@ -405,7 +405,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
           </div>
 
           <div className="space-y-4">
-            <h5 className="text-sm font-bold text-nejah-sapphire text-foreground font-serif border-b pb-2">Feedback &amp; Remarks</h5>
+            <h5 className="text-sm font-bold text-foreground font-serif border-b pb-2">Feedback &amp; Remarks</h5>
             <div className="space-y-2">
               <Label>Teacher Comments <span className="text-red-500">*</span></Label>
               <Textarea
@@ -443,7 +443,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
           ) : evaluations.length === 0 ? (
             <div className="text-center py-12 bg-muted/20 border border-dashed rounded-3xl">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
-              <p className="font-bold text-nejah-sapphire text-foreground">No evaluations recorded yet</p>
+              <p className="font-bold text-foreground">No evaluations recorded yet</p>
               <p className="text-xs text-muted-foreground mt-1">Conduct the first evaluation to track this student's progress.</p>
             </div>
           ) : (
@@ -489,7 +489,7 @@ export function TeacherStudentEvaluationsPanel({ studentId, studentLevel }: Prop
                   <div className="flex md:flex-col md:items-end justify-between items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0">
                     <div className="text-center md:text-right">
                       <p className="text-xs text-muted-foreground font-bold">Score</p>
-                      <p className="text-3xl font-black text-nejah-sapphire text-foreground font-serif">{ev.score}/100</p>
+                      <p className="text-3xl font-black text-foreground font-serif">{ev.score}/100</p>
                     </div>
 
                     <div className="flex flex-col gap-2 items-end">

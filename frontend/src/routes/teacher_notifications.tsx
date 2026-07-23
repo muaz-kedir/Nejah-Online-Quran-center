@@ -273,7 +273,7 @@ function TeacherNotificationsPage() {
             <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               Notifications
             </p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
+            <h1 className="text-4xl font-extrabold text-foreground font-serif">
               Notifications & Updates
             </h1>
           </div>

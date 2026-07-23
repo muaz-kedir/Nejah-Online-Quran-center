@@ -81,9 +81,9 @@ export const StaffOverview = memo(function StaffOverview() {
 
       <div className="space-y-1 p-4">
         {loading ? (
-          <div className="py-8 text-center text-nejah-slate-blue">Loading teachers...</div>
+          <div className="py-8 text-center text-muted-foreground">Loading teachers...</div>
         ) : teachers.length === 0 ? (
-          <div className="py-8 text-center text-nejah-slate-blue">No teachers registered yet</div>
+          <div className="py-8 text-center text-muted-foreground">No teachers registered yet</div>
         ) : (
           teachers.map((staff) => {
             const status = statusConfig[staff.status];
@@ -114,12 +114,12 @@ export const StaffOverview = memo(function StaffOverview() {
                     <p className="text-sm font-medium text-foreground transition-colors group-hover:text-nejah-electric">
                       {staff.fullName}
                     </p>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-nejah-slate-blue">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                       {staff.role}
                     </p>
                   </div>
                 </div>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-nejah-slate-blue opacity-0 transition-opacity hover:bg-primary/10 group-hover:opacity-100">
+                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-opacity hover:bg-primary/10 group-hover:opacity-100">
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </div>

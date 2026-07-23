@@ -46,7 +46,7 @@ export function Hero() {
             {t.hero.title2}{" "}
             <span className="text-gradient">{t.hero.title3}</span>
           </h1>
-          <p className="mb-8 max-w-xl text-base leading-relaxed text-nejah-slate-blue md:text-lg">
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             {t.hero.desc}
           </p>
           <div className="flex flex-wrap gap-3 mb-10">

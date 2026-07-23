@@ -504,7 +504,7 @@ function FamilyPaymentsPage() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin" /></div>
       ) : rows.length === 0 ? (
-        <p className="text-center text-nejah-slate-blue py-16">No family payment records</p>
+        <p className="text-center text-muted-foreground py-16">No family payment records</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((f, i) => (
@@ -516,14 +516,14 @@ function FamilyPaymentsPage() {
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="font-medium text-foreground">{f.parentName}</p>
-                  <p className="text-xs text-nejah-slate-blue capitalize">{f.type === 'bundled' ? 'Bundled Family' : 'Separate Children'}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{f.type === 'bundled' ? 'Bundled Family' : 'Separate Children'}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadgeVariant(f.status)}>{f.status}</Badge>
-                  <Eye className="h-4 w-4 text-nejah-slate-blue" />
+                  <Eye className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
-              <p className="mb-2 text-sm text-nejah-slate-blue">Children:</p>
+              <p className="mb-2 text-sm text-muted-foreground">Children:</p>
               <ul className="mb-3 space-y-1 text-sm">
                 {f.children?.map((c: any) => (
                   <li key={c.studentId} className="flex justify-between">
@@ -537,7 +537,7 @@ function FamilyPaymentsPage() {
                 <span>ETB {f.monthlyTotal}</span>
               </div>
               {f.type === 'bundled' && f.remainingBalance != null && (
-                <p className="mt-1 text-xs text-nejah-slate-blue">Balance: ETB {f.remainingBalance}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Balance: ETB {f.remainingBalance}</p>
               )}
             </div>
           ))}
@@ -558,22 +558,22 @@ function FamilyPaymentsPage() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-nejah-slate-blue">Type:</span> <span className="capitalize">{detail.isSeparate ? 'Separate Children' : 'Bundled Family'}</span></div>
-                <div><span className="text-nejah-slate-blue">Monthly Total:</span> ETB {detail.monthlyTotal}</div>
+                <div><span className="text-muted-foreground">Type:</span> <span className="capitalize">{detail.isSeparate ? 'Separate Children' : 'Bundled Family'}</span></div>
+                <div><span className="text-muted-foreground">Monthly Total:</span> ETB {detail.monthlyTotal}</div>
                 {!detail.isSeparate && (
                   <>
-                    <div><span className="text-nejah-slate-blue">Amount Paid:</span> ETB {detail.amountPaid}</div>
-                    <div><span className="text-nejah-slate-blue">Remaining Balance:</span> ETB {detail.remainingBalance}</div>
+                    <div><span className="text-muted-foreground">Amount Paid:</span> ETB {detail.amountPaid}</div>
+                    <div><span className="text-muted-foreground">Remaining Balance:</span> ETB {detail.remainingBalance}</div>
                   </>
                 )}
-                <div><span className="text-nejah-slate-blue">Status:</span> <Badge variant={statusBadgeVariant(detail.status)}>{detail.status}</Badge></div>
-                {detail.dueDate && <div><span className="text-nejah-slate-blue">Due Date:</span> {detail.dueDate}</div>}
+                <div><span className="text-muted-foreground">Status:</span> <Badge variant={statusBadgeVariant(detail.status)}>{detail.status}</Badge></div>
+                {detail.dueDate && <div><span className="text-muted-foreground">Due Date:</span> {detail.dueDate}</div>}
               </div>
 
               <div>
                 <p className="mb-2 font-medium">Children</p>
                 {(detail.children || []).map((c: any, i: number) => (
-                  <p key={i} className="text-nejah-slate-blue">{c.studentName} — ETB {c.monthlyFee}/mo</p>
+                  <p key={i} className="text-muted-foreground">{c.studentName} — ETB {c.monthlyFee}/mo</p>
                 ))}
               </div>
 
@@ -587,10 +587,10 @@ function FamilyPaymentsPage() {
                   <div>
                     <p className="mb-2 font-medium">Payment History</p>
                     {(!detail.paymentHistory || detail.paymentHistory.length === 0) && (
-                      <p className="text-nejah-slate-blue">No transactions yet</p>
+                      <p className="text-muted-foreground">No transactions yet</p>
                     )}
                     {detail.paymentHistory?.map((t: any) => (
-                      <p key={t.id} className="text-nejah-slate-blue">
+                      <p key={t.id} className="text-muted-foreground">
                         {t.transactionDate}: ETB {t.amount} ({t.type}){t.description ? ` — ${t.description}` : ''}
                       </p>
                     ))}

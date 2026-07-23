@@ -83,7 +83,7 @@ export function Teachers() {
               <h3 className="text-lg font-medium text-foreground">{tc.fullName}</h3>
               <div className="mb-3 text-sm font-semibold text-nejah-electric">{tc.specialization}</div>
               {tc.experience && (
-                <p className="mb-5 text-sm leading-relaxed text-nejah-slate-blue">{tc.experience}</p>
+                <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{tc.experience}</p>
               )}
               <Button
                 onClick={() => setSelectedTeacher(tc)}
@@ -116,11 +116,11 @@ export function Teachers() {
               </div>
             </div>
             {selectedTeacher.experience && (
-              <p className="text-sm leading-relaxed text-nejah-slate-blue mb-6">
+              <p className="text-sm leading-relaxed text-muted-foreground mb-6">
                 {selectedTeacher.experience}
               </p>
             )}
-            <p className="text-sm leading-relaxed text-nejah-slate-blue">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {t.teachers?.bookTrial || "Book Trial"} with {selectedTeacher.fullName} to experience their teaching style firsthand and discuss your learning goals.
             </p>
           </div>

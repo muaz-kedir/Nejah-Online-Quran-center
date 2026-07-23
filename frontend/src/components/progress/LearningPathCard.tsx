@@ -63,7 +63,7 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
     <div className={cn('w-full', className)}>
       {!compact && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">Learning Path</h3>
+          <h3 className="text-lg font-bold text-foreground">Learning Path</h3>
           {path.progressionPaused && (
             <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
               <Pause className="h-3 w-3" /> Progression paused
@@ -104,9 +104,9 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                     'font-bold mt-2 leading-tight',
                     compact ? 'text-[10px]' : 'text-xs',
                     stage.status === 'current'
-                      ? 'text-nejah-sapphire text-nejah-electric'
+                      ? 'text-nejah-electric'
                       : stage.status === 'completed'
-                        ? 'text-nejah-sapphire dark:text-foreground'
+                        ? 'text-foreground dark:text-foreground'
                         : 'text-muted-foreground',
                   )}
                 >
@@ -189,7 +189,7 @@ export function LevelHistoryList({ history }: { history: LevelHistoryEntry[] }) 
                   : 'bg-muted',
             )}
           />
-          <p className="font-bold text-sm text-nejah-sapphire text-foreground">
+          <p className="font-bold text-sm text-foreground">
             {h.level}
             <span
               className={cn(

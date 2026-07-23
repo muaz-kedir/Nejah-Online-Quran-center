@@ -36,7 +36,7 @@ export function StatCard({ icon: Icon, value, label, subValue, color, bgColor }:
       </div>
       <div className="mt-6">
         <h3 className="text-3xl font-extrabold text-foreground font-serif leading-none">{value}</h3>
-        <p className="text-sm font-semibold text-muted-foreground dark:text-nejah-slate-blue mt-2">
+        <p className="text-sm font-semibold text-muted-foreground dark:text-muted-foreground mt-2">
           {label}
         </p>
       </div>

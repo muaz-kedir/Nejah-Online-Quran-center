@@ -55,7 +55,7 @@ function StudentHomework() {
       <main className="flex-1 px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-4xl">
         <div className="mb-10">
           <p className="text-[10px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Student Portal</p>
-          <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">Homework</h1>
+          <h1 className="text-4xl font-extrabold text-foreground font-serif">Homework</h1>
         </div>
 
         {homeworks.length === 0 ? (
@@ -76,7 +76,7 @@ function StudentHomework() {
                     onClick={() => setExpanded(isOpen ? null : hw.id)}
                   >
                     <div>
-                      <h3 className="font-bold text-lg text-nejah-sapphire text-foreground">{hw.title}</h3>
+                      <h3 className="font-bold text-lg text-foreground">{hw.title}</h3>
                       <p className="text-xs text-muted-foreground mt-1">Teacher: {hw.teacher}</p>
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <CalendarDays className="h-3 w-3" />

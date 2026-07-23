@@ -107,7 +107,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
           <div className="absolute top-6 right-8">
             <Badge className={cn(
               "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-tighter border-none",
-              student.status === 'active' ? "bg-primary/40 text-nejah-sapphire text-foreground" : "bg-nejah-slate-blue text-white"
+              student.status === 'active' ? "bg-primary/40 text-foreground" : "bg-muted text-muted-foreground"
             )}>
               {student.status}
             </Badge>
@@ -118,7 +118,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-primary/10/50 dark:bg-primary/10/10 p-5 rounded-3xl border border-primary/100 dark:border-nejah-border-blue/30">
               <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Attendance</p>
-              <h3 className="text-2xl font-black text-nejah-sapphire text-nejah-electric">{student.attendanceRate || 0}%</h3>
+              <h3 className="text-2xl font-black text-nejah-electric">{student.attendanceRate || 0}%</h3>
               <div className="w-full h-1.5 bg-primary/10 dark:bg-primary/10/40 rounded-full mt-2 overflow-hidden">
                 <div className="h-full bg-primary rounded-full" style={{ width: `${student.attendanceRate}%` }} />
               </div>

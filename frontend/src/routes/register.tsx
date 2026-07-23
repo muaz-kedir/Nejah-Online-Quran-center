@@ -458,7 +458,7 @@ function RegisterPage() {
                 {currentStep !== "student" ? <CheckCircle2 className="h-5 w-5" /> : "1"}
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep === "student" ? "text-nejah-electric" : "text-nejah-slate-blue"
+                currentStep === "student" ? "text-nejah-electric" : "text-muted-foreground"
               }`}>
                 Student Info
               </span>
@@ -466,12 +466,12 @@ function RegisterPage() {
             <div className={`h-1 w-16 ${currentStep !== "student" ? "bg-primary" : "bg-nejah-surface/50"}`} />
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-nejah-surface/50 text-nejah-slate-blue"
+                currentStep !== "student" ? "bg-blue-600 text-white" : "bg-nejah-surface/50 text-muted-foreground"
               }`}>
                 2
               </div>
               <span className={`ml-2 text-sm font-medium ${
-                currentStep !== "student" ? "text-blue-600" : "text-nejah-slate-blue"
+                currentStep !== "student" ? "text-blue-600" : "text-muted-foreground"
               }`}>
                 Parent Info
               </span>
@@ -490,7 +490,7 @@ function RegisterPage() {
                 <CheckCircle2 className="h-16 w-16 text-green-600" />
               </div>
               <h3 className="text-2xl font-bold text-foreground">Registration Successful!</h3>
-              <p className="text-nejah-slate-blue">You are being redirected to the login page...</p>
+              <p className="text-muted-foreground">You are being redirected to the login page...</p>
               <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
             </motion.div>
           ) : (
@@ -646,7 +646,7 @@ function RegisterPage() {
                                 <FormLabel>Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-muted-foreground text-sm">
                                       <Phone className="h-4 w-4" />
                                       {studentCountryData ? `+${studentCountryData.phonecode}` : ""}
                                     </div>
@@ -853,7 +853,7 @@ function RegisterPage() {
                                         </button>
                                       </div>
                                     </FormControl>
-                                    <p className="text-xs text-nejah-slate-blue mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -946,7 +946,7 @@ function RegisterPage() {
                             >
                               <Search className="h-8 w-8 text-nejah-electric" />
                               <span className="font-semibold text-foreground">Yes</span>
-                              <span className="text-sm text-nejah-slate-blue">
+                              <span className="text-sm text-muted-foreground">
                                 Search for the existing parent account and link this student to it.
                               </span>
                             </button>
@@ -959,7 +959,7 @@ function RegisterPage() {
                             >
                               <Users className="h-8 w-8 text-blue-600" />
                               <span className="font-semibold text-foreground">No</span>
-                              <span className="text-sm text-nejah-slate-blue">
+                              <span className="text-sm text-muted-foreground">
                                 Register the parent's information and create a new parent account.
                               </span>
                             </button>
@@ -1024,24 +1024,24 @@ function RegisterPage() {
                           </div>
 
                           {parentResults.length > 0 && (
-                            <div className="border border-border rounded-lg max-h-72 overflow-y-auto bg-white shadow-sm">
+                            <div className="border border-border rounded-lg max-h-72 overflow-y-auto bg-card shadow-sm">
                               <table className="w-full text-sm">
                                 <thead className="bg-muted sticky top-0">
                                   <tr>
-                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Parent Name</th>
-                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Email</th>
-                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Phone</th>
-                                    <th className="px-3 py-2 text-left font-medium text-nejah-slate-blue">Children</th>
-                                    <th className="px-3 py-2 text-right font-medium text-nejah-slate-blue">Action</th>
+                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Parent Name</th>
+                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Email</th>
+                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Phone</th>
+                                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Children</th>
+                                    <th className="px-3 py-2 text-right font-medium text-muted-foreground">Action</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
                                   {parentResults.map((parent) => (
                                     <tr key={parent.id} className="hover:bg-muted">
                                       <td className="px-3 py-2 font-medium text-foreground">{parent.fullName}</td>
-                                      <td className="px-3 py-2 text-nejah-slate-blue">{parent.email}</td>
-                                      <td className="px-3 py-2 text-nejah-slate-blue">{parent.phoneNumber || '—'}</td>
-                                      <td className="px-3 py-2 text-nejah-slate-blue">
+                                      <td className="px-3 py-2 text-muted-foreground">{parent.email}</td>
+                                      <td className="px-3 py-2 text-muted-foreground">{parent.phoneNumber || '—'}</td>
+                                      <td className="px-3 py-2 text-muted-foreground">
                                         {parent.childrenCount > 0 ? (
                                           <span className="inline-flex items-center gap-1 bg-primary/10 text-nejah-electric px-2 py-0.5 rounded-full text-xs">
                                             <Users className="w-3 h-3" />
@@ -1072,7 +1072,7 @@ function RegisterPage() {
 
                           {parentSearchPerformed && !searchingParent && parentResults.length === 0 && !selectedParent && (
                             <div className="text-center border border-dashed border-border rounded-lg p-6 space-y-2">
-                              <p className="text-sm text-nejah-slate-blue">No matching parent account found.</p>
+                              <p className="text-sm text-muted-foreground">No matching parent account found.</p>
                               <Button
                                 type="button"
                                 variant="outline"
@@ -1263,7 +1263,7 @@ function RegisterPage() {
                                 <FormLabel>Contact Phone Number *</FormLabel>
                                 <FormControl>
                                   <div className="relative flex items-center">
-                                    <div className="absolute left-3 flex items-center gap-1 text-nejah-slate-blue text-sm">
+                                    <div className="absolute left-3 flex items-center gap-1 text-muted-foreground text-sm">
                                       <Phone className="h-4 w-4" />
                                       {parentCountryData ? `+${parentCountryData.phonecode}` : ""}
                                     </div>
@@ -1359,7 +1359,7 @@ function RegisterPage() {
                               </div>
 
                               {showDuplicateDetails && (
-                                <div className="bg-white border border-amber-200 rounded-md p-3 text-sm space-y-1">
+                                <div className="bg-card border border-amber-200 rounded-md p-3 text-sm space-y-1">
                                   <p><span className="font-medium text-foreground">Name:</span> {duplicateParent.fullName}</p>
                                   <p><span className="font-medium text-foreground">Email:</span> {duplicateParent.email}</p>
                                   <p><span className="font-medium text-foreground">Phone:</span> {duplicateParent.phoneNumber || '—'}</p>
@@ -1441,7 +1441,7 @@ function RegisterPage() {
                   )}
                 </AnimatePresence>
                 
-                <p className="text-center text-sm text-nejah-slate-blue pt-4">
+                <p className="text-center text-sm text-muted-foreground pt-4">
                   Already have an account?{" "}
                   <button
                     type="button"

@@ -425,7 +425,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <BookOpen className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-nejah-sapphire text-foreground">
+              <h3 className="text-lg font-bold text-foreground">
                 {context?.learningTrackLabel || 'Learning Progress'}
               </h3>
               <div className="flex gap-2 mt-1">
@@ -465,20 +465,20 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <Award className="h-4 w-4 mx-auto text-primary mb-1" />
                 <p className="text-xs text-muted-foreground font-bold uppercase">Completed</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.progressSummary.completed || 0}/{context?.progressSummary.total || 0}
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <Star className="h-4 w-4 mx-auto text-primary mb-1" />
                 <p className="text-xs text-muted-foreground font-bold uppercase">Remaining</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.progressSummary.remaining || 0}
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 col-span-2 rounded-xl p-4 text-center">
                 <p className="text-xs text-muted-foreground font-bold uppercase">Current Topic</p>
-                <p className="font-bold text-nejah-sapphire text-foreground text-sm mt-1 truncate">
+                <p className="font-bold text-foreground text-sm mt-1 truncate">
                   {context?.currentTopic?.nameEn || context?.suggestedTopic?.nameEn || '—'}
                 </p>
               </div>
@@ -488,32 +488,32 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <Award className="h-4 w-4 mx-auto text-primary mb-1" />
                 <p className="text-xs text-muted-foreground font-bold uppercase">Surahs</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.completedTopicIds?.filter((id) => id.startsWith('surah-')).length ?? 0}/114
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <Star className="h-4 w-4 mx-auto text-primary mb-1" />
                 <p className="text-xs text-muted-foreground font-bold uppercase">Ayahs</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.progress?.ayahsCount || 0}
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <p className="text-xs text-muted-foreground font-bold uppercase">Last Surah</p>
-                <p className="font-bold text-nejah-sapphire text-foreground text-sm mt-1 truncate">
+                <p className="font-bold text-foreground text-sm mt-1 truncate">
                   {context?.lastPosition?.lastStudiedSurah || '—'}
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <p className="text-xs text-muted-foreground font-bold uppercase">Last Page</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.lastPosition?.lastStudiedPage || '—'}
                 </p>
               </div>
               <div className="bg-muted dark:bg-nejah-surface rounded-xl p-4 text-center">
                 <p className="text-xs text-muted-foreground font-bold uppercase">Last Ayah</p>
-                <p className="font-bold text-nejah-sapphire text-foreground">
+                <p className="font-bold text-foreground">
                   {context?.lastPosition?.lastStudiedAyah || '—'}
                 </p>
               </div>
@@ -573,7 +573,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
             {!sessionActive ? (
               <Button 
                 onClick={startSession} 
-                className="flex-1 bg-white text-nejah-sapphire text-foreground hover:bg-primary/10 font-bold rounded-xl"
+                className="flex-1 bg-card text-foreground hover:bg-primary/10 font-bold rounded-xl"
               >
                 <Play className="h-4 w-4 mr-2" /> Start Session
               </Button>
@@ -600,7 +600,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
 
       {dailyLogs.length > 0 && (
         <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
-          <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-4">Daily Log History</h4>
+          <h4 className="text-sm font-bold text-foreground mb-4">Daily Log History</h4>
           <div className="space-y-3">
             {dailyLogs.slice(0, 5).map((log) => {
               const entry = formatLogEntry(log);
@@ -610,7 +610,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                   className="bg-muted dark:bg-nejah-surface rounded-xl p-4 border border-border dark:border-nejah-border-blue"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-nejah-sapphire text-foreground">{entry.title}</span>
+                    <span className="text-sm font-medium text-foreground">{entry.title}</span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(log.createdAt).toLocaleDateString()}
                     </span>
@@ -625,7 +625,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
 
       {feedbacks.length > 0 && (
         <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
-          <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-4">Recent Feedback</h4>
+          <h4 className="text-sm font-bold text-foreground mb-4">Recent Feedback</h4>
           <div className="space-y-3">
             {feedbacks.slice(0, 3).map((fb) => (
               <div
@@ -662,7 +662,7 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
               {(track === 'qaidah' || track === 'tajweed') && (
                 <>
                   {context?.suggestedTopic && !logForm.isReview ? (
-                    <div className="rounded-lg bg-primary/10 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue px-3 py-2 text-sm text-nejah-sapphire text-foreground">
+                    <div className="rounded-lg bg-primary/10 dark:bg-nejah-sapphire/20 border border-primary/100 dark:border-nejah-border-blue px-3 py-2 text-sm text-foreground">
                       Suggested next lesson: <strong>{context.suggestedTopic.nameEn}</strong>
                     </div>
                   ) : null}
@@ -861,12 +861,12 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
                       className="bg-primary/10 dark:bg-nejah-sapphire/20 rounded-lg p-4 border border-primary/100 dark:border-nejah-border-blue"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-nejah-sapphire text-foreground uppercase">Daily Log</span>
+                        <span className="text-xs font-bold text-foreground uppercase">Daily Log</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(log.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm font-medium text-nejah-sapphire text-foreground">{entry.title}</p>
+                      <p className="text-sm font-medium text-foreground">{entry.title}</p>
                       <p className="text-sm text-muted-foreground">{entry.detail}</p>
                     </div>
                   );

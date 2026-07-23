@@ -199,7 +199,7 @@ export function TeacherStudentHomeworkPanel({ studentId }: TeacherStudentHomewor
                       <div className="flex items-center gap-3">
                         <ClipboardList className="h-5 w-5 text-primary shrink-0" />
                         <div>
-                          <span className="font-medium text-nejah-sapphire text-foreground">{hw.title}</span>
+                          <span className="font-medium text-foreground">{hw.title}</span>
                           {hw.description && (
                             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{hw.description}</p>
                           )}

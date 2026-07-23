@@ -85,7 +85,7 @@ export function Navbar() {
                 <a
                   key={l.href}
                   href={l.href}
-                  className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+                  className="group relative px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-nejah-electric"
                 >
                   {l.label}
                   <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
@@ -94,7 +94,7 @@ export function Navbar() {
                 <Link
                   key={l.href}
                   to={l.href}
-                  className="group relative px-4 py-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+                  className="group relative px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-nejah-electric"
                 >
                   {l.label}
                   <span className="absolute inset-x-4 -bottom-0.5 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />

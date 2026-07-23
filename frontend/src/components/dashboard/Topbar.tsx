@@ -66,7 +66,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
 
   const iconBtn = cn(
     'flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 cursor-pointer',
-    'text-nejah-slate-blue hover:bg-primary/10 hover:text-nejah-electric',
+    'text-muted-foreground hover:bg-primary/10 hover:text-nejah-electric',
   );
 
   return (
@@ -82,12 +82,12 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
 
       <div className="max-w-lg flex-1">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t.searchPlaceholder}
             className={cn(
               'h-9 border-border bg-nejah-surface/30 pl-9 text-sm text-foreground',
-              'placeholder:text-nejah-slate-blue focus:border-nejah-electric/50 dark:border-white/10 dark:bg-background/50',
+              'placeholder:text-muted-foreground focus:border-nejah-electric/50 dark:border-white/10 dark:bg-background/50',
             )}
           />
         </div>
@@ -118,7 +118,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="glass-panel w-44 border-border dark:border-white/5">
-              <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-nejah-slate-blue">
+              <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Language
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
@@ -184,7 +184,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="glass-panel w-56 border-border dark:border-white/5">
-            <DropdownMenuLabel className="text-nejah-slate-blue">My Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-muted-foreground">My Account</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-nejah-border-blue/20" />
             <DropdownMenuItem
               onClick={() => navigate({ to: '/profile' })}

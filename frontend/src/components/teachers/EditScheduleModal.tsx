@@ -233,7 +233,7 @@ export function EditScheduleModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2 font-serif">
+          <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2 font-serif">
             <Calendar className="h-5.5 w-5.5 text-primary" />
             {schedule ? "Edit Schedule" : "Create New Schedule"}
           </DialogTitle>

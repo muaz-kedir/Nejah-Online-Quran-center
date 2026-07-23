@@ -106,7 +106,7 @@ function TeacherProfilePage() {
             <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               My Profile
             </p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
+            <h1 className="text-4xl font-extrabold text-foreground font-serif">
               Teacher Profile
             </h1>
           </div>
@@ -310,7 +310,7 @@ function TeacherProfilePage() {
                       'text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border-none',
                       teacher.status === 'active' ? 'bg-brand-electric/10 text-brand-electric' :
                       teacher.status === 'on leave' ? 'bg-amber-100 text-amber-800' :
-                      'bg-gray-100 text-gray-700'
+                      'bg-muted text-muted-foreground'
                     )}>
                       {teacher.status}
                     </Badge>
@@ -361,7 +361,7 @@ function TeacherProfilePage() {
           </Card>
 
           <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface/30 dark:to-nejah-surface/20 border-primary/200 dark:border-nejah-border-blue/50">
-            <h3 className="text-sm font-bold text-nejah-sapphire dark:text-nejah-electric uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-bold text-foreground dark:text-nejah-electric uppercase tracking-wider mb-4">
               Average Attendance
             </h3>
             <div className="flex items-center gap-4">
@@ -369,7 +369,7 @@ function TeacherProfilePage() {
                 <CheckCircle className="h-8 w-8 text-primary text-nejah-electric" />
               </div>
               <div>
-                <p className="text-4xl font-bold text-nejah-sapphire dark:text-nejah-electric">
+                <p className="text-4xl font-bold text-foreground dark:text-nejah-electric">
                   {teacher.stats?.averageAttendanceRate || '-'}%
                 </p>
                 <p className="text-sm text-primary text-nejah-electric mt-1">Attendance Rate</p>

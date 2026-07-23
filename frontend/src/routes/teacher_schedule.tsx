@@ -73,7 +73,7 @@ function TeacherSchedulePage() {
             <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               Class Schedule
             </p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
+            <h1 className="text-4xl font-extrabold text-foreground font-serif">
               My Schedule
             </h1>
           </div>
@@ -133,7 +133,7 @@ function TeacherSchedulePage() {
             <>
               {currentView === 'day' ? (
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-nejah-sapphire text-foreground mb-6 flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h2>
@@ -192,7 +192,7 @@ function TeacherSchedulePage() {
               ) : (
                 <>
                 <div className="p-6 border-b border-border dark:border-nejah-border-blue bg-muted/50 dark:bg-nejah-surface/20">
-                  <h2 className="text-xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
                     {selectedDay} Schedule
                   </h2>

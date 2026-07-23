@@ -178,7 +178,7 @@ function LoginPage() {
         title="Welcome Back"
         subtitle="Online Quran & Islamic Center — Sign in to your account"
         footer={
-          <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-nejah-slate-blue">
+          <div className="flex justify-center gap-6 text-xs font-medium uppercase tracking-widest text-muted-foreground">
             <button className="transition-colors hover:text-nejah-electric cursor-pointer">Privacy Policy</button>
             <button className="transition-colors hover:text-nejah-electric cursor-pointer">
               Terms of Service
@@ -197,7 +197,7 @@ function LoginPage() {
                   <FormLabel className="text-foreground">Email or Phone</FormLabel>
                   <FormControl>
                     <div className="group relative">
-                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-nejah-electric" />
                       <Input
                         className="h-12 pl-10"
                         placeholder="email@example.com or phone"
@@ -218,7 +218,7 @@ function LoginPage() {
                   <FormLabel className="text-foreground">Password</FormLabel>
                   <FormControl>
                     <div className="group relative">
-                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-nejah-electric" />
                       <Input
                         className="h-12 pl-10 pr-10"
                         type={showPassword ? "text" : "password"}
@@ -256,7 +256,7 @@ function LoginPage() {
                     />
                     <label
                       htmlFor="remember"
-                      className="cursor-pointer text-sm font-medium text-nejah-slate-blue"
+                      className="cursor-pointer text-sm font-medium text-muted-foreground"
                     >
                       Remember me
                     </label>
@@ -289,7 +289,7 @@ function LoginPage() {
             <SilverDivider />
 
             <div className="space-y-2 pt-2 text-center">
-              <p className="text-sm text-nejah-slate-blue">
+              <p className="text-sm text-muted-foreground">
                 New student?{" "}
                 <button
                   type="button"
@@ -300,7 +300,7 @@ function LoginPage() {
                 </button>
               </p>
               {isApplicationsOpen && (
-                <p className="text-sm text-nejah-slate-blue">
+                <p className="text-sm text-muted-foreground">
                   Are you a teacher?{" "}
                   <button
                     type="button"

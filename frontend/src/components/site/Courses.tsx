@@ -65,7 +65,7 @@ export function Courses() {
             <h2 className="heading-premium mb-4 text-3xl md:text-4xl lg:text-5xl">
               {mainTitle}
             </h2>
-            <p className="text-base text-nejah-slate-blue md:text-lg">{description}</p>
+            <p className="text-base text-muted-foreground md:text-lg">{description}</p>
           </div>
           <a
             href="#"
@@ -112,7 +112,7 @@ export function Courses() {
                 </div>
                 <div className="p-5">
                   <h3 className="mb-2 text-lg font-medium text-foreground">{title}</h3>
-                  <p className="mb-4 text-sm leading-relaxed text-nejah-slate-blue">{desc}</p>
+                  <p className="mb-4 text-sm leading-relaxed text-muted-foreground">{desc}</p>
                   <Button
                     variant="outline"
                     onClick={() => setSelectedProgram(program)}

@@ -388,7 +388,7 @@ function ApplyAsTeacherPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
                       <Label htmlFor="fullName" className="text-foreground font-medium">Full Name *</Label>
-                      <Input id="fullName" {...register('fullName')} placeholder="Enter your full name" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="fullName" {...register('fullName')} placeholder="Enter your full name" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
                     </div>
                     <div>
@@ -404,40 +404,40 @@ function ApplyAsTeacherPage() {
                     </div>
                     <div>
                       <Label htmlFor="dateOfBirth" className="text-foreground font-medium">Date of Birth</Label>
-                      <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                     </div>
                     <div>
                       <Label htmlFor="phoneNumber" className="text-foreground font-medium">Phone Number *</Label>
-                      <Input id="phoneNumber" {...register('phoneNumber')} placeholder="+251 9XX XXX XXXX" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="phoneNumber" {...register('phoneNumber')} placeholder="+251 9XX XXX XXXX" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="email" className="text-foreground font-medium">Email Address *</Label>
-                      <Input id="email" type="email" {...register('email')} placeholder="teacher@example.com" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="email" type="email" {...register('email')} placeholder="teacher@example.com" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="password" className="text-foreground font-medium">Password *</Label>
-                      <Input id="password" type="password" {...register('password')} placeholder="Create a password" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="password" type="password" {...register('password')} placeholder="Create a password" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirm Password *</Label>
-                      <Input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="Confirm your password" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="Confirm your password" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="country" className="text-foreground font-medium">Country *</Label>
-                      <Input id="country" {...register('country')} placeholder="e.g. Ethiopia" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="country" {...register('country')} placeholder="e.g. Ethiopia" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                       {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country.message}</p>}
                     </div>
                     <div>
                       <Label htmlFor="city" className="text-foreground font-medium">City</Label>
-                      <Input id="city" {...register('city')} placeholder="e.g. Addis Ababa" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="city" {...register('city')} placeholder="e.g. Addis Ababa" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="streetAddress" className="text-foreground font-medium">Street Address</Label>
-                      <Input id="streetAddress" {...register('streetAddress')} placeholder="Your street address" className="mt-1.5 h-11 bg-muted border-border focus:bg-white" />
+                      <Input id="streetAddress" {...register('streetAddress')} placeholder="Your street address" className="mt-1.5 h-11 bg-muted border-border focus:bg-card" />
                     </div>
                   </div>
                 </div>
@@ -585,7 +585,7 @@ function ApplyAsTeacherPage() {
                       {documents[doc.key] ? (
                         <div className="flex items-center gap-2 p-2.5 bg-primary/10 rounded-lg">
                           <CheckCircle2 className="h-4 w-4 text-nejah-electric flex-shrink-0" />
-                          <span className="text-sm text-nejah-sapphire text-foreground truncate">{documents[doc.key].fileName}</span>
+                          <span className="text-sm text-foreground truncate">{documents[doc.key].fileName}</span>
                         </div>
                       ) : (
                         <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/400 hover:bg-primary/10 transition-all">
@@ -620,7 +620,7 @@ function ApplyAsTeacherPage() {
                       id="additionalComments"
                       {...register('additionalComments')}
                       placeholder="Any additional information you'd like to share..."
-                      className="mt-1.5 bg-muted border-border focus:bg-white min-h-[100px]"
+                      className="mt-1.5 bg-muted border-border focus:bg-card min-h-[100px]"
                     />
                   </div>
                 </div>
@@ -636,7 +636,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Personal */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Personal Details</h3>
+                    <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-3">Personal Details</h3>
                     <ReviewRow label="Full Name" value={watchAll.fullName} />
                     <ReviewRow label="Gender" value={watchAll.gender} />
                     <ReviewRow label="Date of Birth" value={watchAll.dateOfBirth} />
@@ -649,7 +649,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Qualifications */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Qualifications</h3>
+                    <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-3">Qualifications</h3>
                     <ReviewRow label="Languages" value={watchAll.languages?.join(', ')} />
                     <ReviewRow label="Internet" value={watchAll.internetConnectionType === 'Other' ? watchAll.internetOther : watchAll.internetConnectionType} />
                     <ReviewRow label="Qirat Level" value={watchAll.qiratEducationLevel === 'Other' ? watchAll.qiratOther : watchAll.qiratEducationLevel} />
@@ -660,7 +660,7 @@ function ApplyAsTeacherPage() {
 
                   {/* Documents */}
                   <div className="bg-muted rounded-xl p-5 space-y-2">
-                    <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
+                    <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-3">Uploaded Documents</h3>
                     {Object.values(documents).length > 0 ? (
                       Object.values(documents).map(d => (
                         <div key={d.key} className="flex items-center gap-2 text-sm">
@@ -676,7 +676,7 @@ function ApplyAsTeacherPage() {
 
                   {watchAll.additionalComments && (
                     <div className="bg-muted rounded-xl p-5">
-                      <h3 className="font-semibold text-nejah-sapphire text-foreground text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
+                      <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider mb-3">Additional Comments</h3>
                       <p className="text-sm text-foreground">{watchAll.additionalComments}</p>
                     </div>
                   )}

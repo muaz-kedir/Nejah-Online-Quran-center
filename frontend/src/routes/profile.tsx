@@ -167,7 +167,7 @@ function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-bold text-nejah-sapphire text-foreground overflow-hidden">
+                  <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-bold text-foreground overflow-hidden">
                     {profile?.avatar ? (
                       <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" />
                     ) : (

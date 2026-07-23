@@ -89,9 +89,9 @@ export const SystemAlerts = memo(function SystemAlerts() {
 
       <div className="space-y-2 p-4">
         {loading ? (
-          <div className="py-8 text-center text-sm text-nejah-slate-blue">Loading alerts...</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">Loading alerts...</div>
         ) : alerts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-nejah-slate-blue">No alerts at this time</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">No alerts at this time</div>
         ) : (
           alerts.map((alert) => {
             const config = alertConfig[alert.type];
@@ -111,8 +111,8 @@ export const SystemAlerts = memo(function SystemAlerts() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="mb-0.5 text-sm font-medium text-foreground">{alert.title}</p>
-                  <p className="text-xs leading-relaxed text-nejah-slate-blue">{alert.description}</p>
-                  <p className="mt-1.5 font-mono text-[10px] text-nejah-slate-blue">{alert.time}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{alert.description}</p>
+                  <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">{alert.time}</p>
                 </div>
               </div>
             );

@@ -66,7 +66,7 @@ function FinanceReportsPage() {
                 <CardTitle className="flex items-center gap-2 text-base">
                   <r.icon className="h-5 w-5 text-nejah-electric" /> {r.title}
                 </CardTitle>
-                <p className="text-sm text-nejah-slate-blue">{r.desc}</p>
+                <p className="text-sm text-muted-foreground">{r.desc}</p>
               </CardHeader>
               <CardContent className="space-y-3">
                 {data && (
@@ -75,7 +75,7 @@ function FinanceReportsPage() {
                       .filter(([k]) => k !== 'details')
                       .map(([k, v]) => (
                         <div key={k}>
-                          <span className="text-nejah-slate-blue capitalize">{k.replace(/([A-Z])/g, ' $1')}: </span>
+                          <span className="text-muted-foreground capitalize">{k.replace(/([A-Z])/g, ' $1')}: </span>
                           <span className="font-medium">{String(v)}</span>
                         </div>
                       ))}

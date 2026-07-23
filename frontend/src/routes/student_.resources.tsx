@@ -124,7 +124,7 @@ function ResourceCard({
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-bold text-nejah-sapphire text-foreground line-clamp-1">{resource.titleEn}</h3>
+          <h3 className="font-bold text-foreground line-clamp-1">{resource.titleEn}</h3>
           <Badge variant="outline" className="text-[10px] font-bold bg-muted/50 shrink-0">{resource.resourceType}</Badge>
         </div>
 
@@ -147,11 +147,11 @@ function ResourceCard({
               Open
             </Button>
           )}
-          <Button onClick={() => onDetail(resource)} variant="secondary" className="rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-nejah-sapphire text-foreground">
+          <Button onClick={() => onDetail(resource)} variant="secondary" className="rounded-xl bg-nejah-blue/5 hover:bg-nejah-blue/10 text-foreground">
             Details
           </Button>
           {resource.fileUrl && !resource.youtubeUrl && (
-            <Button onClick={() => onDownload(resource)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-nejah-sapphire text-foreground">
+            <Button onClick={() => onDownload(resource)} variant="outline" className="px-3 rounded-xl border-nejah-blue/20 text-foreground">
               <Download className="w-4 h-4" />
             </Button>
           )}
@@ -292,7 +292,7 @@ function StudentResources() {
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-amber-500 text-white border-none shadow-sm">Featured</Badge>
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-card shadow-sm flex items-center justify-center mb-6">
                     {r.thumbnailUrl ? (
                       <img src={r.thumbnailUrl} alt="" className="w-full h-full object-cover rounded-2xl" />
                     ) : (

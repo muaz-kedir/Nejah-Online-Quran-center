@@ -194,7 +194,7 @@ function TeacherStudentsPage() {
               Search
             </Button>
           </form>
-          <div className="flex items-center gap-2 text-sm text-nejah-slate-blue font-medium">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
             <Filter className="h-4 w-4" />
             <span>
               {meta.total} student{meta.total !== 1 ? "s" : ""} assigned
@@ -227,10 +227,10 @@ function TeacherStudentsPage() {
         ) : students.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <Users className="h-10 w-10 text-nejah-slate-blue" />
+              <Users className="h-10 w-10 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-2">No Students Assigned</h2>
-            <p className="text-sm text-nejah-slate-blue max-w-md mx-auto">
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Students assigned to you by the admin will appear here. Your schedule and class
               sessions will be automatically generated once students are assigned.
             </p>
@@ -272,7 +272,7 @@ function TeacherStudentsPage() {
                             <p className="font-bold text-sm text-foreground leading-tight">
                               {student.fullName}
                             </p>
-                            <p className="text-[10px] text-nejah-slate-blue font-medium">
+                            <p className="text-[10px] text-muted-foreground font-medium">
                               {student.email || "No email"}
                             </p>
                           </div>
@@ -282,7 +282,7 @@ function TeacherStudentsPage() {
                             "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border-none",
                             student.status === "active"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-muted text-nejah-slate-blue",
+                              : "bg-muted text-muted-foreground",
                           )}
                         >
                           {student.status === "active" ? "Active" : "Inactive"}
@@ -291,7 +291,7 @@ function TeacherStudentsPage() {
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div className="bg-background/50 rounded-xl p-3 text-center">
-                          <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider">
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                             Level
                           </p>
                           <p className="text-xs font-bold text-foreground mt-0.5 truncate">
@@ -299,7 +299,7 @@ function TeacherStudentsPage() {
                           </p>
                         </div>
                         <div className="bg-background/50 rounded-xl p-3 text-center">
-                          <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider">
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                             Attendance
                           </p>
                           <p className="text-xs font-bold text-foreground mt-0.5">
@@ -318,7 +318,7 @@ function TeacherStudentsPage() {
 
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-nejah-slate-blue font-medium">Progress</span>
+                          <span className="text-muted-foreground font-medium">Progress</span>
                           <span className="font-bold">
                             {Math.round(student.progressRate || 0)}%
                           </span>
@@ -338,7 +338,7 @@ function TeacherStudentsPage() {
                     </div>
 
                     <div className="border-t border-border dark:border-white/5 px-6 py-3 flex items-center justify-between bg-background/30 dark:bg-nejah-midnight/20">
-                      <div className="flex items-center gap-1.5 text-[10px] text-nejah-slate-blue">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span>Next class: —</span>
                       </div>
@@ -369,22 +369,22 @@ function TeacherStudentsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-background/50 border-b border-border dark:border-white/5">
-                    <th className="py-4 px-6 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Student
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Level
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Status
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Attendance
                     </th>
-                    <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Progress
                     </th>
-                    <th className="py-4 px-6 text-right text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                    <th className="py-4 px-6 text-right text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       Actions
                     </th>
                   </tr>
@@ -416,7 +416,7 @@ function TeacherStudentsPage() {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-foreground">{student.fullName}</p>
-                            <p className="text-[10px] text-nejah-slate-blue">
+                            <p className="text-[10px] text-muted-foreground">
                               {student.email || "—"}
                             </p>
                           </div>
@@ -514,7 +514,7 @@ function TeacherStudentsPage() {
 
         {meta.totalPages > 1 && (
           <div className="flex items-center justify-between bg-background/50 border border-border dark:border-white/5 rounded-2xl px-6 py-4">
-            <p className="text-xs text-nejah-slate-blue font-medium">
+            <p className="text-xs text-muted-foreground font-medium">
               Showing {(meta.page - 1) * meta.limit + 1}–
               {Math.min(meta.page * meta.limit, meta.total)} of {meta.total}
             </p>

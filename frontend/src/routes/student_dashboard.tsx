@@ -399,7 +399,7 @@ function StudentDashboard() {
                 )}
                 <div className="flex flex-col gap-2 mt-5">
                   <Button
-                    className="bg-white text-nejah-sapphire text-foreground hover:bg-white/90 font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-card text-foreground hover:bg-card/90 font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={joinClass}
                     disabled={!isSessionLive}
                   >

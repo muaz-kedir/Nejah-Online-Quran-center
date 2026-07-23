@@ -482,7 +482,7 @@ function StudentPaymentsPage() {
             {loading ? (
               <TableRow><TableCell colSpan={7} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="py-12 text-center text-nejah-slate-blue">No payment records found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="py-12 text-center text-muted-foreground">No payment records found</TableCell></TableRow>
             ) : rows.map((r) => (
               <TableRow key={r.id} className="cursor-pointer" onClick={() => openDetail(r)}>
                 <TableCell className="font-medium">{r.studentName}</TableCell>
@@ -503,7 +503,7 @@ function StudentPaymentsPage() {
       {meta && meta.totalPages > 1 && (
         <div className="mt-4 flex justify-between">
           <Button variant="outline" disabled={filters.page! <= 1} onClick={() => setFilters({ ...filters, page: (filters.page || 1) - 1 })}>Previous</Button>
-          <span className="text-sm text-nejah-slate-blue">Page {meta.page} of {meta.totalPages}</span>
+          <span className="text-sm text-muted-foreground">Page {meta.page} of {meta.totalPages}</span>
           <Button variant="outline" disabled={filters.page! >= meta.totalPages} onClick={() => setFilters({ ...filters, page: (filters.page || 1) + 1 })}>Next</Button>
         </div>
       )}
@@ -520,27 +520,27 @@ function StudentPaymentsPage() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-nejah-slate-blue">Program:</span> {cur.program}</div>
-                <div><span className="text-nejah-slate-blue">Teacher:</span> {cur.teacherName}</div>
-                <div><span className="text-nejah-slate-blue">Monthly Fee:</span> ETB {cur.monthlyFee}</div>
-                <div><span className="text-nejah-slate-blue">Paid:</span> ETB {cur.amountPaid}</div>
-                <div><span className="text-nejah-slate-blue">Balance:</span> ETB {cur.remainingBalance}</div>
-                <div><span className="text-nejah-slate-blue">Sessions/mo:</span> {cur.monthlySessions}</div>
+                <div><span className="text-muted-foreground">Program:</span> {cur.program}</div>
+                <div><span className="text-muted-foreground">Teacher:</span> {cur.teacherName}</div>
+                <div><span className="text-muted-foreground">Monthly Fee:</span> ETB {cur.monthlyFee}</div>
+                <div><span className="text-muted-foreground">Paid:</span> ETB {cur.amountPaid}</div>
+                <div><span className="text-muted-foreground">Balance:</span> ETB {cur.remainingBalance}</div>
+                <div><span className="text-muted-foreground">Sessions/mo:</span> {cur.monthlySessions}</div>
               </div>
               {detail && detail.weeklySchedule?.length > 0 && (
                 <div>
                   <p className="mb-2 font-medium">Weekly Schedule</p>
                   {detail.weeklySchedule.map((s: any, i: number) => (
-                    <p key={i} className="text-nejah-slate-blue">{s.day} {s.startTime}–{s.endTime}</p>
+                    <p key={i} className="text-muted-foreground">{s.day} {s.startTime}–{s.endTime}</p>
                   ))}
                 </div>
               )}
               <div>
                 <p className="mb-2 font-medium">Payment History</p>
-                {!detail && <p className="text-nejah-slate-blue">Loading payment history...</p>}
-                {detail && detail.paymentHistory?.length === 0 && <p className="text-nejah-slate-blue">No transactions yet</p>}
+                {!detail && <p className="text-muted-foreground">Loading payment history...</p>}
+                {detail && detail.paymentHistory?.length === 0 && <p className="text-muted-foreground">No transactions yet</p>}
                 {detail && detail.paymentHistory?.map((t: any) => (
-                  <p key={t.id} className="text-nejah-slate-blue">{t.transactionDate}: ETB {t.amount} ({t.type})</p>
+                  <p key={t.id} className="text-muted-foreground">{t.transactionDate}: ETB {t.amount} ({t.type})</p>
                 ))}
               </div>
               {cur.status !== 'paid' && (

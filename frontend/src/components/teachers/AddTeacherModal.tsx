@@ -301,7 +301,7 @@ export function AddTeacherModal({ open, onClose, onSuccess }: AddTeacherModalPro
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+          <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <UserPlus className="h-6 w-6 text-primary" />
             Add New Teacher
           </DialogTitle>

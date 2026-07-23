@@ -609,7 +609,7 @@ function ProgressPage() {
 
             {/* Summary */}
             <div className="bg-primary/10 dark:bg-primary/10/20 rounded-xl p-4 border border-primary/100 dark:border-nejah-border-blue/30">
-              <h5 className="text-sm font-bold text-nejah-sapphire text-nejah-electric mb-2">Summary</h5>
+              <h5 className="text-sm font-bold text-nejah-electric mb-2">Summary</h5>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-primary text-nejah-electric font-semibold">Current Rank:</span>{' '}
