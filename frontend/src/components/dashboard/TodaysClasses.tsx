@@ -88,7 +88,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
         title={t.todaysClasses}
         action={
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-nejah-slate-blue">
+            <span className="font-mono text-xs text-muted-foreground">
               {classes.length > 0
                 ? `${page * ITEMS_PER_PAGE + 1}–${Math.min((page + 1) * ITEMS_PER_PAGE, classes.length)} of ${classes.length}`
                 : '0 of 0'}
@@ -117,11 +117,11 @@ export const TodaysClasses = memo(function TodaysClasses() {
 
       <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
         {isLoading ? (
-          <div className="col-span-1 py-8 text-center font-medium text-nejah-slate-blue md:col-span-2">
+          <div className="col-span-1 py-8 text-center font-medium text-muted-foreground md:col-span-2">
             Loading today's classes...
           </div>
         ) : classes.length === 0 ? (
-          <div className="col-span-1 py-8 text-center font-medium text-nejah-slate-blue md:col-span-2">
+          <div className="col-span-1 py-8 text-center font-medium text-muted-foreground md:col-span-2">
             No classes scheduled for today
           </div>
         ) : (
@@ -143,7 +143,7 @@ export const TodaysClasses = memo(function TodaysClasses() {
                 >
                   {cls.category}
                 </span>
-                <div className="flex items-center gap-1 text-xs text-nejah-slate-blue">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" />
                   <span className="font-mono font-medium">{cls.time}</span>
                 </div>
@@ -164,9 +164,9 @@ export const TodaysClasses = memo(function TodaysClasses() {
                       {cls.isOnline ? (
                         <Wifi className="h-3 w-3 text-nejah-electric" />
                       ) : (
-                        <MapPin className="h-3 w-3 text-nejah-slate-blue" />
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
                       )}
-                      <p className="text-[10px] text-nejah-slate-blue">{cls.location}</p>
+                      <p className="text-[10px] text-muted-foreground">{cls.location}</p>
                     </div>
                   </div>
                 </div>

@@ -337,7 +337,7 @@ export function ProgressDetailsModal({ open, onClose, studentId, studentName }: 
 
             {/* Summary Section */}
             <div className="bg-primary/10 dark:bg-primary/10/20 rounded-xl p-5 border border-primary/100 dark:border-nejah-border-blue/30">
-              <h5 className="text-sm font-bold text-nejah-sapphire text-nejah-electric mb-3 flex items-center gap-2">
+              <h5 className="text-sm font-bold text-nejah-electric mb-3 flex items-center gap-2">
                 <Trophy className="h-4 w-4" /> Summary
               </h5>
               <div className="grid grid-cols-2 gap-3">

@@ -90,7 +90,7 @@ export function SurahSelect({
                     )}
                     <div className={cn(
                       "flex-1 overflow-hidden",
-                      isSelected && highlightSelected && "font-bold text-nejah-sapphire text-nejah-electric",
+                      isSelected && highlightSelected && "font-bold text-nejah-electric",
                       isCompleted && !isSelected && "text-primary text-nejah-electric"
                     )}>
                       {formatSurahLabel(surah)}

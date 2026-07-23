@@ -81,12 +81,12 @@ const CLASSROOM_STATUS_LABELS: Record<string, { label: string; color: string; ic
   },
   no_show: {
     label: "No Show",
-    color: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+    color: "bg-muted/50 text-muted-foreground border-border",
     icon: XCircle,
   },
   not_available: {
     label: "Not Available",
-    color: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+    color: "bg-muted/50 text-muted-foreground border-border",
     icon: Clock,
   },
 };
@@ -459,8 +459,8 @@ function ClassroomPage() {
             </div>
           ) : classroom?.session?.status === "NO_SHOW" ? (
             <div className="flex flex-col items-center gap-3 py-4">
-              <XCircle className="h-12 w-12 text-gray-400" />
-              <p className="font-semibold text-gray-300">No participants joined this session</p>
+              <XCircle className="h-12 w-12 text-muted-foreground" />
+              <p className="font-semibold text-muted-foreground">No participants joined this session</p>
             </div>
           ) : classroom?.session?.status === "EXPIRED" ? (
             <div className="flex flex-col items-center gap-3 py-4">

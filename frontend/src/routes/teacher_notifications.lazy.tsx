@@ -62,7 +62,7 @@ const CHANNEL_COLORS: Record<string, string> = {
   CLASS_ALERT: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30',
   STUDENT_JOINED: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30',
   STUDENT_LEFT: 'text-red-600 bg-red-100 dark:bg-red-900/30',
-  SYSTEM_ALERT: 'text-gray-600 bg-gray-100 dark:bg-gray-900/30',
+  SYSTEM_ALERT: 'text-muted-foreground bg-muted dark:bg-gray-900/30',
   TEMP_REPLACEMENT: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30',
   SCHEDULE_CHANGED: 'text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30',
   HOMEWORK_ASSIGNED: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30',
@@ -238,7 +238,7 @@ function TeacherNotificationsPage() {
             <p className="text-[10px] font-bold text-primary dark:text-primary tracking-widest uppercase mb-1">
               Notifications
             </p>
-            <h1 className="text-4xl font-extrabold text-nejah-sapphire text-foreground font-serif">
+            <h1 className="text-4xl font-extrabold text-foreground font-serif">
               Notifications & Updates
             </h1>
           </div>

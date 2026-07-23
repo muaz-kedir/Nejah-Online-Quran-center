@@ -42,13 +42,13 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
             <h3 className="text-xl font-extrabold text-foreground font-serif">
               {note ? "Edit Note" : "Add Personal Reflection"}
             </h3>
-            <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium mt-0.5">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium mt-0.5">
               Your notes are private and visible only to you
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background hover:text-muted-foreground dark:hover:text-foreground transition-all"
+            className="p-2 rounded-xl text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-background hover:text-muted-foreground dark:hover:text-foreground transition-all"
           >
             <X className="h-5 w-5" />
           </button>
@@ -56,7 +56,7 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
 
         <div className="px-8 py-6 space-y-5">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">
               Note Type
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -72,7 +72,7 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
                         : t === "Observation"
                           ? "bg-amber-500 border-amber-500 text-white"
                           : "bg-blue-500 border-blue-500 text-white"
-                      : "border-border dark:border-white/10 text-muted-foreground dark:text-nejah-slate-blue hover:border-border dark:hover:border-white/20",
+                      : "border-border dark:border-white/10 text-muted-foreground dark:text-muted-foreground hover:border-border dark:hover:border-white/20",
                   )}
                 >
                   {t}
@@ -82,19 +82,19 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">
               Title
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Focus on Makharij with Sarah"
-              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-semibold text-foreground placeholder:text-muted-foreground dark:placeholder:text-nejah-slate-blue/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-semibold text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest">
+            <label className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">
               Content
             </label>
             <textarea
@@ -102,7 +102,7 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your note or observation here..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-medium text-muted-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-nejah-slate-blue/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all resize-none leading-relaxed"
+              className="w-full px-4 py-3 rounded-xl border border-border dark:border-white/10 text-sm font-medium text-muted-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-nejah-electric focus:border-transparent transition-all resize-none leading-relaxed"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ export function NoteModal({ note, onClose, onSave }: NoteModalProps) {
         <div className="flex items-center justify-end gap-3 px-8 pb-8">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background transition-all"
+            className="px-6 py-3 rounded-xl text-sm font-bold text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-background transition-all"
           >
             Cancel
           </button>

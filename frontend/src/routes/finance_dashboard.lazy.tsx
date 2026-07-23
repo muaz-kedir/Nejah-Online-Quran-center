@@ -74,7 +74,7 @@ function FinanceDashboardPage() {
           ].map((link) => (
             <Link key={link.to} to={link.to} className="glass-panel rounded-2xl p-5 transition hover:border-nejah-electric/30">
               <p className="font-medium text-foreground">{link.label}</p>
-              <p className="mt-1 text-xs text-nejah-slate-blue">View & manage →</p>
+              <p className="mt-1 text-xs text-muted-foreground">View & manage →</p>
             </Link>
           ))}
         </div>

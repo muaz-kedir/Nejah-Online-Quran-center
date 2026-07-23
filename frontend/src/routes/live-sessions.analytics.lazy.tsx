@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 export const Route = createLazyFileRoute('/live-sessions/analytics')({
   component: () => (
     <DashboardLayout>
-      <div className="flex items-center justify-center py-24 text-nejah-slate-blue">
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
         <p>Session analytics are unavailable with manual meeting links.</p>
       </div>
     </DashboardLayout>

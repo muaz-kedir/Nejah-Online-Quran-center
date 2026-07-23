@@ -135,7 +135,7 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
         <button
           type="button"
           onClick={() => navigate({ to: '/live-sessions' })}
-          className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
+          className="text-xs font-bold text-foreground flex items-center gap-1 hover:underline"
         >
           View All Sessions <ChevronRight className="h-3 w-3" />
         </button>
@@ -165,7 +165,7 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
               <div className="flex items-center gap-5 shrink-0">
                 {session.actualStart && (
                   <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-bold tabular-nums text-foreground">
                       {new Date(session.actualStart).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -180,13 +180,13 @@ export const TeacherRecentlyCompletedSessions = memo(function TeacherRecentlyCom
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
-                  <Timer className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                  <Timer className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs font-bold tabular-nums text-foreground">
                     {session.durationMinutes ?? '—'}m
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs font-bold tabular-nums text-foreground">
                     {session.attendances?.length || session.participantCount || 0}
                   </span>

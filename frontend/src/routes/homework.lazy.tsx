@@ -248,7 +248,7 @@ function HomeworkPage() {
                     <select
                       value={hw.status}
                       onChange={(e) => handleStatusUpdate(hw.id, e.target.value)}
-                      className="text-sm border rounded px-2 py-1 bg-white"
+                      className="text-sm border rounded px-2 py-1 bg-card"
                     >
                       <option value="Pending">Pending</option>
                       <option value="Completed">Completed</option>

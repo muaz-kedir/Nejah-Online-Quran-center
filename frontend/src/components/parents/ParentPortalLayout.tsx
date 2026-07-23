@@ -312,7 +312,7 @@ export function ParentPortalLayout({
 
   return (
     <OnboardingGuard>
-      <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
+      <div className="flex h-screen dark:bg-background bg-muted/80 overflow-hidden text-foreground font-sans">
       {/* ─── Desktop Sidebar ─── */}
       <aside
         className={cn(
@@ -430,7 +430,7 @@ export function ParentPortalLayout({
 
 export function ParentPageLoader() {
   return (
-    <div className="flex h-screen items-center justify-center dark:bg-background bg-gray-50/80">
+    <div className="flex h-screen items-center justify-center dark:bg-background bg-muted/80">
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
           <div className="w-12 h-12 rounded-full border-[3px] border-primary/20" />

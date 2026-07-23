@@ -27,7 +27,7 @@ const statusConfig: Record<
   CANCELLED: {
     label: "Cancelled",
     icon: XCircle,
-    className: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700/50",
+    className: "bg-muted text-muted-foreground border-gray-200 dark:bg-gray-800/30 dark:text-muted-foreground dark:border-gray-700/50",
   },
   NO_SHOW: {
     label: "No Show",
@@ -37,7 +37,7 @@ const statusConfig: Record<
   EXPIRED: {
     label: "Expired",
     icon: Clock,
-    className: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/30 dark:text-gray-500 dark:border-gray-700/50",
+    className: "bg-muted text-muted-foreground border-gray-200 dark:bg-gray-800/30 dark:text-muted-foreground dark:border-gray-700/50",
   },
 };
 

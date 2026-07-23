@@ -200,7 +200,7 @@ function LiveSessionsPage() {
       case 'LIVE': return 'bg-red-500 text-white border-none animate-pulse';
       case 'COMPLETED': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none';
       case 'CANCELLED': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-none';
-      case 'NO_SHOW': return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none';
+      case 'NO_SHOW': return 'bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none';
       case 'EXPIRED': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none';
       default: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none';
     }
@@ -243,7 +243,7 @@ function LiveSessionsPage() {
   const SortHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center gap-1 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest hover:text-nejah-electric transition-colors"
+      className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-nejah-electric transition-colors"
     >
       {children}
       <ArrowUpDown className={cn('h-3 w-3', sortField === field && 'text-nejah-electric')} />
@@ -333,24 +333,24 @@ function LiveSessionsPage() {
                             </span>
                             LIVE
                           </Badge>
-                          <span className="text-[10px] font-bold text-nejah-slate-blue tabular-nums flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-muted-foreground tabular-nums flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {s.actualStart ? new Date(s.actualStart).toLocaleTimeString() : ''}
                           </span>
                         </div>
-                        <h3 className="text-lg font-bold text-nejah-sapphire dark:text-white mb-1">
+                        <h3 className="text-lg font-bold text-foreground dark:text-white mb-1">
                           {s.schedule?.className || 'Quran Class'}
                         </h3>
-                        <p className="text-xs text-nejah-slate-blue mb-3">{s.teacher?.fullName}</p>
+                        <p className="text-xs text-muted-foreground mb-3">{s.teacher?.fullName}</p>
                         <div className="grid grid-cols-2 gap-3 bg-background/50 dark:bg-nejah-midnight/30 rounded-2xl p-4 mb-4">
                           <div className="text-center">
-                            <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider">Present</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Present</p>
                             <p className="text-lg font-bold text-green-600">
                               {s.attendances?.filter((a: any) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE').length || 0}
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider">Duration</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Duration</p>
                             <p className="text-lg font-bold tabular-nums">
                               {s.actualStart
                                 ? `${Math.floor((Date.now() - new Date(s.actualStart).getTime()) / 60000)}m`
@@ -399,7 +399,7 @@ function LiveSessionsPage() {
                       'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap',
                       statusFilter === s
                         ? 'bg-nejah-sapphire text-white'
-                        : 'bg-background/50 text-nejah-slate-blue hover:bg-muted',
+                        : 'bg-background/50 text-muted-foreground hover:bg-muted',
                     )}
                   >
                     {s === 'all' ? 'All' : s}
@@ -436,10 +436,10 @@ function LiveSessionsPage() {
                       <td colSpan={8}>
                         <div className="py-16 text-center">
                           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Video className="h-8 w-8 text-nejah-slate-blue" />
+                            <Video className="h-8 w-8 text-muted-foreground" />
                           </div>
-                          <p className="text-sm font-bold text-nejah-slate-blue">No sessions found</p>
-                          <p className="text-xs text-nejah-slate-blue mt-1">Try adjusting your search or filters</p>
+                          <p className="text-sm font-bold text-muted-foreground">No sessions found</p>
+                          <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
                         </div>
                       </td>
                     </tr>
@@ -450,24 +450,24 @@ function LiveSessionsPage() {
                         className="hover:bg-background/50 dark:hover:bg-nejah-surface/20 transition-all"
                       >
                         <td className="py-4 px-6">
-                          <p className="font-bold text-sm text-nejah-sapphire dark:text-foreground">
+                          <p className="font-bold text-sm text-foreground dark:text-foreground">
                             {s.schedule?.className || 'Quran Class'}
                           </p>
-                          <p className="text-[10px] text-muted-foreground dark:text-nejah-slate-blue font-bold uppercase mt-0.5">
+                          <p className="text-[10px] text-muted-foreground dark:text-muted-foreground font-bold uppercase mt-0.5">
                             {s.student?.fullName || (s.studentId ? `Student #${s.studentId.slice(0, 8)}` : 'Group Session')}
                           </p>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-nejah-sapphire dark:text-nejah-electric">
+                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-foreground dark:text-nejah-electric">
                               {s.teacher?.fullName?.charAt(0) || '?'}
                             </div>
-                            <span className="text-xs font-semibold text-nejah-slate-blue">{s.teacher?.fullName}</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{s.teacher?.fullName}</span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-xs font-bold tabular-nums">{new Date(s.scheduledStart).toLocaleDateString()}</p>
-                          <p className="text-[10px] text-nejah-slate-blue tabular-nums">
+                          <p className="text-[10px] text-muted-foreground tabular-nums">
                             {new Date(s.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </td>
@@ -489,8 +489,8 @@ function LiveSessionsPage() {
                             <span className="text-green-600 font-bold">
                               {s.attendances?.filter((a: any) => a.attendanceStatus === 'PRESENT' || a.attendanceStatus === 'LATE').length || 0}
                             </span>
-                            <span className="text-nejah-slate-blue">/</span>
-                            <span className="text-nejah-slate-blue">{s.attendances?.length || 0}</span>
+                            <span className="text-muted-foreground">/</span>
+                            <span className="text-muted-foreground">{s.attendances?.length || 0}</span>
                           </div>
                         </td>
                         <td className="py-4 px-6 text-right">
@@ -543,7 +543,7 @@ function LiveSessionsPage() {
             </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-border dark:border-white/5">
-                <p className="text-xs text-nejah-slate-blue">
+                <p className="text-xs text-muted-foreground">
                   Page {page} of {totalPages}
                 </p>
                 <div className="flex gap-2">
@@ -579,7 +579,7 @@ function LiveSessionsPage() {
               <AlertTriangle className="h-5 w-5 text-red-500" />
               Cancel Session
             </DialogTitle>
-            <DialogDescription className="text-xs text-nejah-slate-blue">
+            <DialogDescription className="text-xs text-muted-foreground">
               This will cancel the session, end the meeting, and notify the student. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

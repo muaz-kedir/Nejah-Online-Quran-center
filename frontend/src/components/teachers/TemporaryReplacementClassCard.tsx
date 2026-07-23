@@ -84,7 +84,7 @@ export function TemporaryReplacementClassCard({
           placeholder="https://zoom.us/j/..."
           value={meetingLink}
           onChange={(e) => setMeetingLink(e.target.value)}
-          className="h-9 text-sm bg-white"
+          className="h-9 text-sm bg-card"
         />
       </div>
 

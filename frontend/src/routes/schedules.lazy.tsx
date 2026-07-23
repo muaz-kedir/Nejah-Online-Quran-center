@@ -120,7 +120,7 @@ function SchedulesPage() {
               'px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap flex flex-col gap-1 h-auto min-w-[88px]',
               selectedDay === day
                 ? 'bg-primary text-white hover:bg-nejah-azure'
-                : 'bg-white text-muted-foreground hover:bg-primary/10 border-border',
+                : 'bg-card text-muted-foreground hover:bg-primary/10 border-border',
             )}
           >
             <span>{day.substring(0, 3)}</span>
@@ -143,7 +143,7 @@ function SchedulesPage() {
 
       <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <Calendar className="h-4 w-4 text-primary" />
-        <span className="font-semibold text-nejah-sapphire text-foreground">{selectedDay}</span>
+        <span className="font-semibold text-foreground">{selectedDay}</span>
         <span>
           — {filtered.length} {filtered.length === 1 ? 'class' : 'classes'}
         </span>

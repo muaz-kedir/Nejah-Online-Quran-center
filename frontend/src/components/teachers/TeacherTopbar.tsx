@@ -75,7 +75,7 @@ export function TeacherTopbar({ teacher }: TeacherTopbarProps) {
 
       <div className="flex-1 max-w-xl mx-8" ref={searchRef}>
         <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-nejah-slate-blue" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
           <Input
             placeholder="Search students, resources, or notes..."
             value={searchQuery}
@@ -132,11 +132,11 @@ export function TeacherTopbar({ teacher }: TeacherTopbarProps) {
             <p className="text-sm font-bold text-foreground leading-tight">
               {teacher?.name || teacher?.fullName || "Teacher"}
             </p>
-            <p className="text-[10px] text-muted-foreground dark:text-nejah-slate-blue font-bold uppercase tracking-wider">
+            <p className="text-[10px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-wider">
               Teacher
             </p>
           </div>
-          <div className="w-10 h-10 rounded-full border-2 border-nejah-electric/15 p-0.5 bg-primary/10 flex items-center justify-center text-nejah-sapphire text-foreground font-bold">
+          <div className="w-10 h-10 rounded-full border-2 border-nejah-electric/15 p-0.5 bg-primary/10 flex items-center justify-center text-foreground font-bold">
             {teacher?.avatarUrl || teacher?.avatar ? (
               <img
                 src={teacher!.avatarUrl || teacher!.avatar!}
@@ -152,7 +152,7 @@ export function TeacherTopbar({ teacher }: TeacherTopbarProps) {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate({ to: "/teacher_notifications" })}
-            className="relative p-2 text-muted-foreground dark:text-nejah-slate-blue hover:text-nejah-electric transition-colors"
+            className="relative p-2 text-muted-foreground dark:text-muted-foreground hover:text-nejah-electric transition-colors"
           >
             <Bell className="h-6 w-6" />
             <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />

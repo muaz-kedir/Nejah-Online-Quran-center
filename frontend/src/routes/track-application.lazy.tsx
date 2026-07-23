@@ -101,7 +101,7 @@ function TrackApplicationPage() {
               <Search className="h-7 w-7 text-nejah-electric" />
             </div>
             <h1 className="mb-2 text-2xl font-medium tracking-tight text-foreground">Track Your Application</h1>
-            <p className="text-sm text-nejah-slate-blue">Enter your email and application number to check your application status.</p>
+            <p className="text-sm text-muted-foreground">Enter your email and application number to check your application status.</p>
           </div>
 
           <div className="glass-panel relative overflow-hidden rounded-2xl p-6">
@@ -112,7 +112,7 @@ function TrackApplicationPage() {
                 <div className="relative mt-1.5">
                   <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-muted-foreground" />
                   <Input id="track-email" {...form.register('email')} placeholder="teacher@example.com"
-                    className="pl-10 h-11 bg-muted border-border focus:bg-white"
+                    className="pl-10 h-11 bg-muted border-border focus:bg-card"
                   />
                 </div>
                 {form.formState.errors.email && (
@@ -125,7 +125,7 @@ function TrackApplicationPage() {
                 <div className="relative mt-1.5">
                   <Hash className="absolute left-3 top-3 h-4.5 w-4.5 text-muted-foreground" />
                   <Input id="track-appnum" {...form.register('applicationNumber')} placeholder="NJH-XXXXXX-XXXXXX"
-                    className="pl-10 h-11 bg-muted border-border focus:bg-white"
+                    className="pl-10 h-11 bg-muted border-border focus:bg-card"
                   />
                 </div>
                 {form.formState.errors.applicationNumber && (
@@ -169,7 +169,7 @@ function TrackApplicationPage() {
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground">
               Want to apply?{' '}
-              <button onClick={() => navigate({ to: '/apply-as-teacher' })} className="font-bold text-primary hover:text-nejah-sapphire dark:hover:text-nejah-electric">
+              <button onClick={() => navigate({ to: '/apply-as-teacher' })} className="font-bold text-primary hover:text-foreground dark:hover:text-nejah-electric">
                 Submit an Application
               </button>
             </p>

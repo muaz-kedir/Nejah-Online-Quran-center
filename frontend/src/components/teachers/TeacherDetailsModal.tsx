@@ -85,8 +85,8 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-lg text-nejah-sapphire text-nejah-electric">
+          <DialogTitle className="text-2xl font-bold text-foreground font-serif flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-lg text-nejah-electric">
               {teacher.fullName?.charAt(0)}
             </div>
             <div>
@@ -107,25 +107,25 @@ export function TeacherDetailsModal({ open, onClose, teacher }: TeacherDetailsMo
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Students</p>
-              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
+              <p className="text-xl font-extrabold text-foreground mt-1 font-serif">
                 {analytics?.studentCount ?? (teacher.students?.length || 0)}
               </p>
             </div>
             <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Weekly Hours</p>
-              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
+              <p className="text-xl font-extrabold text-foreground mt-1 font-serif">
                 {analytics?.totalWeeklyHours ?? '-'}
               </p>
             </div>
             <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Experience</p>
-              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
+              <p className="text-xl font-extrabold text-foreground mt-1 font-serif">
                 {teacher.experience || 0}y
               </p>
             </div>
             <div className="bg-muted dark:bg-nejah-surface/50 p-3 rounded-xl border border-border dark:border-nejah-border-blue">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Topics</p>
-              <p className="text-xl font-extrabold text-nejah-sapphire text-foreground mt-1 font-serif">
+              <p className="text-xl font-extrabold text-foreground mt-1 font-serif">
                 {analytics?.topics?.length || 0}
               </p>
             </div>

@@ -145,7 +145,7 @@ function TeacherDailySchedulePage() {
         <div>
           <button
             onClick={() => navigate({ to: '/teachers/$id/profile', params: { id } })}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Teacher Profile
           </button>
@@ -174,7 +174,7 @@ function TeacherDailySchedulePage() {
                 setScheduleToEdit(null);
                 setIsEditScheduleOpen(true);
               }}
-              className="bg-white text-nejah-sapphire text-foreground hover:bg-primary/10 rounded-xl h-11 px-6 shadow-lg shadow-nejah-glow gap-2 font-bold"
+              className="bg-card text-foreground hover:bg-primary/10 rounded-xl h-11 px-6 shadow-lg shadow-nejah-glow gap-2 font-bold"
             >
               <Plus className="h-4 w-4" /> Schedule a Class
             </Button>
@@ -239,7 +239,7 @@ function TeacherDailySchedulePage() {
                       
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-nejah-sapphire text-nejah-electric flex items-center justify-center font-bold text-lg shadow-sm border border-primary/50">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-nejah-electric flex items-center justify-center font-bold text-lg shadow-sm border border-primary/50">
                             {studentAvatar}
                           </div>
                           <div>
@@ -268,13 +268,13 @@ function TeacherDailySchedulePage() {
                       </div>
 
                       <div className="bg-muted dark:bg-nejah-surface/50 rounded-xl p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-nejah-sapphire text-nejah-electric">
+                        <div className="flex items-center gap-2 text-nejah-electric">
                           <Clock className="h-4 w-4 opacity-70" />
                           <span className="text-sm font-bold tracking-tight">
                             {schedule.startTimeString} - {schedule.endTimeString}
                           </span>
                         </div>
-                        <Badge className="bg-primary/10/80 text-nejah-sapphire dark:bg-primary/10 text-nejah-electric border-none text-[10px] font-bold uppercase tracking-wider px-2">
+                        <Badge className="bg-primary/10/80 text-foreground dark:bg-primary/10 text-nejah-electric border-none text-[10px] font-bold uppercase tracking-wider px-2">
                           {schedule.status || 'Active'}
                         </Badge>
                       </div>

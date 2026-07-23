@@ -202,7 +202,7 @@ function ClassSessionContent() {
       <div className="glass-panel flex h-[70vh] items-center justify-center bg-card dark:bg-nejah-surface rounded-[32px] border border-border dark:border-white/5 shadow-sm">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nejah-electric mx-auto" />
-          <p className="text-sm font-bold text-nejah-slate-blue font-serif">
+          <p className="text-sm font-bold text-muted-foreground font-serif">
             Connecting to Quranic Classroom...
           </p>
         </div>
@@ -217,7 +217,7 @@ function ClassSessionContent() {
         <h2 className="text-2xl font-bold text-foreground dark:text-foreground font-serif mb-2">
           Class Session Not Found
         </h2>
-        <p className="text-sm text-nejah-slate-blue mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           The requested class session ID does not exist or has been deleted.
         </p>
         <Button
@@ -240,13 +240,13 @@ function ClassSessionContent() {
         );
       case "COMPLETED":
         return (
-          <Badge className="bg-muted text-nejah-slate-blue dark:bg-nejah-surface dark:text-nejah-slate-blue border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+          <Badge className="bg-muted text-muted-foreground dark:bg-nejah-surface dark:text-muted-foreground border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
             COMPLETED
           </Badge>
         );
       case "NO_SHOW":
         return (
-          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+          <Badge className="bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
             NO SHOW
           </Badge>
         );
@@ -277,7 +277,7 @@ function ClassSessionContent() {
             else if (userRole === "student") navigate({ to: "/student_dashboard" });
             else navigate({ to: "/dashboard" });
           }}
-          className="flex items-center gap-1.5 text-xs font-black text-nejah-slate-blue hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
+          className="flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
         >
           <ChevronLeft className="h-4 w-4" /> Back to Dashboard
         </button>
@@ -341,14 +341,14 @@ function ClassSessionContent() {
                 <CardTitle className="text-2xl font-bold font-serif text-foreground dark:text-foreground">
                   Start the Online Meeting
                 </CardTitle>
-                <CardDescription className="text-xs font-semibold text-nejah-slate-blue dark:text-nejah-slate-blue uppercase tracking-wider">
+                <CardDescription className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                   For Teacher Only
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 space-y-6">
                 {userRole === "teacher" ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-nejah-slate-blue dark:text-nejah-slate-blue leading-relaxed">
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed">
                       To initialize this class session, you can either:
                       <br />
                        • <strong>Auto-create a meeting</strong> (just click Start Meeting)
@@ -359,7 +359,7 @@ function ClassSessionContent() {
                       Students and parents will be automatically notified when you start.
                     </p>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-nejah-slate-blue uppercase tracking-widest ml-1">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                         Meeting Connection URL (Optional if Zoom is connected)
                       </label>
                       <Input
@@ -385,7 +385,7 @@ function ClassSessionContent() {
                       <h4 className="text-sm font-bold text-amber-900 dark:text-amber-400">
                         Waiting for Instructor
                       </h4>
-                      <p className="text-xs text-amber-800/80 dark:text-nejah-slate-blue leading-relaxed">
+                      <p className="text-xs text-amber-800/80 dark:text-muted-foreground leading-relaxed">
                         Assalamu Alaikum. This Quran class session is scheduled but the meeting has
                         not been started yet. You will see a &quot;Join Meeting&quot; option here as
                         soon as your teacher launches the class. Keep this tab open.
@@ -427,7 +427,7 @@ function ClassSessionContent() {
                       />
                       <Button
                         onClick={() => window.open(meetingLink, "_blank")}
-                        className="h-11 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl shrink-0 px-4"
+                        className="h-11 bg-card hover:bg-primary/10 text-foreground font-extrabold rounded-xl shrink-0 px-4"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -467,7 +467,7 @@ function ClassSessionContent() {
                         <div className="flex gap-3">
                           <Button
                             onClick={() => window.open(meetingLink, "_blank")}
-                            className="flex-1 h-12 bg-white hover:bg-primary/10 text-foreground font-extrabold rounded-xl"
+                            className="flex-1 h-12 bg-card hover:bg-primary/10 text-foreground font-extrabold rounded-xl"
                           >
                             <ExternalLink className="h-4 w-4 mr-2" /> Re-Join Call
                           </Button>
@@ -482,9 +482,9 @@ function ClassSessionContent() {
                     ) : (
                       <Button
                         onClick={handleJoinMeeting}
-                        className="w-full h-14 bg-white hover:bg-primary/10 text-nejah-sapphire text-foreground font-black rounded-2xl text-base shadow-xl gap-3"
+                        className="w-full h-14 bg-card hover:bg-primary/10 text-foreground font-black rounded-2xl text-base shadow-xl gap-3"
                       >
-                        <PlayIcon className="h-5 w-5 fill-nejah-sapphire text-nejah-sapphire text-foreground" />
+                        <PlayIcon className="h-5 w-5 fill-nejah-sapphire text-foreground" />
                         Join Meeting Now
                       </Button>
                     )}
@@ -504,7 +504,7 @@ function ClassSessionContent() {
                   <h2 className="text-2xl font-bold font-serif text-foreground">
                     Session Completed
                   </h2>
-                  <p className="text-sm text-nejah-slate-blue mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Class has ended. See the summary below.
                   </p>
                 </div>
@@ -515,7 +515,7 @@ function ClassSessionContent() {
                     <p className="text-2xl font-bold font-mono">
                       {session.totalDuration || session.durationMinutes || "—"}
                     </p>
-                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
                       Duration (min)
                     </p>
                   </div>
@@ -524,21 +524,21 @@ function ClassSessionContent() {
                     <p className="text-2xl font-bold font-mono">
                       {session.totalStudentsPresent || 0}
                     </p>
-                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
                       Present
                     </p>
                   </div>
                   <div className="bg-background/50 rounded-2xl p-4 text-center">
                     <BarChart3 className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
                     <p className="text-2xl font-bold font-mono">{session.totalStudentsLate || 0}</p>
-                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
                       Late
                     </p>
                   </div>
                   <div className="bg-background/50 rounded-2xl p-4 text-center">
                     <ClipboardList className="h-5 w-5 text-nejah-electric mx-auto mb-2" />
                     <p className="text-2xl font-bold font-mono">{session.notes || "—"}</p>
-                    <p className="text-[9px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
                       Notes
                     </p>
                   </div>
@@ -546,7 +546,7 @@ function ClassSessionContent() {
 
                 {session.actualStartTime && (
                   <div className="bg-background/30 rounded-2xl p-4 text-sm">
-                    <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-wider mb-2">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
                       Timeline
                     </p>
                     <div className="flex items-center gap-4 text-xs">
@@ -582,13 +582,13 @@ function ClassSessionContent() {
                 <Users className="h-5 w-5 text-nejah-electric" />
                 Assigned Students ({session.studentAttendances?.length || 0})
               </CardTitle>
-              <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground dark:text-nejah-slate-blue tracking-wider">
+              <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground dark:text-muted-foreground tracking-wider">
                 Attendance Logs
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
               {!session.studentAttendances || session.studentAttendances.length === 0 ? (
-                <div className="py-8 text-center text-xs text-nejah-slate-blue font-medium italic">
+                <div className="py-8 text-center text-xs text-muted-foreground font-medium italic">
                   No students assigned to this class.
                 </div>
               ) : (
@@ -607,7 +607,7 @@ function ClassSessionContent() {
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-nejah-sapphire text-foreground text-xs shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-foreground text-xs shrink-0">
                           {student.fullName?.charAt(0) || "S"}
                         </div>
                         <div>
@@ -637,7 +637,7 @@ function ClassSessionContent() {
                         </Badge>
 
                         {isJoined && (
-                          <p className="text-[9px] text-nejah-slate-blue font-bold tabular-nums mt-1.5">
+                          <p className="text-[9px] text-muted-foreground font-bold tabular-nums mt-1.5">
                             Duration: {record.durationMinutes || 0} mins
                           </p>
                         )}

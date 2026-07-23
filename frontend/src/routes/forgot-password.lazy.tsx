@@ -83,12 +83,12 @@ function ForgotPasswordPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-mono text-[10px] uppercase tracking-widest text-nejah-slate-blue">
+                  <FormLabel className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                     Email Address
                   </FormLabel>
                   <FormControl>
                     <div className="group relative">
-                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-nejah-slate-blue transition-colors group-focus-within:text-nejah-electric" />
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-nejah-electric" />
                       <Input className="h-12 pl-10" placeholder="your@email.com" {...field} />
                     </div>
                   </FormControl>
@@ -115,7 +115,7 @@ function ForgotPasswordPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/login" })}
-                className="inline-flex items-center text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+                className="inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-nejah-electric"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Login

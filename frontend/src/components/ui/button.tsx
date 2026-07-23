@@ -16,7 +16,7 @@ const buttonVariants = cva(
           "border border-nejah-border-blue bg-transparent text-foreground hover:bg-primary/10 hover:border-primary/50",
         secondary:
           "bg-nejah-surface/60 text-foreground border border-nejah-border-blue hover:bg-nejah-sapphire/30",
-        ghost: "text-nejah-slate-blue hover:bg-muted hover:text-foreground",
+        ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

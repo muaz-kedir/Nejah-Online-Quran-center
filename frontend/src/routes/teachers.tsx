@@ -34,11 +34,11 @@ const TeacherRow = memo(function TeacherRow({ teacher, onView, onEdit, onDelete 
     >
       <td className="py-4 px-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex-shrink-0 flex items-center justify-center font-bold text-lg text-nejah-sapphire text-nejah-electric">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex-shrink-0 flex items-center justify-center font-bold text-lg text-nejah-electric">
             {teacher.fullName.charAt(0)}
           </div>
           <div>
-            <p className="font-extrabold text-nejah-sapphire text-foreground group-hover:text-primary transition-colors text-base font-serif">
+            <p className="font-extrabold text-foreground group-hover:text-primary transition-colors text-base font-serif">
               {teacher.fullName}
             </p>
             <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
@@ -742,7 +742,7 @@ function TeachersPage() {
         <div className="admin-filter-bar">
           <div className="flex-1 min-w-[240px]">
             <form onSubmit={handleSearchSubmit} className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search faculty by name, email, or specialty..."
                 value={search}
@@ -774,7 +774,7 @@ function TeachersPage() {
             </Button>
 
             <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
-              <RotateCcw className="h-5 w-5 text-nejah-slate-blue" />
+              <RotateCcw className="h-5 w-5 text-muted-foreground" />
             </Button>
           </div>
         </div>
@@ -784,11 +784,11 @@ function TeachersPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-background/50">
-                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Teacher Name</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Students Count</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Experience</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Status</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Actions</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Teacher Name</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Students Count</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Experience</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -835,7 +835,7 @@ function TeachersPage() {
                   onClick={() => setMeta({ ...meta, page: i + 1 })}
                   className={cn(
                     'h-9 w-9 rounded-xl font-bold border-none',
-                    meta.page === i + 1 ? 'bg-primary hover:bg-nejah-azure' : 'bg-transparent text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric'
+                    meta.page === i + 1 ? 'bg-primary hover:bg-nejah-azure' : 'bg-transparent text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric'
                   )}
                 >
                   {i + 1}
@@ -867,7 +867,7 @@ function TeachersPage() {
                 New Faculty Training Program Begins Next Monday.
               </h2>
             </div>
-            <p className="mt-4 max-w-[500px] text-xs leading-relaxed text-nejah-slate-blue">
+            <p className="mt-4 max-w-[500px] text-xs leading-relaxed text-muted-foreground">
               Join our monthly pedagogy workshop to enhance student engagement and master virtual whiteboard curriculum delivery.
             </p>
           </GlassPanel>
@@ -879,10 +879,10 @@ function TeachersPage() {
               </div>
               <div>
                 <h3 className="text-base font-medium text-foreground">Scholarly Excellence</h3>
-                <p className="text-xs font-medium text-nejah-slate-blue">Faculty Accreditation</p>
+                <p className="text-xs font-medium text-muted-foreground">Faculty Accreditation</p>
               </div>
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-nejah-slate-blue">
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
               View teachers who have successfully completed the advanced virtual ijazah syllabus and curriculum accreditation this quarter.
             </p>
             <button className="mt-4 flex items-center gap-1.5 text-xs font-bold text-nejah-electric group hover:text-nejah-electric/80 cursor-pointer">

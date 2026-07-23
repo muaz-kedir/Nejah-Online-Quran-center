@@ -122,13 +122,13 @@ function AuditLogsPage() {
                             log.method === 'POST' ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400' :
                             log.method === 'PATCH' || log.method === 'PUT' ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400' :
                             log.method === 'DELETE' ? 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-400' :
-                            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            'bg-muted text-foreground dark:bg-gray-800 dark:text-muted-foreground'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                               log.method === 'POST' ? 'bg-green-500' :
                               log.method === 'PATCH' || log.method === 'PUT' ? 'bg-amber-500' :
                               log.method === 'DELETE' ? 'bg-red-500' :
-                              'bg-gray-500'
+                              'bg-muted0'
                             }`} />
                             {log.action || `${log.method} ${log.path}`}
                           </span>

@@ -34,7 +34,7 @@ const statusBadge: Record<string, string> = {
   COMPLETED: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400',
   CANCELLED: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400',
   NO_SHOW: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400',
-  EXPIRED: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400',
+  EXPIRED: 'bg-muted text-foreground border-gray-200 dark:bg-gray-900/30 dark:text-muted-foreground',
 };
 
 const attendanceBadge: Record<string, string> = {

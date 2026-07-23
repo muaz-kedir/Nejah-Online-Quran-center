@@ -153,7 +153,7 @@ function AnalyticsPage() {
         />
         {loading ? (
           <div className="flex h-96 items-center justify-center">
-            <div className="text-center text-nejah-slate-blue flex flex-col items-center gap-3">
+            <div className="text-center text-muted-foreground flex flex-col items-center gap-3">
               <Loader2 className="h-10 w-10 animate-spin text-nejah-electric" />
               <p className="text-sm font-semibold">Loading real-time analytics...</p>
             </div>
@@ -238,7 +238,7 @@ function AnalyticsPage() {
                 <h3 className="mb-6 text-sm font-bold text-foreground tracking-wide uppercase">Session Distribution</h3>
                 <div className="h-72 w-full flex flex-col md:flex-row items-center justify-center gap-4">
                   {sessionDistribution.every((s) => s.value === 0) ? (
-                    <div className="text-center text-nejah-slate-blue py-8">
+                    <div className="text-center text-muted-foreground py-8">
                       <Clock className="mx-auto mb-2 h-12 w-12 opacity-30" />
                       <p className="text-sm">No sessions recorded yet</p>
                     </div>
@@ -278,7 +278,7 @@ function AnalyticsPage() {
                               className="h-3 w-3 rounded-full flex-shrink-0"
                               style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                             />
-                            <span className="text-xs text-nejah-slate-blue font-medium">{item.name}:</span>
+                            <span className="text-xs text-muted-foreground font-medium">{item.name}:</span>
                             <span className="text-xs font-bold font-mono text-foreground">{item.value}</span>
                           </div>
                         ))}

@@ -141,7 +141,7 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
 
         <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 bg-white/50 dark:bg-transparent backdrop-blur-sm">
           <div className="space-y-2.5">
-            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-nejah-sapphire/60 text-nejah-electric/60 flex items-center gap-2">
+            <Label className="text-[11px] font-bold uppercase tracking-[0.15em]/60 text-nejah-electric/60 flex items-center gap-2">
               <Search className="h-3 w-3" /> Select Student
             </Label>
             <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
@@ -165,7 +165,7 @@ export function AssignStudentModal({ open, onClose, onSuccess }: AssignStudentMo
           </div>
 
           <div className="space-y-2.5">
-            <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-nejah-sapphire/60 text-nejah-electric/60 flex items-center gap-2">
+            <Label className="text-[11px] font-bold uppercase tracking-[0.15em]/60 text-nejah-electric/60 flex items-center gap-2">
               <GraduationCap className="h-3 w-3" /> Select Teacher
             </Label>
             <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>

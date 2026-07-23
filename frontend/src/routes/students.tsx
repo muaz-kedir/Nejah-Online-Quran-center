@@ -149,16 +149,16 @@ function StudentsPage() {
       case 'intermediate': return 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
       case 'advanced': return 'bg-nejah-sapphire/20 text-foreground border-nejah-electric/20';
       case 'hifz': return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
-      default: return 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
+      default: return 'bg-nejah-surface/50 text-muted-foreground border-white/10';
     }
   };
 
   const getStatusColor = (s: string) => {
     switch (s?.toLowerCase()) {
       case 'active': return 'bg-primary/10 text-nejah-electric border-nejah-electric/20';
-      case 'inactive': return 'bg-nejah-surface/50 text-nejah-slate-blue border-white/10';
+      case 'inactive': return 'bg-nejah-surface/50 text-muted-foreground border-white/10';
       case 'pending': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      default: return 'bg-nejah-surface/50 text-nejah-slate-blue';
+      default: return 'bg-nejah-surface/50 text-muted-foreground';
     }
   };
 
@@ -189,7 +189,7 @@ function StudentsPage() {
         <div className="admin-filter-bar">
           <div className="flex-1 min-w-[240px]">
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nejah-slate-blue" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by student name or ID..."
                 value={search}
@@ -296,7 +296,7 @@ function StudentsPage() {
              </Button>
              
              <Button variant="ghost" onClick={resetFilters} className="mt-5 h-11 w-11 rounded-xl p-0">
-                <RotateCcw className="h-5 w-5 text-nejah-slate-blue" />
+                <RotateCcw className="h-5 w-5 text-muted-foreground" />
              </Button>
           </div>
         </div>
@@ -306,12 +306,12 @@ function StudentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-background/50 dark:bg-background/50">
-                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Student Name</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Location</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Level</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Assigned Teacher</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Status</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-nejah-slate-blue">Actions</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Student Name</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Location</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Level</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Assigned Teacher</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Status</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -342,7 +342,7 @@ function StudentsPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-bold text-foreground text-foreground group-hover:text-nejah-sapphire dark:group-hover:text-nejah-electric transition-colors">
+                            <p className="font-bold text-foreground text-foreground group-hover:text-foreground dark:group-hover:text-nejah-electric transition-colors">
                               {student.fullName}
                             </p>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">

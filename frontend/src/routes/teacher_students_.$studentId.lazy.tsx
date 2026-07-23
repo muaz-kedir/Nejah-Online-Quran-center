@@ -125,19 +125,19 @@ function TeacherStudentDetailContent() {
     <div className="space-y-6">
       <Link
         to="/teacher_students"
-        className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest"
+        className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric uppercase tracking-widest"
       >
         <ChevronLeft className="h-4 w-4" /> Back to Students Directory
       </Link>
 
       <div className="bg-card dark:bg-nejah-surface rounded-3xl border border-border dark:border-nejah-border-blue p-6 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-2xl text-nejah-sapphire text-nejah-electric shrink-0">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface flex items-center justify-center font-bold text-2xl text-nejah-electric shrink-0">
             {student.fullName?.charAt(0) || 'S'}
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-nejah-sapphire text-foreground font-serif">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-foreground font-serif">
                 {student.fullName}
               </h1>
               {student.isTemporaryAssignment && (
@@ -174,7 +174,7 @@ function TeacherStudentDetailContent() {
                 style={{ width: `${student.attendanceRate || 0}%` }}
               />
             </div>
-            <span className="text-sm font-bold text-nejah-sapphire text-foreground">{student.attendanceRate ?? 0}%</span>
+            <span className="text-sm font-bold text-foreground">{student.attendanceRate ?? 0}%</span>
           </div>
         </div>
       </div>
@@ -208,7 +208,7 @@ function TeacherStudentDetailContent() {
           <div className="space-y-6">
             <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Video className="h-5 w-5 text-primary" /> Quick Actions
                 </h2>
               </div>
@@ -218,16 +218,16 @@ function TeacherStudentDetailContent() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/20 flex items-center justify-center">
-                      <Video className="h-5 w-5 text-nejah-sapphire text-foreground" />
+                      <Video className="h-5 w-5 text-foreground" />
                     </div>
                     <div className="text-left">
-                      <p className="text-sm font-bold text-nejah-sapphire text-foreground">Start a Session</p>
-                      <p className="text-[10px] text-nejah-slate-blue font-medium">
+                      <p className="text-sm font-bold text-foreground">Start a Session</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">
                         Schedule a live session — student will be notified in real-time
                       </p>
                     </div>
                   </div>
-                  <Sparkles className="h-5 w-5 text-nejah-sapphire text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Sparkles className="h-5 w-5 text-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
 
@@ -235,13 +235,13 @@ function TeacherStudentDetailContent() {
               role="tabpanel"
               className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6"
             >
-              <h2 className="text-lg font-bold text-nejah-sapphire text-foreground mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" /> Student Profile
               </h2>
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Full Name</dt>
-                <dd className="font-medium text-nejah-sapphire text-foreground mt-1">{student.fullName || '—'}</dd>
+                <dd className="font-medium text-foreground mt-1">{student.fullName || '—'}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Gender</dt>
@@ -299,7 +299,7 @@ function TeacherStudentDetailContent() {
             <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
               <div>
                 <h3 className="text-xl font-bold font-serif">Start Session</h3>
-                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">
                   A meeting will be created and {student?.fullName || 'the student'} will be notified.
                 </p>
               </div>
@@ -313,7 +313,7 @@ function TeacherStudentDetailContent() {
 
             <div className="px-8 py-6 space-y-5">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Student
                 </Label>
                 <div className="h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium flex items-center">
@@ -322,7 +322,7 @@ function TeacherStudentDetailContent() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Start Date & Time <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-2 items-center">
@@ -340,13 +340,13 @@ function TeacherStudentDetailContent() {
                     Now
                   </button>
                 </div>
-                <p className="text-[10px] text-nejah-slate-blue font-medium mt-1">
+                <p className="text-[10px] text-muted-foreground font-medium mt-1">
                   Duration is auto-set to 60 minutes. Ends when you click "End Session".
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Notes (optional)
                 </Label>
                 <Textarea

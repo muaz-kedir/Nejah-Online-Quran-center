@@ -92,14 +92,14 @@ function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="font-medium">Email Reports</Label>
-                      <p className="text-sm text-nejah-slate-blue">Receive weekly reports via email</p>
+                      <p className="text-sm text-muted-foreground">Receive weekly reports via email</p>
                     </div>
                     <Switch checked={emailReports} onCheckedChange={setEmailReports} />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="font-medium">Auto Attendance Alerts</Label>
-                      <p className="text-sm text-nejah-slate-blue">Alert parents when student is absent</p>
+                      <p className="text-sm text-muted-foreground">Alert parents when student is absent</p>
                     </div>
                     <Switch checked={autoAttendance} onCheckedChange={setAutoAttendance} />
                   </div>
@@ -142,11 +142,11 @@ function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="rounded-lg border border-white/5 bg-background/30 p-4">
                   <div className="mb-2 flex justify-between text-sm">
-                    <span className="text-nejah-slate-blue">Database Status</span>
+                    <span className="text-muted-foreground">Database Status</span>
                     <span className="font-semibold text-nejah-electric">Connected</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-nejah-slate-blue">Last Backup</span>
+                    <span className="text-muted-foreground">Last Backup</span>
                     <span className="text-foreground">N/A</span>
                   </div>
                 </div>

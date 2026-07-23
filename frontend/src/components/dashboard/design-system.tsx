@@ -74,13 +74,13 @@ export function PageHeader({
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow && (
-          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-nejah-slate-blue">
+          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {eyebrow}
           </p>
         )}
         <h1 className="text-3xl font-medium tracking-tight text-foreground">{title}</h1>
         {description && (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-nejah-slate-blue">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
@@ -114,9 +114,9 @@ export function BentoStatCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <p className="text-[10px] font-medium uppercase tracking-widest text-nejah-slate-blue">{label}</p>
+          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{label}</p>
           <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-foreground">{value}</p>
-          {sub && <p className="mt-1 text-xs text-nejah-slate-blue">{sub}</p>}
+          {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
         </div>
         <div className="flex h-12 w-12 items-center justify-center rounded-nejah-lg border border-nejah-electric/20 bg-primary/10 text-nejah-electric transition-transform group-hover:scale-105">
           {icon}

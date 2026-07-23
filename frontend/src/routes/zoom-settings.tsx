@@ -13,7 +13,7 @@ export const Route = createFileRoute('/zoom-settings')({
 function ZoomSettingsPlaceholder() {
   return (
     <TeacherLayout>
-      <div className="flex items-center justify-center py-24 text-nejah-slate-blue">
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
         <p>Zoom settings are no longer required. Teachers now paste meeting links directly when scheduling sessions.</p>
       </div>
     </TeacherLayout>

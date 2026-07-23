@@ -106,10 +106,10 @@ function ParentNotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bell className="h-8 w-8 text-nejah-slate-blue" />
+              <Bell className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-sm font-bold text-nejah-slate-blue">No notifications yet</p>
-            <p className="text-xs text-nejah-slate-blue mt-1">Notifications from your children's classes will appear here</p>
+            <p className="text-sm font-bold text-muted-foreground">No notifications yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Notifications from your children's classes will appear here</p>
           </div>
         ) : (
           <GlassPanel className="overflow-hidden">
@@ -131,8 +131,8 @@ function ParentNotificationsPage() {
                       <p className={cn('text-sm', !n.isRead && 'font-bold')}>{n.title}</p>
                       {!n.isRead && <span className="w-2 h-2 rounded-full bg-nejah-electric shrink-0 mt-1.5" />}
                     </div>
-                    <p className="text-xs text-nejah-slate-blue mt-0.5 line-clamp-2">{n.content}</p>
-                    <p className="text-[10px] text-nejah-slate-blue/60 mt-1.5 tabular-nums">
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.content}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1.5 tabular-nums">
                       {new Date(n.createdAt || n.sentAt).toLocaleString()}
                     </p>
                   </div>

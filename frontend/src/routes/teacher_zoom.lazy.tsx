@@ -170,7 +170,7 @@ function TeacherZoomPage() {
         );
       case "NO_SHOW":
         return (
-          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none text-[9px] font-black uppercase tracking-widest">
+          <Badge className="bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none text-[9px] font-black uppercase tracking-widest">
             No Show
           </Badge>
         );
@@ -234,7 +234,7 @@ function TeacherZoomPage() {
             ) : session.status === "COMPLETED" ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             ) : session.status === "NO_SHOW" ? (
-              <XCircle className="h-5 w-5 text-gray-500" />
+              <XCircle className="h-5 w-5 text-muted-foreground" />
             ) : session.status === "EXPIRED" ? (
               <AlertTriangle className="h-5 w-5 text-orange-500" />
             ) : (
@@ -243,7 +243,7 @@ function TeacherZoomPage() {
           </div>
           <div>
             <p className="text-sm font-bold">{session.schedule?.className || "Quran Class"}</p>
-            <p className="text-[10px] text-nejah-slate-blue font-medium">
+            <p className="text-[10px] text-muted-foreground font-medium">
               {session.student?.fullName || "Group Session"}
             </p>
           </div>
@@ -251,7 +251,7 @@ function TeacherZoomPage() {
         {statusBadge(session.status)}
       </div>
 
-      <div className="flex items-center gap-4 text-[10px] text-nejah-slate-blue font-bold mb-4">
+      <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold mb-4">
         <span className="flex items-center gap-1">
           <Clock className="h-3 w-3" />{" "}
           {formatSessionTime(session.scheduledStart)}
@@ -351,7 +351,7 @@ function TeacherZoomPage() {
   }) => (
     <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-wider">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
           {label}
         </span>
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-nejah-electric">
@@ -437,7 +437,7 @@ function TeacherZoomPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-xs font-bold text-nejah-slate-blue">
+              <span className="text-xs font-bold text-muted-foreground">
                 {weekOffset === 0 ? "This Week" : weekOffset < 0 ? `${Math.abs(weekOffset)} weeks ago` : `${weekOffset} weeks ahead`}
               </span>
               <Button
@@ -483,7 +483,7 @@ function TeacherZoomPage() {
                         "text-[9px] font-bold mt-0.5 px-2 py-0.5 rounded-full",
                         selectedDay === i
                           ? "bg-white/20 text-white"
-                          : "bg-nejah-sapphire/10 text-nejah-sapphire dark:text-nejah-electric",
+                          : "bg-nejah-sapphire/10 text-foreground dark:text-nejah-electric",
                       )}>
                         {sessions.length}
                       </span>
@@ -509,12 +509,12 @@ function TeacherZoomPage() {
                 return (
                   <div className="text-center py-16">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar className="h-8 w-8 text-nejah-slate-blue" />
+                      <Calendar className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-bold text-nejah-slate-blue">
+                    <p className="text-sm font-bold text-muted-foreground">
                       No sessions on {day.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                     </p>
-                    <p className="text-xs text-nejah-slate-blue mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {isSameDay(day, new Date()) ? "No sessions scheduled for today" : "No sessions on this day"}
                     </p>
                   </div>
@@ -525,13 +525,13 @@ function TeacherZoomPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-nejah-sapphire/10 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
+                      <Calendar className="h-5 w-5 text-foreground dark:text-nejah-electric" />
                     </div>
                     <div>
                       <p className="text-sm font-bold">
                         {day.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                       </p>
-                      <p className="text-[10px] text-nejah-slate-blue font-medium">
+                      <p className="text-[10px] text-muted-foreground font-medium">
                         {daySessions.length} session{daySessions.length !== 1 ? "s" : ""}
                       </p>
                     </div>
@@ -550,9 +550,9 @@ function TeacherZoomPage() {
             {teacherSessions.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ClipboardList className="h-8 w-8 text-nejah-slate-blue" />
+                  <ClipboardList className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-bold text-nejah-slate-blue">No session history</p>
+                <p className="text-sm font-bold text-muted-foreground">No session history</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -576,13 +576,13 @@ function TeacherZoomPage() {
             <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
               <div>
                 <h3 className="text-xl font-extrabold text-foreground font-serif">Session Details</h3>
-                <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium mt-0.5">
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium mt-0.5">
                   {detailSession?.student?.fullName || 'Session'} &middot; {detailSession?.status || ''}
                 </p>
               </div>
               <button
                 onClick={() => setDetailSessionId(null)}
-                className="p-2 rounded-xl text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-background transition-all"
+                className="p-2 rounded-xl text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-background transition-all"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -596,7 +596,7 @@ function TeacherZoomPage() {
               <div className="px-8 py-6 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
-                    <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-1">Date</p>
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1">Date</p>
                     <p className="text-sm font-bold text-foreground">
                       {new Date(detailSession.scheduledStart).toLocaleDateString('en-US', {
                         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
@@ -607,7 +607,7 @@ function TeacherZoomPage() {
                     </p>
                   </div>
                   <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
-                    <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-1">Duration</p>
+                    <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1">Duration</p>
                     <p className="text-sm font-bold text-foreground">
                       {detailSession.durationMinutes ? `${detailSession.durationMinutes} min` : '—'}
                     </p>
@@ -620,7 +620,7 @@ function TeacherZoomPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
-                  <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider mb-2">Start & End Times</p>
+                  <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">Start & End Times</p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground">Scheduled Start</p>

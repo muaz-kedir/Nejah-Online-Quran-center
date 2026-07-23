@@ -248,11 +248,11 @@ function AddTeacherPage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
-          <h1 className="text-3xl font-extrabold text-nejah-sapphire text-foreground font-serif">Add New Teacher</h1>
+          <h1 className="text-3xl font-extrabold text-foreground font-serif">Add New Teacher</h1>
           <p className="text-xs text-muted-foreground dark:text-muted-foreground font-semibold mt-1">
             Register a new scholar and define their curriculum schedule.
           </p>
@@ -263,8 +263,8 @@ function AddTeacherPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Card 1: Personal Details */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <User className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
+              <h2 className="text-lg font-bold text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
+                <User className="h-5 w-5 text-foreground dark:text-nejah-electric" />
                 Personal Details
               </h2>
 
@@ -418,8 +418,8 @@ function AddTeacherPage() {
 
             {/* Card 2: Academic & Specialties */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <GraduationCap className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
+              <h2 className="text-lg font-bold text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
+                <GraduationCap className="h-5 w-5 text-foreground dark:text-nejah-electric" />
                 Academic Qualifications
               </h2>
 
@@ -474,8 +474,8 @@ function AddTeacherPage() {
 
             {/* Card 2B: Teacher Specifics */}
             <div className="bg-card dark:bg-nejah-surface p-6 rounded-3xl border border-border dark:border-nejah-border-blue shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-nejah-sapphire text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
-                <FileText className="h-5 w-5 text-nejah-sapphire dark:text-nejah-electric" />
+              <h2 className="text-lg font-bold text-foreground font-serif flex items-center gap-2 border-b border-border dark:border-nejah-border-blue pb-3">
+                <FileText className="h-5 w-5 text-foreground dark:text-nejah-electric" />
                 Additional Details
               </h2>
 
@@ -617,7 +617,7 @@ function AddTeacherPage() {
                 {imagePreview ? (
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-nejah-sapphire text-nejah-electric">
+                  <div className="flex flex-col items-center justify-center text-nejah-electric">
                     <Camera className="h-7 w-7 opacity-70 group-hover:scale-110 transition-transform" />
                   </div>
                 )}

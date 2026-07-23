@@ -268,7 +268,7 @@ function TeacherProfilePage() {
         <div>
           <button
             onClick={() => window.location.href = '/teachers'}
-            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-nejah-sapphire dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground dark:hover:text-nejah-electric uppercase tracking-widest transition-colors mb-2"
           >
             <ChevronLeft className="h-4 w-4" /> Back to Faculty
           </button>
@@ -278,13 +278,13 @@ function TeacherProfilePage() {
         <div className="bg-card dark:bg-nejah-surface rounded-3xl p-6 border border-border dark:border-nejah-border-blue shadow-sm relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center gap-6 justify-between relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface border-4 border-white dark:border-nejah-border-blue shadow-lg flex items-center justify-center font-bold text-3xl text-nejah-sapphire text-nejah-electric">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/20 dark:from-nejah-surface dark:to-nejah-surface border-4 border-white dark:border-nejah-border-blue shadow-lg flex items-center justify-center font-bold text-3xl text-nejah-electric">
                 {teacher.fullName.charAt(0)}
               </div>
 
               <div className="text-center md:text-left space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                  <h1 className="text-3xl font-extrabold text-nejah-sapphire text-foreground font-serif">{teacher.fullName}</h1>
+                  <h1 className="text-3xl font-extrabold text-foreground font-serif">{teacher.fullName}</h1>
                   <Badge className="bg-primary/10 text-primary dark:bg-nejah-sapphire/40 text-nejah-electric border border-primary/30 rounded-full px-2.5 font-bold uppercase text-[9px] tracking-widest flex items-center gap-1">
                     <span className={cn('w-1.5 h-1.5 rounded-full', getStatusColor(teacher.status))} />
                     {teacher.status || 'Active'}
@@ -303,7 +303,7 @@ function TeacherProfilePage() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <Button
                 onClick={() => setIsEditModalOpen(true)}
-                className="h-10 rounded-xl px-4 bg-primary/10 hover:bg-primary/10 text-nejah-sapphire text-foreground border border-primary/250/20 gap-1.5 text-xs font-bold uppercase tracking-wider"
+                className="h-10 rounded-xl px-4 bg-primary/10 hover:bg-primary/10 text-foreground border border-primary/250/20 gap-1.5 text-xs font-bold uppercase tracking-wider"
               >
                 <Pencil className="h-4 w-4" /> Edit Profile
               </Button>
@@ -364,7 +364,7 @@ function TeacherProfilePage() {
         {/* Schedule Detail Section (Redesigned) */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold text-nejah-sapphire text-foreground font-serif flex items-center gap-2">
+            <h2 className="text-xl font-extrabold text-foreground font-serif flex items-center gap-2">
               <Calendar className="h-6 w-6 text-primary" />
               Weekly Schedule Management
             </h2>
@@ -478,7 +478,7 @@ function TeacherProfilePage() {
                         
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-nejah-sapphire text-nejah-electric flex items-center justify-center font-bold text-lg shadow-sm border border-primary/50">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-nejah-sapphire/40 text-nejah-electric flex items-center justify-center font-bold text-lg shadow-sm border border-primary/50">
                               {studentAvatar}
                             </div>
                             <div>
@@ -507,13 +507,13 @@ function TeacherProfilePage() {
                         </div>
 
                         <div className="bg-muted dark:bg-nejah-surface/50 rounded-xl p-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-nejah-sapphire text-nejah-electric">
+                          <div className="flex items-center gap-2 text-nejah-electric">
                             <Clock className="h-4 w-4 opacity-70" />
                             <span className="text-sm font-bold tracking-tight">
                               {schedule.startTimeString} - {schedule.endTimeString}
                             </span>
                           </div>
-                          <Badge className="bg-primary/10/80 text-nejah-sapphire dark:bg-primary/10 text-nejah-electric border-none text-[10px] font-bold uppercase tracking-wider px-2">
+                          <Badge className="bg-primary/10/80 text-foreground dark:bg-primary/10 text-nejah-electric border-none text-[10px] font-bold uppercase tracking-wider px-2">
                             {schedule.status || 'Active'}
                           </Badge>
                         </div>
@@ -595,7 +595,7 @@ function TeacherProfilePage() {
       <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
         <DialogContent aria-describedby={undefined} className="sm:max-w-[480px] dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-nejah-sapphire text-foreground flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
               <UserPlus className="h-5.5 w-5.5 text-primary" />
               Assign Student to Teacher
             </DialogTitle>

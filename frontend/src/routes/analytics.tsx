@@ -149,7 +149,7 @@ function AnalyticsPage() {
 
         {loading ? (
           <div className="flex h-96 items-center justify-center">
-            <div className="text-center text-nejah-slate-blue flex flex-col items-center gap-3">
+            <div className="text-center text-muted-foreground flex flex-col items-center gap-3">
               <Loader2 className="h-10 w-10 animate-spin text-nejah-electric" />
               <p className="text-sm font-semibold">Loading real-time analytics...</p>
             </div>

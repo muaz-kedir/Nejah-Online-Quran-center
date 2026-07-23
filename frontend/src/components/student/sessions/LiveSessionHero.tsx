@@ -41,13 +41,13 @@ export function LiveSessionHero({ liveClass, upcomingClass, onJoin }: LiveSessio
         <div
           className={cn(
             "absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl opacity-20",
-            isLive ? "bg-red-400" : "bg-white",
+            isLive ? "bg-red-400" : "bg-card",
           )}
         />
         <div
           className={cn(
             "absolute -bottom-16 -left-16 w-48 h-48 rounded-full blur-3xl opacity-10",
-            isLive ? "bg-red-300" : "bg-white",
+            isLive ? "bg-red-300" : "bg-card",
           )}
         />
         {/* Subtle grid pattern */}
@@ -92,7 +92,7 @@ export function LiveSessionHero({ liveClass, upcomingClass, onJoin }: LiveSessio
 
             <Button
               size="lg"
-              className="bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl px-8 py-6 text-base shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="bg-card text-red-600 hover:bg-destructive/10 font-bold rounded-xl px-8 py-6 text-base shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               onClick={onJoin}
             >
               <Play className="h-5 w-5 mr-2 fill-current" />

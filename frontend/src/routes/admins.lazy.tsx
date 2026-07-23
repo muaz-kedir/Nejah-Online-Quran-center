@@ -23,8 +23,8 @@ export const Route = createLazyFileRoute('/admins')({
 });
 
 function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loading: boolean; icon: any; color: string }) {
-  if (loading) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">Loading...</div>;
-  if (users.length === 0) return <div className="col-span-full py-12 text-center text-nejah-slate-blue">No users found</div>;
+  if (loading) return <div className="col-span-full py-12 text-center text-muted-foreground">Loading...</div>;
+  if (users.length === 0) return <div className="col-span-full py-12 text-center text-muted-foreground">No users found</div>;
   return users.map((user) => (
     <div key={user.id} className="glass-panel rounded-2xl p-6">
       <div className="mb-4 flex items-center gap-4">
@@ -36,7 +36,7 @@ function StaffGrid({ users, loading, icon: Icon, color }: { users: any[]; loadin
           <RoleBadge role={user.role} variant="pill" />
         </div>
       </div>
-      <div className="space-y-2 text-sm text-nejah-slate-blue">
+      <div className="space-y-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> {user.email}</div>
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4" /> Joined {new Date(user.createdAt).toLocaleDateString()}
@@ -97,7 +97,7 @@ function AdminsPage() {
         </TabsList>
         <TabsContent value="finance_manager" className="mt-4">
           <div className="relative mb-6 max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search finance managers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -106,7 +106,7 @@ function AdminsPage() {
         </TabsContent>
         <TabsContent value="qirat_manager" className="mt-4">
           <div className="relative mb-6 max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-nejah-slate-blue" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search qirat managers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

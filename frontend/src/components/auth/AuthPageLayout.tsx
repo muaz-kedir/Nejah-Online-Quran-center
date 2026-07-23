@@ -35,7 +35,7 @@ export function AuthPageLayout({
         {showBack && (
           <Link
             to="/"
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-nejah-slate-blue transition-colors hover:text-nejah-electric"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-nejah-electric"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
@@ -49,7 +49,7 @@ export function AuthPageLayout({
             </div>
             <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
             {subtitle && (
-              <p className="mt-2 text-sm leading-relaxed text-nejah-slate-blue">{subtitle}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
             )}
           </div>
           {children}

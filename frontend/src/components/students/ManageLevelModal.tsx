@@ -162,7 +162,7 @@ export function ManageLevelModal({ open, onClose, onSuccess, student }: ManageLe
             </div>
 
             <div>
-              <h4 className="text-sm font-bold text-nejah-sapphire text-foreground mb-3">
+              <h4 className="text-sm font-bold text-foreground mb-3">
                 Level History
               </h4>
               <LevelHistoryList history={history} />

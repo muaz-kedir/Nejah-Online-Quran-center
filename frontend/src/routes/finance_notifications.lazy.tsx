@@ -279,8 +279,8 @@ function FinanceNotificationsPage() {
       ) : notifications.length === 0 ? (
         <GlassPanel className="flex flex-col items-center justify-center rounded-2xl py-20 text-center">
           <Bell className="mb-4 h-12 w-12 text-nejah-electric/50" />
-          <p className="font-bold text-nejah-slate-blue">No financial notifications</p>
-          <p className="text-xs text-nejah-slate-blue mt-1">Payment reminders and financial alerts will appear here</p>
+          <p className="font-bold text-muted-foreground">No financial notifications</p>
+          <p className="text-xs text-muted-foreground mt-1">Payment reminders and financial alerts will appear here</p>
         </GlassPanel>
       ) : (
         <div className="space-y-2">

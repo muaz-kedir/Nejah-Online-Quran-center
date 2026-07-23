@@ -59,7 +59,7 @@ function QiratExamsPage() {
             {loading ? (
               <TableRow><TableCell colSpan={6} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
             ) : exams.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="py-12 text-center text-nejah-slate-blue">No exams found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="py-12 text-center text-muted-foreground">No exams found</TableCell></TableRow>
             ) : exams.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-medium">{e.title || e.name}</TableCell>

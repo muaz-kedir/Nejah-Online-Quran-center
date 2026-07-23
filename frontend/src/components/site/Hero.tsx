@@ -87,7 +87,7 @@ export function Hero() {
           <div className="mb-6 h-px w-20 bg-gradient-to-r from-nejah-electric to-transparent" />
 
           {/* Description */}
-          <p className="mb-8 max-w-xl text-base leading-relaxed text-nejah-slate-blue md:text-lg">
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             {t.hero.desc}
           </p>
 

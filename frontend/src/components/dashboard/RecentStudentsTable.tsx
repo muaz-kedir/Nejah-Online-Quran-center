@@ -87,13 +87,13 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-nejah-slate-blue">
+              <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                 Loading students...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-nejah-slate-blue">
+              <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                 No students registered yet
               </TableCell>
             </TableRow>
@@ -114,12 +114,12 @@ export const RecentStudentsTable = memo(function RecentStudentsTable() {
                       <p className="text-sm font-medium text-foreground transition-colors group-hover:text-nejah-electric">
                         {student.fullName}
                       </p>
-                      <p className="font-mono text-xs text-nejah-slate-blue">ID: {student.id.slice(0, 8)}</p>
+                      <p className="font-mono text-xs text-muted-foreground">ID: {student.id.slice(0, 8)}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-nejah-slate-blue">{student.createdAt}</TableCell>
-                <TableCell className="text-nejah-slate-blue">{student.level}</TableCell>
+                <TableCell className="text-muted-foreground">{student.createdAt}</TableCell>
+                <TableCell className="text-muted-foreground">{student.level}</TableCell>
                 <TableCell>
                   <span className="rounded-full border border-nejah-electric/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-nejah-electric">
                     {student.status}

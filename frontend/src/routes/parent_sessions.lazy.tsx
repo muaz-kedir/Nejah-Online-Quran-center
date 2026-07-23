@@ -115,7 +115,7 @@ function ParentSessionsPage() {
       case 'LIVE': return 'bg-red-500 text-white border-none animate-pulse';
       case 'COMPLETED': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none';
       case 'CANCELLED': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-none';
-      case 'NO_SHOW': return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none';
+      case 'NO_SHOW': return 'bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none';
       case 'EXPIRED': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-none';
       default: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none';
     }
@@ -133,16 +133,16 @@ function ParentSessionsPage() {
       >
         <td className="py-4 px-6">
           <p className="text-sm font-bold">{session.schedule?.className || 'Quran Class'}</p>
-          <p className="text-[10px] text-nejah-slate-blue font-medium mt-0.5">{session.teacher?.fullName || 'Teacher'}</p>
+          <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{session.teacher?.fullName || 'Teacher'}</p>
         </td>
         <td className="py-4 px-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-nejah-sapphire/10 flex items-center justify-center text-xs font-bold text-nejah-sapphire dark:text-nejah-electric">
+            <div className="w-8 h-8 rounded-full bg-nejah-sapphire/10 flex items-center justify-center text-xs font-bold text-foreground dark:text-nejah-electric">
               {session.student?.fullName?.charAt(0) || '?'}
             </div>
             <div>
               <p className="text-xs font-bold">{session.student?.fullName || 'Student'}</p>
-              <p className="text-[9px] text-nejah-slate-blue">{session.student?.studentCode || ''}</p>
+              <p className="text-[9px] text-muted-foreground">{session.student?.studentCode || ''}</p>
             </div>
           </div>
         </td>
@@ -249,10 +249,10 @@ function ParentSessionsPage() {
               ) : filteredSessions.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Video className="h-8 w-8 text-nejah-slate-blue" />
+                    <Video className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-bold text-nejah-slate-blue">No sessions found</p>
-                   <p className="text-xs text-nejah-slate-blue mt-1">Your children's sessions will appear here</p>
+                  <p className="text-sm font-bold text-muted-foreground">No sessions found</p>
+                   <p className="text-xs text-muted-foreground mt-1">Your children's sessions will appear here</p>
                 </div>
               ) : (
                 <GlassPanel className="overflow-hidden">
@@ -260,13 +260,13 @@ function ParentSessionsPage() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-background/50 border-b border-border dark:border-white/5">
-                          <th className="py-4 px-6 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Class</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Child</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Date</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Time</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Duration</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Status</th>
-                          <th className="py-4 px-4 text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">Attendance</th>
+                          <th className="py-4 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Class</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Child</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Date</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Time</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Duration</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                          <th className="py-4 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Attendance</th>
                           <th className="py-4 px-6" />
                         </tr>
                       </thead>
@@ -303,13 +303,13 @@ function ParentSessionsPage() {
                 </div>
                 <div className="text-center p-6 rounded-2xl bg-primary/5">
                   <p className="text-3xl font-bold font-mono text-nejah-electric">{totalAttendance > 0 ? `${Math.round((presentCount / totalAttendance) * 100)}%` : '—'}</p>
-                  <p className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-wider mt-1">Attendance Rate</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Attendance Rate</p>
                 </div>
               </div>
 
               {children.length > 1 && selectedChild === 'all' && (
                 <div className="border-t border-border dark:border-white/5 pt-6">
-                  <h4 className="text-xs font-bold text-nejah-slate-blue uppercase tracking-wider mb-4">Per-Child Breakdown</h4>
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Per-Child Breakdown</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {children.map((child: any) => {
                       const childSessions = sessions.filter((s: any) => s.student?.id === child.id);
@@ -321,7 +321,7 @@ function ParentSessionsPage() {
                       return (
                         <div key={child.id} className="p-4 rounded-2xl bg-background/50 border border-border dark:border-white/5">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="w-7 h-7 rounded-full bg-nejah-sapphire/10 flex items-center justify-center text-[10px] font-bold text-nejah-sapphire dark:text-nejah-electric">
+                            <div className="w-7 h-7 rounded-full bg-nejah-sapphire/10 flex items-center justify-center text-[10px] font-bold text-foreground dark:text-nejah-electric">
                               {child.fullName?.charAt(0) || '?'}
                             </div>
                             <p className="text-xs font-bold">{child.fullName}</p>
@@ -329,15 +329,15 @@ function ParentSessionsPage() {
                           <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                             <div>
                               <p className="font-bold text-green-600">{childPresent}</p>
-                              <p className="text-nejah-slate-blue uppercase tracking-wider">Present</p>
+                              <p className="text-muted-foreground uppercase tracking-wider">Present</p>
                             </div>
                             <div>
                               <p className="font-bold text-red-600">{childTotal - childPresent}</p>
-                              <p className="text-nejah-slate-blue uppercase tracking-wider">Absent</p>
+                              <p className="text-muted-foreground uppercase tracking-wider">Absent</p>
                             </div>
                             <div>
                               <p className="font-bold text-nejah-electric">{rate}%</p>
-                              <p className="text-nejah-slate-blue uppercase tracking-wider">Rate</p>
+                              <p className="text-muted-foreground uppercase tracking-wider">Rate</p>
                             </div>
                           </div>
                           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">

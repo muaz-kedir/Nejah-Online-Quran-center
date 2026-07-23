@@ -409,7 +409,7 @@ function TeacherPaymentsPage() {
             {loading ? (
               <TableRow><TableCell colSpan={6} className="py-12 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
             ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="py-12 text-center text-nejah-slate-blue">No payroll records found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="py-12 text-center text-muted-foreground">No payroll records found</TableCell></TableRow>
             ) : rows.map((r) => (
               <TableRow
                 key={r.teacherId}
@@ -451,7 +451,7 @@ function TeacherPaymentsPage() {
                   {detail.assignedStudents.map((s: any, i: number) => (
                     <div key={i} className="border-b border-white/5 py-2 flex justify-between">
                       <span>{s.studentName}</span>
-                      <span className="text-nejah-slate-blue">{s.sessionsConducted} sessions</span>
+                      <span className="text-muted-foreground">{s.sessionsConducted} sessions</span>
                     </div>
                   ))}
                 </div>
@@ -487,7 +487,7 @@ function TeacherPaymentsPage() {
               )}
 
               {!detail.payroll && (
-                <p className="text-nejah-slate-blue">No payroll record for this teacher.</p>
+                <p className="text-muted-foreground">No payroll record for this teacher.</p>
               )}
             </div>
           )}

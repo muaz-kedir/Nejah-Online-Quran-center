@@ -76,7 +76,7 @@ export default function PWADownloadPrompt() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <p className="text-xs text-nejah-slate-blue mb-3 leading-relaxed">
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
             Install Nejah Online Quran Center for a better experience with offline access and push notifications.
           </p>
           <Button
@@ -103,7 +103,7 @@ export default function PWADownloadPrompt() {
               </span>
             </div>
           </div>
-          <p className="text-xs text-nejah-slate-blue mb-3 leading-relaxed">
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
             {pushSubscribed
               ? "You'll receive class updates and alerts via push notifications."
               : "Enable push notifications to get instant class alerts."}

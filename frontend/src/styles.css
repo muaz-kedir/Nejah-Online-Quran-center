@@ -280,7 +280,7 @@
   }
 
   .admin-field-label {
-    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-nejah-slate-blue;
+    @apply mb-1 ml-1 font-mono text-[10px] font-medium uppercase tracking-widest text-muted-foreground;
   }
 
   .admin-page {

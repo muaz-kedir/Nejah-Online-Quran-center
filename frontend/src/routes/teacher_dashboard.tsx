@@ -283,7 +283,7 @@ function TeacherDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-[0.2em] mb-2">
+            <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-2">
               Assalamu Alaikum, {data?.teacher?.fullName?.split(" ")[0] || "Teacher"}
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground font-serif">
@@ -381,7 +381,7 @@ function TeacherDashboard() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/teacher_students", search: {} })}
-                className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
+                className="text-xs font-bold text-foreground flex items-center gap-1 hover:underline"
               >
                 View All Students <ChevronRight className="h-3 w-3" />
               </button>
@@ -389,7 +389,7 @@ function TeacherDashboard() {
             <div className="glass-panel bg-card dark:bg-nejah-surface rounded-[32px] overflow-hidden border border-border dark:border-white/5 shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-muted/30 dark:bg-background/30 text-[9px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-widest border-b border-border dark:border-white/5">
+                  <tr className="bg-muted/30 dark:bg-background/30 text-[9px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest border-b border-border dark:border-white/5">
                     <th className="px-8 py-5">Student Name</th>
                     <th className="px-8 py-5">Current Surah/Juz</th>
                     <th className="px-8 py-5">Status</th>
@@ -411,7 +411,7 @@ function TeacherDashboard() {
                     >
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-muted dark:bg-background flex items-center justify-center font-bold text-xs text-muted-foreground dark:text-nejah-slate-blue group-hover:bg-primary/10 group-hover:text-nejah-electric transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-muted dark:bg-background flex items-center justify-center font-bold text-xs text-muted-foreground dark:text-muted-foreground group-hover:bg-primary/10 group-hover:text-nejah-electric transition-colors">
                             {student.initials}
                           </div>
                           <span className="font-bold text-foreground">{student.name}</span>
@@ -432,7 +432,7 @@ function TeacherDashboard() {
                                 ? "bg-primary/10 text-nejah-electric/70"
                                 : student.status === "NEEDS REVIEW"
                                   ? "bg-amber-50 text-amber-600"
-                                  : "bg-muted dark:bg-background text-muted-foreground dark:text-nejah-slate-blue",
+                                  : "bg-muted dark:bg-background text-muted-foreground dark:text-muted-foreground",
                           )}
                         >
                           {student.status.replace("_", " ")}
@@ -464,7 +464,7 @@ function TeacherDashboard() {
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-foreground font-serif">Teacher's Notes</h3>
-              <button className="p-2 bg-muted dark:bg-background rounded-lg text-muted-foreground dark:text-nejah-slate-blue hover:bg-muted dark:hover:bg-nejah-surface transition-all">
+              <button className="p-2 bg-muted dark:bg-background rounded-lg text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-nejah-surface transition-all">
                 <Filter className="h-4 w-4" />
               </button>
             </div>
@@ -472,7 +472,7 @@ function TeacherDashboard() {
             <div className="space-y-5">
               {notes.length === 0 && (
                 <div className="bg-card dark:bg-nejah-surface rounded-[24px] p-8 border border-dashed border-border dark:border-white/10 text-center">
-                  <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-medium">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground font-medium">
                     No notes yet. Add your first reflection!
                   </p>
                 </div>
@@ -492,14 +492,14 @@ function TeacherDashboard() {
                   <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
                       onClick={() => openEdit(note)}
-                      className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-primary/15 hover:text-nejah-electric text-muted-foreground dark:text-nejah-slate-blue transition-all"
+                      className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-primary/15 hover:text-nejah-electric text-muted-foreground dark:text-muted-foreground transition-all"
                       title="Edit note"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteNote(note.id)}
-                      className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 text-muted-foreground dark:text-nejah-slate-blue transition-all"
+                      className="p-1.5 rounded-lg bg-muted dark:bg-background hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 text-muted-foreground dark:text-muted-foreground transition-all"
                       title="Delete note"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -510,19 +510,19 @@ function TeacherDashboard() {
                       className={cn(
                         "text-[9px] font-extrabold uppercase tracking-widest",
                         noteTypeLabelColor[note.type] ||
-                          "text-muted-foreground dark:text-nejah-slate-blue",
+                          "text-muted-foreground dark:text-muted-foreground",
                       )}
                     >
                       {note.type}
                     </span>
-                    <span className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue">
+                    <span className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground">
                       {formatDate(note.createdAt)}
                     </span>
                   </div>
                   <h4 className="text-base font-bold text-foreground font-serif leading-tight mb-2">
                     {note.title}
                   </h4>
-                  <p className="text-xs text-muted-foreground dark:text-nejah-slate-blue font-medium leading-relaxed">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium leading-relaxed">
                     {note.content}
                   </p>
                 </div>
@@ -530,7 +530,7 @@ function TeacherDashboard() {
 
               <button
                 onClick={openCreate}
-                className="w-full h-16 rounded-[24px] border-2 border-dashed border-border dark:border-white/10 text-muted-foreground dark:text-nejah-slate-blue text-xs font-bold uppercase tracking-widest hover:border-nejah-electric/20 hover:text-nejah-electric transition-all"
+                className="w-full h-16 rounded-[24px] border-2 border-dashed border-border dark:border-white/10 text-muted-foreground dark:text-muted-foreground text-xs font-bold uppercase tracking-widest hover:border-nejah-electric/20 hover:text-nejah-electric transition-all"
               >
                 + Add Personal Reflection
               </button>
@@ -552,7 +552,7 @@ function TeacherDashboard() {
               <h4 className="text-2xl font-bold text-foreground font-serif mb-2">
                 No remaining sessions for today.
               </h4>
-              <p className="text-muted-foreground dark:text-nejah-slate-blue font-medium">
+              <p className="text-muted-foreground dark:text-muted-foreground font-medium">
                 You have completed all your scheduled classes or have a day off.
               </p>
             </div>
@@ -585,7 +585,7 @@ function TeacherDashboard() {
                     <h4 className="text-4xl font-extrabold text-foreground font-serif mb-2 line-clamp-1">
                       {session.title}
                     </h4>
-                    <p className="text-sm text-muted-foreground dark:text-nejah-slate-blue font-semibold mb-6">
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground font-semibold mb-6">
                       {session.sessionType}
                     </p>
                     <p className="text-xs font-bold text-foreground mb-8">{session.studentName}</p>
@@ -666,7 +666,7 @@ function TeacherDashboard() {
                   <h3 className="text-xl font-bold text-foreground font-serif">
                     Recently Completed
                   </h3>
-                  <p className="text-[10px] font-bold text-muted-foreground dark:text-nejah-slate-blue uppercase tracking-wider">
+                  <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                     {completedToday} session{completedToday !== 1 ? "s" : ""} completed today
                     {teacherAnalytics?.averageSessionDuration
                       ? ` · Avg ${teacherAnalytics.averageSessionDuration} min`
@@ -677,7 +677,7 @@ function TeacherDashboard() {
               <button
                 type="button"
                 onClick={() => navigate({ to: "/live-sessions" })}
-                className="text-xs font-bold text-nejah-sapphire text-foreground flex items-center gap-1 hover:underline"
+                className="text-xs font-bold text-foreground flex items-center gap-1 hover:underline"
               >
                 View All Sessions <ChevronRight className="h-3 w-3" />
               </button>
@@ -698,7 +698,7 @@ function TeacherDashboard() {
                         <p className="font-bold text-sm text-foreground truncate group-hover:text-emerald-600 transition-colors">
                           {session.metadata?.className || "Quran Class"}
                         </p>
-                        <p className="text-[10px] font-semibold text-muted-foreground dark:text-nejah-slate-blue truncate">
+                        <p className="text-[10px] font-semibold text-muted-foreground dark:text-muted-foreground truncate">
                           {session.student?.fullName || session.studentName || "—"}
                         </p>
                       </div>
@@ -706,7 +706,7 @@ function TeacherDashboard() {
                     <div className="flex items-center gap-5 shrink-0 ml-4">
                       {session.actualStart && (
                         <div className="flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-xs font-bold tabular-nums text-foreground">
                             {new Date(session.actualStart).toLocaleTimeString([], {
                               hour: "2-digit",
@@ -718,13 +718,13 @@ function TeacherDashboard() {
                         </div>
                       )}
                       <div className="flex items-center gap-1.5">
-                        <Timer className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                        <Timer className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs font-bold tabular-nums text-foreground">
                           {session.durationMinutes || "—"}m
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-nejah-slate-blue" />
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs font-bold tabular-nums text-foreground">
                           {session.attendances?.length || session.participantCount || 0}
                         </span>
@@ -762,7 +762,7 @@ function TeacherDashboard() {
             <div className="flex items-center justify-between px-8 pt-8 pb-6 border-b border-border dark:border-white/5">
               <div>
                 <h3 className="text-xl font-bold font-serif">Start Session</h3>
-                <p className="text-xs text-nejah-slate-blue font-medium mt-0.5">
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">
                   Paste your meeting link to start the session live.
                 </p>
               </div>
@@ -776,7 +776,7 @@ function TeacherDashboard() {
 
             <div className="px-8 py-6 space-y-5">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Student
                 </Label>
                 <div className="h-12 px-4 rounded-xl border border-border dark:border-white/10 bg-background text-sm font-medium flex items-center">
@@ -785,7 +785,7 @@ function TeacherDashboard() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold text-nejah-slate-blue uppercase tracking-widest">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Meeting Link <span className="text-red-500">*</span>
                 </Label>
                 <Input
