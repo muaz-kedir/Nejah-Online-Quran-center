@@ -24,7 +24,7 @@ export class OnboardingService {
   ) {}
 
   private requireNotifications(): boolean {
-    return process.env.REQUIRE_NOTIFICATIONS !== 'false';
+    return false;
   }
 
   private requireTelegram(): boolean {

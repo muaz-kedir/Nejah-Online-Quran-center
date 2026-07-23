@@ -31,7 +31,6 @@ import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { OnboardingGuard } from "@/components/ui/OnboardingGuard";
-import { PushNotificationToggle } from "@/components/ui/push-notification-toggle";
 import { TelegramLink } from "@/components/ui/telegram-link";
 import type { StudentProfileData } from "@/lib/student-types";
 
@@ -498,11 +497,8 @@ export function StudentPortalLayout({
               <Lock className="h-5 w-5 text-nejah-electric" />
               <span className="font-bold text-sm">Change Password</span>
             </button>
-            <div className="border-t border-border pt-3 space-y-4">
-              <PushNotificationToggle variant="card" />
-              <div className="border-t pt-4">
-                <TelegramLink />
-              </div>
+            <div className="border-t border-border pt-4">
+              <TelegramLink />
             </div>
           </div>
         </DialogContent>

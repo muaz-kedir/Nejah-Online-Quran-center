@@ -239,7 +239,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     const user = await this.userRepository.findOne({ where: { id: linkingCode.userId } });
-    if (user && user.notificationEnabled && !user.onboardingCompleted) {
+    if (user && !user.onboardingCompleted) {
       user.onboardingCompleted = true;
       await this.userRepository.save(user);
       this.logger.log(`Onboarding auto-completed for user ${user.id} after Telegram link`);
