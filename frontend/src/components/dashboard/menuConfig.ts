@@ -28,13 +28,16 @@ import {
   Wallet,
   BookMarked,
   MessageSquareText,
+  User,
+  Clock,
 } from 'lucide-react';
 
 export interface MenuItem {
   label: string;
+  labelKey?: string;
   icon: any;
   path: string;
-  badge?: string;
+  badge?: string | number;
   children?: MenuItem[];
 }
 
@@ -94,14 +97,28 @@ export const menuByRole: Record<string, MenuItem[]> = {
   ],
   // admin role removed — admins use qirat_manager or finance_manager menus
   student: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/student_dashboard' },
-    { label: 'My Classes', icon: Users, path: '/student/classes' },
-    { label: 'My Progress', icon: TrendingUp, path: '/student/progress' },
-    { label: 'Homework', icon: ClipboardList, path: '/student/homework' },
-    { label: 'Resources', icon: FolderOpen, path: '/student/resources' },
+    { label: 'Dashboard', icon: LayoutDashboard, labelKey: 'dashboard', path: '/student_dashboard' },
+    { label: 'My Classes', icon: Users, labelKey: 'myClasses', path: '/student/classes' },
+    { label: 'My Progress', icon: TrendingUp, labelKey: 'myProgress', path: '/student/progress' },
+    { label: 'Homework', icon: ClipboardList, labelKey: 'homework', path: '/student/homework' },
+    { label: 'Resources', icon: FolderOpen, labelKey: 'resources', path: '/student/resources' },
+    { label: 'Notifications', icon: Bell, labelKey: 'notifications', path: '/student/notifications' },
+  ],
+  teacher: [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher_dashboard' },
+    { label: 'Students', icon: Users, path: '/teacher_students' },
+    { label: 'Schedule', icon: Calendar, path: '/teacher_schedule' },
+    { label: 'Session History', icon: Clock, path: '/teacher_sessions' },
+    { label: 'Notifications', icon: Bell, path: '/teacher_notifications' },
+    { label: 'Profile', icon: User, path: '/teacher_profile' },
   ],
   parent: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/parent_dashboard' },
+    { label: 'Dashboard', icon: LayoutDashboard, labelKey: 'dashboard', path: '/parent_dashboard' },
+    { label: 'My Children', icon: Users, labelKey: 'myChildren', path: '/parent_dashboard' },
+    { label: 'Quran Progress', icon: BookOpen, labelKey: 'quranProgress', path: '/parent_dashboard' },
+    { label: 'Homework', icon: ClipboardList, labelKey: 'homework', path: '/parent_dashboard' },
+    { label: 'Exams & Results', icon: FileText, labelKey: 'examsResults', path: '/parent_dashboard' },
+    { label: 'Class Schedule', icon: Clock, labelKey: 'classSchedule', path: '/parent_dashboard' },
     { label: 'Sessions', icon: Video, path: '/parent_sessions' },
   ],
   qirat_manager: [
