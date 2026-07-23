@@ -53,7 +53,6 @@ import { Route as Finance_notificationsRouteImport } from './routes/finance_noti
 import { Route as Finance_familyPaymentsRouteImport } from './routes/finance_family-payments'
 import { Route as Finance_expensesRouteImport } from './routes/finance_expenses'
 import { Route as Finance_dashboardRouteImport } from './routes/finance_dashboard'
-import { Route as Fee_settingsRouteImport } from './routes/fee_settings'
 import { Route as DebugUserRouteImport } from './routes/debug-user'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as Currency_settingsRouteImport } from './routes/currency_settings'
@@ -310,11 +309,6 @@ const Finance_dashboardRoute = Finance_dashboardRouteImport.update({
   path: '/finance_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Fee_settingsRoute = Fee_settingsRouteImport.update({
-  id: '/fee_settings',
-  path: '/fee_settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DebugUserRoute = DebugUserRouteImport.update({
   id: '/debug-user',
   path: '/debug-user',
@@ -503,7 +497,6 @@ export interface FileRoutesByFullPath {
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
-  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -585,7 +578,6 @@ export interface FileRoutesByTo {
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
-  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -667,7 +659,6 @@ export interface FileRoutesById {
   '/currency_settings': typeof Currency_settingsRoute
   '/dashboard': typeof DashboardRoute
   '/debug-user': typeof DebugUserRoute
-  '/fee_settings': typeof Fee_settingsRoute
   '/finance_dashboard': typeof Finance_dashboardRoute
   '/finance_expenses': typeof Finance_expensesRoute
   '/finance_family-payments': typeof Finance_familyPaymentsRoute
@@ -751,7 +742,6 @@ export interface FileRouteTypes {
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
-    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_expenses'
     | '/finance_family-payments'
@@ -833,7 +823,6 @@ export interface FileRouteTypes {
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
-    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_expenses'
     | '/finance_family-payments'
@@ -914,7 +903,6 @@ export interface FileRouteTypes {
     | '/currency_settings'
     | '/dashboard'
     | '/debug-user'
-    | '/fee_settings'
     | '/finance_dashboard'
     | '/finance_expenses'
     | '/finance_family-payments'
@@ -997,7 +985,6 @@ export interface RootRouteChildren {
   Currency_settingsRoute: typeof Currency_settingsRoute
   DashboardRoute: typeof DashboardRoute
   DebugUserRoute: typeof DebugUserRoute
-  Fee_settingsRoute: typeof Fee_settingsRoute
   Finance_dashboardRoute: typeof Finance_dashboardRoute
   Finance_expensesRoute: typeof Finance_expensesRoute
   Finance_familyPaymentsRoute: typeof Finance_familyPaymentsRoute
@@ -1373,13 +1360,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Finance_dashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/fee_settings': {
-      id: '/fee_settings'
-      path: '/fee_settings'
-      fullPath: '/fee_settings'
-      preLoaderRoute: typeof Fee_settingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/debug-user': {
       id: '/debug-user'
       path: '/debug-user'
@@ -1682,7 +1662,6 @@ const rootRouteChildren: RootRouteChildren = {
   Currency_settingsRoute: Currency_settingsRoute,
   DashboardRoute: DashboardRoute,
   DebugUserRoute: DebugUserRoute,
-  Fee_settingsRoute: Fee_settingsRoute,
   Finance_dashboardRoute: Finance_dashboardRoute,
   Finance_expensesRoute: Finance_expensesRoute,
   Finance_familyPaymentsRoute: Finance_familyPaymentsRoute,
