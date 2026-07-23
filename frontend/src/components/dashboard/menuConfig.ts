@@ -70,6 +70,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
         { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
         { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
         { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
+        { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
       ],
     },
 
@@ -127,6 +128,7 @@ export const menuByRole: Record<string, MenuItem[]> = {
     { label: 'Revenue Analytics', icon: LineChart, path: '/finance_revenue' },
     { label: 'Financial Reports', icon: BarChart3, path: '/finance_reports' },
     { label: 'Expenses', icon: Wallet, path: '/finance_expenses' },
+    { label: 'Fee Settings', icon: DollarSign, path: '/fee_settings' },
     { label: 'Notifications', icon: Bell, path: '/finance_notifications' },
     { label: 'Profile Settings', icon: UserCircle, path: '/finance_settings' },
   ],
