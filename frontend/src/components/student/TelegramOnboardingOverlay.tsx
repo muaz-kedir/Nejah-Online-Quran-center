@@ -112,7 +112,10 @@ export function TelegramOnboardingOverlay() {
       .then((res) => setConfigured(res.configured))
       .catch(() => setConfigured(false));
     fetchApi<TelegramStatus>("/telegram/status", { signal: ctrl.signal })
-      .then((res) => setLinked(res.linked))
+      .then((res) => {
+        setLinked(res.linked);
+        if (res.linked) setShowSuccess(true);
+      })
       .catch(() => setLinked(false));
 
     return () => {
