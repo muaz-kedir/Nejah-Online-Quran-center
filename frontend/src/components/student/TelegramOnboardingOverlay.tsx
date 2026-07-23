@@ -211,6 +211,8 @@ export function TelegramOnboardingOverlay() {
     );
   }
 
+  if (linked && showSuccess) return null;
+
   if (linked && !showSuccess) {
     return (
       <div
