@@ -331,11 +331,10 @@ function RootComponent() {
           reconnectionDelayMax: 60000,
         });
 
-        socket.on("connect", () => console.log("[WS Root] Connected"));
-        socket.on("connected", (data: any) => console.log("[WS Root] Authenticated:", data.userId));
+        socket.on("connect", () => {});
+        socket.on("connected", (data: any) => {});
 
         socket.on("notification:new", (notif: any) => {
-          console.log("[WS Root] Notification:", notif);
           const isSamePage = window.location.pathname.includes("/notifications");
           if (!isSamePage) {
             const handleClick = notif.data?.sessionId
@@ -349,9 +348,7 @@ function RootComponent() {
           }
         });
 
-        socket.on("session:status_changed", (data: any) => {
-          console.log("[WS Root] Session status:", data);
-        });
+        socket.on("session:status_changed", (data: any) => {});
 
         socket.on("error", (err: any) => console.error("[WS Root] Error:", err.message));
 

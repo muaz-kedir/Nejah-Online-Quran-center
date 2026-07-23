@@ -133,21 +133,26 @@ function TeacherDashboard() {
     const session = startSessionModal.session;
     if (!session?.liveSessionId) return;
 
-    const body = meetingLink ? JSON.stringify({ meetingLink }) : undefined;
-    const result = await api<{
-      meetingLink: string | null;
-      notificationSummary: { studentCount: number; parentCount: number; warnings: string[] };
-    }>(`/live-sessions/${session.liveSessionId}/start`, {
-      method: "POST",
-      body,
-    });
-    setStartSessionModal({ open: false, session: null });
-    setStartedSessionResult({
-      open: true,
-      session,
-      meetingLink: result.meetingLink || meetingLink || null,
-      notificationSummary: result.notificationSummary,
-    });
+    try {
+      const body = meetingLink ? JSON.stringify({ meetingLink }) : undefined;
+      const result = await api<{
+        meetingLink: string | null;
+        notificationSummary?: { studentCount: number; parentCount: number; warnings: string[] };
+      }>(`/live-sessions/${session.liveSessionId}/start`, {
+        method: "POST",
+        body,
+      });
+      setStartSessionModal({ open: false, session: null });
+      setStartedSessionResult({
+        open: true,
+        session,
+        meetingLink: result.meetingLink || meetingLink || null,
+        notificationSummary: result.notificationSummary || { studentCount: 0, parentCount: 0, warnings: [] },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to start session");
+      setStartSessionModal({ open: false, session: null });
+    }
   };
 
   const handleOpenSession = async (scheduleId: string) => {

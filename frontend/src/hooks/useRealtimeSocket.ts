@@ -63,16 +63,14 @@ export function useRealtimeSocket() {
     globalRefCount++;
     socketRef.current = socket;
 
-    const onConnect = () => console.log("[WS Realtime] Connected");
-    const onConnected = (data: any) =>
-      console.log("[WS Realtime] Authenticated:", data.userId);
+    const onConnect = () => {};
+    const onConnected = (data: any) => {};
 
     socket.on("connect", onConnect);
     socket.on("connected", onConnected);
 
     const domainHandlers = Object.entries(DOMAIN_EVENTS).map(([event, queryPrefixes]) => {
       const handler = () => {
-        console.log(`[WS Realtime] ${event} — invalidating:`, queryPrefixes);
         queryPrefixes.forEach((prefix) => {
           queryClient.invalidateQueries({ predicate: (q) => {
             const key = q.queryKey[0];
@@ -84,7 +82,7 @@ export function useRealtimeSocket() {
       return [event, handler] as const;
     });
 
-    const onError = (err: Error) => console.error("[WS Realtime] Error:", err.message);
+    const onError = (err: Error) => {};
     socket.on("error", onError);
 
     return () => {

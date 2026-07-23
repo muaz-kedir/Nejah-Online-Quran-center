@@ -65,14 +65,14 @@ export function useSocket(callbacks?: SocketCallbacks) {
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
-    const onConnected = (data: any) => console.log("[WS] Connected:", data.userId);
+    const onConnected = (data: any) => {};
     const onNotification = (notif: NotificationData) => {
       callbacksRef.current?.onNotification?.(notif);
     };
     const onSessionStatus = (data: any) => {
       callbacksRef.current?.onSessionStatus?.(data);
     };
-    const onError = (err: Error) => console.error("[WS] Error:", err.message);
+    const onError = (err: Error) => {};
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
