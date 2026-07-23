@@ -308,6 +308,12 @@ function TeacherProfilePage() {
                 <Pencil className="h-4 w-4" /> Edit Profile
               </Button>
               <Button
+                onClick={() => setIsAssignModalOpen(true)}
+                className="h-10 rounded-xl px-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30 gap-1.5 text-xs font-bold uppercase tracking-wider"
+              >
+                <UserPlus className="h-4 w-4" /> Assign Student
+              </Button>
+              <Button
                 onClick={() => setIsTempReplacementOpen(true)}
                 variant="outline"
                 className="h-10 rounded-xl px-4 border-amber-200 text-amber-800 gap-1.5 text-xs font-bold uppercase tracking-wider"
