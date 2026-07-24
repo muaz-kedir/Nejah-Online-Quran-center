@@ -86,7 +86,7 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                     stage.status === 'current' &&
                       'bg-card dark:bg-nejah-surface border-primary/600 text-primary ring-4 ring-primary/100 dark:ring-primary/900',
                     stage.status === 'upcoming' &&
-                      'bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue text-muted-foreground dark:text-gray-200',
+                      'bg-muted dark:bg-nejah-surface border-border dark:border-nejah-border-blue text-muted-foreground',
                   )}
                 >
                   {stage.status === 'completed' ? (
@@ -107,13 +107,13 @@ export function LearningPathCard({ path, compact = false, className }: LearningP
                       ? 'text-nejah-electric'
                       : stage.status === 'completed'
                         ? 'text-foreground dark:text-foreground'
-                        : 'text-muted-foreground dark:text-gray-200',
+                        : 'text-muted-foreground',
                   )}
                 >
                   {stage.label}
                 </p>
                 {!compact && (
-                  <p className="text-[10px] text-muted-foreground dark:text-gray-200 mt-0.5">
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     {stage.status === 'completed' &&
                       `${formatMonthYear(stage.startedAt)} – ${formatMonthYear(stage.completedAt)}`}
                     {stage.status === 'current' &&
@@ -172,7 +172,7 @@ const CHANGE_LABELS: Record<string, string> = {
 
 export function LevelHistoryList({ history }: { history: LevelHistoryEntry[] }) {
   if (!history?.length) {
-    return <p className="text-muted-foreground dark:text-gray-200 text-sm">No level history yet.</p>;
+    return <p className="text-muted-foreground text-sm">No level history yet.</p>;
   }
 
   return (
@@ -198,19 +198,19 @@ export function LevelHistoryList({ history }: { history: LevelHistoryEntry[] }) 
                   ? 'bg-primary/10 text-primary'
                   : h.status === 'in_progress'
                     ? 'bg-amber-50 text-amber-700'
-                    : 'bg-muted text-muted-foreground dark:text-gray-200',
+                    : 'bg-muted text-muted-foreground',
               )}
             >
               {STATUS_LABELS[h.status] || h.status}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground dark:text-gray-200 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {formatMonthYear(h.startedAt)}
             {h.completedAt ? ` – ${formatMonthYear(h.completedAt)}` : h.status === 'in_progress' ? ' – present' : ''}
             {h.teacherName ? ` · ${h.teacherName}` : ''}
             {h.progressPercentage != null ? ` · ${Math.round(h.progressPercentage)}%` : ''}
           </p>
-          <p className="text-[10px] text-muted-foreground dark:text-gray-200 mt-0.5">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {CHANGE_LABELS[h.changeType] || h.changeType}
             {h.reason ? ` — ${h.reason}` : ''}
           </p>

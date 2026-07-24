@@ -21,7 +21,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History } from 'lucide-react';
+import { BookOpen, Award, TrendingUp, Star, MessageSquare, Plus, History, Play, Pause, Clock, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -521,6 +521,82 @@ export function TeacherStudentProgressPanel({ studentId, studentName }: TeacherS
           )}
         </div>
       </div>
+
+      {/* Session Timer for Quran Reading Level */}
+      {track === 'quran_reading' && (
+        <div className="bg-gradient-to-br from-nejah-sapphire to-nejah-midnight rounded-2xl border border-primary/800 dark:border-nejah-border-blue p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-nejah-azure flex items-center justify-center">
+                {sessionActive ? (
+                  <Pause className="h-6 w-6" />
+                ) : (
+                  <Play className="h-6 w-6" />
+                )}
+              </div>
+              <div>
+                <h4 className="font-bold text-lg">Session Timer</h4>
+                <p className="text-xs text-nejah-electric">
+                  Track time and auto-increase progress
+                </p>
+              </div>
+            </div>
+            <div className="text-3xl font-mono font-bold tabular-nums">
+              {formatTime(sessionTime)}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="bg-nejah-sapphire/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-nejah-electric">Progress</span>
+                <span className="text-sm font-bold">{sessionProgress.toFixed(1)}%</span>
+              </div>
+              <ProgressBar value={sessionProgress} className="h-1.5 bg-nejah-azure" />
+            </div>
+            <div className="bg-nejah-sapphire/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-nejah-electric">Session Status</span>
+                <span className={cn(
+                  "text-xs font-bold px-2 py-1 rounded-lg",
+                  sessionActive 
+                    ? "bg-primary/100 text-white" 
+                    : "bg-muted0 dark:bg-nejah-surface text-white"
+                )}>
+                  {sessionActive ? "Active" : "Paused"}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            {!sessionActive ? (
+              <Button 
+                onClick={startSession} 
+                className="flex-1 bg-card text-foreground hover:bg-primary/10 font-bold rounded-xl"
+              >
+                <Play className="h-4 w-4 mr-2" /> Start Session
+              </Button>
+            ) : (
+              <Button 
+                onClick={pauseSession} 
+                className="flex-1 bg-amber-500 text-white hover:bg-amber-600 font-bold rounded-xl"
+              >
+                <Pause className="h-4 w-4 mr-2" /> Pause Session
+              </Button>
+            )}
+            {sessionTime > 0 && (
+              <Button 
+                onClick={resetSession} 
+                variant="outline"
+                className="border-primary/700 text-nejah-electric hover:bg-primary rounded-xl"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" /> Reset
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {dailyLogs.length > 0 && (
         <div className="bg-card dark:bg-nejah-surface rounded-2xl border border-border dark:border-nejah-border-blue p-6">

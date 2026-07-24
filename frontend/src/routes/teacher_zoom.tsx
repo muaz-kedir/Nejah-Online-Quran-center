@@ -205,7 +205,7 @@ function TeacherZoomPage() {
         );
       case "NO_SHOW":
         return (
-          <Badge className="bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none text-[9px] font-black uppercase tracking-widest">
+          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-muted-foreground border-none text-[9px] font-black uppercase tracking-widest">
             No Show
           </Badge>
         );

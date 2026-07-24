@@ -1,10 +1,10 @@
-import { memo, useMemo } from 'react';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowRight, Megaphone } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
 import { GlassPanel, PanelHeader, SilverDivider } from './design-system';
-import { useApiQuery } from '@/hooks/useApiQuery';
+import { apiUrl, apiHeaders } from "@/lib/api";
 
 interface Alert {
   id: string;
@@ -39,24 +39,36 @@ function formatRelativeTime(iso: string): string {
 export const SystemAlerts = memo(function SystemAlerts() {
   const { t } = useApp();
   const navigate = useNavigate();
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
-  const { data, isLoading } = useApiQuery<any>({
-    queryKey: ['dashboard', 'notifications'],
-    path: '/notifications?limit=5',
-    refetchInterval: 60_000,
-  });
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const response = await fetch(apiUrl('/notifications?limit=5'), { headers: apiHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const data = await response.json();
+      const items = Array.isArray(data) ? data : data?.items || data?.data || [];
+      const mapped: Alert[] = items.map((n: any) => ({
+        id: n.id,
+        type: mapChannelToType(n.channel || n.type),
+        title: n.title,
+        description: n.content || '',
+        time: formatRelativeTime(n.createdAt),
+      }));
+      setAlerts(mapped);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const alerts = useMemo(() => {
-    if (!data) return [];
-    const items = Array.isArray(data) ? data : data?.items || data?.data || [];
-    return items.map((n: any) => ({
-      id: n.id,
-      type: mapChannelToType(n.channel || n.type),
-      title: n.title,
-      description: n.content || '',
-      time: formatRelativeTime(n.createdAt),
-    }));
-  }, [data]);
+  useEffect(() => {
+    fetchAlerts();
+    intervalRef.current = setInterval(fetchAlerts, 60000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [fetchAlerts]);
 
   const criticalCount = alerts.filter((a) => a.type === 'error').length;
 
@@ -76,7 +88,7 @@ export const SystemAlerts = memo(function SystemAlerts() {
       <SilverDivider />
 
       <div className="space-y-2 p-4">
-        {isLoading ? (
+        {loading ? (
           <div className="py-8 text-center text-sm text-muted-foreground">Loading alerts...</div>
         ) : alerts.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">No alerts at this time</div>

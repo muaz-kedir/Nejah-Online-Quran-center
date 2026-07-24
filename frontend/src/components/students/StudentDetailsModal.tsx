@@ -107,7 +107,7 @@ export function StudentDetailsModal({ open, onClose, student }: StudentDetailsMo
           <div className="absolute top-6 right-8">
             <Badge className={cn(
               "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-tighter border-none",
-              student.status === 'active' ? "bg-primary/40 text-foreground" : "bg-nejah-slate-blue text-white"
+              student.status === 'active' ? "bg-primary/40 text-foreground" : "bg-muted text-muted-foreground"
             )}>
               {student.status}
             </Badge>
