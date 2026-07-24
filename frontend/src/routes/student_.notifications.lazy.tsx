@@ -34,6 +34,19 @@ import {
 } from "@/lib/notification-helpers";
 import { useApiQuery } from "@/hooks/useApiQuery";
 
+const TYPE_CHIPS = [
+  { value: "", label: "All" },
+  { value: "in_app", label: "In-App" },
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+  { value: "telegram", label: "Telegram" },
+];
+
+function matchesTypeFilter(channel: string, filter: string) {
+  if (!filter) return true;
+  return channel?.toLowerCase() === filter.toLowerCase();
+}
+
 export const Route = createLazyFileRoute('/student_/notifications')({
   component: StudentNotificationsPage,
 });
