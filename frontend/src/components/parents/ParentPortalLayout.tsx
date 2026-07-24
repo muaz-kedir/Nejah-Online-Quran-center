@@ -8,10 +8,12 @@ import {
   FileText,
   Clock,
   Video,
+  Menu,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppSidebar, type AppMenuItem } from '@/components/ui/AppSidebar';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSidebar } from '@/hooks/useSidebar';
 import { OnboardingGuard } from '@/components/ui/OnboardingGuard';
 
 type Props = {
@@ -36,6 +38,7 @@ export function ParentPortalLayout({
 }: Props) {
   const navigate = useNavigate();
   const { translations, lang, setLang } = useLanguage();
+  const { openMobile } = useSidebar();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -111,7 +114,38 @@ export function ParentPortalLayout({
           onNotificationClick={() => navigate({ to: '/parent_notifications' })}
           extraTop={<div className="px-3 pb-2">{languageSwitcher}</div>}
         />
-        <div className="flex-1 flex flex-col overflow-y-auto min-w-0">
+        {/* Mobile Top Bar */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-16 bg-card/95 dark:bg-nejah-surface/95 backdrop-blur-xl border-b border-border/50 dark:border-nejah-border-blue/40 flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openMobile}
+              className="p-2 rounded-xl hover:bg-primary/10 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5 text-foreground" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center">
+                <span className="text-nejah-electric font-black text-xs">N</span>
+              </div>
+              <span className="font-extrabold text-foreground text-base">Nejah</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {parent?.avatarUrl ? (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center overflow-hidden">
+                <img src={parent.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-nejah-electric/20 to-primary/30 flex items-center justify-center">
+                <span className="font-bold text-xs text-nejah-electric">{initials}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col overflow-y-auto min-w-0 lg:pt-0 pt-16">
           {children}
         </div>
       </div>
