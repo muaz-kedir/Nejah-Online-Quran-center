@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import {
   LogOut,
@@ -76,6 +76,8 @@ export function AppSidebar({
   const location = useLocation();
   const { collapsed, toggleCollapsed, mobileOpen, closeMobile } = useSidebar();
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const defaultIsActive = (item: AppMenuItem) => {
     if (item.path) {
@@ -241,20 +243,14 @@ export function AppSidebar({
               )}
             </button>
             {!collapsed && (
-              <span suppressHydrationWarning>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95 text-muted-foreground hover:text-foreground hover:bg-primary/8 cursor-pointer"
-                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                >
-                  {theme === "dark" ? (
-                    <Sun className="h-4 w-4" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                </button>
-              </span>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95 text-muted-foreground hover:text-foreground hover:bg-primary/8 cursor-pointer"
+                aria-label={mounted ? (theme === "dark" ? "Switch to light mode" : "Switch to dark mode") : "Switch to dark mode"}
+              >
+                {mounted ? (theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />) : <Moon className="h-4 w-4" />}
+              </button>
             )}
           </div>
 
