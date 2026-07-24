@@ -12,7 +12,7 @@ import {
 import { studentPaths, api } from "@/lib/student-portal";
 import { LogoutConfirmDialog } from "@/components/ui/logout-confirm-dialog";
 import { useApp } from "@/context/AppContext";
-import { useSidebar } from "@/hooks/useSidebar";
+import { SidebarProvider, useSidebar } from "@/hooks/useSidebar";
 import { AppSidebar } from "@/components/ui/AppSidebar";
 import { OnboardingGuard } from "@/components/ui/OnboardingGuard";
 
@@ -85,6 +85,7 @@ export function StudentPortalLayout({
 
   return (
     <OnboardingGuard>
+      <SidebarProvider>
       <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
       {/* ─── Ambient Background ─── */}
       <div className="bg-ambient-layer">
@@ -172,6 +173,7 @@ export function StudentPortalLayout({
         onConfirm={confirmLogout}
       />
     </div>
+    </SidebarProvider>
     </OnboardingGuard>
   );
 }

@@ -241,6 +241,7 @@ export function AppSidebar({
               )}
             </button>
             {!collapsed && (
+              <span suppressHydrationWarning>
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -298,8 +299,9 @@ export function AppSidebar({
                     >
                       <Settings className="h-5 w-5 shrink-0 text-muted-foreground group-hover:text-nejah-electric transition-colors duration-200" />
                       <span className="flex-1 text-left truncate font-semibold">Settings</span>
-                    </button>
-                  )}
+              </button>
+              </span>
+            )}
                 </TooltipProvider>
               )}
 
@@ -327,8 +329,9 @@ export function AppSidebar({
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
                   <span className="font-semibold">Logout</span>
-                </button>
-              )}
+              </button>
+              </span>
+            )}
             </TooltipProvider>
           </div>
 
