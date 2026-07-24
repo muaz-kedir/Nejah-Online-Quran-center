@@ -22,9 +22,8 @@ import { toast } from 'sonner';
 import { Pencil, BookOpen, GraduationCap, Briefcase, Upload, DollarSign, Star, Globe, MapPin, Clock, Wifi, Megaphone } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { Country } from 'country-state-city';
-import { getCountryIsoByName, getUniqueCityNames } from '@/lib/geo-data';
 import { buildUpdateTeacherPayload } from '@/lib/teacher-payload';
+import { CountryInput, CityInput } from '@/components/ui/location-input';
 
 const API = API_BASE;
 
@@ -205,17 +204,6 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher, apiEndpoin
     fileInputRef.current?.click();
   };
 
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
-
-  useEffect(() => {
-    const iso = getCountryIsoByName(formData.country);
-    if (iso) {
-      getUniqueCityNames(iso).then(setCityOptions);
-    } else {
-      setCityOptions([]);
-    }
-  }, [formData.country]);
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto dark:bg-nejah-surface dark:border-nejah-border-blue rounded-3xl p-6">
@@ -331,40 +319,18 @@ export function EditTeacherModal({ open, onClose, onSuccess, teacher, apiEndpoin
               {/* Address Information */}
               <div className="grid gap-1.5">
                 <Label className="text-xs font-semibold dark:text-muted-foreground">Country</Label>
-                <Select
-                  value={getCountryIsoByName(formData.country)}
-                  onValueChange={(val) => {
-                    const country = Country.getCountryByCode(val);
-                    setFormData({ ...formData, country: country?.name || val, city: '' });
-                  }}
-                >
-                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select Country" /></SelectTrigger>
-                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                    {Country.getAllCountries().map((c) => (
-                      <SelectItem key={c.isoCode} value={c.isoCode}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CountryInput
+                  value={formData.country}
+                  onChange={(val) => setFormData({ ...formData, country: val })}
+                />
               </div>
 
               <div className="grid gap-1.5">
                 <Label className="text-xs font-semibold dark:text-muted-foreground">City</Label>
-                <Select
+                <CityInput
                   value={formData.city}
-                  onValueChange={(val) => setFormData({ ...formData, city: val })}
-                  disabled={!formData.country}
-                >
-                  <SelectTrigger className="dark:bg-nejah-surface dark:border-nejah-border-blue rounded-xl"><SelectValue placeholder="Select City" /></SelectTrigger>
-                  <SelectContent className="dark:bg-nejah-surface dark:border-nejah-border-blue max-h-60">
-                    {cityOptions.map((cityName) => (
-                      <SelectItem key={cityName} value={cityName}>
-                        {cityName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(val) => setFormData({ ...formData, city: val })}
+                />
               </div>
 
               <div className="grid gap-1.5 col-span-2">

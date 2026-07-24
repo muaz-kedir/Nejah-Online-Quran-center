@@ -4,6 +4,7 @@ export type StudentJoinSessionResult = {
   sessionId: string;
   joinUrl: string;
   zoomJoinUrl?: string;
+  meetingLink?: string;
   status: string;
   alreadyJoined?: boolean;
   attendance?: {
@@ -14,8 +15,8 @@ export type StudentJoinSessionResult = {
 };
 
 /**
- * Record student attendance via the backend, then return the Zoom join URL.
- * Throws if attendance cannot be recorded (caller should not open Zoom).
+ * Record student attendance via the backend, then return the meeting join URL.
+ * Throws if attendance cannot be recorded (caller should not open the meeting).
  */
 export async function joinLiveSessionAsStudent(sessionId: string): Promise<StudentJoinSessionResult> {
   const res = await fetch(apiUrl(`/live-sessions/${sessionId}/join`), {
@@ -28,7 +29,7 @@ export async function joinLiveSessionAsStudent(sessionId: string): Promise<Stude
     throw new Error(body.message || 'Failed to record attendance and join session');
   }
 
-  const joinUrl = body.joinUrl || body.zoomJoinUrl || body.meetingLink;
+  const joinUrl = body.meetingLink || body.joinUrl || body.zoomJoinUrl;
   if (!joinUrl) {
     throw new Error('Meeting link is not available yet. Please try again in a moment.');
   }
@@ -37,6 +38,7 @@ export async function joinLiveSessionAsStudent(sessionId: string): Promise<Stude
     sessionId: body.sessionId || sessionId,
     joinUrl,
     zoomJoinUrl: body.zoomJoinUrl || joinUrl,
+    meetingLink: body.meetingLink || undefined,
     status: body.status,
     alreadyJoined: body.alreadyJoined,
     attendance: body.attendance,

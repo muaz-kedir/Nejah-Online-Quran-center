@@ -26,6 +26,12 @@ export interface NotificationPayload {
   actionUrl?: string;
 }
 
+export interface NotificationDispatchResult {
+  studentCount: number;
+  parentCount: number;
+  warnings: string[];
+}
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -220,6 +226,46 @@ export class NotificationsService {
           createdAt: notif.createdAt,
         });
       }
+
+      // Send push notification (VAPID) to all recipients
+      await this.pushSubscriptionService.sendPushToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : undefined),
+        data: payload.data,
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+      }).catch((err) => {
+        this.logger.error('Failed to send VAPID push notification', err);
+      });
+
+      // Send FCM push notification to all recipients
+      await this.fcmService.sendToUsers(uniqueRecipientIds, {
+        title: payload.title,
+        body: payload.message,
+        data: Object.fromEntries(
+          Object.entries({
+            ...(payload.data || {}),
+            sessionId: typeof payload.data?.sessionId === 'string' ? payload.data.sessionId : undefined,
+            url: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+            channel,
+          }).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)]),
+        ),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: typeof payload.data?.sessionId === 'string' ? `session-${payload.data.sessionId}` : 'session-notification',
+        clickAction: payload.actionUrl || (typeof payload.data?.url === 'string' ? payload.data.url : '/'),
+      }).catch((err) => {
+        this.logger.error('Failed to send FCM push notification', err);
+      });
+
+      // Send Telegram notification to all recipients
+      await this.telegramService.sendToUsers(uniqueRecipientIds,
+        `${payload.title}\n\n${payload.message}${payload.actionUrl ? `\n\n${payload.actionUrl}` : ''}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notification', err);
+      });
     }
   }
 
@@ -440,9 +486,10 @@ export class NotificationsService {
     }
   }
 
-  async notifyLiveSessionStarted(session: LiveSession): Promise<void> {
+  async notifyLiveSessionStarted(session: LiveSession): Promise<NotificationDispatchResult> {
     const studentUserIds = new Set<string>();
     const parentUserIds = new Set<string>();
+    const warnings: string[] = [];
 
     const collectStudent = (student?: Student | null) => {
       if (!student) return;
@@ -461,13 +508,27 @@ export class NotificationsService {
       collectStudent(scheduleStudent.student);
     }
 
+    if (!session.studentId && (!session.attendances || session.attendances.length === 0) && (!session.schedule?.scheduleStudents || session.schedule.scheduleStudents.length === 0)) {
+      this.logger.warn(`No students found for session ${session.id} — skipping notification`);
+      return { studentCount: 0, parentCount: 0, warnings: [] };
+    }
+
     const className =
       session.schedule?.className || session.metadata?.className || 'Quran Class';
     const teacherName = session.teacher?.fullName || 'Your teacher';
     const sessionId = session.id;
-    const meetingLink = session.metadata?.meetingLink || session.zoomJoinUrl || '';
-    const joinUrl = session.zoomJoinUrl || `/classroom/${sessionId}`;
+    const meetingLink = session.meetingLink || session.metadata?.meetingLink || session.zoomJoinUrl || '';
+    const joinUrl = meetingLink || `/classroom/${sessionId}`;
     const classroomUrl = `/classroom/${sessionId}`;
+
+    const scheduledTime = session.scheduledStart
+      ? new Date(session.scheduledStart).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        })
+      : '';
+
     const enrolledCount =
       session.schedule?.scheduleStudents?.length ||
       (session.studentId ? 1 : 0) ||
@@ -476,9 +537,13 @@ export class NotificationsService {
 
     const studentParentIds = Array.from(new Set([...studentUserIds, ...parentUserIds]));
 
+    const learnerBody = scheduledTime
+      ? `${teacherName}'s ${className} class has begun. Scheduled at ${scheduledTime}. Tap to join!`
+      : `${teacherName}'s ${className} class has begun. Tap to join now!`;
+
     const learnerPayload = {
       title: 'Class Started — Nejah',
-      body: `${teacherName}'s ${className} class has begun. Tap to join now!`,
+      body: learnerBody,
       icon: '/logo.png',
       badge: '/logo.png',
       url: classroomUrl,
@@ -490,9 +555,10 @@ export class NotificationsService {
         channel: 'MEETING_STARTED',
         className,
         teacherName,
+        scheduledTime,
       },
       actions: [
-        { action: 'join', title: '▶ Join Class' },
+        { action: 'join', title: 'Join Class' },
         { action: 'dismiss', title: 'Dismiss' },
       ],
       renotify: true,
@@ -509,6 +575,7 @@ export class NotificationsService {
         channel: 'MEETING_STARTED',
         className,
         teacherName,
+        scheduledTime,
         enrolledCount,
       },
     };
@@ -521,33 +588,58 @@ export class NotificationsService {
         `Your Quran session with ${teacherName} is ready.`,
         { sessionId, className, teacherName, meetingLink },
         NotificationChannel.MEETING_STARTED,
-        true,
-      );
-      await this.telegramService.sendToUsers(studentIds,
-        `🎓 ${className}\n\nYour Quran session is ready.\n👤 Teacher: ${teacherName}\n\nTap below to join.`,
-        { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Session', callback_data: `join:${sessionId}` }]] } },
-      );
-    }
+        false,
+        classroomUrl,
+      ).catch((err) => {
+        this.logger.error('Failed to send in-app notifications to students', err);
+        warnings.push('Some in-app notifications could not be delivered');
+      });
 
-    if (parentUserIds.size > 0) {
-      const parentIds = Array.from(parentUserIds);
-      await this.sendCustomNotifications(
-        parentIds,
-        '🎓 Class Started',
-        `Your child's Quran session has started with ${teacherName}.`,
-        { sessionId, className, teacherName },
-        NotificationChannel.MEETING_STARTED,
-        true,
-      );
+      const joinUrl_ = meetingLink || joinUrl;
+
+      if (studentIds.length > 0) {
+        await this.telegramService.sendToUsers(studentIds,
+          `🎓 ${className}\n\nYour Quran session is ready.\n👤 Teacher: ${teacherName}\n\nTap below to join.`,
+          { replyMarkup: { inline_keyboard: [[{ text: '▶ Join Session', callback_data: `join:${sessionId}` }]] } },
+        ).catch((err) => {
+          this.logger.error('Failed to send Telegram notifications to students', err);
+          warnings.push('Some Telegram messages could not be delivered');
+        });
+      }
+
+      const parentIdsArr = Array.from(parentUserIds);
+      if (parentIdsArr.length > 0) {
+        await this.telegramService.sendToUsers(parentIdsArr,
+          `🎓 ${className} — Class Started\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n\nYour child's class has started.`,
+        ).catch((err) => {
+          this.logger.error('Failed to send Telegram notifications to parents', err);
+          warnings.push('Some parent Telegram messages could not be delivered');
+        });
+      }
+
+      await this.fcmService.sendToUsers(studentParentIds, {
+        title: learnerPayload.title,
+        body: learnerPayload.body,
+        icon: learnerPayload.icon,
+        badge: learnerPayload.badge,
+        tag: learnerPayload.tag,
+        clickAction: learnerPayload.url,
+        data: Object.fromEntries(
+          Object.entries(learnerPayload.data || {}).map(([k, v]) => [k, String(v)]),
+        ),
+      });
     }
 
     const meetingLinkDisplay = meetingLink || joinUrl;
     const teacherIds = session.teacher?.userId ? [session.teacher.userId] : [];
     if (teacherIds.length > 0) {
       await this.telegramService.sendToUsers(teacherIds,
-        `✅ Invitation sent successfully.\n\n📚 ${className}\n🔗 ${meetingLinkDisplay}\n\nTap below to end the session when done.`,
+        `✅ Session started.\n\n📚 ${className}\n🔗 ${meetingLinkDisplay}\n\nTap below to end the session when done.`,
         { replyMarkup: { inline_keyboard: [[{ text: '⏹ End Session', callback_data: `end:${sessionId}` }]] } },
-      );
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notification to teacher', err);
+        warnings.push('Teacher Telegram notification could not be delivered');
+      });
     }
 
     const admins = await this.userRepository.find({
@@ -562,13 +654,22 @@ export class NotificationsService {
         adminPayload.body,
         adminPayload.data,
         NotificationChannel.MEETING_STARTED,
-        true,
-      );
-      await this.pushSubscriptionService.sendPushToUsers(adminUserIds, adminPayload);
+        false,
+        `/live-sessions/${sessionId}`,
+      ).catch((err) => {
+        this.logger.error('Failed to send in-app notifications to admins', err);
+        warnings.push('Some admin notifications could not be delivered');
+      });
+
+      const adminJoinUrl = meetingLink || joinUrl;
       await this.telegramService.sendToUsers(adminUserIds,
-        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${meetingLink || joinUrl}`,
-        { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', callback_data: `join:${sessionId}` }]] } },
-      );
+        `🎓 Session Started — Admin\n\n👤 Teacher: ${teacherName}\n📚 Class: ${className}\n👥 Enrolled: ${enrolledCount}\n🔗 Meeting: ${adminJoinUrl}`,
+        adminJoinUrl
+          ? { replyMarkup: { inline_keyboard: [[{ text: '▶ View Session', url: adminJoinUrl }]] } }
+          : undefined,
+      ).catch((err) => {
+        this.logger.error('Failed to send Telegram notifications to admins', err);
+      });
       await this.fcmService.sendToUsers(adminUserIds, {
         title: adminPayload.title,
         body: adminPayload.body,
@@ -585,7 +686,15 @@ export class NotificationsService {
     await this.pushSubscriptionService.sendToUserTypes(
       [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER],
       adminPayload,
-    );
+    ).catch((err) => {
+      this.logger.error('Failed to send push to admin user types', err);
+    });
+
+    return {
+      studentCount: studentUserIds.size,
+      parentCount: parentUserIds.size,
+      warnings,
+    };
   }
 
   async notifyLiveSessionEnded(session: LiveSession): Promise<void> {

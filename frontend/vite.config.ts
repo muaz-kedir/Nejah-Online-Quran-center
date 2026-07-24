@@ -21,6 +21,20 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Only split truly independent, large vendor libraries.
+            // Do NOT split react/react-dom — other chunks depend on them at
+            // load time and a separate chunk causes ordering bugs (e.g.
+            // "Cannot set properties of undefined (setting 'Activity')").
+            if (id.includes('node_modules/firebase')) return 'vendor-firebase';
+            if (id.includes('node_modules/recharts')) return 'vendor-recharts';
+          },
+        },
+      },
+    },
     server: {
       proxy: {
         '/api': {

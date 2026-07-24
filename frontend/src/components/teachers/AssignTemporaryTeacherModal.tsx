@@ -229,7 +229,7 @@ export function AssignTemporaryTeacherModal({
             <div className="space-y-2">
               <Label>Original Teacher</Label>
               <Select
-                value={originalTeacherId || undefined}
+                value={originalTeacherId}
                 onValueChange={handleOriginalTeacherChange}
               >
                 <SelectTrigger>
@@ -256,7 +256,7 @@ export function AssignTemporaryTeacherModal({
           <div className="space-y-2">
             <Label>Replacement Teacher</Label>
             <Select
-              value={replacementTeacherId || undefined}
+              value={replacementTeacherId}
               onValueChange={setReplacementTeacherId}
             >
               <SelectTrigger>
@@ -359,7 +359,7 @@ export function AssignTemporaryTeacherModal({
 
           <div className="space-y-2">
             <Label>Reason</Label>
-            <Select value={reason || undefined} onValueChange={setReason}>
+            <Select value={reason} onValueChange={setReason}>
               <SelectTrigger>
                 <SelectValue placeholder="Select reason" />
               </SelectTrigger>

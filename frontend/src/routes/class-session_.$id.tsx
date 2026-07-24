@@ -257,7 +257,7 @@ function ClassSessionContent() {
         );
       case "NO_SHOW":
         return (
-          <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+          <Badge className="bg-gray-200 text-foreground dark:bg-gray-700 dark:text-muted-foreground border-none px-3 py-1 text-[10px] font-black tracking-widest uppercase">
             NO SHOW
           </Badge>
         );

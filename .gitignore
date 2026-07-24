@@ -30,3 +30,7 @@ graphify-out/
 
 # Firebase service account JSON
 *-firebase-adminsdk-*.json
+
+# graphify knowledge graph outputs
+graphify-out/
+backend/graphify-out/

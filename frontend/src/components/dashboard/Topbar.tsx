@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/components/site/ThemeProvider';
 import { cn } from '@/lib/utils';
 import { getRoleLabel } from '@/components/ui/role-badge';
 import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
@@ -31,9 +32,16 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useApp();
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [userName, setUserName] = useState('Admin User');
   const [userRole, setUserRole] = useState('super_admin');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const effectiveTheme = mounted ? theme : 'light';
 
   useEffect(() => {
     const loadUserData = () => {
@@ -58,6 +66,7 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
     navigate({ to: '/login', replace: true });
     setTimeout(() => {
       localStorage.clear();
+      window.dispatchEvent(new Event('auth-changed'));
       import('@/lib/push-notifications').then(m =>
         m.unsubscribeFromPushNotifications().catch(() => {}),
       );
@@ -96,10 +105,10 @@ function TopbarInner({ onMenuClick, notifCount }: TopbarProps) {
       <div className="ml-auto flex items-center gap-1">
         <button
           onClick={toggleTheme}
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={effectiveTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           className={iconBtn}
         >
-          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {effectiveTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
         <button

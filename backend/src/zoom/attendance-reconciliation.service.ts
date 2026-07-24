@@ -116,7 +116,17 @@ export class AttendanceReconciliationService {
 
     let participants: ZoomReportParticipant[];
     try {
-      participants = await this.zoomService.getMeetingParticipantsReport(uuid);
+      const accessToken = await this.zoomService.getTeacherAccessToken(session.teacherId);
+      if (!accessToken) {
+        this.logger.warn(
+          `Reconciliation skipped for session ${sessionId}: teacher has no connected Zoom account`,
+        );
+        await this.liveSessionRepository.update(sessionId, {
+          reconciliationStatus: ReconciliationStatus.FAILED,
+        });
+        return;
+      }
+      participants = await this.zoomService.getMeetingParticipantsReport(uuid, accessToken);
     } catch (error) {
       const message = (error as Error).message || '';
       if (this.isMissingReportScope(message)) {

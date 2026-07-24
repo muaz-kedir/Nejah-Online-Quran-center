@@ -1,0 +1,79 @@
+/* eslint-disable */
+// @ts-nocheck
+// Lazy component (code-split). Do not edit.
+
+import { useState, useEffect, useCallback } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { DashboardCards } from '@/components/dashboard/DashboardCards';
+import { RecentStudentsTable } from '@/components/dashboard/RecentStudentsTable';
+import { StaffOverview } from '@/components/dashboard/StaffOverview';
+import { TodaysClasses } from '@/components/dashboard/TodaysClasses';
+import { SystemAlerts } from '@/components/dashboard/SystemAlerts';
+import { AmbientSection, PageHeader } from '@/components/dashboard/design-system';
+import { createLazyFileRoute} from '@tanstack/react-router';
+import { useApp } from '@/context/AppContext';
+import { requireAuth } from '@/lib/auth';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+
+export const Route = createLazyFileRoute('/dashboard')({
+  component: DashboardPage,
+});
+
+function DashboardContent() {
+  const { t } = useApp();
+  const [userName, setUserName] = useState('Administrator');
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserName(localStorage.getItem('userName') || 'Administrator');
+    }
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    setTimeout(() => setRefreshing(false), 1000);
+  }, [queryClient]);
+
+  return (
+    <AmbientSection>
+      <PageHeader
+        eyebrow={t.managementOverview}
+        title={`Assalamu Alaikum, ${userName}`}
+        description="Welcome back to the Nejah command center."
+        actions={
+          <Button onClick={handleRefresh} variant="outline" className="h-11 gap-2 rounded-xl px-4" disabled={refreshing}>
+            <RefreshCw className={cn('h-5 w-5', refreshing && 'animate-spin')} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        }
+      />
+
+      <DashboardCards />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <RecentStudentsTable />
+          <TodaysClasses />
+        </div>
+        <div className="space-y-6">
+          <StaffOverview />
+          <SystemAlerts />
+        </div>
+      </div>
+    </AmbientSection>
+  );
+}
+
+function DashboardPage() {
+  return (
+    <DashboardLayout>
+      <DashboardContent />
+    </DashboardLayout>
+  );
+}

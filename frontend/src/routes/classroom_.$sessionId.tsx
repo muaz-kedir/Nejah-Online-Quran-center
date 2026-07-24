@@ -702,5 +702,5 @@ export const Route = createFileRoute("/classroom_/$sessionId")({
       if (!token) throw redirect({ to: "/login" });
       if (role !== "teacher" && role !== "student") throw redirect({ to: "/dashboard" });
     }
-  },
+  }
 });

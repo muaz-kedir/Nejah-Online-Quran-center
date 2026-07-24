@@ -24,15 +24,13 @@ type SocketCallbacks = {
   onSessionStatus?: (data: { sessionId: string; status: string; [key: string]: unknown }) => void;
 };
 
-export function useSocket(callbacks?: SocketCallbacks) {
-  const socketRef = useRef<Socket | null>(null);
-  const [connected, setConnected] = useState(false);
+let globalSocket: Socket | null = null;
+let globalSocketToken: string | null = null;
+let globalRefCount = 0;
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    const socket = io(`${WS_URL}/ws`, {
+function getGlobalSocket(token: string): Socket {
+  if (!globalSocket) {
+    globalSocket = io(`${WS_URL}/ws`, {
       auth: { token },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -40,34 +38,67 @@ export function useSocket(callbacks?: SocketCallbacks) {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 60000,
     });
+    globalSocketToken = token;
+  } else if (token !== globalSocketToken) {
+    globalSocket.auth = { token };
+    globalSocket.disconnect().connect();
+    globalSocketToken = token;
+  }
+  return globalSocket;
+}
 
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
-    socket.on("connected", (data) => console.log("[WS] Connected:", data.userId));
+export function useSocket(callbacks?: SocketCallbacks) {
+  const [connected, setConnected] = useState(false);
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
-    socket.on("notification:new", (notif: NotificationData) => {
-      console.log("[WS] Notification:", notif);
-      callbacks?.onNotification?.(notif);
-    });
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-    socket.on("session:status_changed", (data) => {
-      console.log("[WS] Session status:", data);
-      callbacks?.onSessionStatus?.(data);
-    });
+    const socket = getGlobalSocket(token);
+    globalRefCount++;
 
-    socket.on("error", (err) => console.error("[WS] Error:", err.message));
+    if (socket.connected) {
+      setConnected(true);
+    }
 
-    socketRef.current = socket;
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+    const onConnected = (data: any) => {};
+    const onNotification = (notif: NotificationData) => {
+      callbacksRef.current?.onNotification?.(notif);
+    };
+    const onSessionStatus = (data: any) => {
+      callbacksRef.current?.onSessionStatus?.(data);
+    };
+    const onError = (err: Error) => {};
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connected", onConnected);
+    socket.on("notification:new", onNotification);
+    socket.on("session:status_changed", onSessionStatus);
+    socket.on("error", onError);
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("connected", onConnected);
+      socket.off("notification:new", onNotification);
+      socket.off("session:status_changed", onSessionStatus);
+      socket.off("error", onError);
+
+      globalRefCount--;
+      if (globalRefCount <= 0 && globalSocket) {
+        globalSocket.removeAllListeners();
+      }
     };
   }, []);
 
   const emit = useCallback((event: string, data: unknown) => {
-    socketRef.current?.emit(event, data);
+    globalSocket?.emit(event, data);
   }, []);
 
-  return { socket: socketRef, connected, emit };
+  return { connected, emit };
 }

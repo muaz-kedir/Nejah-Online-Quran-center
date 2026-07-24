@@ -119,7 +119,17 @@ export function TelegramLink() {
         <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
           <p className="text-sm font-medium">Link your Telegram</p>
           <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside">
-            <li>Open Telegram and search for <strong className="text-foreground">@{linkInfo.botUsername}</strong></li>
+            <li>
+              Open Telegram via{" "}
+              <a
+                href={`https://t.me/${linkInfo.botUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sky-600 dark:text-sky-400 font-medium hover:underline"
+              >
+                @{linkInfo.botUsername}
+              </a>
+            </li>
             <li>
               Send this code:
               <div className="flex items-center gap-2 mt-1">
@@ -128,6 +138,7 @@ export function TelegramLink() {
                   {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Just paste and send — no command needed.</p>
             </li>
             <li>Wait for confirmation <span className="animate-pulse">(checking...)</span></li>
           </ol>

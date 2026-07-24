@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { CheckCircle2, Circle, Bell, Send, Loader2, ExternalLink, Copy, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, Send, Loader2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ function SetupRequiredPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [enablingNotif, setEnablingNotif] = useState(false);
   const [linkInfo, setLinkInfo] = useState<{ code: string; botUsername: string } | null>(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -58,29 +57,6 @@ function SetupRequiredPage() {
     }
     fetchStatus();
   }, []);
-
-  const handleEnableNotifications = async () => {
-    if (!('Notification' in window)) {
-      toast.error('Notifications are not supported in this browser');
-      return;
-    }
-
-    setEnablingNotif(true);
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const result = await api<OnboardingStatus>('/onboarding/notifications/enable', { method: 'POST' });
-        setStatus(result);
-        toast.success('Notifications enabled!');
-      } else {
-        toast.error('Please allow notifications to continue');
-      }
-    } catch {
-      toast.error('Failed to enable notifications');
-    } finally {
-      setEnablingNotif(false);
-    }
-  };
 
   const handleLinkTelegram = async () => {
     setGenerating(true);
@@ -166,7 +142,6 @@ function SetupRequiredPage() {
     );
   }
 
-  const notifDone = status ? (status.notificationEnabled || !status.requireNotifications) : false;
   const tgDone = status ? (status.telegramConnected || !status.requireTelegram) : false;
 
   return (
@@ -181,16 +156,6 @@ function SetupRequiredPage() {
 
         <div className="space-y-4">
           <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-            {notifDone ? (
-              <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
-            ) : (
-              <Circle className="h-6 w-6 text-muted-foreground shrink-0" />
-            )}
-            <span className={`font-medium ${notifDone ? 'text-green-600 dark:text-green-400' : 'text-foreground'}`}>
-              Enable Notifications
-            </span>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
             {tgDone ? (
               <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
             ) : (
@@ -203,30 +168,14 @@ function SetupRequiredPage() {
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
-          {!notifDone ? (
-            <>
-              <div className="flex items-center gap-3">
-                <Bell className="h-6 w-6 text-primary" />
-                <h2 className="text-lg font-bold text-foreground">Enable Notifications</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Allow notifications to receive class reminders, homework alerts, attendance updates,
-                teacher messages, payment notifications, and important announcements.
-              </p>
-              <Button onClick={handleEnableNotifications} disabled={enablingNotif} className="w-full">
-                {enablingNotif ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {enablingNotif ? 'Enabling...' : 'Enable Notifications'}
-              </Button>
-            </>
-          ) : !tgDone ? (
+          {!tgDone ? (
             <>
               <div className="flex items-center gap-3">
                 <Send className="h-6 w-6 text-sky-500" />
                 <h2 className="text-lg font-bold text-foreground">Connect Telegram</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                Connect your Telegram account to receive class links, reminders, homework notifications,
-                attendance alerts, announcements, and teacher messages.
+                Connect your Telegram account to receive class links, reminders, notifications, announcements, and teacher messages.
               </p>
 
               {tgError && (
@@ -262,11 +211,11 @@ function SetupRequiredPage() {
                   </ol>
                 </div>
               ) : (
-                <Button onClick={handleLinkTelegram} disabled={generating} variant="outline" className="w-full gap-2">
+                <Button onClick={handleLinkTelegram} disabled={generating} className="w-full gap-2">
                   {generating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <ExternalLink className="h-4 w-4" />
+                    <Send className="h-4 w-4" />
                   )}
                   {generating ? 'Generating...' : 'Connect Telegram'}
                 </Button>
@@ -275,10 +224,10 @@ function SetupRequiredPage() {
           ) : null}
         </div>
 
-        {notifDone && tgDone && !status?.onboardingCompleted && (
+        {tgDone && !status?.onboardingCompleted && (
           <div className="text-center">
             <Button onClick={fetchStatus} className="gap-2">
-              Complete Setup <ArrowRight className="h-4 w-4" />
+              Continue <CheckCircle2 className="h-4 w-4" />
             </Button>
           </div>
         )}

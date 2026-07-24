@@ -13,6 +13,7 @@ export enum AttendanceStatus {
   LATE = 'LATE',
   LEFT_EARLY = 'LEFT_EARLY',
   PARTIAL = 'PARTIAL',
+  EXCUSED = 'EXCUSED',
 }
 
 export type ApiAttendanceStatus =
@@ -20,7 +21,8 @@ export type ApiAttendanceStatus =
   | 'late'
   | 'left_early'
   | 'partial'
-  | 'absent';
+  | 'absent'
+  | 'excused';
 
 export function attendanceStatusToApi(status: AttendanceStatus | string): ApiAttendanceStatus {
   switch (status) {
@@ -36,6 +38,9 @@ export function attendanceStatusToApi(status: AttendanceStatus | string): ApiAtt
     case AttendanceStatus.PARTIAL:
     case 'PARTIAL':
       return 'partial';
+    case AttendanceStatus.EXCUSED:
+    case 'EXCUSED':
+      return 'excused';
     default:
       return 'absent';
   }
@@ -51,6 +56,8 @@ export function apiStatusToAttendanceStatus(status: string): AttendanceStatus {
       return AttendanceStatus.LEFT_EARLY;
     case 'partial':
       return AttendanceStatus.PARTIAL;
+    case 'excused':
+      return AttendanceStatus.EXCUSED;
     default:
       return AttendanceStatus.ABSENT;
   }

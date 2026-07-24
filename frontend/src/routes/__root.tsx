@@ -9,22 +9,22 @@ import {
 } from "@tanstack/react-router";
 
 import "../styles.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { AppProvider } from '@/context/AppContext';
 import { setupChunkLoadRecovery } from "@/lib/chunk-reload";
-import PWADownloadPrompt from "@/components/pwa/PWADownloadPrompt";
 import { ThemeProvider } from '@/components/site/ThemeProvider';
-import { initializePwaPush, setupForegroundListener, updateNotificationBadge } from "@/lib/push-notifications";
-import { io, Socket } from "socket.io-client";
 import { WS_URL } from "@/lib/api";
+import { useRealtimeSocket } from "@/hooks/useRealtimeSocket";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://nejah-center.com";
 const SITE_NAME = "Nejah Online Quran Center";
+const SITE_KEYWORDS =
+  "Quran, online learning, tajweed, hifz, islamic studies, Arabic, Nejah, online madrasa, learn Quran online, Quran teacher, Islamic school, Quran memorization, online Quran classes, Quran for kids, Quran for adults";
 const DEFAULT_TITLE = SITE_NAME;
 const DEFAULT_DESCRIPTION =
-  "Learn Quran online with expert teachers. Tajweed, Hifz, Quran reading, and Islamic studies for all ages and levels.";
+  "Learn Quran online with expert teachers. Tajweed, Hifz, Quran reading, and Islamic studies for all ages and levels. Join the best online madrasa for personalized Quran education.";
 const OG_IMAGE = `${SITE_URL}/og-image.svg`;
 
 function NotFoundComponent() {
@@ -72,12 +72,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Try again
           </button>
-          <a
-            href="/"
+          <Link
+            to="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -91,10 +91,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: DEFAULT_TITLE },
       { name: "description", content: DEFAULT_DESCRIPTION },
-      { name: "keywords", content: "Quran, online learning, tajweed, hifz, islamic studies, Arabic, Nejah" },
-      { name: "author", content: "Nejah Online Quran Center" },
-      { name: "theme-color", content: "#0066CC" },
+      { name: "keywords", content: SITE_KEYWORDS },
+      { name: "author", content: SITE_NAME },
+      { name: "theme-color", content: "#0F62AC" },
+      { name: "msapplication-TileColor", content: "#0F62AC" },
+      { name: "application-name", content: SITE_NAME },
 
+      // Search engine behavior
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },
+      { name: "googlebot", content: "index, follow, max-image-preview:large, max-snippet:-1" },
+      { name: "revisit-after", content: "7 days" },
+
+      // AI / chatbot indexing
+      { name: "chatgpt:index", content: "true" },
+
+      // Open Graph
       { property: "og:site_name", content: SITE_NAME },
       { property: "og:title", content: DEFAULT_TITLE },
       { property: "og:description", content: DEFAULT_DESCRIPTION },
@@ -104,7 +115,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:locale", content: "en_US" },
+      { property: "og:locale:alternate", content: "ar_SA" },
+      { property: "og:locale:alternate", content: "am_ET" },
 
+      // Twitter Card
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@NejahCenter" },
       { name: "twitter:title", content: DEFAULT_TITLE },
@@ -112,13 +126,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: "/logo.png" },
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/logo.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/logo.png" },
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "canonical", href: SITE_URL },
+      { rel: "sitemap", type: "application/xml", href: `${SITE_URL}/sitemap.xml` },
+      { rel: "alternate", hrefLang: "en", href: SITE_URL },
+      { rel: "alternate", hrefLang: "ar", href: `${SITE_URL}/ar` },
+      { rel: "alternate", hrefLang: "am", href: `${SITE_URL}/am` },
+      { rel: "alternate", hrefLang: "x-default", href: SITE_URL },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-
+      { rel: "dns-prefetch", href: SITE_URL },
     ],
     scripts: [
       {
@@ -126,11 +146,86 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
+          "@id": `${SITE_URL}/#organization`,
           name: SITE_NAME,
           url: SITE_URL,
           logo: `${SITE_URL}/logo.svg`,
           description: DEFAULT_DESCRIPTION,
-          sameAs: [],
+          foundingDate: "2020",
+          isicV4: "8542",
+          sameAs: [
+            "https://facebook.com/NejahCenter",
+            "https://twitter.com/NejahCenter",
+            "https://instagram.com/NejahCenter",
+            "https://youtube.com/@NejahCenter",
+          ],
+          offers: {
+            "@type": "AggregateOffer",
+            name: "Quran & Islamic Studies Courses",
+            description: "Personalized one-on-one Quran, Tajweed, Hifz and Islamic Studies for all ages.",
+            availability: "https://schema.org/OnlineOnly",
+            offers: [
+              { "@type": "Offer", name: "Quran Reading" },
+              { "@type": "Offer", name: "Tajweed Rules" },
+              { "@type": "Offer", name: "Quran Memorization (Hifz)" },
+              { "@type": "Offer", name: "Islamic Studies" },
+              { "@type": "Offer", name: "Arabic Language" },
+            ],
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "@id": `${SITE_URL}/#website`,
+          name: SITE_NAME,
+          url: SITE_URL,
+          description: DEFAULT_DESCRIPTION,
+          inLanguage: ["en", "ar", "am"],
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+            },
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "@id": `${SITE_URL}/#faq`,
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "What is Nejah Online Quran Center?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Nejah is an online madrasa offering personalized Quran, Tajweed, Hifz, and Islamic studies with qualified teachers for students of all ages worldwide.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How do I start learning Quran online?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Simply register on our website for a free trial, and we'll match you with a qualified Quran teacher based on your level and goals.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Are the teachers qualified?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes, all our teachers hold Ijazah in Quran recitation and have years of experience teaching Quran and Islamic studies online.",
+              },
+            },
+          ],
         }),
       },
     ],
@@ -158,15 +253,33 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ClientOnlyPWAPrompt() {
+  const [Comp, setComp] = useState<React.ComponentType | null>(null);
+  useEffect(() => {
+    import("@/components/pwa/PWADownloadPrompt").then((m) => setComp(() => m.default));
+  }, []);
+  if (!Comp) return null;
+  return (
+    <Suspense fallback={null}>
+      <Comp />
+    </Suspense>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<any>(null);
+
+  useRealtimeSocket();
 
   useEffect(() => {
     setupChunkLoadRecovery();
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const interval = setInterval(() => {
       fetch(`${WS_URL}/health`, { mode: 'cors' }).catch(() => {});
     }, 5 * 60 * 1000);
@@ -177,71 +290,75 @@ function RootComponent() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    initializePwaPush().catch(() => {});
+    const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1));
 
-    updateNotificationBadge().catch(() => {});
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+    idle(() => {
+      import("@/lib/push-notifications").then(({ initializePwaPush, setupForegroundListener, updateNotificationBadge }) => {
+        initializePwaPush().catch(() => {});
         updateNotificationBadge().catch(() => {});
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
 
-    const unsubForeground = setupForegroundListener((payload) => {
-      const title = payload.title || "Nejah";
-      const body = payload.body || "";
-      if (body) {
-        toast(title, {
-          description: body,
-          duration: 8000,
-          action: payload.clickAction
-            ? { label: "View", onClick: () => { window.location.href = payload.clickAction!; } }
-            : undefined,
+        const onVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            updateNotificationBadge().catch(() => {});
+          }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        setupForegroundListener((payload: any) => {
+          const title = payload.title || "Nejah";
+          const body = payload.body || "";
+          if (body) {
+            toast(title, {
+              description: body,
+              duration: 8000,
+              action: payload.clickAction
+                ? { label: "View", onClick: () => { window.location.href = payload.clickAction!; } }
+                : undefined,
+            });
+          }
         });
-      }
+      });
     });
 
-    const socket = io(`${WS_URL}/ws`, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 20,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 60000,
-    });
-
-    socket.on("connect", () => console.log("[WS Root] Connected"));
-    socket.on("connected", (data) => console.log("[WS Root] Authenticated:", data.userId));
-
-    socket.on("notification:new", (notif: any) => {
-      console.log("[WS Root] Notification:", notif);
-      const isSamePage = window.location.pathname.includes("/notifications");
-      if (!isSamePage) {
-        const handleClick = notif.data?.sessionId
-          ? () => { window.location.href = `/classroom/${notif.data.sessionId}`; }
-          : undefined;
-        toast(notif.title, {
-          description: notif.content,
-          duration: 8000,
-          action: handleClick ? { label: "View", onClick: handleClick } : undefined,
+    idle(() => {
+      import("socket.io-client").then(({ io }) => {
+        const socket = io(`${WS_URL}/ws`, {
+          auth: { token },
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionAttempts: 20,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 60000,
         });
-      }
+
+        socket.on("connect", () => {});
+        socket.on("connected", (data: any) => {});
+
+        socket.on("notification:new", (notif: any) => {
+          const isSamePage = window.location.pathname.includes("/notifications");
+          if (!isSamePage) {
+            const handleClick = notif.data?.sessionId
+              ? () => { window.location.href = `/classroom/${notif.data.sessionId}`; }
+              : undefined;
+            toast(notif.title, {
+              description: notif.content,
+              duration: 8000,
+              action: handleClick ? { label: "View", onClick: handleClick } : undefined,
+            });
+          }
+        });
+
+        socket.on("session:status_changed", (data: any) => {});
+
+        socket.on("error", (err: any) => console.error("[WS Root] Error:", err.message));
+
+        socketRef.current = socket;
+      });
     });
-
-    socket.on("session:status_changed", (data) => {
-      console.log("[WS Root] Session status:", data);
-    });
-
-    socket.on("error", (err) => console.error("[WS Root] Error:", err.message));
-
-    socketRef.current = socket;
 
     return () => {
-      unsubForeground?.();
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      socket.disconnect();
-      socketRef.current = null;
+      const s = socketRef.current;
+      if (s?.connected) s.disconnect();
     };
   }, []);
 
@@ -251,7 +368,7 @@ function RootComponent() {
         <ThemeProvider>
           <Outlet />
           <Toaster richColors position="top-right" />
-          <PWADownloadPrompt />
+          <ClientOnlyPWAPrompt />
         </ThemeProvider>
       </AppProvider>
     </QueryClientProvider>
