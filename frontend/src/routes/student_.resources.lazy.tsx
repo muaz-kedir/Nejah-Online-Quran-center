@@ -231,22 +231,23 @@ function StudentResources() {
   }, [studentLevel]);
 
   const groupedResources = useMemo(() => {
+    const items = resources || [];
     const sections = [
       {
         title: 'Quran Class Videos',
-        items: resources.filter(
+        items: items.filter(
           (r) => r.category?.toLowerCase().includes('video') || r.resourceType?.toLowerCase().includes('video'),
         ),
       },
       {
         title: 'Class Notes',
-        items: resources.filter(
+        items: items.filter(
           (r) => r.category?.toLowerCase().includes('note') || r.category?.toLowerCase().includes('study'),
         ),
       },
       {
         title: 'Additional Resources',
-        items: resources.filter(
+        items: items.filter(
           (r) =>
             !r.category?.toLowerCase().includes('video') &&
             !r.category?.toLowerCase().includes('note') &&
@@ -299,13 +300,13 @@ function StudentResources() {
         </div>
 
         {/* Featured */}
-        {featured.length > 0 && !search && selectedCategory === 'All' && selectedType === 'All' && (
+        {featured?.length > 0 && !search && selectedCategory === 'All' && selectedType === 'All' && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
               <Star className="w-6 h-6 text-amber-500" /> Featured Materials
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featured.map((r) => (
+              {featured?.map((r) => (
                 <div key={r.id} className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-3xl p-6 relative overflow-hidden group">
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-amber-500 text-white border-none shadow-sm">Featured</Badge>
@@ -390,7 +391,7 @@ function StudentResources() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-foreground">Resources for your level</h2>
-                <Badge variant="outline" className="rounded-full px-3">{resources.length} items</Badge>
+                <Badge variant="outline" className="rounded-full px-3">{(resources || []).length} items</Badge>
               </div>
 
               {groupedResources.length > 0 ? (
@@ -434,13 +435,13 @@ function StudentResources() {
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Recently Added */}
-            {recent.length > 0 && (
+            {recent?.length > 0 && (
               <div className="bg-card rounded-[32px] p-6 border shadow-sm">
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-nejah-electric" /> Recently Added
                 </h3>
                 <div className="space-y-3">
-                  {recent.map((r) => (
+                  {recent?.map((r) => (
                     <div key={r.id} onClick={() => setSelectedResource(r)} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/50 cursor-pointer transition-colors border border-transparent hover:border-border">
                       <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
                         {getFileIcon(r.resourceType)}
@@ -461,9 +462,9 @@ function StudentResources() {
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 <Download className="w-4 h-4 text-emerald-500" /> Download History
               </h3>
-              {downloadHistory.length > 0 ? (
+              {downloadHistory?.length > 0 ? (
                 <div className="space-y-3">
-                  {downloadHistory.slice(0, 5).map((d) => (
+                  {(downloadHistory || []).slice(0, 5).map((d) => (
                     <div key={d.id} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border border-muted">
                       <div className="min-w-0 flex-1 pr-3">
                         <p className="text-sm font-bold text-foreground truncate">{d.resource?.titleEn}</p>
