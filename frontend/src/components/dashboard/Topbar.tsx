@@ -12,7 +12,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useApp } from '@/context/AppContext';
-import { useTheme } from '@/components/site/ThemeProvider';
 import { cn } from '@/lib/utils';
 import { getRoleLabel } from '@/components/ui/role-badge';
 import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
