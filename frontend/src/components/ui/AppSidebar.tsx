@@ -300,9 +300,8 @@ export function AppSidebar({
                     >
                       <Settings className="h-5 w-5 shrink-0 text-muted-foreground group-hover:text-nejah-electric transition-colors duration-200" />
                       <span className="flex-1 text-left truncate font-semibold">Settings</span>
-              </button>
-              </span>
-            )}
+                    </button>
+                  )}
                 </TooltipProvider>
               )}
 
@@ -330,11 +329,10 @@ export function AppSidebar({
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
                   <span className="font-semibold">Logout</span>
-              </button>
-              </span>
-            )}
-            </TooltipProvider>
-          </div>
+                    </button>
+                  )}
+                </TooltipProvider>
+              </div>
 
           {/* Profile card */}
           {(onOpenProfile || user) && (
