@@ -242,18 +242,19 @@ export function AppSidebar({
             </button>
             {!collapsed && (
               <span suppressHydrationWarning>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95 text-muted-foreground hover:text-foreground hover:bg-primary/8 cursor-pointer"
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="p-2 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95 text-muted-foreground hover:text-foreground hover:bg-primary/8 cursor-pointer"
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </button>
+              </span>
             )}
           </div>
 
