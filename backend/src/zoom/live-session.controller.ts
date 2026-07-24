@@ -118,6 +118,29 @@ export class LiveSessionController {
     throw new ForbiddenException('Teacher access required');
   }
 
+  @Get('teacher-history')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.QIRAT_MANAGER)
+  async getTeacherHistory(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const teacherId = req.user.role === UserRole.TEACHER
+      ? (await this.teachersService.resolveAuthenticatedTeacher(req.user.id)).id
+      : req.query.teacherId;
+    return this.liveSessionService.findAll({
+      teacherId,
+      page: Number(page) || 1,
+      limit: Number(limit) || 20,
+      status: status as any,
+      startDate: from,
+      endDate: to,
+    } as any);
+  }
+
   @Get('student/:studentId')
   @Roles(
     UserRole.STUDENT,
