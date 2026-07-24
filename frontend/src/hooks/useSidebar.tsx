@@ -1,69 +1,64 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 const STORAGE_KEY = 'sidebar_collapsed';
 
-interface SidebarState {
-  collapsed: boolean;
-  setCollapsed: (v: boolean) => void;
-  toggleCollapsed: () => void;
-  mobileOpen: boolean;
-  openMobile: () => void;
-  closeMobile: () => void;
+let globalCollapsed: boolean;
+try {
+  globalCollapsed = localStorage.getItem(STORAGE_KEY) === 'true';
+} catch {
+  globalCollapsed = false;
+}
+let globalMobileOpen = false;
+
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+function subscribe(l: Listener) {
+  listeners.add(l);
+  return () => { listeners.delete(l); };
 }
 
-const SidebarContext = createContext<SidebarState | null>(null);
+function notify() {
+  listeners.forEach(l => l());
+}
 
-export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsedState] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, String(collapsed));
-    } catch {}
-  }, [collapsed]);
-
-  const toggleCollapsed = useCallback(() => setCollapsedState(prev => !prev), []);
-  const openMobile = useCallback(() => setMobileOpen(true), []);
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
-
-  return (
-    <SidebarContext.Provider
-      value={{ collapsed, setCollapsed: setCollapsedState, toggleCollapsed, mobileOpen, openMobile, closeMobile }}
-    >
-      {children}
-    </SidebarContext.Provider>
-  );
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
 
 export function useSidebar() {
-  const ctx = useContext(SidebarContext);
-  if (ctx) return ctx;
+  const [, forceUpdate] = useState(0);
 
-  const [collapsed, setCollapsedState] = useState(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
-  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => subscribe(() => forceUpdate(n => n + 1)), []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, String(collapsed));
-    } catch {}
-  }, [collapsed]);
+  const toggleCollapsed = useCallback(() => {
+    globalCollapsed = !globalCollapsed;
+    try { localStorage.setItem(STORAGE_KEY, String(globalCollapsed)); } catch {}
+    notify();
+  }, []);
 
-  const toggleCollapsed = useCallback(() => setCollapsedState(prev => !prev), []);
-  const openMobile = useCallback(() => setMobileOpen(true), []);
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const setCollapsed = useCallback((value: boolean) => {
+    globalCollapsed = value;
+    try { localStorage.setItem(STORAGE_KEY, String(globalCollapsed)); } catch {}
+    notify();
+  }, []);
 
-  return { collapsed, setCollapsed: setCollapsedState, toggleCollapsed, mobileOpen, openMobile, closeMobile };
+  const openMobile = useCallback(() => {
+    globalMobileOpen = true;
+    notify();
+  }, []);
+
+  const closeMobile = useCallback(() => {
+    globalMobileOpen = false;
+    notify();
+  }, []);
+
+  return {
+    collapsed: globalCollapsed,
+    setCollapsed,
+    toggleCollapsed,
+    mobileOpen: globalMobileOpen,
+    openMobile,
+    closeMobile,
+  };
 }
