@@ -44,6 +44,26 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 
 export function useSidebar() {
   const ctx = useContext(SidebarContext);
-  if (!ctx) throw new Error('useSidebar must be used within a SidebarProvider');
-  return ctx;
+  if (ctx) return ctx;
+
+  const [collapsed, setCollapsedState] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(collapsed));
+    } catch {}
+  }, [collapsed]);
+
+  const toggleCollapsed = useCallback(() => setCollapsedState(prev => !prev), []);
+  const openMobile = useCallback(() => setMobileOpen(true), []);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  return { collapsed, setCollapsed: setCollapsedState, toggleCollapsed, mobileOpen, openMobile, closeMobile };
 }
