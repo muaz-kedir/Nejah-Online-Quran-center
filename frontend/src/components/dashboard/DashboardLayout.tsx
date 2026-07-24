@@ -5,7 +5,7 @@ import { Topbar } from './Topbar';
 import { menuByRole } from './menuConfig';
 import { api } from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
-import { useSidebar } from '@/hooks/useSidebar';
+import { SidebarProvider, useSidebar } from '@/hooks/useSidebar';
 import { LogoutConfirmDialog } from '@/components/ui/logout-confirm-dialog';
 
 interface DashboardLayoutProps {
@@ -56,33 +56,35 @@ export const DashboardLayout = memo(function DashboardLayout({ children }: Dashb
   };
 
   return (
-    <div className="flex h-screen overflow-hidden admin-shell-bg">
-      <AppSidebar
-        menuItems={menuItems}
-        notifCount={notifCount}
-        notifPath="/teacher_notifications"
-        brandName="Nejah"
-        brandSubtitle="Command Center"
-        user={{ name: userName, role: resolvedRole }}
-        onLogout={handleLogout}
-      />
+    <SidebarProvider>
+      <div className="flex h-screen overflow-hidden admin-shell-bg">
+        <AppSidebar
+          menuItems={menuItems}
+          notifCount={notifCount}
+          notifPath="/teacher_notifications"
+          brandName="Nejah"
+          brandSubtitle="Command Center"
+          user={{ name: userName, role: resolvedRole }}
+          onLogout={handleLogout}
+        />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar onMenuClick={openMobile} notifCount={notifCount} />
-        <main className="relative flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 admin-shell-bg">
-          <div className="pointer-events-none absolute inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
-          <div className="relative z-10">{children}</div>
-        </main>
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Topbar onMenuClick={openMobile} notifCount={notifCount} />
+          <main className="relative flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 admin-shell-bg">
+            <div className="pointer-events-none absolute inset-0 ambient-glow dark:ambient-glow-dark opacity-60" />
+            <div className="relative z-10">{children}</div>
+          </main>
+        </div>
+
+        <LogoutConfirmDialog
+          open={showLogoutConfirm}
+          onOpenChange={setShowLogoutConfirm}
+          onConfirm={confirmLogout}
+          userName={userName}
+          userRole={resolvedRole}
+        />
       </div>
-
-      <LogoutConfirmDialog
-        open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-        onConfirm={confirmLogout}
-        userName={userName}
-        userRole={resolvedRole}
-      />
-    </div>
+    </SidebarProvider>
   );
 });
 
