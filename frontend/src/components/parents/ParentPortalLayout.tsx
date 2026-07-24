@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppSidebar, type AppMenuItem } from '@/components/ui/AppSidebar';
+import { SidebarProvider } from '@/hooks/useSidebar';
 import { useLanguage } from '@/context/LanguageContext';
 import { OnboardingGuard } from '@/components/ui/OnboardingGuard';
 
@@ -99,6 +100,7 @@ export function ParentPortalLayout({
 
   return (
     <OnboardingGuard>
+      <SidebarProvider>
       <div className="flex h-screen dark:bg-background bg-gray-50/80 overflow-hidden text-foreground font-sans">
         <AppSidebar
           menuItems={menuItems}
@@ -115,6 +117,7 @@ export function ParentPortalLayout({
           {children}
         </div>
       </div>
+    </SidebarProvider>
     </OnboardingGuard>
   );
 }
